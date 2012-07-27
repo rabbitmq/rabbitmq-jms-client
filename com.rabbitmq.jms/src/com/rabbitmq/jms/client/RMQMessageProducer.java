@@ -1,6 +1,19 @@
-/**
- * 
- */
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License
+// at http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+// the License for the specific language governing rights and
+// limitations under the License.
+//
+// The Original Code is RabbitMQ.
+//
+// The Initial Developer of the Original Code is VMware, Inc.
+// Copyright (c) 2012 VMware, Inc. All rights reserved.
+//
 package com.rabbitmq.jms.client;
 
 import javax.jms.Destination;
@@ -92,27 +105,20 @@ public class RMQMessageProducer implements MessageProducer {
     }
 
     @Override
-    public void send(Message message,
-                     int deliveryMode,
-                     int priority,
-                     long timeToLive) throws JMSException {
+    public void send(Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void send(Destination destination, Message message) throws JMSException {
         // TODO Auto-generated method stub
 
     }
 
     @Override
     public void
-            send(Destination destination, Message message) throws JMSException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void send(Destination destination,
-                     Message message,
-                     int deliveryMode,
-                     int priority,
-                     long timeToLive) throws JMSException {
+            send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         // TODO Auto-generated method stub
 
     }

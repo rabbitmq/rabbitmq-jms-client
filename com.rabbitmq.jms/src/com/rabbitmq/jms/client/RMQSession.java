@@ -1,6 +1,19 @@
-/**
- *
- */
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License
+// at http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+// the License for the specific language governing rights and
+// limitations under the License.
+//
+// The Original Code is RabbitMQ.
+//
+// The Initial Developer of the Original Code is VMware, Inc.
+// Copyright (c) 2012 VMware, Inc. All rights reserved.
+//
 package com.rabbitmq.jms.client;
 
 import java.io.Serializable;
@@ -54,8 +67,7 @@ public class RMQSession implements Session {
     }
 
     @Override
-    public ObjectMessage
-            createObjectMessage(Serializable object) throws JMSException {
+    public ObjectMessage createObjectMessage(Serializable object) throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -121,8 +133,7 @@ public class RMQSession implements Session {
     }
 
     @Override
-    public void
-            setMessageListener(MessageListener listener) throws JMSException {
+    public void setMessageListener(MessageListener listener) throws JMSException {
         // TODO Auto-generated method stub
 
     }
@@ -134,30 +145,26 @@ public class RMQSession implements Session {
     }
 
     @Override
-    public MessageProducer
-            createProducer(Destination destination) throws JMSException {
+    public MessageProducer createProducer(Destination destination) throws JMSException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public MessageConsumer createConsumer(Destination destination) throws JMSException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public MessageConsumer createConsumer(Destination destination, String messageSelector) throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public MessageConsumer
-            createConsumer(Destination destination) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public MessageConsumer
-            createConsumer(Destination destination, String messageSelector) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public MessageConsumer createConsumer(Destination destination,
-                                          String messageSelector,
-                                          boolean NoLocal) throws JMSException {
+            createConsumer(Destination destination, String messageSelector, boolean NoLocal) throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -175,18 +182,14 @@ public class RMQSession implements Session {
     }
 
     @Override
-    public TopicSubscriber
-            createDurableSubscriber(Topic topic, String name) throws JMSException {
+    public TopicSubscriber createDurableSubscriber(Topic topic, String name) throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public TopicSubscriber
-            createDurableSubscriber(Topic topic,
-                                    String name,
-                                    String messageSelector,
-                                    boolean noLocal) throws JMSException {
+            createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -198,8 +201,7 @@ public class RMQSession implements Session {
     }
 
     @Override
-    public QueueBrowser
-            createBrowser(Queue queue, String messageSelector) throws JMSException {
+    public QueueBrowser createBrowser(Queue queue, String messageSelector) throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
