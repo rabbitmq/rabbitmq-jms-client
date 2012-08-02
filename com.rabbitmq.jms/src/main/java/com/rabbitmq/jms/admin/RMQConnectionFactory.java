@@ -31,13 +31,19 @@ import javax.naming.Referenceable;
 public class RMQConnectionFactory implements ConnectionFactory, Referenceable, Serializable {
 
     /** Default serializable uid. */
-    private static final long   serialVersionUID = 1L;
-    private static final String DEFAULT_USERNAME = "guest";
-    private static final String DEFAULT_PASSWORD = "guest";
+    private static final long serialVersionUID = 1L;
+
+    private RMQConnectionProperties properties = null;
+
+    public static RMQConnectionFactory newConnectionFactory(RMQConnectionProperties properties) {
+        RMQConnectionFactory factory = new RMQConnectionFactory();
+        factory.properties = properties;
+        return factory;
+    }
 
     @Override
     public Connection createConnection() throws JMSException {
-        return createConnection(DEFAULT_USERNAME, DEFAULT_PASSWORD);
+        return createConnection(properties.getUsername(), properties.getPassword());
     }
 
     @Override

@@ -2,6 +2,8 @@ package com.rabbitmq.test.java;
 
 import java.io.IOException;
 
+import junit.framework.Assert;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +38,7 @@ public class TestSimpleServerConnection {
         factory.setHost(getHost());
         factory.setPort(getPort());
         conn = factory.newConnection();
+
     }
 
     @After
@@ -49,27 +52,29 @@ public class TestSimpleServerConnection {
 
     @Test
     public void test() throws Exception {
+        final String message = "Hello, world!";
         final Channel channel = getConnection().createChannel();
         channel.exchangeDeclare("exchangeName", "direct", true);
         String queueName = channel.queueDeclare().getQueue();
         channel.queueBind(queueName, "exchangeName", "routingKey");
-        byte[] messageBodyBytes = "Hello, world!".getBytes();
+        byte[] messageBodyBytes = message.getBytes();
         channel.basicPublish("exchangeName", "routingKey", null, messageBodyBytes);
         boolean autoAck = false;
+        final StringBuilder response = new StringBuilder();
         channel.basicConsume(queueName, autoAck, "myConsumerTag", new DefaultConsumer(channel) {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
                     throws IOException {
-                String routingKey = envelope.getRoutingKey();
-                String contentType = properties.getContentType();
                 long deliveryTag = envelope.getDeliveryTag();
                 // (process the message components here ...)
-                System.out.println("Received Message:" + new String(body));
+                response.append(new String(body));
                 channel.basicAck(deliveryTag, false);
             }
         });
-        Thread.sleep(1000);
+        Thread.sleep(100);
         channel.close();
+        Assert.assertEquals("Received message does not match sent message.", message, response.toString());
+
     }
 
     public Connection getConnection() {
