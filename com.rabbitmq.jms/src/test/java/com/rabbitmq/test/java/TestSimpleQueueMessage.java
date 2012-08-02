@@ -21,7 +21,7 @@ public class TestSimpleQueueMessage {
     private final String QUEUE_NAME = "test.queue";
 
     @Test
-    public void send() throws Exception {
+    public void test1Send() throws Exception {
         // get the initial context
         QueueConnectionFactory connFactory = new RMQConnectionFactory(new SingleConnectionFactory());
         Queue queue = new RMQDestination((RMQConnectionFactory) connFactory, QUEUE_NAME, true);
@@ -36,7 +36,7 @@ public class TestSimpleQueueMessage {
     }
 
     @Test
-    public void receive() throws Exception {
+    public void test2Receive() throws Exception {
         QueueConnectionFactory connFactory = new RMQConnectionFactory(new SingleConnectionFactory());
         Queue queue = new RMQDestination((RMQConnectionFactory) connFactory, QUEUE_NAME, true);
         QueueConnection queueConn = connFactory.createQueueConnection();
