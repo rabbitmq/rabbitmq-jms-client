@@ -29,6 +29,8 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.QueueBrowser;
+import javax.jms.QueueReceiver;
+import javax.jms.QueueSender;
 import javax.jms.Session;
 import javax.jms.StreamMessage;
 import javax.jms.TemporaryQueue;
@@ -37,10 +39,17 @@ import javax.jms.TextMessage;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
+import com.rabbitmq.jms.admin.RMQDestination;
+
 /**
  * RabbitMQ implementation of JMS {@link Session}
  */
-public class RMQSession implements Session {
+public class RMQSession implements Session, javax.jms.QueueSession {
+    private final RMQConnection connection;
+
+    public RMQSession(RMQConnection connection, boolean transacted, int acknowledgeMode) {
+        this.connection = connection;
+    }
 
     @Override
     public BytesMessage createBytesMessage() throws JMSException {
@@ -86,8 +95,9 @@ public class RMQSession implements Session {
 
     @Override
     public TextMessage createTextMessage(String text) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        TextMessage msg = new RMQMessage();
+        msg.setText(text);
+        return msg;
     }
 
     @Override
@@ -164,7 +174,7 @@ public class RMQSession implements Session {
 
     @Override
     public MessageConsumer
-            createConsumer(Destination destination, String messageSelector, boolean NoLocal) throws JMSException {
+    createConsumer(Destination destination, String messageSelector, boolean NoLocal) throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -189,7 +199,7 @@ public class RMQSession implements Session {
 
     @Override
     public TopicSubscriber
-            createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
+    createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -222,6 +232,26 @@ public class RMQSession implements Session {
     public void unsubscribe(String name) throws JMSException {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public QueueReceiver createReceiver(Queue queue) throws JMSException {
+        return new RMQMessageConsumer(this, (RMQDestination) queue);
+    }
+
+    @Override
+    public QueueReceiver createReceiver(Queue queue, String messageSelector) throws JMSException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public QueueSender createSender(Queue queue) throws JMSException {
+        return new RMQMessageProducer(this, (RMQDestination) queue);
+    }
+
+    public RMQConnection getConnection() {
+        return connection;
     }
 
 }

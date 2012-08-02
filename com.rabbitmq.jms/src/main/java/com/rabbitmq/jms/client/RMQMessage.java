@@ -20,12 +20,28 @@ import java.util.Enumeration;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.Message;
+import javax.jms.TextMessage;
+
+import org.springframework.amqp.core.MessageProperties;
+import org.springframework.util.Assert;
 
 /**
  *
  */
-public class RMQMessage implements Message {
+public class RMQMessage implements javax.jms.Message, TextMessage {
+
+    private final MessageProperties properties;
+    private byte[] body;
+
+    public RMQMessage() {
+        this(new MessageProperties(), null);
+    }
+
+    public RMQMessage(MessageProperties properties, byte[] body) {
+        super();
+        this.properties = properties;
+        this.body = body;
+    }
 
     @Override
     public String getJMSMessageID() throws JMSException {
@@ -295,6 +311,22 @@ public class RMQMessage implements Message {
     public void clearBody() throws JMSException {
         // TODO Auto-generated method stub
 
+    }
+
+    public org.springframework.amqp.core.Message buildMessage() {
+        return new org.springframework.amqp.core.Message(body, properties);
+    }
+
+    @Override
+    public void setText(String string) throws JMSException {
+        properties.setContentType(MessageProperties.CONTENT_TYPE_TEXT_PLAIN);
+        body = string.getBytes();
+    }
+
+    @Override
+    public String getText() throws JMSException {
+        Assert.isTrue(MessageProperties.CONTENT_TYPE_TEXT_PLAIN.equals(properties.getContentType()));
+        return new String(body);
     }
 
 }

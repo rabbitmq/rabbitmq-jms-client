@@ -20,11 +20,25 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.QueueSender;
+
+import org.springframework.util.Assert;
+
+import com.rabbitmq.jms.admin.RMQDestination;
 
 /**
  *
  */
-public class RMQMessageProducer implements MessageProducer {
+public class RMQMessageProducer implements MessageProducer, QueueSender {
+
+    private final RMQDestination destination;
+    private final RMQSession session;
+
+    public RMQMessageProducer(RMQSession session, RMQDestination destination) {
+        this.session = session;
+        this.destination = destination;
+    }
 
     @Override
     public void setDisableMessageID(boolean value) throws JMSException {
@@ -100,8 +114,8 @@ public class RMQMessageProducer implements MessageProducer {
 
     @Override
     public void send(Message message) throws JMSException {
-        // TODO Auto-generated method stub
-
+        org.springframework.amqp.core.Message msg = ((RMQMessage) message).buildMessage();
+        destination.getTemplate().send(msg);
     }
 
     @Override
@@ -118,9 +132,32 @@ public class RMQMessageProducer implements MessageProducer {
 
     @Override
     public void
-            send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+    send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public Queue getQueue() throws JMSException {
+        Assert.notNull(destination);
+        Assert.isTrue(destination.isQueue());
+        return destination;
+    }
+
+    @Override
+    public void send(Queue queue, Message message) throws JMSException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void send(Queue queue, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+        // TODO Auto-generated method stub
+
+    }
+
+    public RMQSession getSession() {
+        return session;
     }
 
 }
