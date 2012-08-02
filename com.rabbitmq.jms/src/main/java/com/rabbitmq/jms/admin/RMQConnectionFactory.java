@@ -33,17 +33,12 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     /** Default serializable uid. */
     private static final long serialVersionUID = 1L;
 
-    private RMQConnectionProperties properties = null;
 
-    public static RMQConnectionFactory newConnectionFactory(RMQConnectionProperties properties) {
-        RMQConnectionFactory factory = new RMQConnectionFactory();
-        factory.properties = properties;
-        return factory;
-    }
+
 
     @Override
     public Connection createConnection() throws JMSException {
-        return createConnection(properties.getUsername(), properties.getPassword());
+        return null;
     }
 
     @Override
