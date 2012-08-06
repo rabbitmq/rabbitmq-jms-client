@@ -1,4 +1,4 @@
-package com.rabbitmq.test.java;
+package com.rabbitmq.jms.basic;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Queue;

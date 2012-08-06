@@ -1,4 +1,4 @@
-package com.rabbitmq.test.java;
+package com.rabbitmq.jms.basic;
 
 import java.io.IOException;
 
