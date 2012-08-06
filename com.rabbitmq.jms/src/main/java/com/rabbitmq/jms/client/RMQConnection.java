@@ -1,7 +1,3 @@
-/**
- * The Initial Developer of the Original Code is VMware, Inc. Copyright (c) 2012
- * VMware, Inc. All rights reserved.
- */
 package com.rabbitmq.jms.client;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -116,10 +112,8 @@ public class RMQConnection implements Connection, javax.jms.QueueConnection {
     }
 
     @Override
-    public ConnectionConsumer createConnectionConsumer(Queue queue,
-                                                       String messageSelector,
-                                                       ServerSessionPool sessionPool,
-                                                       int maxMessages) throws JMSException {
+    public ConnectionConsumer
+            createConnectionConsumer(Queue queue, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
