@@ -39,6 +39,7 @@ import javax.jms.TextMessage;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
+import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.admin.RMQDestination;
 
 /**
@@ -46,9 +47,11 @@ import com.rabbitmq.jms.admin.RMQDestination;
  */
 public class RMQSession implements Session, javax.jms.QueueSession {
     private final RMQConnection connection;
+    private boolean transacted = false;
 
     public RMQSession(RMQConnection connection, boolean transacted, int acknowledgeMode) {
         this.connection = connection;
+        this.transacted = transacted;
     }
 
     @Override
@@ -102,8 +105,7 @@ public class RMQSession implements Session, javax.jms.QueueSession {
 
     @Override
     public boolean getTransacted() throws JMSException {
-        // TODO Auto-generated method stub
-        return false;
+        return transacted;
     }
 
     @Override
@@ -173,16 +175,14 @@ public class RMQSession implements Session, javax.jms.QueueSession {
     }
 
     @Override
-    public MessageConsumer
-    createConsumer(Destination destination, String messageSelector, boolean NoLocal) throws JMSException {
+    public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean NoLocal) throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public Queue createQueue(String queueName) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return new RMQDestination((RMQConnectionFactory) connection.getFactory(), queueName, true);
     }
 
     @Override
@@ -198,8 +198,7 @@ public class RMQSession implements Session, javax.jms.QueueSession {
     }
 
     @Override
-    public TopicSubscriber
-    createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
+    public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }

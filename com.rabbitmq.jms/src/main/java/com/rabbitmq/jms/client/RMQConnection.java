@@ -18,8 +18,6 @@ import javax.jms.ServerSessionPool;
 import javax.jms.Session;
 import javax.jms.Topic;
 
-import junit.framework.Assert;
-
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 
 @SuppressWarnings("serial")
@@ -77,7 +75,7 @@ public class RMQConnection implements Connection, javax.jms.QueueConnection {
 
     @Override
     public void start() throws JMSException {
-        Assert.assertTrue(started.compareAndSet(false, true));
+        assert started.compareAndSet(false, true) == true;
 
     }
 
