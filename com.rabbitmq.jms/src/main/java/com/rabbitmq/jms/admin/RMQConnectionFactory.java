@@ -34,7 +34,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     @Override
     public Connection createConnection(String userName, String password) throws JMSException {
         com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
-        factory.setUsername(DEFAULT_PASSWORD);
+        factory.setUsername(userName);
         factory.setPassword(password);
         factory.setVirtualHost("/");
         factory.setHost("localhost");
