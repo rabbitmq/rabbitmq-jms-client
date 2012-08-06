@@ -19,6 +19,8 @@ package com.rabbitmq.jms.admin;
 import java.io.Serializable;
 
 import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Queue;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
@@ -26,7 +28,18 @@ import javax.naming.Referenceable;
 /**
  * RabbitMQ implementation of JMS {@link Destination}
  */
-public class RMQDestination implements Destination, Referenceable, Serializable {
+public class RMQDestination implements Queue, Destination, Referenceable, Serializable {
+
+    private final RMQConnectionFactory factory;
+    private final String name;
+    private boolean queue;
+    
+    public RMQDestination(RMQConnectionFactory factory, String name, boolean queue) {
+        super();
+        this.factory = factory;
+        this.name = name;
+        this.queue = queue;
+    }
 
     /** Default serializable uid */
     private static final long serialVersionUID = 1L;
@@ -35,5 +48,13 @@ public class RMQDestination implements Destination, Referenceable, Serializable 
     public Reference getReference() throws NamingException {
         return new Reference(this.getClass().getCanonicalName());
     }
+
+    @Override
+    public String getQueueName() throws JMSException {
+        assert queue == true;
+        return name;
+    }
+    
+    
 
 }
