@@ -21,11 +21,7 @@ import com.rabbitmq.jms.client.RMQConnection;
  * RabbitMQ Implementation of JMS {@link javax.jms.ConnectionFactory}
  */
 @SuppressWarnings("serial")
-public class RMQConnectionFactory implements
-javax.jms.ConnectionFactory,
-javax.jms.QueueConnectionFactory,
-Referenceable,
-Serializable {
+public class RMQConnectionFactory implements javax.jms.ConnectionFactory, javax.jms.QueueConnectionFactory, Referenceable, Serializable {
 
     private org.springframework.amqp.rabbit.connection.ConnectionFactory amqpFactory;
 
