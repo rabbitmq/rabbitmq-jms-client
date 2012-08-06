@@ -11,9 +11,6 @@ import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
 
-import org.springframework.expression.spel.support.ReflectionHelper.ArgumentsMatchInfo;
-
-import com.rabbitmq.jms.client.RMQMessage;
 import com.rabbitmq.jms.client.RMQSession;
 import com.rabbitmq.jms.util.Util;
 

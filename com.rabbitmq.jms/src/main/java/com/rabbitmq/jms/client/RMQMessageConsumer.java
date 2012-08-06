@@ -13,7 +13,6 @@ import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.util.Util;
 
-
 public class RMQMessageConsumer implements MessageConsumer, QueueReceiver {
 
     private final RMQDestination destination;
@@ -52,11 +51,12 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver {
     public Message receive() throws JMSException {
         try {
             GetResponse resp = destination.getSession().getChannel().basicGet(destination.getQueueName(), true);
-            if (resp==null) return null;
+            if (resp == null)
+                return null;
             RMQMessage message = new RMQMessage();
             message.setBody(resp.getBody());
             return message;
-        }catch (IOException x) {
+        } catch (IOException x) {
             Util.util().handleException(x);
         }
         return null;

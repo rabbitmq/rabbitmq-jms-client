@@ -100,7 +100,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     @Override
     public void send(Message message) throws JMSException {
         assert message instanceof RMQMessage;
-        byte[] data = ((RMQMessage)message).getBody();
+        byte[] data = ((RMQMessage) message).getBody();
         try {
             destination.getSession().getChannel().basicPublish(destination.getExchangeName(), destination.getRoutingKey(), null, data);
         } catch (IOException x) {

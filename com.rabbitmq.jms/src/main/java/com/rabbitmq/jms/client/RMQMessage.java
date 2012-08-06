@@ -1,19 +1,3 @@
-//
-// The contents of this file are subject to the Mozilla Public License
-// Version 1.1 (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License
-// at http://www.mozilla.org/MPL/
-//
-// Software distributed under the License is distributed on an "AS IS"
-// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
-// the License for the specific language governing rights and
-// limitations under the License.
-//
-// The Original Code is RabbitMQ.
-//
-// The Initial Developer of the Original Code is VMware, Inc.
-// Copyright (c) 2012 VMware, Inc. All rights reserved.
-//
 package com.rabbitmq.jms.client;
 
 import java.nio.charset.Charset;
@@ -31,8 +15,7 @@ public class RMQMessage implements Message, TextMessage {
 
     private static final Charset charset = Charset.forName("UTF-8");
     private volatile byte[] body;
-    
-    
+
     @Override
     public String getJMSMessageID() throws JMSException {
         // TODO Auto-generated method stub
@@ -310,17 +293,15 @@ public class RMQMessage implements Message, TextMessage {
 
     @Override
     public String getText() throws JMSException {
-        return new String(body,charset);
+        return new String(body, charset);
     }
-    
+
     public byte[] getBody() throws JMSException {
         return body;
     }
-    
+
     public void setBody(byte[] b) {
         body = b;
     }
-    
-    
 
 }

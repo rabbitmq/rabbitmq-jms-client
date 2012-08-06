@@ -1,19 +1,3 @@
-//
-// The contents of this file are subject to the Mozilla Public License
-// Version 1.1 (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License
-// at http://www.mozilla.org/MPL/
-//
-// Software distributed under the License is distributed on an "AS IS"
-// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
-// the License for the specific language governing rights and
-// limitations under the License.
-//
-// The Original Code is RabbitMQ.
-//
-// The Initial Developer of the Original Code is VMware, Inc.
-// Copyright (c) 2012 VMware, Inc. All rights reserved.
-//
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
@@ -41,11 +25,11 @@ import com.rabbitmq.jms.util.Util;
 public class RMQConnection implements Connection, QueueConnection, TopicConnection {
 
     private final com.rabbitmq.client.Connection rabbitConnection;
-    
+
     public RMQConnection(com.rabbitmq.client.Connection rabbitConnection) {
         this.rabbitConnection = rabbitConnection;
     }
-    
+
     @Override
     public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
         // TODO Auto-generated method stub
@@ -122,7 +106,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         // TODO Auto-generated method stub
         return null;
     }
-    
+
     public com.rabbitmq.client.Connection getRabbitConnection() {
         return rabbitConnection;
     }
@@ -151,7 +135,5 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         // TODO Auto-generated method stub
         return null;
     }
-    
-    
 
 }
