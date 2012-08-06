@@ -1,37 +1,28 @@
-//
-// The contents of this file are subject to the Mozilla Public License
-// Version 1.1 (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License
-// at http://www.mozilla.org/MPL/
-//
-// Software distributed under the License is distributed on an "AS IS"
-// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
-// the License for the specific language governing rights and
-// limitations under the License.
-//
-// The Original Code is RabbitMQ.
-//
-// The Initial Developer of the Original Code is VMware, Inc.
-// Copyright (c) 2012 VMware, Inc. All rights reserved.
-//
 package com.rabbitmq.jms.admin;
 
+import java.io.IOException;
 import java.io.Serializable;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
+import javax.jms.QueueConnection;
+import javax.jms.QueueConnectionFactory;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
 
+import com.rabbitmq.jms.client.RMQConnection;
+import com.rabbitmq.jms.util.Util;
+
 /**
  * RabbitMQ Implementation of JMS {@link ConnectionFactory}
  */
-public class RMQConnectionFactory implements ConnectionFactory, Referenceable, Serializable {
+@SuppressWarnings("serial")
+public class RMQConnectionFactory implements ConnectionFactory, Referenceable, Serializable, QueueConnectionFactory, TopicConnectionFactory {
 
-    /** Default serializable uid. */
-    private static final long   serialVersionUID = 1L;
     private static final String DEFAULT_USERNAME = "guest";
     private static final String DEFAULT_PASSWORD = "guest";
 
@@ -42,8 +33,19 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     @Override
     public Connection createConnection(String userName, String password) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
+        factory.setUsername(DEFAULT_PASSWORD);
+        factory.setPassword(password);
+        factory.setVirtualHost("/");
+        factory.setHost("localhost");
+        factory.setPort(5672);
+        com.rabbitmq.client.Connection rabbitConnection = null;
+        try {
+            rabbitConnection = factory.newConnection();
+        }catch (IOException x) {
+            Util.util().handleException(x);
+        }
+        return new RMQConnection(rabbitConnection);
     }
 
     @Override
@@ -51,5 +53,26 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public TopicConnection createTopicConnection() throws JMSException {
+        return (TopicConnection)createConnection();
+    }
+
+    @Override
+    public TopicConnection createTopicConnection(String userName, String password) throws JMSException {
+        return (TopicConnection)createConnection(userName,password);    }
+
+    @Override
+    public QueueConnection createQueueConnection() throws JMSException {
+        return (QueueConnection)createConnection();
+    }
+
+    @Override
+    public QueueConnection createQueueConnection(String userName, String password) throws JMSException {
+        return (QueueConnection)createConnection(userName,password);
+    }
+    
+    
 
 }

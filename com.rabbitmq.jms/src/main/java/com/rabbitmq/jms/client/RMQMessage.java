@@ -16,17 +16,23 @@
 //
 package com.rabbitmq.jms.client;
 
+import java.nio.charset.Charset;
 import java.util.Enumeration;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.TextMessage;
 
 /**
  *
  */
-public class RMQMessage implements Message {
+public class RMQMessage implements Message, TextMessage {
 
+    private static final Charset charset = Charset.forName("UTF-8");
+    private volatile byte[] body;
+    
+    
     @Override
     public String getJMSMessageID() throws JMSException {
         // TODO Auto-generated method stub
@@ -296,5 +302,25 @@ public class RMQMessage implements Message {
         // TODO Auto-generated method stub
 
     }
+
+    @Override
+    public void setText(String string) throws JMSException {
+        body = string.getBytes(charset);
+    }
+
+    @Override
+    public String getText() throws JMSException {
+        return new String(body,charset);
+    }
+    
+    public byte[] getBody() throws JMSException {
+        return body;
+    }
+    
+    public void setBody(byte[] b) {
+        body = b;
+    }
+    
+    
 
 }

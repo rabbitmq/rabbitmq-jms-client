@@ -1,21 +1,6 @@
-//
-// The contents of this file are subject to the Mozilla Public License
-// Version 1.1 (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License
-// at http://www.mozilla.org/MPL/
-//
-// Software distributed under the License is distributed on an "AS IS"
-// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
-// the License for the specific language governing rights and
-// limitations under the License.
-//
-// The Original Code is RabbitMQ.
-//
-// The Initial Developer of the Original Code is VMware, Inc.
-// Copyright (c) 2012 VMware, Inc. All rights reserved.
-//
 package com.rabbitmq.jms.client;
 
+import java.io.IOException;
 import java.io.Serializable;
 
 import javax.jms.BytesMessage;
@@ -29,18 +14,45 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.QueueBrowser;
+import javax.jms.QueueReceiver;
+import javax.jms.QueueSender;
+import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.StreamMessage;
 import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
+import javax.jms.TopicPublisher;
+import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
+
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.jms.admin.RMQDestination;
+import com.rabbitmq.jms.util.Util;
 
 /**
  * RabbitMQ implementation of JMS {@link Session}
  */
-public class RMQSession implements Session {
+public class RMQSession implements Session, QueueSession, TopicSession {
+
+    private final RMQConnection connection;
+    private final boolean transacted;
+    private final int acknowledgeMode;
+    private volatile Channel channel;
+
+    public RMQSession(RMQConnection connection, boolean transacted, int mode) throws JMSException {
+        assert (mode >= 0 && mode <= 3);
+        this.connection = connection;
+        this.transacted = transacted;
+        this.acknowledgeMode = mode;
+        try {
+            this.channel = connection.getRabbitConnection().createChannel();
+        } catch (IOException x) {
+            Util.util().handleException(x);
+        }
+        assert channel != null;
+    }
 
     @Override
     public BytesMessage createBytesMessage() throws JMSException {
@@ -86,31 +98,30 @@ public class RMQSession implements Session {
 
     @Override
     public TextMessage createTextMessage(String text) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        RMQMessage msg = new RMQMessage();
+        msg.setText(text);
+        return msg;
     }
 
     @Override
     public boolean getTransacted() throws JMSException {
-        // TODO Auto-generated method stub
-        return false;
+        return transacted;
     }
 
     @Override
     public int getAcknowledgeMode() throws JMSException {
-        // TODO Auto-generated method stub
-        return 0;
+        return acknowledgeMode;
     }
 
     @Override
     public void commit() throws JMSException {
-        // TODO Auto-generated method stub
+        assert transacted;
 
     }
 
     @Override
     public void rollback() throws JMSException {
-        // TODO Auto-generated method stub
+        assert transacted;
 
     }
 
@@ -163,16 +174,17 @@ public class RMQSession implements Session {
     }
 
     @Override
-    public MessageConsumer
-            createConsumer(Destination destination, String messageSelector, boolean NoLocal) throws JMSException {
+    public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean NoLocal) throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Queue createQueue(String queueName) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return new RMQDestination(this, queueName, true, true, false);
     }
 
     @Override
@@ -188,8 +200,7 @@ public class RMQSession implements Session {
     }
 
     @Override
-    public TopicSubscriber
-            createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
+    public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -222,6 +233,50 @@ public class RMQSession implements Session {
     public void unsubscribe(String name) throws JMSException {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public QueueReceiver createReceiver(Queue queue) throws JMSException {
+        assert queue instanceof RMQDestination;
+        return new RMQMessageConsumer(this, (RMQDestination) queue);
+    }
+
+    @Override
+    public QueueReceiver createReceiver(Queue queue, String messageSelector) throws JMSException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public QueueSender createSender(Queue queue) throws JMSException {
+        assert queue instanceof RMQDestination;
+        return new RMQMessageProducer(this, (RMQDestination) queue);
+    }
+
+    @Override
+    public TopicSubscriber createSubscriber(Topic topic) throws JMSException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public TopicSubscriber createSubscriber(Topic topic, String messageSelector, boolean noLocal) throws JMSException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public TopicPublisher createPublisher(Topic topic) throws JMSException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public RMQConnection getConnection() {
+        return connection;
+    }
+
+    public Channel getChannel() {
+        return channel;
     }
 
 }

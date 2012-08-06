@@ -1,22 +1,8 @@
-//
-// The contents of this file are subject to the Mozilla Public License
-// Version 1.1 (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License
-// at http://www.mozilla.org/MPL/
-//
-// Software distributed under the License is distributed on an "AS IS"
-// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
-// the License for the specific language governing rights and
-// limitations under the License.
-//
-// The Original Code is RabbitMQ.
-//
-// The Initial Developer of the Original Code is VMware, Inc.
-// Copyright (c) 2012 VMware, Inc. All rights reserved.
-//
 package com.rabbitmq.jms.admin;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.util.HashMap;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -25,24 +11,74 @@ import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
 
+import org.springframework.expression.spel.support.ReflectionHelper.ArgumentsMatchInfo;
+
+import com.rabbitmq.jms.client.RMQMessage;
+import com.rabbitmq.jms.client.RMQSession;
+import com.rabbitmq.jms.util.Util;
+
 /**
  * RabbitMQ implementation of JMS {@link Destination}
  */
+@SuppressWarnings("serial")
 public class RMQDestination implements Queue, Destination, Referenceable, Serializable {
 
-    private final RMQConnectionFactory factory;
+    private final RMQSession session;
     private final String name;
-    private boolean queue;
-    
-    public RMQDestination(RMQConnectionFactory factory, String name, boolean queue) {
+    private final String exchangeName;
+    private final String routingKey;
+    private final boolean queue;
+    private final String consumerTag;
+
+    public RMQDestination(RMQSession session, String name, boolean queue, boolean durable, boolean temporary) throws JMSException {
         super();
-        this.factory = factory;
+        this.session = session;
         this.name = name;
         this.queue = queue;
+        exchangeName = "exchange." + name;
+        routingKey = "route." + name;
+        consumerTag = name + "." + System.identityHashCode(this);
+        try {
+            if (queue) {
+                session.getChannel().exchangeDeclare("exchange." + name, "direct", durable);
+                session.getChannel().queueDeclare(name, durable, temporary, !durable, new HashMap<String,Object>());
+                session.getChannel().queueBind(name, exchangeName, routingKey);
+            }
+        } catch (IOException x) {
+            Util.util().handleException(x);
+        }
+    }
+    
+    
+    
+    public String getName() {
+        return name;
     }
 
-    /** Default serializable uid */
-    private static final long serialVersionUID = 1L;
+
+
+    public String getExchangeName() {
+        return exchangeName;
+    }
+
+
+
+    public String getRoutingKey() {
+        return routingKey;
+    }
+
+
+
+    public boolean isQueue() {
+        return queue;
+    }
+
+
+
+    public String getConsumerTag() {
+        return consumerTag;
+    }
+
 
     @Override
     public Reference getReference() throws NamingException {
@@ -54,7 +90,9 @@ public class RMQDestination implements Queue, Destination, Referenceable, Serial
         assert queue == true;
         return name;
     }
-    
-    
+
+    public RMQSession getSession() {
+        return session;
+    }
 
 }

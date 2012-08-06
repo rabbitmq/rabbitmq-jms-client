@@ -1,5 +1,7 @@
 package com.rabbitmq.jms.client;
 
+import java.io.IOException;
+
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -7,7 +9,9 @@ import javax.jms.MessageListener;
 import javax.jms.Queue;
 import javax.jms.QueueReceiver;
 
+import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
+import com.rabbitmq.jms.util.Util;
 
 
 public class RMQMessageConsumer implements MessageConsumer, QueueReceiver {
@@ -46,7 +50,15 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver {
 
     @Override
     public Message receive() throws JMSException {
-        // TODO Auto-generated method stub
+        try {
+            GetResponse resp = destination.getSession().getChannel().basicGet(destination.getQueueName(), true);
+            if (resp==null) return null;
+            RMQMessage message = new RMQMessage();
+            message.setBody(resp.getBody());
+            return message;
+        }catch (IOException x) {
+            Util.util().handleException(x);
+        }
         return null;
     }
 

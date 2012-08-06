@@ -1,30 +1,32 @@
-//
-// The contents of this file are subject to the Mozilla Public License
-// Version 1.1 (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License
-// at http://www.mozilla.org/MPL/
-//
-// Software distributed under the License is distributed on an "AS IS"
-// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
-// the License for the specific language governing rights and
-// limitations under the License.
-//
-// The Original Code is RabbitMQ.
-//
-// The Initial Developer of the Original Code is VMware, Inc.
-// Copyright (c) 2012 VMware, Inc. All rights reserved.
-//
 package com.rabbitmq.jms.client;
+
+import java.io.IOException;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.QueueSender;
+import javax.jms.Topic;
+import javax.jms.TopicPublisher;
+
+import com.rabbitmq.jms.admin.RMQDestination;
+import com.rabbitmq.jms.util.Util;
 
 /**
  *
  */
-public class RMQMessageProducer implements MessageProducer {
+public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPublisher {
+
+    private final RMQDestination destination;
+    private final RMQSession session;
+    private int deliveryMode;
+
+    public RMQMessageProducer(RMQSession session, RMQDestination destination) {
+        this.session = session;
+        this.destination = destination;
+    }
 
     @Override
     public void setDisableMessageID(boolean value) throws JMSException {
@@ -52,14 +54,12 @@ public class RMQMessageProducer implements MessageProducer {
 
     @Override
     public void setDeliveryMode(int deliveryMode) throws JMSException {
-        // TODO Auto-generated method stub
-
+        this.deliveryMode = deliveryMode;
     }
 
     @Override
     public int getDeliveryMode() throws JMSException {
-        // TODO Auto-generated method stub
-        return 0;
+        return deliveryMode;
     }
 
     @Override
@@ -88,8 +88,7 @@ public class RMQMessageProducer implements MessageProducer {
 
     @Override
     public Destination getDestination() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return this.destination;
     }
 
     @Override
@@ -100,8 +99,13 @@ public class RMQMessageProducer implements MessageProducer {
 
     @Override
     public void send(Message message) throws JMSException {
-        // TODO Auto-generated method stub
-
+        assert message instanceof RMQMessage;
+        byte[] data = ((RMQMessage)message).getBody();
+        try {
+            destination.getSession().getChannel().basicPublish(destination.getExchangeName(), destination.getRoutingKey(), null, data);
+        } catch (IOException x) {
+            Util.util().handleException(x);
+        }
     }
 
     @Override
@@ -117,8 +121,54 @@ public class RMQMessageProducer implements MessageProducer {
     }
 
     @Override
-    public void
-            send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+    public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public Queue getQueue() throws JMSException {
+        return destination;
+    }
+
+    @Override
+    public void send(Queue queue, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void send(Queue queue, Message message) throws JMSException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public Topic getTopic() throws JMSException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void publish(Message message) throws JMSException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void publish(Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void publish(Topic topic, Message message) throws JMSException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void publish(Topic topic, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         // TODO Auto-generated method stub
 
     }
