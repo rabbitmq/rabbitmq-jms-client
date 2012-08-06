@@ -10,6 +10,8 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import junit.framework.Assert;
+
 import org.junit.Test;
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
@@ -19,6 +21,7 @@ import com.rabbitmq.jms.connection.SingleConnectionFactory;
 public class TestSimpleQueueMessage {
 
     private final String QUEUE_NAME = "test.queue";
+    private final String MESSAGE = "Hello "+TestSimpleQueueMessage.class.getName();
 
     @Test
     public void test1Send() throws Exception {
@@ -29,9 +32,8 @@ public class TestSimpleQueueMessage {
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         QueueSender queueSender = queueSession.createSender(queue);
         queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-        TextMessage message = queueSession.createTextMessage("Hello");
+        TextMessage message = queueSession.createTextMessage(MESSAGE);
         queueSender.send(message);
-        System.out.println("sent: " + message.getText());
         queueConn.close();
     }
 
@@ -43,8 +45,8 @@ public class TestSimpleQueueMessage {
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
         TextMessage message = (TextMessage) queueReceiver.receive();
-        System.out.println("receiver: " + message.getText());
         queueConn.close();
+        Assert.assertEquals(MESSAGE, message.getText());
     }
 
 }
