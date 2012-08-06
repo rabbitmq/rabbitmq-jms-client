@@ -7,6 +7,7 @@ import java.util.HashMap;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Queue;
+import javax.jms.Topic;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
@@ -18,7 +19,7 @@ import com.rabbitmq.jms.util.Util;
  * RabbitMQ implementation of JMS {@link Destination}
  */
 @SuppressWarnings("serial")
-public class RMQDestination implements Queue, Destination, Referenceable, Serializable {
+public class RMQDestination implements Queue, Destination, Referenceable, Serializable, Topic {
 
     private final RMQSession session;
     private final String name;
@@ -32,14 +33,12 @@ public class RMQDestination implements Queue, Destination, Referenceable, Serial
         this.session = session;
         this.name = name;
         this.queue = queue;
-        exchangeName = "exchange." + name;
-        routingKey = "route." + name;
+        exchangeName = "";
+        routingKey = name;
         consumerTag = name + "." + System.identityHashCode(this);
         try {
             if (queue) {
-                session.getChannel().exchangeDeclare("exchange." + name, "direct", durable);
                 session.getChannel().queueDeclare(name, durable, temporary, !durable, new HashMap<String,Object>());
-                session.getChannel().queueBind(name, exchangeName, routingKey);
             }
         } catch (IOException x) {
             Util.util().handleException(x);
@@ -87,9 +86,21 @@ public class RMQDestination implements Queue, Destination, Referenceable, Serial
         assert queue == true;
         return name;
     }
+    
+    
+
+    @Override
+    public String getTopicName() throws JMSException {
+        assert queue == false;
+        return name;
+    }
+
+
 
     public RMQSession getSession() {
         return session;
     }
+    
+    
 
 }

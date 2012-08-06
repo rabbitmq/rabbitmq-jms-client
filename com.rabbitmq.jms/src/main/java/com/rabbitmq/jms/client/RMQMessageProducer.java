@@ -145,8 +145,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     @Override
     public Topic getTopic() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return destination;
     }
 
     @Override
