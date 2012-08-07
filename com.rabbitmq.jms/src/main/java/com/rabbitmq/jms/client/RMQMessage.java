@@ -1,277 +1,409 @@
 package com.rabbitmq.jms.client;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
-import javax.jms.TextMessage;
+
+import com.rabbitmq.jms.util.IteratorEnum;
+import com.rabbitmq.jms.util.Util;
 
 /**
  *
  */
-public class RMQMessage implements Message, TextMessage {
+public class RMQMessage implements Message, Cloneable {
+    private static final int DEFAULT_MESSAGE_BODY_SIZE = Integer.getInteger("com.rabbitmq.jms.message.size", 512);
+
+    private static final String PREFIX = "rmq.";
+    private static final String JMS_MESSAGE_ID = PREFIX + "jms.message.id";
+    private static final String JMS_MESSAGE_TIMESTAMP = PREFIX + "jms.message.timestamp";
+    private static final String JMS_MESSAGE_CORR_ID = PREFIX + "jms.message.correlation.id";
+    private static final String JMS_MESSAGE_REPLY_TO = PREFIX + "jms.message.reply.to";
+    private static final String JMS_MESSAGE_DESTINATION = PREFIX + "jms.message.destination";
+    private static final String JMS_MESSAGE_DELIVERY_MODE = PREFIX + "jms.message.delivery.mode";
+    private static final String JMS_MESSAGE_REDELIVERED = PREFIX + "jms.message.redelivered";
+    private static final String JMS_MESSAGE_TYPE = PREFIX + "jms.message.type";
+    private static final String JMS_MESSAGE_EXPIRATION = PREFIX + "jms.message.expiration";
+    private static final String JMS_MESSAGE_PRIORITY = PREFIX + "jms.message.priority";
 
     private static final Charset charset = Charset.forName("UTF-8");
-    private volatile byte[] body;
+
+    private ByteArrayOutputStream body = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
+    private Map<String, Serializable> rmqProperties = new HashMap<String, Serializable>();
+    private Map<String, Serializable> jmsProperties = new HashMap<String, Serializable>();
+
+    public RMQMessage() {
+    }
 
     @Override
     public String getJMSMessageID() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return getStringProperty(JMS_MESSAGE_ID);
     }
 
     @Override
     public void setJMSMessageID(String id) throws JMSException {
-        // TODO Auto-generated method stub
+        setStringProperty(JMS_MESSAGE_ID, id);
 
     }
 
     @Override
     public long getJMSTimestamp() throws JMSException {
-        // TODO Auto-generated method stub
-        return 0;
+        return getLongProperty(JMS_MESSAGE_TIMESTAMP);
     }
 
     @Override
     public void setJMSTimestamp(long timestamp) throws JMSException {
-        // TODO Auto-generated method stub
-
+        setLongProperty(JMS_MESSAGE_TIMESTAMP, timestamp);
     }
 
     @Override
     public byte[] getJMSCorrelationIDAsBytes() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        String id = getStringProperty(JMS_MESSAGE_CORR_ID);
+        if (id != null)
+            return id.getBytes(charset);
+        else
+            return null;
     }
 
     @Override
     public void setJMSCorrelationIDAsBytes(byte[] correlationID) throws JMSException {
-        // TODO Auto-generated method stub
-
+        String id = correlationID != null ? new String(correlationID, charset) : null;
+        setStringProperty(JMS_MESSAGE_CORR_ID, id);
     }
 
     @Override
     public void setJMSCorrelationID(String correlationID) throws JMSException {
-        // TODO Auto-generated method stub
-
+        setStringProperty(JMS_MESSAGE_CORR_ID, correlationID);
     }
 
     @Override
     public String getJMSCorrelationID() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return getStringProperty(JMS_MESSAGE_CORR_ID);
     }
 
     @Override
     public Destination getJMSReplyTo() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return (Destination) getObjectProperty(JMS_MESSAGE_REPLY_TO);
     }
 
     @Override
     public void setJMSReplyTo(Destination replyTo) throws JMSException {
-        // TODO Auto-generated method stub
-
+        setObjectProperty(JMS_MESSAGE_REPLY_TO, replyTo);
     }
 
     @Override
     public Destination getJMSDestination() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return (Destination) getObjectProperty(JMS_MESSAGE_DESTINATION);
     }
 
     @Override
     public void setJMSDestination(Destination destination) throws JMSException {
-        // TODO Auto-generated method stub
-
+        setObjectProperty(JMS_MESSAGE_DESTINATION, destination);
     }
 
     @Override
     public int getJMSDeliveryMode() throws JMSException {
-        // TODO Auto-generated method stub
-        return 0;
+        return getIntProperty(JMS_MESSAGE_DELIVERY_MODE);
     }
 
     @Override
     public void setJMSDeliveryMode(int deliveryMode) throws JMSException {
-        // TODO Auto-generated method stub
+        setIntProperty(JMS_MESSAGE_DELIVERY_MODE, deliveryMode);
 
     }
 
     @Override
     public boolean getJMSRedelivered() throws JMSException {
-        // TODO Auto-generated method stub
-        return false;
+        return getBooleanProperty(JMS_MESSAGE_REDELIVERED);
     }
 
     @Override
     public void setJMSRedelivered(boolean redelivered) throws JMSException {
-        // TODO Auto-generated method stub
-
+        setBooleanProperty(JMS_MESSAGE_REDELIVERED, redelivered);
     }
 
     @Override
     public String getJMSType() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return getStringProperty(JMS_MESSAGE_TYPE);
     }
 
     @Override
     public void setJMSType(String type) throws JMSException {
-        // TODO Auto-generated method stub
+        setStringProperty(JMS_MESSAGE_TYPE, type);
 
     }
 
     @Override
     public long getJMSExpiration() throws JMSException {
-        // TODO Auto-generated method stub
-        return 0;
+        return getLongProperty(JMS_MESSAGE_EXPIRATION);
     }
 
     @Override
     public void setJMSExpiration(long expiration) throws JMSException {
-        // TODO Auto-generated method stub
+        setLongProperty(JMS_MESSAGE_EXPIRATION, expiration);
 
     }
 
     @Override
     public int getJMSPriority() throws JMSException {
-        // TODO Auto-generated method stub
-        return 0;
+        return getIntProperty(JMS_MESSAGE_PRIORITY);
     }
 
     @Override
     public void setJMSPriority(int priority) throws JMSException {
-        // TODO Auto-generated method stub
+        setIntProperty(JMS_MESSAGE_PRIORITY, priority);
 
     }
 
     @Override
     public void clearProperties() throws JMSException {
-        // TODO Auto-generated method stub
-
+        jmsProperties.clear();
     }
 
     @Override
     public boolean propertyExists(String name) throws JMSException {
-        // TODO Auto-generated method stub
-        return false;
+        return jmsProperties.containsKey(name) || rmqProperties.containsKey(name);
     }
 
     @Override
     public boolean getBooleanProperty(String name) throws JMSException {
-        // TODO Auto-generated method stub
-        return false;
+        Object o = getObjectProperty(name);
+        if (o == null) {
+            return false;
+        } else if (o instanceof String) {
+            return Boolean.parseBoolean((String) o);
+        } else if (o instanceof Boolean) {
+            Boolean b = (Boolean) o;
+            return b.booleanValue();
+        } else {
+            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
+        }
     }
 
     @Override
     public byte getByteProperty(String name) throws JMSException {
-        // TODO Auto-generated method stub
-        return 0;
+        Object o = getObjectProperty(name);
+        if (o == null) {
+            return 0;
+        } else if (o instanceof String) {
+            try {
+                return Byte.parseByte((String) o);
+            } catch (NumberFormatException x) {
+                throw Util.util().handleException(x);
+            }
+        } else if (o instanceof Byte) {
+            Byte b = (Byte) o;
+            return b.byteValue();
+        } else {
+            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
+        }
     }
 
     @Override
     public short getShortProperty(String name) throws JMSException {
-        // TODO Auto-generated method stub
-        return 0;
+        Object o = getObjectProperty(name);
+        if (o == null) {
+            return 0;
+        } else if (o instanceof String) {
+            try {
+                return Short.parseShort((String) o);
+            } catch (NumberFormatException x) {
+                throw Util.util().handleException(x);
+            }
+        } else if (o instanceof Byte) {
+            Byte b = (Byte) o;
+            return b.byteValue();
+        } else if (o instanceof Short) {
+            Short b = (Short) o;
+            return b.shortValue();
+        } else {
+            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
+        }
     }
 
     @Override
     public int getIntProperty(String name) throws JMSException {
-        // TODO Auto-generated method stub
-        return 0;
+        Object o = getObjectProperty(name);
+        if (o == null) {
+            return 0;
+        } else if (o instanceof String) {
+            try {
+                return Short.parseShort((String) o);
+            } catch (NumberFormatException x) {
+                throw Util.util().handleException(x);
+            }
+        } else if (o instanceof Byte) {
+            Byte b = (Byte) o;
+            return b.byteValue();
+        } else if (o instanceof Short) {
+            Short b = (Short) o;
+            return b.shortValue();
+        } else if (o instanceof Integer) {
+            Integer b = (Integer) o;
+            return b.intValue();
+        } else {
+            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
+        }
     }
 
     @Override
     public long getLongProperty(String name) throws JMSException {
-        // TODO Auto-generated method stub
-        return 0;
+        Object o = getObjectProperty(name);
+        if (o == null) {
+            return 0;
+        } else if (o instanceof String) {
+            try {
+                return Short.parseShort((String) o);
+            } catch (NumberFormatException x) {
+                throw Util.util().handleException(x);
+            }
+        } else if (o instanceof Byte) {
+            Byte b = (Byte) o;
+            return b.byteValue();
+        } else if (o instanceof Short) {
+            Short b = (Short) o;
+            return b.shortValue();
+        } else if (o instanceof Integer) {
+            Integer b = (Integer) o;
+            return b.intValue();
+        } else if (o instanceof Long) {
+            Long b = (Long) o;
+            return b.longValue();
+        } else {
+            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
+        }
     }
 
     @Override
     public float getFloatProperty(String name) throws JMSException {
-        // TODO Auto-generated method stub
-        return 0;
+        Object o = getObjectProperty(name);
+        if (o == null) {
+            return 0;
+        } else if (o instanceof String) {
+            try {
+                return Float.parseFloat((String) o);
+            } catch (NumberFormatException x) {
+                throw Util.util().handleException(x);
+            }
+        } else if (o instanceof Float) {
+            Float b = (Float) o;
+            return b.floatValue();
+        } else {
+            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
+        }
     }
 
     @Override
     public double getDoubleProperty(String name) throws JMSException {
-        // TODO Auto-generated method stub
-        return 0;
+        Object o = getObjectProperty(name);
+        if (o == null) {
+            return 0;
+        } else if (o instanceof String) {
+            try {
+                return Float.parseFloat((String) o);
+            } catch (NumberFormatException x) {
+                throw Util.util().handleException(x);
+            }
+        } else if (o instanceof Float) {
+            Float b = (Float) o;
+            return b.floatValue();
+        } else if (o instanceof Double) {
+            Double b = (Double) o;
+            return b.doubleValue();
+        } else {
+            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
+        }
     }
 
     @Override
     public String getStringProperty(String name) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        Object o = getObjectProperty(name);
+        if (o == null) {
+            return null;
+        } else if (o instanceof String) {
+            return (String) o;
+        } else {
+            return o.toString();
+        }
     }
 
     @Override
     public Object getObjectProperty(String name) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        if (name.startsWith(PREFIX)) {
+            return rmqProperties.get(name);
+        } else {
+            return jmsProperties.get(name);
+        }
     }
 
     @Override
     public Enumeration<?> getPropertyNames() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return new IteratorEnum<String>(jmsProperties.keySet().iterator());
     }
 
     @Override
     public void setBooleanProperty(String name, boolean value) throws JMSException {
-        // TODO Auto-generated method stub
-
+        setObjectProperty(name, Boolean.valueOf(value));
     }
 
     @Override
     public void setByteProperty(String name, byte value) throws JMSException {
-        // TODO Auto-generated method stub
-
+        setObjectProperty(name, value);
     }
 
     @Override
     public void setShortProperty(String name, short value) throws JMSException {
-        // TODO Auto-generated method stub
-
+        setObjectProperty(name, value);
     }
 
     @Override
     public void setIntProperty(String name, int value) throws JMSException {
-        // TODO Auto-generated method stub
-
+        setObjectProperty(name, value);
     }
 
     @Override
     public void setLongProperty(String name, long value) throws JMSException {
-        // TODO Auto-generated method stub
-
+        setObjectProperty(name, value);
     }
 
     @Override
     public void setFloatProperty(String name, float value) throws JMSException {
-        // TODO Auto-generated method stub
-
+        setObjectProperty(name, value);
     }
 
     @Override
     public void setDoubleProperty(String name, double value) throws JMSException {
-        // TODO Auto-generated method stub
-
+        setObjectProperty(name, value);
     }
 
     @Override
     public void setStringProperty(String name, String value) throws JMSException {
-        // TODO Auto-generated method stub
-
+        setObjectProperty(name, value);
     }
 
     @Override
     public void setObjectProperty(String name, Object value) throws JMSException {
-        // TODO Auto-generated method stub
-
+        try {
+            if (name.startsWith(PREFIX)) {
+                rmqProperties.put(name, (Serializable) value);
+            } else {
+                jmsProperties.put(name, (Serializable) value);
+            }
+        } catch (ClassCastException x) {
+            Util.util().handleException(x, "Property value not serializable.");
+        }
     }
 
     @Override
@@ -282,26 +414,138 @@ public class RMQMessage implements Message, TextMessage {
 
     @Override
     public void clearBody() throws JMSException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void setText(String string) throws JMSException {
-        body = string.getBytes(charset);
-    }
-
-    @Override
-    public String getText() throws JMSException {
-        return new String(body, charset);
+        if (body.size() > DEFAULT_MESSAGE_BODY_SIZE) {
+            body = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
+        } else {
+            body.reset();
+        }
     }
 
     public byte[] getBody() throws JMSException {
-        return body;
+        return body.toByteArray();
     }
 
     public void setBody(byte[] b) {
-        body = b;
+        setBody(b, 0, b.length);
     }
+
+    public void setBody(byte[] b, int off, int len) {
+        body.write(b, off, len);
+    }
+
+    public long getBodyLength() {
+        return body.size();
+    }
+
+    public Charset getCharset() {
+        return charset;
+    }
+
+    public static byte[] toMessage(RMQMessage msg) throws IOException {
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
+        ObjectOutputStream out = new ObjectOutputStream(bout);
+        out.writeUTF(msg.getClass().getName());
+        out.writeInt(msg.rmqProperties.size());
+        for (Map.Entry<String, Serializable> entry : msg.rmqProperties.entrySet()) {
+            out.writeUTF(entry.getKey());
+            writePrimitive(entry.getValue(), out);
+        }
+        out.writeInt(msg.jmsProperties.size());
+        for (Map.Entry<String, Serializable> entry : msg.jmsProperties.entrySet()) {
+            out.writeUTF(entry.getKey());
+            writePrimitive(entry.getValue(), out);
+        }
+        if (msg.getBodyLength()>Integer.MAX_VALUE) throw new IOException("Message too large.");
+        out.writeLong(msg.getBodyLength());
+        out.write(msg.body.toByteArray());
+        out.flush();
+        return bout.toByteArray();
+    }
+
+    public static RMQMessage fromMessage(byte[] b) throws ClassNotFoundException, IOException, IllegalAccessException, InstantiationException {
+        ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(b));
+        String clazz = in.readUTF();
+        RMQMessage msg = (RMQMessage)Class.forName(clazz, true, Thread.currentThread().getContextClassLoader()).newInstance();
+        int propsize = in.readInt();
+        for (int i=0; i<propsize; i++) {
+            String name = in.readUTF();
+            Object value = readPrimitive(in);
+            msg.rmqProperties.put(name, (Serializable)value);
+        }
+        propsize = in.readInt();
+        for (int i=0; i<propsize; i++) {
+            String name = in.readUTF();
+            Object value = readPrimitive(in);
+            msg.jmsProperties.put(name, (Serializable)value);
+        }
+        long len = in.readLong();
+        if (len>Integer.MAX_VALUE) throw new IOException("Message too large.");
+        byte[] body = new byte[(int)len];
+        in.read(body);
+        msg.body.write(body);
+        return msg;
+    }
+
+    public static void writePrimitive(Object s, ObjectOutput out) throws IOException {
+        if (s instanceof Boolean) {
+            out.writeByte(1);
+            out.writeBoolean(((Boolean)s).booleanValue());
+        } else if (s instanceof Byte) {
+            out.writeByte(2);
+            out.writeByte(((Byte)s).byteValue());
+        } else if (s instanceof Short) {
+            out.writeByte(3);
+            out.writeShort((((Short)s).shortValue()));
+        } else if (s instanceof Integer) {
+            out.writeByte(4);
+            out.writeInt(((Integer)s).intValue());
+        } else if (s instanceof Long) {
+            out.writeByte(5);
+            out.writeLong(((Long)s).longValue());
+        } else if (s instanceof Float) {
+            out.writeByte(6);
+            out.writeFloat(((Float)s).floatValue());
+        } else if (s instanceof Double) {
+            out.writeByte(7);
+            out.writeDouble(((Double)s).doubleValue());
+        } else if (s instanceof String) {
+            out.writeByte(8);
+            out.writeUTF((String)s);
+        } else {
+            out.writeByte(9);
+            out.writeObject(s);
+        }
+    }
+
+    public static Object readPrimitive(ObjectInput in) throws IOException, ClassNotFoundException {
+        byte b = in.readByte();
+        switch (b) {
+        case 1:
+            return in.readBoolean();
+        case 2:
+            return in.readByte();
+        case 3:
+            return in.readShort();
+        case 4:
+            return in.readInt();
+        case 5:
+            return in.readLong();
+        case 6:
+            return in.readFloat();
+        case 7:
+            return in.readDouble();
+        case 8:
+            return in.readUTF();
+        default:
+            return in.readObject();
+        }
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
+    
+    
 
 }

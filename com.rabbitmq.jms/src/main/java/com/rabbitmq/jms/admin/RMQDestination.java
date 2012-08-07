@@ -1,53 +1,36 @@
 package com.rabbitmq.jms.admin;
 
-import java.io.IOException;
 import java.io.Serializable;
-import java.util.HashMap;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Queue;
+import javax.jms.Topic;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
-
-import com.rabbitmq.jms.client.RMQSession;
-import com.rabbitmq.jms.util.Util;
-
-/**
- * RabbitMQ implementation of JMS {@link Destination}
- */
 @SuppressWarnings("serial")
-public class RMQDestination implements Queue, Destination, Referenceable, Serializable {
+public class RMQDestination implements Queue, Topic, Destination, Referenceable, Serializable {
 
-    private final RMQSession session;
-    private final String name;
-    private final String exchangeName;
-    private final String routingKey;
-    private final boolean queue;
-    private final String consumerTag;
+    private volatile String name;
+    private volatile String exchangeName;
+    private volatile String routingKey;
+    private volatile boolean queue;
+    private volatile String consumerTag;
 
-    public RMQDestination(RMQSession session, String name, boolean queue, boolean durable, boolean temporary) throws JMSException {
-        super();
-        this.session = session;
+    public RMQDestination() {
+    }
+    
+    public RMQDestination(String name, String exchangeName, String routingKey, boolean queue, String consumerTag) {
         this.name = name;
+        this.exchangeName = exchangeName;
+        this.routingKey = routingKey;
         this.queue = queue;
-        exchangeName = "exchange." + name;
-        routingKey = "route." + name;
-        consumerTag = name + "." + System.identityHashCode(this);
-        try {
-            if (queue) {
-                session.getChannel().exchangeDeclare("exchange." + name, "direct", durable);
-                session.getChannel().queueDeclare(name, durable, temporary, !durable, new HashMap<String,Object>());
-                session.getChannel().queueBind(name, exchangeName, routingKey);
-            }
-        } catch (IOException x) {
-            Util.util().handleException(x);
-        }
+        this.consumerTag = consumerTag;
     }
     
     
-    
+
     public String getName() {
         return name;
     }
@@ -75,21 +58,47 @@ public class RMQDestination implements Queue, Destination, Referenceable, Serial
     public String getConsumerTag() {
         return consumerTag;
     }
+    
+    
 
 
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setExchangeName(String exchangeName) {
+        this.exchangeName = exchangeName;
+    }
+
+    public void setRoutingKey(String routingKey) {
+        this.routingKey = routingKey;
+    }
+
+    public void setQueue(boolean queue) {
+        this.queue = queue;
+    }
+
+    public void setConsumerTag(String consumerTag) {
+        this.consumerTag = consumerTag;
+    }
+
+    @Override
+    public String getTopicName() throws JMSException {
+        return name;
+    }
+
+    @Override
+    public String getQueueName() throws JMSException {
+        return name;
+    }
+    
     @Override
     public Reference getReference() throws NamingException {
         return new Reference(this.getClass().getCanonicalName());
     }
 
-    @Override
-    public String getQueueName() throws JMSException {
-        assert queue == true;
-        return name;
-    }
-
-    public RMQSession getSession() {
-        return session;
-    }
+    
+    
 
 }

@@ -14,7 +14,7 @@
 // The Initial Developer of the Original Code is VMware, Inc.
 // Copyright (c) 2012 VMware, Inc. All rights reserved.
 //
-package com.rabbitmq.jms.client.app;
+package com.rabbitmq.integration.tests;
 
 import java.io.UnsupportedEncodingException;
 

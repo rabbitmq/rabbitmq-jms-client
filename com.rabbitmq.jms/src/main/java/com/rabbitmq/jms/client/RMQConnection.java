@@ -1,6 +1,9 @@
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
@@ -25,6 +28,10 @@ import com.rabbitmq.jms.util.Util;
 public class RMQConnection implements Connection, QueueConnection, TopicConnection {
 
     private final com.rabbitmq.client.Connection rabbitConnection;
+    private static final ConnectionMetaData connectionMetaData = new RMQConnectionMetaData();
+    private String clientID;
+    private ExceptionListener exceptionListener;
+    private List<RMQSession> sessions = Collections.<RMQSession>synchronizedList(new ArrayList<RMQSession>());
 
     public RMQConnection(com.rabbitmq.client.Connection rabbitConnection) {
         this.rabbitConnection = rabbitConnection;
@@ -32,38 +39,34 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
     @Override
     public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        RMQSession session = new RMQSession(this, transacted, acknowledgeMode);
+        sessions.add(session);
+        return session;
     }
 
     @Override
     public String getClientID() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return clientID;
     }
 
     @Override
     public void setClientID(String clientID) throws JMSException {
-        // TODO Auto-generated method stub
-
+        this.clientID = clientID;
     }
 
     @Override
     public ConnectionMetaData getMetaData() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return connectionMetaData;
     }
 
     @Override
     public ExceptionListener getExceptionListener() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return exceptionListener;
     }
 
     @Override
     public void setExceptionListener(ExceptionListener listener) throws JMSException {
-        // TODO Auto-generated method stub
-
+        this.exceptionListener = listener;
     }
 
     @Override
@@ -88,13 +91,38 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
     }
 
+    public com.rabbitmq.client.Connection getRabbitConnection() {
+        return rabbitConnection;
+    }
+
+    @Override
+    public TopicSession createTopicSession(boolean transacted, int acknowledgeMode) throws JMSException {
+        return (TopicSession) createSession(transacted, acknowledgeMode);
+    }
+
+    @Override
+    public ConnectionConsumer
+            createConnectionConsumer(Topic topic, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public QueueSession createQueueSession(boolean transacted, int acknowledgeMode) throws JMSException {
+        return (QueueSession) createSession(transacted, acknowledgeMode);
+    }
+
+    @Override
+    public ConnectionConsumer
+            createConnectionConsumer(Queue queue, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
+        throw new UnsupportedOperationException();
+    }
+
     @Override
     public ConnectionConsumer createConnectionConsumer(Destination destination,
                                                        String messageSelector,
                                                        ServerSessionPool sessionPool,
                                                        int maxMessages) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -103,37 +131,11 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
                                                               String messageSelector,
                                                               ServerSessionPool sessionPool,
                                                               int maxMessages) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
-
-    public com.rabbitmq.client.Connection getRabbitConnection() {
-        return rabbitConnection;
-    }
-
-    @Override
-    public TopicSession createTopicSession(boolean transacted, int acknowledgeMode) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public ConnectionConsumer
-            createConnectionConsumer(Topic topic, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public QueueSession createQueueSession(boolean transacted, int acknowledgeMode) throws JMSException {
-        return new RMQSession(this, transacted, acknowledgeMode);
-    }
-
-    @Override
-    public ConnectionConsumer
-            createConnectionConsumer(Queue queue, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+    
+    public void sessionClose(RMQSession session) {
+        sessions.remove(session);
     }
 
 }
