@@ -22,6 +22,10 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     private final RMQDestination destination;
     private final RMQSession session;
     private int deliveryMode;
+    private boolean disableMessageID;
+    private boolean disableMessageTimestamp;
+    private int priority;
+    private long ttl;
 
     public RMQMessageProducer(RMQSession session, RMQDestination destination) {
         this.session = session;
@@ -30,26 +34,22 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     @Override
     public void setDisableMessageID(boolean value) throws JMSException {
-        // TODO Auto-generated method stub
-
+        disableMessageID = value;
     }
 
     @Override
     public boolean getDisableMessageID() throws JMSException {
-        // TODO Auto-generated method stub
-        return false;
+        return disableMessageID;
     }
 
     @Override
     public void setDisableMessageTimestamp(boolean value) throws JMSException {
-        // TODO Auto-generated method stub
-
+        disableMessageTimestamp = value;
     }
 
     @Override
     public boolean getDisableMessageTimestamp() throws JMSException {
-        // TODO Auto-generated method stub
-        return false;
+        return disableMessageTimestamp;
     }
 
     @Override
@@ -64,26 +64,22 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     @Override
     public void setPriority(int defaultPriority) throws JMSException {
-        // TODO Auto-generated method stub
-
+        priority = defaultPriority;
     }
 
     @Override
     public int getPriority() throws JMSException {
-        // TODO Auto-generated method stub
-        return 0;
+        return priority;
     }
 
     @Override
     public void setTimeToLive(long timeToLive) throws JMSException {
-        // TODO Auto-generated method stub
-
+        ttl = timeToLive;
     }
 
     @Override
     public long getTimeToLive() throws JMSException {
-        // TODO Auto-generated method stub
-        return 0;
+        return ttl;
     }
 
     @Override
@@ -100,8 +96,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     @Override
     public void send(Message message) throws JMSException {
         assert message instanceof RMQMessage;
-        byte[] data = ((RMQMessage) message).getBody();
         try {
+            byte[] data = RMQMessage.toMessage((RMQMessage) message);
             destination.getSession().getChannel().basicPublish(destination.getExchangeName(), destination.getRoutingKey(), null, data);
         } catch (IOException x) {
             Util.util().handleException(x);

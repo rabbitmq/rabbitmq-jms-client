@@ -1,5 +1,14 @@
 package com.rabbitmq.jms.client;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.Enumeration;
@@ -17,6 +26,7 @@ import com.rabbitmq.jms.util.Util;
  *
  */
 public class RMQMessage implements Message {
+    private static final int DEFAULT_MESSAGE_BODY_SIZE = Integer.getInteger("com.rabbitmq.jms.message.size", 512);
 
     private static final String PREFIX = "rmq.";
     private static final String JMS_MESSAGE_ID = PREFIX + "jms.message.id";
@@ -29,18 +39,17 @@ public class RMQMessage implements Message {
     private static final String JMS_MESSAGE_TYPE = PREFIX + "jms.message.type";
     private static final String JMS_MESSAGE_EXPIRATION = PREFIX + "jms.message.expiration";
     private static final String JMS_MESSAGE_PRIORITY = PREFIX + "jms.message.priority";
-    
-    private static final Charset charset = Charset.forName("UTF-8");
-    
-    private volatile byte[] body;
 
-    private Map<String,Serializable> rmqProperties = new HashMap<String,Serializable>();
-    private Map<String,Serializable> jmsProperties = new HashMap<String,Serializable>();
-    
+    private static final Charset charset = Charset.forName("UTF-8");
+
+    private volatile ByteArrayOutputStream body = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
+
+    private Map<String, Serializable> rmqProperties = new HashMap<String, Serializable>();
+    private Map<String, Serializable> jmsProperties = new HashMap<String, Serializable>();
+
     public RMQMessage() {
     }
-    
-    
+
     @Override
     public String getJMSMessageID() throws JMSException {
         return getStringProperty(JMS_MESSAGE_ID);
@@ -65,13 +74,15 @@ public class RMQMessage implements Message {
     @Override
     public byte[] getJMSCorrelationIDAsBytes() throws JMSException {
         String id = getStringProperty(JMS_MESSAGE_CORR_ID);
-        if (id!=null) return id.getBytes(charset);
-        else return null;
+        if (id != null)
+            return id.getBytes(charset);
+        else
+            return null;
     }
 
     @Override
     public void setJMSCorrelationIDAsBytes(byte[] correlationID) throws JMSException {
-        String id = correlationID!=null ? new String(correlationID,charset) : null;
+        String id = correlationID != null ? new String(correlationID, charset) : null;
         setStringProperty(JMS_MESSAGE_CORR_ID, id);
     }
 
@@ -87,17 +98,17 @@ public class RMQMessage implements Message {
 
     @Override
     public Destination getJMSReplyTo() throws JMSException {
-        return (Destination)getObjectProperty(JMS_MESSAGE_REPLY_TO);
+        return (Destination) getObjectProperty(JMS_MESSAGE_REPLY_TO);
     }
 
     @Override
     public void setJMSReplyTo(Destination replyTo) throws JMSException {
-        setObjectProperty(JMS_MESSAGE_REPLY_TO,replyTo);
+        setObjectProperty(JMS_MESSAGE_REPLY_TO, replyTo);
     }
 
     @Override
     public Destination getJMSDestination() throws JMSException {
-        return (Destination)getObjectProperty(JMS_MESSAGE_DESTINATION);
+        return (Destination) getObjectProperty(JMS_MESSAGE_DESTINATION);
     }
 
     @Override
@@ -175,12 +186,12 @@ public class RMQMessage implements Message {
         if (o == null) {
             return false;
         } else if (o instanceof String) {
-            return Boolean.parseBoolean((String)o);
+            return Boolean.parseBoolean((String) o);
         } else if (o instanceof Boolean) {
-            Boolean b = (Boolean)o;
+            Boolean b = (Boolean) o;
             return b.booleanValue();
         } else {
-            throw new JMSException("Unable to convert from class:"+o.getClass().getName());
+            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
         }
     }
 
@@ -191,15 +202,15 @@ public class RMQMessage implements Message {
             return 0;
         } else if (o instanceof String) {
             try {
-                return Byte.parseByte((String)o);
+                return Byte.parseByte((String) o);
             } catch (NumberFormatException x) {
                 throw Util.util().handleException(x);
             }
         } else if (o instanceof Byte) {
-            Byte b = (Byte)o;
+            Byte b = (Byte) o;
             return b.byteValue();
         } else {
-            throw new JMSException("Unable to convert from class:"+o.getClass().getName());
+            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
         }
     }
 
@@ -210,18 +221,18 @@ public class RMQMessage implements Message {
             return 0;
         } else if (o instanceof String) {
             try {
-                return Short.parseShort((String)o);
+                return Short.parseShort((String) o);
             } catch (NumberFormatException x) {
                 throw Util.util().handleException(x);
             }
         } else if (o instanceof Byte) {
-            Byte b = (Byte)o;
+            Byte b = (Byte) o;
             return b.byteValue();
         } else if (o instanceof Short) {
-            Short b = (Short)o;
+            Short b = (Short) o;
             return b.shortValue();
         } else {
-            throw new JMSException("Unable to convert from class:"+o.getClass().getName());
+            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
         }
     }
 
@@ -232,21 +243,21 @@ public class RMQMessage implements Message {
             return 0;
         } else if (o instanceof String) {
             try {
-                return Short.parseShort((String)o);
+                return Short.parseShort((String) o);
             } catch (NumberFormatException x) {
                 throw Util.util().handleException(x);
             }
         } else if (o instanceof Byte) {
-            Byte b = (Byte)o;
+            Byte b = (Byte) o;
             return b.byteValue();
         } else if (o instanceof Short) {
-            Short b = (Short)o;
+            Short b = (Short) o;
             return b.shortValue();
         } else if (o instanceof Integer) {
-            Integer b = (Integer)o;
+            Integer b = (Integer) o;
             return b.intValue();
         } else {
-            throw new JMSException("Unable to convert from class:"+o.getClass().getName());
+            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
         }
     }
 
@@ -257,24 +268,24 @@ public class RMQMessage implements Message {
             return 0;
         } else if (o instanceof String) {
             try {
-                return Short.parseShort((String)o);
+                return Short.parseShort((String) o);
             } catch (NumberFormatException x) {
                 throw Util.util().handleException(x);
             }
         } else if (o instanceof Byte) {
-            Byte b = (Byte)o;
+            Byte b = (Byte) o;
             return b.byteValue();
         } else if (o instanceof Short) {
-            Short b = (Short)o;
+            Short b = (Short) o;
             return b.shortValue();
         } else if (o instanceof Integer) {
-            Integer b = (Integer)o;
+            Integer b = (Integer) o;
             return b.intValue();
         } else if (o instanceof Long) {
-            Long b = (Long)o;
+            Long b = (Long) o;
             return b.longValue();
         } else {
-            throw new JMSException("Unable to convert from class:"+o.getClass().getName());
+            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
         }
     }
 
@@ -285,15 +296,15 @@ public class RMQMessage implements Message {
             return 0;
         } else if (o instanceof String) {
             try {
-                return Float.parseFloat((String)o);
+                return Float.parseFloat((String) o);
             } catch (NumberFormatException x) {
                 throw Util.util().handleException(x);
             }
         } else if (o instanceof Float) {
-            Float b = (Float)o;
+            Float b = (Float) o;
             return b.floatValue();
         } else {
-            throw new JMSException("Unable to convert from class:"+o.getClass().getName());
+            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
         }
     }
 
@@ -304,18 +315,18 @@ public class RMQMessage implements Message {
             return 0;
         } else if (o instanceof String) {
             try {
-                return Float.parseFloat((String)o);
+                return Float.parseFloat((String) o);
             } catch (NumberFormatException x) {
                 throw Util.util().handleException(x);
             }
         } else if (o instanceof Float) {
-            Float b = (Float)o;
+            Float b = (Float) o;
             return b.floatValue();
         } else if (o instanceof Double) {
-            Double b = (Double)o;
+            Double b = (Double) o;
             return b.doubleValue();
         } else {
-            throw new JMSException("Unable to convert from class:"+o.getClass().getName());
+            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
         }
     }
 
@@ -325,7 +336,7 @@ public class RMQMessage implements Message {
         if (o == null) {
             return null;
         } else if (o instanceof String) {
-            return (String)o;
+            return (String) o;
         } else {
             return o.toString();
         }
@@ -347,53 +358,53 @@ public class RMQMessage implements Message {
 
     @Override
     public void setBooleanProperty(String name, boolean value) throws JMSException {
-        setObjectProperty(name,Boolean.valueOf(value));
+        setObjectProperty(name, Boolean.valueOf(value));
     }
 
     @Override
     public void setByteProperty(String name, byte value) throws JMSException {
-        setObjectProperty(name,value);
+        setObjectProperty(name, value);
     }
 
     @Override
     public void setShortProperty(String name, short value) throws JMSException {
-        setObjectProperty(name,value);
+        setObjectProperty(name, value);
     }
 
     @Override
     public void setIntProperty(String name, int value) throws JMSException {
-        setObjectProperty(name,value);
+        setObjectProperty(name, value);
     }
 
     @Override
     public void setLongProperty(String name, long value) throws JMSException {
-        setObjectProperty(name,value);
+        setObjectProperty(name, value);
     }
 
     @Override
     public void setFloatProperty(String name, float value) throws JMSException {
-        setObjectProperty(name,value);
+        setObjectProperty(name, value);
     }
 
     @Override
     public void setDoubleProperty(String name, double value) throws JMSException {
-        setObjectProperty(name,value);
+        setObjectProperty(name, value);
     }
 
     @Override
     public void setStringProperty(String name, String value) throws JMSException {
-        setObjectProperty(name,value);
+        setObjectProperty(name, value);
     }
 
     @Override
     public void setObjectProperty(String name, Object value) throws JMSException {
         try {
             if (name.startsWith(PREFIX)) {
-                rmqProperties.put(name,(Serializable)value);
+                rmqProperties.put(name, (Serializable) value);
             } else {
-                jmsProperties.put(name,(Serializable)value);
+                jmsProperties.put(name, (Serializable) value);
             }
-        }catch (ClassCastException x) {
+        } catch (ClassCastException x) {
             Util.util().handleException(x, "Property value not serializable.");
         }
     }
@@ -406,19 +417,131 @@ public class RMQMessage implements Message {
 
     @Override
     public void clearBody() throws JMSException {
-        body = null;
-
+        if (body.size() > DEFAULT_MESSAGE_BODY_SIZE) {
+            body = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
+        } else {
+            body.reset();
+        }
     }
-    
+
     public byte[] getBody() throws JMSException {
-        return body;
+        return body.toByteArray();
     }
 
     public void setBody(byte[] b) {
-        body = b;
+        setBody(b, 0, b.length);
+    }
+
+    public void setBody(byte[] b, int off, int len) {
+        body.write(b, off, len);
+    }
+
+    public long getBodyLength() {
+        return body.size();
     }
 
     public Charset getCharset() {
         return charset;
     }
+
+    public static byte[] toMessage(RMQMessage msg) throws IOException {
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
+        ObjectOutputStream out = new ObjectOutputStream(bout);
+        out.writeUTF(msg.getClass().getName());
+        out.writeInt(msg.rmqProperties.size());
+        for (Map.Entry<String, Serializable> entry : msg.rmqProperties.entrySet()) {
+            out.writeUTF(entry.getKey());
+            writePrimitive(entry.getValue(), out);
+        }
+        out.writeInt(msg.jmsProperties.size());
+        for (Map.Entry<String, Serializable> entry : msg.jmsProperties.entrySet()) {
+            out.writeUTF(entry.getKey());
+            writePrimitive(entry.getValue(), out);
+        }
+        if (msg.getBodyLength()>Integer.MAX_VALUE) throw new IOException("Message too large.");
+        out.writeLong(msg.getBodyLength());
+        out.write(msg.body.toByteArray());
+        out.flush();
+        return bout.toByteArray();
+    }
+
+    public static RMQMessage fromMessage(byte[] b) throws ClassNotFoundException, IOException, IllegalAccessException, InstantiationException {
+        ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(b));
+        String clazz = in.readUTF();
+        RMQMessage msg = (RMQMessage)Class.forName(clazz, true, Thread.currentThread().getContextClassLoader()).newInstance();
+        int propsize = in.readInt();
+        for (int i=0; i<propsize; i++) {
+            String name = in.readUTF();
+            Object value = readPrimitive(in);
+            msg.rmqProperties.put(name, (Serializable)value);
+        }
+        propsize = in.readInt();
+        for (int i=0; i<propsize; i++) {
+            String name = in.readUTF();
+            Object value = readPrimitive(in);
+            msg.jmsProperties.put(name, (Serializable)value);
+        }
+        long len = in.readLong();
+        if (len>Integer.MAX_VALUE) throw new IOException("Message too large.");
+        byte[] body = new byte[(int)len];
+        in.read(body);
+        msg.body.write(body);
+        return msg;
+    }
+
+    public static void writePrimitive(Object s, ObjectOutput out) throws IOException {
+        if (s instanceof Boolean) {
+            out.writeByte(1);
+            out.writeBoolean(((Boolean)s).booleanValue());
+        } else if (s instanceof Byte) {
+            out.writeByte(2);
+            out.writeByte(((Byte)s).byteValue());
+        } else if (s instanceof Short) {
+            out.writeByte(3);
+            out.writeShort((((Short)s).shortValue()));
+        } else if (s instanceof Integer) {
+            out.writeByte(4);
+            out.writeInt(((Integer)s).intValue());
+        } else if (s instanceof Long) {
+            out.writeByte(5);
+            out.writeLong(((Long)s).longValue());
+        } else if (s instanceof Float) {
+            out.writeByte(6);
+            out.writeFloat(((Float)s).floatValue());
+        } else if (s instanceof Double) {
+            out.writeByte(7);
+            out.writeDouble(((Double)s).doubleValue());
+        } else if (s instanceof String) {
+            out.writeByte(8);
+            out.writeUTF((String)s);
+        } else {
+            out.writeByte(9);
+            out.writeObject(s);
+        }
+    }
+
+    public static Object readPrimitive(ObjectInput in) throws IOException, ClassNotFoundException {
+        byte b = in.readByte();
+        switch (b) {
+        case 1:
+            return in.readBoolean();
+        case 2:
+            return in.readByte();
+        case 3:
+            return in.readShort();
+        case 4:
+            return in.readInt();
+        case 5:
+            return in.readLong();
+        case 6:
+            return in.readFloat();
+        case 7:
+            return in.readDouble();
+        case 8:
+            return in.readUTF();
+        default:
+            return in.readObject();
+        }
+    }
+
 }

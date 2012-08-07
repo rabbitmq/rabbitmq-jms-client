@@ -53,10 +53,15 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver {
             GetResponse resp = destination.getSession().getChannel().basicGet(destination.getQueueName(), true);
             if (resp == null)
                 return null;
-            RMQMessage message = new RMQMessage();
-            message.setBody(resp.getBody());
+            RMQMessage message = RMQMessage.fromMessage(resp.getBody());
             return message;
         } catch (IOException x) {
+            Util.util().handleException(x);
+        } catch (ClassNotFoundException x) {
+            Util.util().handleException(x);
+        } catch (IllegalAccessException x) {
+            Util.util().handleException(x);
+        } catch (InstantiationException x) {
             Util.util().handleException(x);
         }
         return null;

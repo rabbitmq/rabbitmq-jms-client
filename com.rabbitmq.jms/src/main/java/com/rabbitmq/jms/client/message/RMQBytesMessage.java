@@ -10,11 +10,6 @@ import com.rabbitmq.jms.client.RMQMessage;
  */
 public class RMQBytesMessage extends RMQMessage implements BytesMessage {
 
-    @Override
-    public long getBodyLength() throws JMSException {
-        // TODO Auto-generated method stub
-        return 0;
-    }
 
     @Override
     public boolean readBoolean() throws JMSException {
