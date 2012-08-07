@@ -15,4 +15,10 @@ public class Util {
         throw jx;
 
     }
+    
+    public void checkClosed(boolean closed, String msg) throws JMSException {
+        if (closed) {
+            throw new JMSException(msg!=null?msg:"Closed");
+        }
+    }
 }

@@ -15,9 +15,9 @@ public abstract class TestConnectionFactory {
             System.err.println("Error: Unable to load test.properties");
             properties.put(propertyName,"com.rabbitmq.jms.basic.SpringAMQPTestFactory");
         }
-        String name = properties.getProperty(propertyName);
+        properties.getProperty(propertyName);
         String className = System.getProperty(propertyName, properties.getProperty(propertyName));
-        Class clazz = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
+        Class<?> clazz = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
         return (TestConnectionFactory)clazz.newInstance();
     }
 }

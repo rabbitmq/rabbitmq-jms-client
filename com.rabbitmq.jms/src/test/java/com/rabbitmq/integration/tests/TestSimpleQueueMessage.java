@@ -1,4 +1,4 @@
-package com.rabbitmq.jms.basic;
+package com.rabbitmq.integration.tests;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Queue;
@@ -19,7 +19,6 @@ import com.rabbitmq.jms.TestConnectionFactory;
 public class TestSimpleQueueMessage {
 
     private final String QUEUE_NAME = "test.queue";
-    private final String MESSAGE1 = "1. Hello " + TestSimpleQueueMessage.class.getName();
     private final String MESSAGE2 = "2. Hello " + TestSimpleQueueMessage.class.getName();
 
     /**
