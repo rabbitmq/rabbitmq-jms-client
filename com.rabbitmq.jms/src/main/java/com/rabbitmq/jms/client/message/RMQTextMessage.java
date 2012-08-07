@@ -1,19 +1,45 @@
 package com.rabbitmq.jms.client.message;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
 
 import com.rabbitmq.jms.client.RMQMessage;
 
 public class RMQTextMessage extends RMQMessage implements TextMessage {
+    
+    private String text;
+    
     @Override
     public void setText(String string) throws JMSException {
-        setBody(string.getBytes(getCharset()));
+        this.text = string;
     }
 
     @Override
     public String getText() throws JMSException {
-        return new String(getBody(), getCharset());
+        return text;
     }
+
+    @Override
+    public void clearBody() throws JMSException {
+        text = null;
+    }
+
+    @Override
+    public void writeBody(ObjectOutput out) throws IOException {
+        out.writeBoolean(text==null);
+        out.writeUTF(text);
+    }
+
+    @Override
+    public void readBody(ObjectInput in) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+        boolean isnull = in.readBoolean();
+        if (!isnull) text = in.readUTF();
+    }
+    
+    
 
 }

@@ -23,8 +23,8 @@ import com.rabbitmq.jms.util.Util;
 /**
  *
  */
-public class RMQMessage implements Message, Cloneable {
-    private static final int DEFAULT_MESSAGE_BODY_SIZE = Integer.getInteger("com.rabbitmq.jms.message.size", 512);
+public abstract class RMQMessage implements Message, Cloneable {
+    protected static final int DEFAULT_MESSAGE_BODY_SIZE = Integer.getInteger("com.rabbitmq.jms.message.size", 512);
 
     private static final String PREFIX = "rmq.";
     private static final String JMS_MESSAGE_ID = PREFIX + "jms.message.id";
@@ -40,7 +40,6 @@ public class RMQMessage implements Message, Cloneable {
 
     private static final Charset charset = Charset.forName("UTF-8");
 
-    private ByteArrayOutputStream body = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
     private Map<String, Serializable> rmqProperties = new HashMap<String, Serializable>();
     private Map<String, Serializable> jmsProperties = new HashMap<String, Serializable>();
 
@@ -413,34 +412,16 @@ public class RMQMessage implements Message, Cloneable {
     }
 
     @Override
-    public void clearBody() throws JMSException {
-        if (body.size() > DEFAULT_MESSAGE_BODY_SIZE) {
-            body = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
-        } else {
-            body.reset();
-        }
-    }
-
-    public byte[] getBody() throws JMSException {
-        return body.toByteArray();
-    }
-
-    public void setBody(byte[] b) {
-        setBody(b, 0, b.length);
-    }
-
-    public void setBody(byte[] b, int off, int len) {
-        body.write(b, off, len);
-    }
-
-    public long getBodyLength() {
-        return body.size();
-    }
+    public abstract void clearBody() throws JMSException;
 
     public Charset getCharset() {
         return charset;
     }
-
+    
+    public abstract void writeBody(ObjectOutput out) throws IOException;
+    
+    public abstract void readBody(ObjectInput in) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException;
+ 
     public static byte[] toMessage(RMQMessage msg) throws IOException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
         ObjectOutputStream out = new ObjectOutputStream(bout);
@@ -455,9 +436,7 @@ public class RMQMessage implements Message, Cloneable {
             out.writeUTF(entry.getKey());
             writePrimitive(entry.getValue(), out);
         }
-        if (msg.getBodyLength()>Integer.MAX_VALUE) throw new IOException("Message too large.");
-        out.writeLong(msg.getBodyLength());
-        out.write(msg.body.toByteArray());
+        msg.writeBody(out);
         out.flush();
         return bout.toByteArray();
     }
@@ -478,11 +457,7 @@ public class RMQMessage implements Message, Cloneable {
             Object value = readPrimitive(in);
             msg.jmsProperties.put(name, (Serializable)value);
         }
-        long len = in.readLong();
-        if (len>Integer.MAX_VALUE) throw new IOException("Message too large.");
-        byte[] body = new byte[(int)len];
-        in.read(body);
-        msg.body.write(body);
+        msg.readBody(in);
         return msg;
     }
 
@@ -511,8 +486,11 @@ public class RMQMessage implements Message, Cloneable {
         } else if (s instanceof String) {
             out.writeByte(8);
             out.writeUTF((String)s);
-        } else {
+        } else if (s instanceof Character) {
             out.writeByte(9);
+            out.writeChar(((Character)s).charValue());
+        } else {
+            out.writeByte(Byte.MAX_VALUE);
             out.writeObject(s);
         }
     }
@@ -536,6 +514,8 @@ public class RMQMessage implements Message, Cloneable {
             return in.readDouble();
         case 8:
             return in.readUTF();
+        case 9:
+            return in.readChar();
         default:
             return in.readObject();
         }

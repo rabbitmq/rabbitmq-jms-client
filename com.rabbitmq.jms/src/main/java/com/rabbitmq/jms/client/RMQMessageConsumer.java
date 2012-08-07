@@ -9,7 +9,6 @@ import javax.jms.MessageListener;
 import javax.jms.Queue;
 import javax.jms.QueueReceiver;
 
-import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.util.Util;

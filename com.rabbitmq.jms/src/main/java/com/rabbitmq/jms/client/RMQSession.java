@@ -31,6 +31,7 @@ import javax.jms.TopicSubscriber;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.jms.admin.RMQDestination;
+import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.util.Util;
 
@@ -61,8 +62,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public BytesMessage createBytesMessage() throws JMSException {
         Util.util().checkClosed(closed,"Session has been closed");
-        // TODO Auto-generated method stub
-        return null;
+        return new RMQBytesMessage();
     }
 
     @Override
