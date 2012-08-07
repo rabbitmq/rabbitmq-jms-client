@@ -38,7 +38,7 @@ public class TestMessages {
         Assert.assertEquals(Integer.MAX_VALUE, message.readInt());
         Assert.assertEquals(Long.MAX_VALUE, message.readLong());
         Assert.assertEquals(Short.MAX_VALUE, message.readShort());
-        //Assert.assertEquals((int) 0xFFFF, message.readUnsignedShort());
+        Assert.assertEquals((int) 0xFFFF, message.readUnsignedShort());
         Assert.assertEquals("TEST", message.readUTF());
     }
     
@@ -54,7 +54,7 @@ public class TestMessages {
         message.writeInt(Integer.MAX_VALUE);
         message.writeLong(Long.MAX_VALUE);
         message.writeShort(Short.MAX_VALUE);
-        //message.writeShort((short) 0xFFFF);
+        message.writeShort((short) 0xFFFF);
         message.writeUTF("TEST");
     }
 }

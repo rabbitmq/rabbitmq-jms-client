@@ -115,15 +115,15 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             RMQMessage msg = (RMQMessage) ((RMQMessage)message);
             RMQDestination dest = (RMQDestination)destination;
             AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
+            msg.setJMSDeliveryMode(deliveryMode);
+            msg.setJMSPriority(priority);
+            msg.setJMSExpiration(timeToLive==0?0:System.currentTimeMillis()+timeToLive);
             bob.contentType("application/octet-stream");
             bob.deliveryMode(deliveryMode);
             bob.priority(priority);
             //bob.expiration(expiration) // TODO TTL implementation
             byte[] data = RMQMessage.toMessage(msg);
             session.getChannel().basicPublish(dest.getExchangeName(), dest.getRoutingKey(), bob.build(), data);
-            msg.setJMSDeliveryMode(deliveryMode);
-            msg.setJMSPriority(priority);
-            msg.setJMSExpiration(timeToLive==0?0:System.currentTimeMillis()+timeToLive);
         } catch (IOException x) {
             Util.util().handleException(x);
         }

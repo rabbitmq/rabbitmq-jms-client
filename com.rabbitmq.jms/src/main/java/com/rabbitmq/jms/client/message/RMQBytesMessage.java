@@ -96,7 +96,8 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         if (!reading)
             throw new MessageNotReadableException(NOT_READABLE);
         try {
-            return in.readInt() & 0xFFFF;
+            int val = in.readShort();
+            return val & 0xFFFF;
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
