@@ -2,8 +2,6 @@ package com.rabbitmq.jms.client;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
@@ -25,7 +23,7 @@ import com.rabbitmq.jms.util.Util;
 /**
  *
  */
-public class RMQMessage implements Message {
+public class RMQMessage implements Message, Cloneable {
     private static final int DEFAULT_MESSAGE_BODY_SIZE = Integer.getInteger("com.rabbitmq.jms.message.size", 512);
 
     private static final String PREFIX = "rmq.";
@@ -42,8 +40,7 @@ public class RMQMessage implements Message {
 
     private static final Charset charset = Charset.forName("UTF-8");
 
-    private volatile ByteArrayOutputStream body = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
-
+    private ByteArrayOutputStream body = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
     private Map<String, Serializable> rmqProperties = new HashMap<String, Serializable>();
     private Map<String, Serializable> jmsProperties = new HashMap<String, Serializable>();
 
@@ -543,5 +540,12 @@ public class RMQMessage implements Message {
             return in.readObject();
         }
     }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
+    
+    
 
 }

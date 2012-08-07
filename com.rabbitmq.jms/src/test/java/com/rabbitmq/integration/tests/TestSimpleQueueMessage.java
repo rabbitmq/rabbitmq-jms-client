@@ -17,10 +17,6 @@ import org.junit.Test;
 import com.rabbitmq.jms.TestConnectionFactory;
 
 public class TestSimpleQueueMessage {
-
-    private final String QUEUE_NAME = "test.queue";
-    private final String MESSAGE2 = "2. Hello " + TestSimpleQueueMessage.class.getName();
-
     /**
      * Sends a text message through a a test queue {@link #QUEUE_NAME} but
      * creates the queue using the JMS API
@@ -28,8 +24,9 @@ public class TestSimpleQueueMessage {
      * @throws Exception
      */
     @Test
-    public void test03Send() throws Exception {
-        // get the initial context
+    public void testSendAndReceiveTextMessage() throws Exception {
+        final String MESSAGE2 = "2. Hello " + TestSimpleQueueMessage.class.getName();
+        final String QUEUE_NAME = "test.queue";
         QueueConnection queueConn = null;
         try {
             QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
@@ -44,19 +41,6 @@ public class TestSimpleQueueMessage {
         } finally {
             queueConn.close();
         }
-
-    }
-
-    /**
-     * Receives a text message through a a test queue {@link #QUEUE_NAME} sent
-     * in {@link TestSimpleQueueMessage#test03Send()}
-     * 
-     * @throws Exception
-     */
-    @Test
-    public void test04Receive() throws Exception {
-        // get the initial context
-        QueueConnection queueConn = null;
         try {
             QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
@@ -69,6 +53,6 @@ public class TestSimpleQueueMessage {
         } finally {
             queueConn.close();
         }
-    }
 
+    }
 }

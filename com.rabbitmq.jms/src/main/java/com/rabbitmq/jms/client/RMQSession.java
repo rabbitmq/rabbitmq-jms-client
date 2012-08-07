@@ -2,6 +2,8 @@ package com.rabbitmq.jms.client;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.UUID;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
@@ -203,12 +205,24 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public Queue createQueue(String queueName) throws JMSException {
-        return new RMQDestination(this, queueName, true, true, false);
+        String name = queueName,
+        exchangeName  = "",
+        routingKey = name,
+        consumerTag = name + "." + UUID.randomUUID().toString();
+        RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, true, consumerTag);
+        boolean temporary = false;
+        boolean durable = true;
+        try {
+           channel.queueDeclare(dest.getQueueName(), durable, temporary, !durable, new HashMap<String,Object>());
+        } catch (IOException x) {
+            Util.util().handleException(x);
+        }
+        return dest;
     }
 
     @Override
     public Topic createTopic(String topicName) throws JMSException {
-        return new RMQDestination(this, topicName, false, true, false);
+        return null; //TODO
     }
 
     @Override
