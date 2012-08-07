@@ -1,7 +1,9 @@
-package com.rabbitmq.jms.client;
+package com.rabbitmq.jms.client.message;
 
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
+
+import com.rabbitmq.jms.client.RMQMessage;
 
 /**
  *
