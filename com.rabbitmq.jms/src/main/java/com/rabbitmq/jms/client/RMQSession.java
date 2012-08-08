@@ -177,14 +177,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public MessageListener getMessageListener() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        // we are not implementing this optional method
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
-        // TODO Auto-generated method stub
-
+        // we are not implementing this optional method
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -205,13 +205,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector) throws JMSException {
-        // TODO Auto-generated method stub
+        // we are not implementing this optional method
         throw new UnsupportedOperationException();
     }
 
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean NoLocal) throws JMSException {
-        // TODO Auto-generated method stub
+        // we are not implementing this optional method
         throw new UnsupportedOperationException();
     }
 
@@ -222,9 +222,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public Queue createQueue(String queueName) throws JMSException {
         String name = queueName,
         exchangeName  = "",
-        routingKey = name,
-        consumerTag = name + "." + UUID.randomUUID().toString();
-        RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, true, consumerTag);
+        routingKey = name;
+        RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, true);
         boolean temporary = false;
         boolean durable = true;
         try {

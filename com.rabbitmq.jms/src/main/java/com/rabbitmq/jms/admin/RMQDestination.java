@@ -17,17 +17,15 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     private volatile String exchangeName;
     private volatile String routingKey;
     private volatile boolean queue;
-    private volatile String consumerTag;
 
     public RMQDestination() {
     }
 
-    public RMQDestination(String name, String exchangeName, String routingKey, boolean queue, String consumerTag) {
+    public RMQDestination(String name, String exchangeName, String routingKey, boolean queue) {
         this.name = name;
         this.exchangeName = exchangeName;
         this.routingKey = routingKey;
         this.queue = queue;
-        this.consumerTag = consumerTag;
     }
 
     public String getName() {
@@ -46,10 +44,6 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
         return queue;
     }
 
-    public String getConsumerTag() {
-        return consumerTag;
-    }
-
     public void setName(String name) {
         this.name = name;
     }
@@ -64,10 +58,6 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     public void setQueue(boolean queue) {
         this.queue = queue;
-    }
-
-    public void setConsumerTag(String consumerTag) {
-        this.consumerTag = consumerTag;
     }
 
     @Override
