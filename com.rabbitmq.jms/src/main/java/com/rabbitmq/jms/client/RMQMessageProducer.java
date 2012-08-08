@@ -35,22 +35,22 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     @Override
     public void setDisableMessageID(boolean value) throws JMSException {
-        disableMessageID = value;
+        this.disableMessageID = value;
     }
 
     @Override
     public boolean getDisableMessageID() throws JMSException {
-        return disableMessageID;
+        return this.disableMessageID;
     }
 
     @Override
     public void setDisableMessageTimestamp(boolean value) throws JMSException {
-        disableMessageTimestamp = value;
+        this.disableMessageTimestamp = value;
     }
 
     @Override
     public boolean getDisableMessageTimestamp() throws JMSException {
-        return disableMessageTimestamp;
+        return this.disableMessageTimestamp;
     }
 
     @Override
@@ -60,27 +60,27 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     @Override
     public int getDeliveryMode() throws JMSException {
-        return deliveryMode;
+        return this.deliveryMode;
     }
 
     @Override
     public void setPriority(int defaultPriority) throws JMSException {
-        priority = defaultPriority;
+        this.priority = defaultPriority;
     }
 
     @Override
     public int getPriority() throws JMSException {
-        return priority;
+        return this.priority;
     }
 
     @Override
     public void setTimeToLive(long timeToLive) throws JMSException {
-        ttl = timeToLive;
+        this.ttl = timeToLive;
     }
 
     @Override
     public long getTimeToLive() throws JMSException {
-        return ttl;
+        return this.ttl;
     }
 
     @Override
@@ -96,34 +96,34 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     @Override
     public void send(Message message) throws JMSException {
-        send(message, getDeliveryMode(), getPriority(), getTimeToLive());
+        this.send(message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
     }
 
     @Override
     public void send(Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        send(destination, message, deliveryMode, priority, timeToLive);
+        this.send(this.destination, message, deliveryMode, priority, timeToLive);
     }
 
     @Override
     public void send(Destination destination, Message message) throws JMSException {
-        send(destination, message, getDeliveryMode(), getPriority(), getTimeToLive());
+        this.send(destination, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
     }
 
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         try {
-            RMQMessage msg = (RMQMessage) ((RMQMessage)message);
-            RMQDestination dest = (RMQDestination)destination;
+            RMQMessage msg = (RMQMessage) ((RMQMessage) message);
+            RMQDestination dest = (RMQDestination) destination;
             AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
             msg.setJMSDeliveryMode(deliveryMode);
             msg.setJMSPriority(priority);
-            msg.setJMSExpiration(timeToLive==0?0:System.currentTimeMillis()+timeToLive);
+            msg.setJMSExpiration(timeToLive == 0 ? 0 : System.currentTimeMillis() + timeToLive);
             bob.contentType("application/octet-stream");
             bob.deliveryMode(deliveryMode);
             bob.priority(priority);
-            //bob.expiration(expiration) // TODO TTL implementation
+            // bob.expiration(expiration) // TODO TTL implementation
             byte[] data = RMQMessage.toMessage(msg);
-            session.getChannel().basicPublish(dest.getExchangeName(), dest.getRoutingKey(), bob.build(), data);
+            this.session.getChannel().basicPublish(dest.getExchangeName(), dest.getRoutingKey(), bob.build(), data);
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -131,24 +131,24 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     @Override
     public Queue getQueue() throws JMSException {
-        return destination;
+        return this.destination;
     }
 
     @Override
     public void send(Queue queue, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        send((Destination)destination, message, getDeliveryMode(), getPriority(), getTimeToLive());
+        this.send((Destination) this.destination, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
 
     }
 
     @Override
     public void send(Queue queue, Message message) throws JMSException {
-        send((Destination)queue, message);
+        this.send((Destination) queue, message);
 
     }
 
     @Override
     public Topic getTopic() throws JMSException {
-        return destination;
+        return this.destination;
     }
 
     @Override

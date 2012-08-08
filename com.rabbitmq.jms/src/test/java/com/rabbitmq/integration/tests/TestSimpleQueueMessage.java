@@ -69,7 +69,7 @@ public class TestSimpleQueueMessage {
             QueueSender queueSender = queueSession.createSender(queue);
             queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
             BytesMessage message = queueSession.createBytesMessage();
-            
+
             TestMessages.writeBytesMessage(message);
             queueSender.send(message);
         } finally {
@@ -103,7 +103,7 @@ public class TestSimpleQueueMessage {
             QueueSender queueSender = queueSession.createSender(queue);
             queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
             MapMessage message = queueSession.createMapMessage();
-            
+
             TestMessages.writeMapMessage(message);
             queueSender.send(message);
         } finally {
@@ -156,7 +156,7 @@ public class TestSimpleQueueMessage {
         }
 
     }
-    
+
     @Test
     public void testSendAndReceiveObjectMessage() throws Exception {
         final String QUEUE_NAME = "test.queue";

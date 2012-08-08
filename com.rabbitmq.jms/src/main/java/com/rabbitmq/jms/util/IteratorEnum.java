@@ -6,19 +6,19 @@ import java.util.Iterator;
 public class IteratorEnum<E> implements Enumeration<E> {
 
     final Iterator<E> it;
+
     public IteratorEnum(Iterator<E> it) {
         this.it = it;
     }
-    
+
     @Override
     public boolean hasMoreElements() {
-        return it.hasNext();
+        return this.it.hasNext();
     }
 
     @Override
     public E nextElement() {
-        return it.next();
+        return this.it.next();
     }
 
-    
 }

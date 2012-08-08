@@ -20,7 +20,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private final RMQDestination destination;
     private final RMQSession session;
     private final String consumerTag;
-    
+
     public RMQMessageConsumer(RMQSession session, RMQDestination destination, String consumerTag) {
         this.session = session;
         this.destination = destination;
@@ -55,12 +55,12 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     public Message receive() throws JMSException {
         try {
             GetResponse resp = null;
-            if (destination.isQueue()) {
-                resp = getSession().getChannel().basicGet(destination.getQueueName(), !getSession().getTransacted());
+            if (this.destination.isQueue()) {
+                resp = this.getSession().getChannel().basicGet(this.destination.getQueueName(), !this.getSession().getTransacted());
             } else {
-                resp = getSession().getChannel().basicGet(getConsumerTag(), !getSession().getTransacted());
+                resp = this.getSession().getChannel().basicGet(this.getConsumerTag(), !this.getSession().getTransacted());
             }
-            
+
             if (resp == null)
                 return null;
             RMQMessage message = RMQMessage.fromMessage(resp.getBody());
@@ -96,27 +96,25 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     public RMQDestination getDestination() {
-        return destination;
+        return this.destination;
     }
 
     public RMQSession getSession() {
-        return session;
+        return this.session;
     }
-    
+
     public String getConsumerTag() {
-        return consumerTag;
+        return this.consumerTag;
     }
 
     @Override
     public Topic getTopic() throws JMSException {
-        return (Topic)getDestination();
+        return (Topic) this.getDestination();
     }
 
     @Override
     public boolean getNoLocal() throws JMSException {
         return false;
     }
-    
-    
 
 }

@@ -3,7 +3,6 @@ package com.rabbitmq.jms.client;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.UUID;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
@@ -57,62 +56,62 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         try {
             this.channel = connection.getRabbitConnection().createChannel();
             if (transacted) {
-                channel.txSelect();
+                this.channel.txSelect();
             }
         } catch (IOException x) {
             Util.util().handleException(x);
         }
-        assert channel != null;
+        assert this.channel != null;
     }
 
     @Override
     public BytesMessage createBytesMessage() throws JMSException {
-        Util.util().checkClosed(closed, "Session has been closed");
+        Util.util().checkClosed(this.closed, "Session has been closed");
         return new RMQBytesMessage();
     }
 
     @Override
     public MapMessage createMapMessage() throws JMSException {
-        Util.util().checkClosed(closed, "Session has been closed");
+        Util.util().checkClosed(this.closed, "Session has been closed");
         return new RMQMapMessage();
     }
 
     @Override
     public Message createMessage() throws JMSException {
-        Util.util().checkClosed(closed, "Session has been closed");
+        Util.util().checkClosed(this.closed, "Session has been closed");
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public ObjectMessage createObjectMessage() throws JMSException {
-        Util.util().checkClosed(closed, "Session has been closed");
+        Util.util().checkClosed(this.closed, "Session has been closed");
         return new RMQObjectMessage();
     }
 
     @Override
     public ObjectMessage createObjectMessage(Serializable object) throws JMSException {
-        Util.util().checkClosed(closed, "Session has been closed");
+        Util.util().checkClosed(this.closed, "Session has been closed");
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public StreamMessage createStreamMessage() throws JMSException {
-        Util.util().checkClosed(closed, "Session has been closed");
+        Util.util().checkClosed(this.closed, "Session has been closed");
         return new RMQStreamMessage();
     }
 
     @Override
     public TextMessage createTextMessage() throws JMSException {
-        Util.util().checkClosed(closed, "Session has been closed");
+        Util.util().checkClosed(this.closed, "Session has been closed");
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public TextMessage createTextMessage(String text) throws JMSException {
-        Util.util().checkClosed(closed, "Session has been closed");
+        Util.util().checkClosed(this.closed, "Session has been closed");
         RMQTextMessage msg = new RMQTextMessage();
         msg.setText(text);
         return msg;
@@ -120,21 +119,21 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public boolean getTransacted() throws JMSException {
-        return transacted;
+        return this.transacted;
     }
 
     @Override
     public int getAcknowledgeMode() throws JMSException {
-        return acknowledgeMode;
+        return this.acknowledgeMode;
     }
 
     @Override
     public void commit() throws JMSException {
-        Util.util().checkClosed(closed, "Session has been closed");
-        if (!transacted)
+        Util.util().checkClosed(this.closed, "Session has been closed");
+        if (!this.transacted)
             return;
         try {
-            channel.txCommit();
+            this.channel.txCommit();
             // TODO ACK ALL THE MESSAGES
             throw new UnsupportedOperationException();
         } catch (IOException x) {
@@ -144,11 +143,11 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public void rollback() throws JMSException {
-        Util.util().checkClosed(closed, "Session has been closed");
-        if (!transacted)
+        Util.util().checkClosed(this.closed, "Session has been closed");
+        if (!this.transacted)
             return;
         try {
-            channel.txRollback();
+            this.channel.txRollback();
             // TODO NACK ALL THE MESSAGES
             throw new UnsupportedOperationException();
         } catch (IOException x) {
@@ -158,21 +157,21 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public void close() throws JMSException {
-        if (closed)
+        if (this.closed)
             return;
-        closed = true;
+        this.closed = true;
         try {
-            channel.close();
+            this.channel.close();
         } catch (IOException x) {
             Util.util().handleException(x);
         } finally {
-            getConnection().sessionClose(this);
+            this.getConnection().sessionClose(this);
         }
     }
 
     @Override
     public void recover() throws JMSException {
-        Util.util().checkClosed(closed, "Session has been closed");
+        Util.util().checkClosed(this.closed, "Session has been closed");
 
         // TODO Auto-generated method stub
 
@@ -203,15 +202,15 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public MessageConsumer createConsumer(Destination destination) throws JMSException {
-        RMQDestination dest = (RMQDestination)destination;
+        RMQDestination dest = (RMQDestination) destination;
         String consumerTag = Util.util().generateConsumerTag();
-        
-        if (! dest.isQueue()) {
+
+        if (!dest.isQueue()) {
             String queueName = consumerTag;
-            //this is a topic, we need to define a queue, and bind to it
+            // this is a topic, we need to define a queue, and bind to it
             try {
-                channel.queueDeclare(queueName,true,false,false,new HashMap<String,Object>());
-                channel.queueBind(queueName, dest.getExchangeName(), dest.getRoutingKey());
+                this.channel.queueDeclare(queueName, true, false, false, new HashMap<String, Object>());
+                this.channel.queueBind(queueName, dest.getExchangeName(), dest.getRoutingKey());
             } catch (IOException x) {
                 Util.util().handleException(x);
             }
@@ -242,7 +241,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         boolean temporary = false;
         boolean durable = true;
         try {
-            channel.queueDeclare(dest.getQueueName(), durable, temporary, !durable, new HashMap<String, Object>());
+            this.channel.queueDeclare(dest.getQueueName(), durable, temporary, !durable, new HashMap<String, Object>());
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -251,12 +250,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public Topic createTopic(String topicName) throws JMSException {
-        String name = topicName, 
-               exchangeName = "topic."+topicName, 
-               routingKey = name;
+        String name = topicName, exchangeName = "topic." + topicName, routingKey = name;
         RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, false);
         try {
-            channel.exchangeDeclare(exchangeName, "fanout");
+            this.channel.exchangeDeclare(exchangeName, "fanout");
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -308,22 +305,22 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public QueueReceiver createReceiver(Queue queue) throws JMSException {
         assert queue instanceof RMQDestination;
-        return (QueueReceiver) createConsumer(queue);
+        return (QueueReceiver) this.createConsumer(queue);
     }
 
     @Override
     public QueueReceiver createReceiver(Queue queue, String messageSelector) throws JMSException {
-        return (QueueReceiver) createConsumer(queue, messageSelector);
+        return (QueueReceiver) this.createConsumer(queue, messageSelector);
     }
 
     @Override
     public QueueSender createSender(Queue queue) throws JMSException {
-        return (QueueSender) createProducer(queue);
+        return (QueueSender) this.createProducer(queue);
     }
 
     @Override
     public TopicSubscriber createSubscriber(Topic topic) throws JMSException {
-        return (TopicSubscriber)createConsumer(topic);
+        return (TopicSubscriber) this.createConsumer(topic);
     }
 
     @Override
@@ -333,15 +330,15 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public TopicPublisher createPublisher(Topic topic) throws JMSException {
-        return (TopicPublisher)createProducer(topic);
+        return (TopicPublisher) this.createProducer(topic);
     }
 
     public RMQConnection getConnection() {
-        return connection;
+        return this.connection;
     }
 
     public Channel getChannel() {
-        return channel;
+        return this.channel;
     }
 
 }

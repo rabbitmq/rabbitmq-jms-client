@@ -48,28 +48,28 @@ public abstract class RMQMessage implements Message, Cloneable {
 
     @Override
     public String getJMSMessageID() throws JMSException {
-        return getStringProperty(JMS_MESSAGE_ID);
+        return this.getStringProperty(JMS_MESSAGE_ID);
     }
 
     @Override
     public void setJMSMessageID(String id) throws JMSException {
-        setStringProperty(JMS_MESSAGE_ID, id);
+        this.setStringProperty(JMS_MESSAGE_ID, id);
 
     }
 
     @Override
     public long getJMSTimestamp() throws JMSException {
-        return getLongProperty(JMS_MESSAGE_TIMESTAMP);
+        return this.getLongProperty(JMS_MESSAGE_TIMESTAMP);
     }
 
     @Override
     public void setJMSTimestamp(long timestamp) throws JMSException {
-        setLongProperty(JMS_MESSAGE_TIMESTAMP, timestamp);
+        this.setLongProperty(JMS_MESSAGE_TIMESTAMP, timestamp);
     }
 
     @Override
     public byte[] getJMSCorrelationIDAsBytes() throws JMSException {
-        String id = getStringProperty(JMS_MESSAGE_CORR_ID);
+        String id = this.getStringProperty(JMS_MESSAGE_CORR_ID);
         if (id != null)
             return id.getBytes(charset);
         else
@@ -79,124 +79,123 @@ public abstract class RMQMessage implements Message, Cloneable {
     @Override
     public void setJMSCorrelationIDAsBytes(byte[] correlationID) throws JMSException {
         String id = correlationID != null ? new String(correlationID, charset) : null;
-        setStringProperty(JMS_MESSAGE_CORR_ID, id);
+        this.setStringProperty(JMS_MESSAGE_CORR_ID, id);
     }
 
     @Override
     public void setJMSCorrelationID(String correlationID) throws JMSException {
-        setStringProperty(JMS_MESSAGE_CORR_ID, correlationID);
+        this.setStringProperty(JMS_MESSAGE_CORR_ID, correlationID);
     }
 
     @Override
     public String getJMSCorrelationID() throws JMSException {
-        return getStringProperty(JMS_MESSAGE_CORR_ID);
+        return this.getStringProperty(JMS_MESSAGE_CORR_ID);
     }
 
     @Override
     public Destination getJMSReplyTo() throws JMSException {
-        return (Destination) getObjectProperty(JMS_MESSAGE_REPLY_TO);
+        return (Destination) this.getObjectProperty(JMS_MESSAGE_REPLY_TO);
     }
 
     @Override
     public void setJMSReplyTo(Destination replyTo) throws JMSException {
-        setObjectProperty(JMS_MESSAGE_REPLY_TO, replyTo);
+        this.setObjectProperty(JMS_MESSAGE_REPLY_TO, replyTo);
     }
 
     @Override
     public Destination getJMSDestination() throws JMSException {
-        return (Destination) getObjectProperty(JMS_MESSAGE_DESTINATION);
+        return (Destination) this.getObjectProperty(JMS_MESSAGE_DESTINATION);
     }
 
     @Override
     public void setJMSDestination(Destination destination) throws JMSException {
-        setObjectProperty(JMS_MESSAGE_DESTINATION, destination);
+        this.setObjectProperty(JMS_MESSAGE_DESTINATION, destination);
     }
 
     @Override
     public int getJMSDeliveryMode() throws JMSException {
-        return getIntProperty(JMS_MESSAGE_DELIVERY_MODE);
+        return this.getIntProperty(JMS_MESSAGE_DELIVERY_MODE);
     }
 
     @Override
     public void setJMSDeliveryMode(int deliveryMode) throws JMSException {
-        setIntProperty(JMS_MESSAGE_DELIVERY_MODE, deliveryMode);
+        this.setIntProperty(JMS_MESSAGE_DELIVERY_MODE, deliveryMode);
 
     }
 
     @Override
     public boolean getJMSRedelivered() throws JMSException {
-        return getBooleanProperty(JMS_MESSAGE_REDELIVERED);
+        return this.getBooleanProperty(JMS_MESSAGE_REDELIVERED);
     }
 
     @Override
     public void setJMSRedelivered(boolean redelivered) throws JMSException {
-        setBooleanProperty(JMS_MESSAGE_REDELIVERED, redelivered);
+        this.setBooleanProperty(JMS_MESSAGE_REDELIVERED, redelivered);
     }
 
     @Override
     public String getJMSType() throws JMSException {
-        return getStringProperty(JMS_MESSAGE_TYPE);
+        return this.getStringProperty(JMS_MESSAGE_TYPE);
     }
 
     @Override
     public void setJMSType(String type) throws JMSException {
-        setStringProperty(JMS_MESSAGE_TYPE, type);
+        this.setStringProperty(JMS_MESSAGE_TYPE, type);
 
     }
 
     @Override
     public long getJMSExpiration() throws JMSException {
-        return getLongProperty(JMS_MESSAGE_EXPIRATION);
+        return this.getLongProperty(JMS_MESSAGE_EXPIRATION);
     }
 
     @Override
     public void setJMSExpiration(long expiration) throws JMSException {
-        setLongProperty(JMS_MESSAGE_EXPIRATION, expiration);
+        this.setLongProperty(JMS_MESSAGE_EXPIRATION, expiration);
 
     }
 
     @Override
     public int getJMSPriority() throws JMSException {
-        return getIntProperty(JMS_MESSAGE_PRIORITY);
+        return this.getIntProperty(JMS_MESSAGE_PRIORITY);
     }
 
     @Override
     public void setJMSPriority(int priority) throws JMSException {
-        setIntProperty(JMS_MESSAGE_PRIORITY, priority);
+        this.setIntProperty(JMS_MESSAGE_PRIORITY, priority);
 
     }
 
     @Override
     public void clearProperties() throws JMSException {
-        jmsProperties.clear();
+        this.jmsProperties.clear();
     }
 
     @Override
     public boolean propertyExists(String name) throws JMSException {
-        return jmsProperties.containsKey(name) || rmqProperties.containsKey(name);
+        return this.jmsProperties.containsKey(name) || this.rmqProperties.containsKey(name);
     }
 
     @Override
     public boolean getBooleanProperty(String name) throws JMSException {
-        Object o = getObjectProperty(name);
-        if (o == null) {
+        Object o = this.getObjectProperty(name);
+        if (o == null)
             return false;
-        } else if (o instanceof String) {
+        else if (o instanceof String)
             return Boolean.parseBoolean((String) o);
-        } else if (o instanceof Boolean) {
+        else if (o instanceof Boolean) {
             Boolean b = (Boolean) o;
             return b.booleanValue();
-        } else {
+        } else
             throw new JMSException("Unable to convert from class:" + o.getClass().getName());
-        }
     }
 
     @Override
     public byte getByteProperty(String name) throws JMSException {
-        Object o = getObjectProperty(name);
-        if (o == null) {
+        Object o = this.getObjectProperty(name);
+        if (o == null)
             return 0;
-        } else if (o instanceof String) {
+        else if (o instanceof String) {
             try {
                 return Byte.parseByte((String) o);
             } catch (NumberFormatException x) {
@@ -205,17 +204,16 @@ public abstract class RMQMessage implements Message, Cloneable {
         } else if (o instanceof Byte) {
             Byte b = (Byte) o;
             return b.byteValue();
-        } else {
+        } else
             throw new JMSException("Unable to convert from class:" + o.getClass().getName());
-        }
     }
 
     @Override
     public short getShortProperty(String name) throws JMSException {
-        Object o = getObjectProperty(name);
-        if (o == null) {
+        Object o = this.getObjectProperty(name);
+        if (o == null)
             return 0;
-        } else if (o instanceof String) {
+        else if (o instanceof String) {
             try {
                 return Short.parseShort((String) o);
             } catch (NumberFormatException x) {
@@ -227,17 +225,16 @@ public abstract class RMQMessage implements Message, Cloneable {
         } else if (o instanceof Short) {
             Short b = (Short) o;
             return b.shortValue();
-        } else {
+        } else
             throw new JMSException("Unable to convert from class:" + o.getClass().getName());
-        }
     }
 
     @Override
     public int getIntProperty(String name) throws JMSException {
-        Object o = getObjectProperty(name);
-        if (o == null) {
+        Object o = this.getObjectProperty(name);
+        if (o == null)
             return 0;
-        } else if (o instanceof String) {
+        else if (o instanceof String) {
             try {
                 return Short.parseShort((String) o);
             } catch (NumberFormatException x) {
@@ -252,17 +249,16 @@ public abstract class RMQMessage implements Message, Cloneable {
         } else if (o instanceof Integer) {
             Integer b = (Integer) o;
             return b.intValue();
-        } else {
+        } else
             throw new JMSException("Unable to convert from class:" + o.getClass().getName());
-        }
     }
 
     @Override
     public long getLongProperty(String name) throws JMSException {
-        Object o = getObjectProperty(name);
-        if (o == null) {
+        Object o = this.getObjectProperty(name);
+        if (o == null)
             return 0;
-        } else if (o instanceof String) {
+        else if (o instanceof String) {
             try {
                 return Short.parseShort((String) o);
             } catch (NumberFormatException x) {
@@ -280,17 +276,16 @@ public abstract class RMQMessage implements Message, Cloneable {
         } else if (o instanceof Long) {
             Long b = (Long) o;
             return b.longValue();
-        } else {
+        } else
             throw new JMSException("Unable to convert from class:" + o.getClass().getName());
-        }
     }
 
     @Override
     public float getFloatProperty(String name) throws JMSException {
-        Object o = getObjectProperty(name);
-        if (o == null) {
+        Object o = this.getObjectProperty(name);
+        if (o == null)
             return 0;
-        } else if (o instanceof String) {
+        else if (o instanceof String) {
             try {
                 return Float.parseFloat((String) o);
             } catch (NumberFormatException x) {
@@ -299,17 +294,16 @@ public abstract class RMQMessage implements Message, Cloneable {
         } else if (o instanceof Float) {
             Float b = (Float) o;
             return b.floatValue();
-        } else {
+        } else
             throw new JMSException("Unable to convert from class:" + o.getClass().getName());
-        }
     }
 
     @Override
     public double getDoubleProperty(String name) throws JMSException {
-        Object o = getObjectProperty(name);
-        if (o == null) {
+        Object o = this.getObjectProperty(name);
+        if (o == null)
             return 0;
-        } else if (o instanceof String) {
+        else if (o instanceof String) {
             try {
                 return Float.parseFloat((String) o);
             } catch (NumberFormatException x) {
@@ -321,84 +315,81 @@ public abstract class RMQMessage implements Message, Cloneable {
         } else if (o instanceof Double) {
             Double b = (Double) o;
             return b.doubleValue();
-        } else {
+        } else
             throw new JMSException("Unable to convert from class:" + o.getClass().getName());
-        }
     }
 
     @Override
     public String getStringProperty(String name) throws JMSException {
-        Object o = getObjectProperty(name);
-        if (o == null) {
+        Object o = this.getObjectProperty(name);
+        if (o == null)
             return null;
-        } else if (o instanceof String) {
+        else if (o instanceof String)
             return (String) o;
-        } else {
+        else
             return o.toString();
-        }
     }
 
     @Override
     public Object getObjectProperty(String name) throws JMSException {
-        if (name.startsWith(PREFIX)) {
-            return rmqProperties.get(name);
-        } else {
-            return jmsProperties.get(name);
-        }
+        if (name.startsWith(PREFIX))
+            return this.rmqProperties.get(name);
+        else
+            return this.jmsProperties.get(name);
     }
 
     @Override
     public Enumeration<?> getPropertyNames() throws JMSException {
-        return new IteratorEnum<String>(jmsProperties.keySet().iterator());
+        return new IteratorEnum<String>(this.jmsProperties.keySet().iterator());
     }
 
     @Override
     public void setBooleanProperty(String name, boolean value) throws JMSException {
-        setObjectProperty(name, Boolean.valueOf(value));
+        this.setObjectProperty(name, Boolean.valueOf(value));
     }
 
     @Override
     public void setByteProperty(String name, byte value) throws JMSException {
-        setObjectProperty(name, value);
+        this.setObjectProperty(name, value);
     }
 
     @Override
     public void setShortProperty(String name, short value) throws JMSException {
-        setObjectProperty(name, value);
+        this.setObjectProperty(name, value);
     }
 
     @Override
     public void setIntProperty(String name, int value) throws JMSException {
-        setObjectProperty(name, value);
+        this.setObjectProperty(name, value);
     }
 
     @Override
     public void setLongProperty(String name, long value) throws JMSException {
-        setObjectProperty(name, value);
+        this.setObjectProperty(name, value);
     }
 
     @Override
     public void setFloatProperty(String name, float value) throws JMSException {
-        setObjectProperty(name, value);
+        this.setObjectProperty(name, value);
     }
 
     @Override
     public void setDoubleProperty(String name, double value) throws JMSException {
-        setObjectProperty(name, value);
+        this.setObjectProperty(name, value);
     }
 
     @Override
     public void setStringProperty(String name, String value) throws JMSException {
-        setObjectProperty(name, value);
+        this.setObjectProperty(name, value);
     }
 
     @Override
     public void setObjectProperty(String name, Object value) throws JMSException {
         try {
             if (name.startsWith(PREFIX)) {
-                rmqProperties.put(name, (Serializable) value);
+                this.rmqProperties.put(name, (Serializable) value);
             } else {
-                jmsProperties.put(name, (Serializable) value);
+                this.jmsProperties.put(name, (Serializable) value);
             }
         } catch (ClassCastException x) {
             Util.util().handleException(x, "Property value not serializable.");
@@ -417,11 +408,14 @@ public abstract class RMQMessage implements Message, Cloneable {
     public Charset getCharset() {
         return charset;
     }
-    
+
     public abstract void writeBody(ObjectOutput out) throws IOException;
-    
-    public abstract void readBody(ObjectInput in) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException;
- 
+
+    public abstract void readBody(ObjectInput in) throws IOException,
+                                                 ClassNotFoundException,
+                                                 InstantiationException,
+                                                 IllegalAccessException;
+
     public static byte[] toMessage(RMQMessage msg) throws IOException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
         ObjectOutputStream out = new ObjectOutputStream(bout);
@@ -441,21 +435,24 @@ public abstract class RMQMessage implements Message, Cloneable {
         return bout.toByteArray();
     }
 
-    public static RMQMessage fromMessage(byte[] b) throws ClassNotFoundException, IOException, IllegalAccessException, InstantiationException {
+    public static RMQMessage fromMessage(byte[] b) throws ClassNotFoundException,
+                                                  IOException,
+                                                  IllegalAccessException,
+                                                  InstantiationException {
         ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(b));
         String clazz = in.readUTF();
-        RMQMessage msg = (RMQMessage)Class.forName(clazz, true, Thread.currentThread().getContextClassLoader()).newInstance();
+        RMQMessage msg = (RMQMessage) Class.forName(clazz, true, Thread.currentThread().getContextClassLoader()).newInstance();
         int propsize = in.readInt();
-        for (int i=0; i<propsize; i++) {
+        for (int i = 0; i < propsize; i++) {
             String name = in.readUTF();
             Object value = readPrimitive(in);
-            msg.rmqProperties.put(name, (Serializable)value);
+            msg.rmqProperties.put(name, (Serializable) value);
         }
         propsize = in.readInt();
-        for (int i=0; i<propsize; i++) {
+        for (int i = 0; i < propsize; i++) {
             String name = in.readUTF();
             Object value = readPrimitive(in);
-            msg.jmsProperties.put(name, (Serializable)value);
+            msg.jmsProperties.put(name, (Serializable) value);
         }
         msg.readBody(in);
         return msg;
@@ -466,35 +463,35 @@ public abstract class RMQMessage implements Message, Cloneable {
             out.write(-1);
         } else if (s instanceof Boolean) {
             out.writeByte(1);
-            out.writeBoolean(((Boolean)s).booleanValue());
+            out.writeBoolean(((Boolean) s).booleanValue());
         } else if (s instanceof Byte) {
             out.writeByte(2);
-            out.writeByte(((Byte)s).byteValue());
+            out.writeByte(((Byte) s).byteValue());
         } else if (s instanceof Short) {
             out.writeByte(3);
-            out.writeShort((((Short)s).shortValue()));
+            out.writeShort((((Short) s).shortValue()));
         } else if (s instanceof Integer) {
             out.writeByte(4);
-            out.writeInt(((Integer)s).intValue());
+            out.writeInt(((Integer) s).intValue());
         } else if (s instanceof Long) {
             out.writeByte(5);
-            out.writeLong(((Long)s).longValue());
+            out.writeLong(((Long) s).longValue());
         } else if (s instanceof Float) {
             out.writeByte(6);
-            out.writeFloat(((Float)s).floatValue());
+            out.writeFloat(((Float) s).floatValue());
         } else if (s instanceof Double) {
             out.writeByte(7);
-            out.writeDouble(((Double)s).doubleValue());
+            out.writeDouble(((Double) s).doubleValue());
         } else if (s instanceof String) {
             out.writeByte(8);
-            out.writeUTF((String)s);
+            out.writeUTF((String) s);
         } else if (s instanceof Character) {
             out.writeByte(9);
-            out.writeChar(((Character)s).charValue());
+            out.writeChar(((Character) s).charValue());
         } else if (s instanceof byte[]) {
             out.writeByte(10);
-            out.writeInt(((byte[])s).length);
-            out.write(((byte[])s));
+            out.writeInt(((byte[]) s).length);
+            out.write(((byte[]) s));
         } else {
             out.writeByte(Byte.MAX_VALUE);
             out.writeObject(s);
@@ -539,7 +536,5 @@ public abstract class RMQMessage implements Message, Cloneable {
     public Object clone() throws CloneNotSupportedException {
         return super.clone();
     }
-    
-    
 
 }

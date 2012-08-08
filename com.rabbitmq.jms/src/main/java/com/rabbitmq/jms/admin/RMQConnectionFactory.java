@@ -28,7 +28,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     @Override
     public Connection createConnection() throws JMSException {
-        return createConnection(DEFAULT_USERNAME, DEFAULT_PASSWORD);
+        return this.createConnection(DEFAULT_USERNAME, DEFAULT_PASSWORD);
     }
 
     @Override
@@ -42,7 +42,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         com.rabbitmq.client.Connection rabbitConnection = null;
         try {
             rabbitConnection = factory.newConnection();
-        }catch (IOException x) {
+        } catch (IOException x) {
             Util.util().handleException(x);
         }
         return new RMQConnection(rabbitConnection);
@@ -56,23 +56,22 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     @Override
     public TopicConnection createTopicConnection() throws JMSException {
-        return (TopicConnection)createConnection();
+        return (TopicConnection) this.createConnection();
     }
 
     @Override
     public TopicConnection createTopicConnection(String userName, String password) throws JMSException {
-        return (TopicConnection)createConnection(userName,password);    }
+        return (TopicConnection) this.createConnection(userName, password);
+    }
 
     @Override
     public QueueConnection createQueueConnection() throws JMSException {
-        return (QueueConnection)createConnection();
+        return (QueueConnection) this.createConnection();
     }
 
     @Override
     public QueueConnection createQueueConnection(String userName, String password) throws JMSException {
-        return (QueueConnection)createConnection(userName,password);
+        return (QueueConnection) this.createConnection(userName, password);
     }
-    
-    
 
 }

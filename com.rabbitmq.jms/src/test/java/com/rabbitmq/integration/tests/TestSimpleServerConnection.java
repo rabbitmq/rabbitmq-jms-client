@@ -72,28 +72,19 @@ public class TestSimpleServerConnection {
         String queueName = channel.queueDeclare().getQueue();
         channel.queueBind(queueName, "exchangeName", "routingKey");
         byte[] messageBodyBytes = "Hello, world!".getBytes();
-        channel.basicPublish("exchangeName",
-                             "routingKey",
-                             null,
-                             messageBodyBytes);
+        channel.basicPublish("exchangeName", "routingKey", null, messageBodyBytes);
         boolean autoAck = false;
-        channel.basicConsume(queueName,
-                             autoAck,
-                             "myConsumerTag",
-                             new DefaultConsumer(channel) {
-                                 @Override
-                                 public void
-                                         handleDelivery(String consumerTag,
-                                                        Envelope envelope,
-                                                        AMQP.BasicProperties properties,
-                                                        byte[] body) throws IOException {
-                                     long deliveryTag = envelope.getDeliveryTag();
-                                     // (process the message components here
-                                     // ...)
-                                     System.out.println("Received Message:" + new String(body));
-                                     channel.basicAck(deliveryTag, false);
-                                 }
-                             });
+        channel.basicConsume(queueName, autoAck, "myConsumerTag", new DefaultConsumer(channel) {
+            @Override
+            public void
+                    handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                long deliveryTag = envelope.getDeliveryTag();
+                // (process the message components here
+                // ...)
+                System.out.println("Received Message:" + new String(body));
+                channel.basicAck(deliveryTag, false);
+            }
+        });
         Thread.sleep(1000);
         channel.close();
     }

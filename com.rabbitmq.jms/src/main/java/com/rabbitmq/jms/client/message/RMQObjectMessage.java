@@ -13,7 +13,7 @@ import com.rabbitmq.jms.client.RMQMessage;
 public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
 
     private Serializable data;
-    
+
     @Override
     public void setObject(Serializable object) throws JMSException {
         this.data = object;
@@ -21,19 +21,19 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
 
     @Override
     public Serializable getObject() throws JMSException {
-        return data;
+        return this.data;
     }
 
     @Override
     public void clearBody() throws JMSException {
-        data = null;
+        this.data = null;
     }
 
     @Override
     public void writeBody(ObjectOutput out) throws IOException {
-        out.writeBoolean(data==null);
-        if (data!=null) {
-            out.writeObject(data);
+        out.writeBoolean(this.data == null);
+        if (this.data != null) {
+            out.writeObject(this.data);
         }
     }
 
@@ -41,7 +41,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
     public void readBody(ObjectInput in) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         boolean isnull = in.readBoolean();
         if (!isnull) {
-            data = (Serializable)in.readObject();
+            this.data = (Serializable) in.readObject();
         }
     }
 

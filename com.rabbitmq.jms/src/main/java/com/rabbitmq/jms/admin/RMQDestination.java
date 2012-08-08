@@ -29,19 +29,19 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public String getExchangeName() {
-        return exchangeName;
+        return this.exchangeName;
     }
 
     public String getRoutingKey() {
-        return routingKey;
+        return this.routingKey;
     }
 
     public boolean isQueue() {
-        return queue;
+        return this.queue;
     }
 
     public void setName(String name) {
@@ -62,12 +62,12 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     @Override
     public String getTopicName() throws JMSException {
-        return name;
+        return this.name;
     }
 
     @Override
     public String getQueueName() throws JMSException {
-        return name;
+        return this.name;
     }
 
     @Override

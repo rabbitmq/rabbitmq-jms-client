@@ -31,7 +31,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private static final ConnectionMetaData connectionMetaData = new RMQConnectionMetaData();
     private String clientID;
     private ExceptionListener exceptionListener;
-    private List<RMQSession> sessions = Collections.<RMQSession>synchronizedList(new ArrayList<RMQSession>());
+    private List<RMQSession> sessions = Collections.<RMQSession> synchronizedList(new ArrayList<RMQSession>());
 
     public RMQConnection(com.rabbitmq.client.Connection rabbitConnection) {
         this.rabbitConnection = rabbitConnection;
@@ -40,13 +40,13 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
         RMQSession session = new RMQSession(this, transacted, acknowledgeMode);
-        sessions.add(session);
+        this.sessions.add(session);
         return session;
     }
 
     @Override
     public String getClientID() throws JMSException {
-        return clientID;
+        return this.clientID;
     }
 
     @Override
@@ -61,7 +61,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
     @Override
     public ExceptionListener getExceptionListener() throws JMSException {
-        return exceptionListener;
+        return this.exceptionListener;
     }
 
     @Override
@@ -84,7 +84,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public void close() throws JMSException {
         try {
-            rabbitConnection.close();
+            this.rabbitConnection.close();
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -92,12 +92,12 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     }
 
     public com.rabbitmq.client.Connection getRabbitConnection() {
-        return rabbitConnection;
+        return this.rabbitConnection;
     }
 
     @Override
     public TopicSession createTopicSession(boolean transacted, int acknowledgeMode) throws JMSException {
-        return (TopicSession) createSession(transacted, acknowledgeMode);
+        return (TopicSession) this.createSession(transacted, acknowledgeMode);
     }
 
     @Override
@@ -108,7 +108,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
     @Override
     public QueueSession createQueueSession(boolean transacted, int acknowledgeMode) throws JMSException {
-        return (QueueSession) createSession(transacted, acknowledgeMode);
+        return (QueueSession) this.createSession(transacted, acknowledgeMode);
     }
 
     @Override
@@ -133,9 +133,9 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
                                                               int maxMessages) throws JMSException {
         throw new UnsupportedOperationException();
     }
-    
+
     public void sessionClose(RMQSession session) {
-        sessions.remove(session);
+        this.sessions.remove(session);
     }
 
 }

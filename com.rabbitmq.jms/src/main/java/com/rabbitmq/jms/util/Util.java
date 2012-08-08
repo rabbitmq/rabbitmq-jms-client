@@ -12,20 +12,20 @@ public class Util {
     }
 
     public JMSException handleException(Exception x, String message) throws JMSException {
-        JMSException jx = new JMSException(message==null?x.getMessage():message);
+        JMSException jx = new JMSException(message == null ? x.getMessage() : message);
         jx.initCause(x);
         throw jx;
     }
+
     public JMSException handleException(Exception x) throws JMSException {
-        return handleException(x, x.getMessage());
+        return this.handleException(x, x.getMessage());
     }
-    
+
     public void checkClosed(boolean closed, String msg) throws JMSException {
-        if (closed) {
-            throw new JMSException(msg!=null?msg:"Closed");
-        }
+        if (closed)
+            throw new JMSException(msg != null ? msg : "Closed");
     }
-    
+
     public String generateConsumerTag() {
         return UUID.randomUUID().toString();
     }

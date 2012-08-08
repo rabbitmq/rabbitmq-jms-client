@@ -36,7 +36,8 @@ public class BasicConnectTest {
 
     /**
      * @param args - none expected
-     * @throws NamingException if cannot get {@link ConnectionFactory} or {@link Destination}
+     * @throws NamingException if cannot get {@link ConnectionFactory} or
+     *             {@link Destination}
      * @throws JMSException if cannot create {@link Connection}
      */
     public static void main(String[] args) throws NamingException, JMSException {
