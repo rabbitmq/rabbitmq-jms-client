@@ -43,7 +43,7 @@ public class TestSimpleSendReceiveTransaction {
             QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             Queue queue = queueSession.createQueue(QUEUE_NAME);
             QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-            TextMessage message = (TextMessage) queueReceiver.receive();
+            TextMessage message = (TextMessage) queueReceiver.receiveNoWait();
             Assert.assertNull(message);
         } finally {
             queueConn.close();
