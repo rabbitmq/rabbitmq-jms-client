@@ -55,6 +55,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.acknowledgeMode = mode;
         try {
             this.channel = connection.getRabbitConnection().createChannel();
+            if (transacted) {
+                channel.txSelect();
+            }
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -129,14 +132,26 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public void commit() throws JMSException {
         Util.util().checkClosed(closed,"Session has been closed");
         if (!transacted) return;
-
+        try {
+            channel.txCommit();
+            //TODO ACK ALL THE MESSAGES
+            throw new UnsupportedOperationException();
+        } catch (IOException x) {
+            Util.util().handleException(x);
+        }
     }
 
     @Override
     public void rollback() throws JMSException {
         Util.util().checkClosed(closed,"Session has been closed");
         if (!transacted) return;
-
+        try {
+            channel.txRollback();
+            //TODO NACK ALL THE MESSAGES
+            throw new UnsupportedOperationException();
+        } catch (IOException x) {
+            Util.util().handleException(x);
+        }
     }
 
     @Override
