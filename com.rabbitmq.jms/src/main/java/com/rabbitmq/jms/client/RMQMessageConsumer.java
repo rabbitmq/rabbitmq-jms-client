@@ -57,6 +57,9 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
     @Override
     public Message receive(long timeout) throws JMSException {
+        if (timeout==0) {
+            timeout = Long.MAX_VALUE;
+        }
         String name = null;
         if (this.destination.isQueue()) {
             name = this.destination.getQueueName();
