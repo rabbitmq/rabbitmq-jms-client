@@ -462,7 +462,9 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
 
     public static void writePrimitive(Object s, ObjectOutput out) throws IOException {
-        if (s instanceof Boolean) {
+        if (s == null) {
+            out.write(-1);
+        } else if (s instanceof Boolean) {
             out.writeByte(1);
             out.writeBoolean(((Boolean)s).booleanValue());
         } else if (s instanceof Byte) {
@@ -489,6 +491,10 @@ public abstract class RMQMessage implements Message, Cloneable {
         } else if (s instanceof Character) {
             out.writeByte(9);
             out.writeChar(((Character)s).charValue());
+        } else if (s instanceof byte[]) {
+            out.writeByte(10);
+            out.writeInt(((byte[])s).length);
+            out.write(((byte[])s));
         } else {
             out.writeByte(Byte.MAX_VALUE);
             out.writeObject(s);
@@ -498,6 +504,8 @@ public abstract class RMQMessage implements Message, Cloneable {
     public static Object readPrimitive(ObjectInput in) throws IOException, ClassNotFoundException {
         byte b = in.readByte();
         switch (b) {
+        case -1:
+            return null;
         case 1:
             return in.readBoolean();
         case 2:
@@ -516,6 +524,12 @@ public abstract class RMQMessage implements Message, Cloneable {
             return in.readUTF();
         case 9:
             return in.readChar();
+        case 10: {
+            int length = in.readInt();
+            byte[] buf = new byte[length];
+            in.read(buf);
+            return buf;
+        }
         default:
             return in.readObject();
         }
