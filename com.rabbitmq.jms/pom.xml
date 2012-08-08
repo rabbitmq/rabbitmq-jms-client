@@ -72,6 +72,7 @@
                     <excludes>
                         <exclude>com/rabbitmq/integration/tests/**</exclude>
                     </excludes>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
                 </configuration>
             </plugin>
         </plugins>
