@@ -1,5 +1,7 @@
 package com.rabbitmq.jms.util;
 
+import java.util.UUID;
+
 import javax.jms.JMSException;
 
 public class Util {
@@ -22,5 +24,9 @@ public class Util {
         if (closed) {
             throw new JMSException(msg!=null?msg:"Closed");
         }
+    }
+    
+    public String generateConsumerTag() {
+        return UUID.randomUUID().toString();
     }
 }

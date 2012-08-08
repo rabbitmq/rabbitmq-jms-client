@@ -53,7 +53,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         assert (mode >= 0 && mode <= 3);
         this.connection = connection;
         this.transacted = transacted;
-        this.acknowledgeMode = transacted? Session.SESSION_TRANSACTED : mode;
+        this.acknowledgeMode = transacted ? Session.SESSION_TRANSACTED : mode;
         try {
             this.channel = connection.getRabbitConnection().createChannel();
             if (transacted) {
@@ -67,52 +67,52 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public BytesMessage createBytesMessage() throws JMSException {
-        Util.util().checkClosed(closed,"Session has been closed");
+        Util.util().checkClosed(closed, "Session has been closed");
         return new RMQBytesMessage();
     }
 
     @Override
     public MapMessage createMapMessage() throws JMSException {
-        Util.util().checkClosed(closed,"Session has been closed");
+        Util.util().checkClosed(closed, "Session has been closed");
         return new RMQMapMessage();
     }
 
     @Override
     public Message createMessage() throws JMSException {
-        Util.util().checkClosed(closed,"Session has been closed");
+        Util.util().checkClosed(closed, "Session has been closed");
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public ObjectMessage createObjectMessage() throws JMSException {
-        Util.util().checkClosed(closed,"Session has been closed");
+        Util.util().checkClosed(closed, "Session has been closed");
         return new RMQObjectMessage();
-        }
+    }
 
     @Override
     public ObjectMessage createObjectMessage(Serializable object) throws JMSException {
-        Util.util().checkClosed(closed,"Session has been closed");
+        Util.util().checkClosed(closed, "Session has been closed");
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public StreamMessage createStreamMessage() throws JMSException {
-        Util.util().checkClosed(closed,"Session has been closed");
+        Util.util().checkClosed(closed, "Session has been closed");
         return new RMQStreamMessage();
     }
 
     @Override
     public TextMessage createTextMessage() throws JMSException {
-        Util.util().checkClosed(closed,"Session has been closed");
+        Util.util().checkClosed(closed, "Session has been closed");
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public TextMessage createTextMessage(String text) throws JMSException {
-        Util.util().checkClosed(closed,"Session has been closed");
+        Util.util().checkClosed(closed, "Session has been closed");
         RMQTextMessage msg = new RMQTextMessage();
         msg.setText(text);
         return msg;
@@ -130,11 +130,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public void commit() throws JMSException {
-        Util.util().checkClosed(closed,"Session has been closed");
-        if (!transacted) return;
+        Util.util().checkClosed(closed, "Session has been closed");
+        if (!transacted)
+            return;
         try {
             channel.txCommit();
-            //TODO ACK ALL THE MESSAGES
+            // TODO ACK ALL THE MESSAGES
             throw new UnsupportedOperationException();
         } catch (IOException x) {
             Util.util().handleException(x);
@@ -143,11 +144,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public void rollback() throws JMSException {
-        Util.util().checkClosed(closed,"Session has been closed");
-        if (!transacted) return;
+        Util.util().checkClosed(closed, "Session has been closed");
+        if (!transacted)
+            return;
         try {
             channel.txRollback();
-            //TODO NACK ALL THE MESSAGES
+            // TODO NACK ALL THE MESSAGES
             throw new UnsupportedOperationException();
         } catch (IOException x) {
             Util.util().handleException(x);
@@ -156,7 +158,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public void close() throws JMSException {
-        if (closed) return;
+        if (closed)
+            return;
         closed = true;
         try {
             channel.close();
@@ -169,7 +172,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public void recover() throws JMSException {
-        Util.util().checkClosed(closed,"Session has been closed");
+        Util.util().checkClosed(closed, "Session has been closed");
 
         // TODO Auto-generated method stub
 
@@ -200,7 +203,21 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public MessageConsumer createConsumer(Destination destination) throws JMSException {
-        return new RMQMessageConsumer(this, (RMQDestination) destination);
+        RMQDestination dest = (RMQDestination)destination;
+        String consumerTag = Util.util().generateConsumerTag();
+        
+        if (! dest.isQueue()) {
+            String queueName = consumerTag;
+            //this is a topic, we need to define a queue, and bind to it
+            try {
+                channel.queueDeclare(queueName,true,false,false,new HashMap<String,Object>());
+                channel.queueBind(queueName, dest.getExchangeName(), dest.getRoutingKey());
+            } catch (IOException x) {
+                Util.util().handleException(x);
+            }
+        }
+        RMQMessageConsumer consumer = new RMQMessageConsumer(this, (RMQDestination) destination, consumerTag);
+        return consumer;
     }
 
     @Override
@@ -220,14 +237,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public Queue createQueue(String queueName) throws JMSException {
-        String name = queueName,
-        exchangeName  = "",
-        routingKey = name;
+        String name = queueName, exchangeName = "", routingKey = name;
         RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, true);
         boolean temporary = false;
         boolean durable = true;
         try {
-           channel.queueDeclare(dest.getQueueName(), durable, temporary, !durable, new HashMap<String,Object>());
+            channel.queueDeclare(dest.getQueueName(), durable, temporary, !durable, new HashMap<String, Object>());
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -236,7 +251,16 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public Topic createTopic(String topicName) throws JMSException {
-        return null; //TODO
+        String name = topicName, 
+               exchangeName = "topic."+topicName, 
+               routingKey = name;
+        RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, false);
+        try {
+            channel.exchangeDeclare(exchangeName, "fanout");
+        } catch (IOException x) {
+            Util.util().handleException(x);
+        }
+        return dest;
     }
 
     @Override
@@ -284,35 +308,32 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public QueueReceiver createReceiver(Queue queue) throws JMSException {
         assert queue instanceof RMQDestination;
-        return (QueueReceiver)createConsumer(queue);
+        return (QueueReceiver) createConsumer(queue);
     }
 
     @Override
     public QueueReceiver createReceiver(Queue queue, String messageSelector) throws JMSException {
-        return (QueueReceiver)createConsumer(queue, messageSelector);
+        return (QueueReceiver) createConsumer(queue, messageSelector);
     }
 
     @Override
     public QueueSender createSender(Queue queue) throws JMSException {
-        return (QueueSender)createProducer(queue);
+        return (QueueSender) createProducer(queue);
     }
 
     @Override
     public TopicSubscriber createSubscriber(Topic topic) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return (TopicSubscriber)createConsumer(topic);
     }
 
     @Override
     public TopicSubscriber createSubscriber(Topic topic, String messageSelector, boolean noLocal) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public TopicPublisher createPublisher(Topic topic) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return (TopicPublisher)createProducer(topic);
     }
 
     public RMQConnection getConnection() {
