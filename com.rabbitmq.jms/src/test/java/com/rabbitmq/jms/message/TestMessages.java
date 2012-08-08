@@ -194,7 +194,6 @@ public class TestMessages {
         private static final long serialVersionUID = 3725702565209476472L;
         int i;
 
-        @SuppressWarnings("unused")
         public TestSerializable(int i) {
             this.i = i;
         }

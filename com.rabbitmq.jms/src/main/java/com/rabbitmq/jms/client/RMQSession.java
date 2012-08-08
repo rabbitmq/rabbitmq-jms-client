@@ -29,6 +29,7 @@ import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQMapMessage;
@@ -47,6 +48,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private final int acknowledgeMode;
     private volatile Channel channel;
     private volatile boolean closed = false;
+    private volatile Long lastReceivedTag;
 
     public RMQSession(RMQConnection connection, boolean transacted, int mode) throws JMSException {
         assert (mode >= 0 && mode <= 3);
@@ -134,8 +136,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             return;
         try {
             this.channel.txCommit();
-            // TODO ACK ALL THE MESSAGES
-            throw new UnsupportedOperationException();
+            lastReceivedTag = null;
+           
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -148,8 +150,11 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             return;
         try {
             this.channel.txRollback();
-            // TODO NACK ALL THE MESSAGES
-            throw new UnsupportedOperationException();
+            if (lastReceivedTag != null) {
+                channel.basicNack(lastReceivedTag, true, true);
+                lastReceivedTag = null;
+            }
+            
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -340,5 +345,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public Channel getChannel() {
         return this.channel;
     }
+    
+    public void messageReceived(GetResponse response) {
+        if (!transacted) return; //auto ack
+        lastReceivedTag = response.getEnvelope().getDeliveryTag();
+    }
+    
+    
 
 }

@@ -29,8 +29,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
     @Override
     public Queue getQueue() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return destination;
     }
 
     @Override
@@ -53,17 +52,26 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
     @Override
     public Message receive() throws JMSException {
-        try {
-            GetResponse resp = null;
-            if (this.destination.isQueue()) {
-                resp = this.getSession().getChannel().basicGet(this.destination.getQueueName(), !this.getSession().getTransacted());
-            } else {
-                resp = this.getSession().getChannel().basicGet(this.getConsumerTag(), !this.getSession().getTransacted());
-            }
+        return receive(Long.MAX_VALUE);
+    }
 
-            if (resp == null)
+    @Override
+    public Message receive(long timeout) throws JMSException {
+        String name = null;
+        if (this.destination.isQueue()) {
+            name = this.destination.getQueueName();
+        } else {
+            name = this.getConsumerTag();
+        }
+
+        try {
+            SynchronousConsumer sc = new SynchronousConsumer(this.session.getChannel(), timeout);
+            getSession().getChannel().basicConsume(name, sc);
+            GetResponse response = sc.receive();
+            if (response == null)
                 return null;
-            RMQMessage message = RMQMessage.fromMessage(resp.getBody());
+            this.session.messageReceived(response);
+            RMQMessage message = RMQMessage.fromMessage(response.getBody());
             return message;
         } catch (IOException x) {
             Util.util().handleException(x);
@@ -78,14 +86,29 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     @Override
-    public Message receive(long timeout) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public Message receiveNoWait() throws JMSException {
-        // TODO Auto-generated method stub
+        try {
+            GetResponse response = null;
+            if (this.destination.isQueue()) {
+                response = this.getSession().getChannel().basicGet(this.destination.getQueueName(), !this.getSession().getTransacted());
+            } else {
+                response = this.getSession().getChannel().basicGet(this.getConsumerTag(), !this.getSession().getTransacted());
+            }
+
+            if (response == null)
+                return null;
+            this.session.messageReceived(response);
+            RMQMessage message = RMQMessage.fromMessage(response.getBody());
+            return message;
+        } catch (IOException x) {
+            Util.util().handleException(x);
+        } catch (ClassNotFoundException x) {
+            Util.util().handleException(x);
+        } catch (IllegalAccessException x) {
+            Util.util().handleException(x);
+        } catch (InstantiationException x) {
+            Util.util().handleException(x);
+        }
         return null;
     }
 
