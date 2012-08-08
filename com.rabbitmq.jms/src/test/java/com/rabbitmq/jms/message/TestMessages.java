@@ -6,6 +6,7 @@ import java.util.Arrays;
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
+import javax.jms.ObjectMessage;
 import javax.jms.StreamMessage;
 
 import org.junit.Test;
@@ -14,6 +15,8 @@ import static junit.framework.Assert.*;
 
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQMapMessage;
+import com.rabbitmq.jms.client.message.RMQObjectMessage;
+import com.rabbitmq.jms.client.message.RMQStreamMessage;
 
 public class TestMessages {
 
@@ -34,9 +37,27 @@ public class TestMessages {
     
     @Test
     public void testStreamMessage() throws Exception {
-        
+        RMQStreamMessage message = new RMQStreamMessage();
+        writeStreamMessage(message);
+        message.reset();
+        readStreamMessage(message);
     }
     
+    @Test
+    public void testObjectMessage() throws Exception {
+        RMQObjectMessage message = new RMQObjectMessage();
+        writeObjectMessage(message);
+        readObjectMessage(message);
+    }
+    
+    
+    public static void writeObjectMessage(ObjectMessage message) throws JMSException {
+        message.setObject(new TestSerializable(8));
+    }
+    
+    public static void readObjectMessage(ObjectMessage message) throws JMSException {
+        assertEquals(new TestSerializable(8),message.getObject());
+    }
     
     public static void writeMapMessage(MapMessage message) throws JMSException {
         byte[] buf = { (byte) -2, (byte) -3 };
