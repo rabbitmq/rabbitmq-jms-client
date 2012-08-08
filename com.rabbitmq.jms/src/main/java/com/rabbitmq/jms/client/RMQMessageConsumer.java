@@ -57,6 +57,11 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
     @Override
     public Message receive(long timeout) throws JMSException {
+        Message msg = receiveNoWait();
+        if (msg!=null) {
+            //attempt instant receive first
+            return msg;
+        }
         if (timeout==0) {
             timeout = Long.MAX_VALUE;
         }
