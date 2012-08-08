@@ -9,6 +9,7 @@ import javax.jms.Topic;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
+
 @SuppressWarnings("serial")
 public class RMQDestination implements Queue, Topic, Destination, Referenceable, Serializable {
 
@@ -20,7 +21,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     public RMQDestination() {
     }
-    
+
     public RMQDestination(String name, String exchangeName, String routingKey, boolean queue, String consumerTag) {
         this.name = name;
         this.exchangeName = exchangeName;
@@ -28,40 +29,26 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
         this.queue = queue;
         this.consumerTag = consumerTag;
     }
-    
-    
 
     public String getName() {
         return name;
     }
 
-
-
     public String getExchangeName() {
         return exchangeName;
     }
-
-
 
     public String getRoutingKey() {
         return routingKey;
     }
 
-
-
     public boolean isQueue() {
         return queue;
     }
 
-
-
     public String getConsumerTag() {
         return consumerTag;
     }
-    
-    
-
-
 
     public void setName(String name) {
         this.name = name;
@@ -92,13 +79,10 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     public String getQueueName() throws JMSException {
         return name;
     }
-    
+
     @Override
     public Reference getReference() throws NamingException {
         return new Reference(this.getClass().getCanonicalName());
     }
-
-    
-    
 
 }
