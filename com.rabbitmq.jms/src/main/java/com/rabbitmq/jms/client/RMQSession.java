@@ -33,6 +33,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQMapMessage;
+import com.rabbitmq.jms.client.message.RMQObjectMessage;
 import com.rabbitmq.jms.client.message.RMQStreamMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.util.Util;
@@ -52,7 +53,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         assert (mode >= 0 && mode <= 3);
         this.connection = connection;
         this.transacted = transacted;
-        this.acknowledgeMode = mode;
+        this.acknowledgeMode = transacted? Session.SESSION_TRANSACTED : mode;
         try {
             this.channel = connection.getRabbitConnection().createChannel();
             if (transacted) {
@@ -86,9 +87,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public ObjectMessage createObjectMessage() throws JMSException {
         Util.util().checkClosed(closed,"Session has been closed");
-        // TODO Auto-generated method stub
-        return null;
-    }
+        return new RMQObjectMessage();
+        }
 
     @Override
     public ObjectMessage createObjectMessage(Serializable object) throws JMSException {
