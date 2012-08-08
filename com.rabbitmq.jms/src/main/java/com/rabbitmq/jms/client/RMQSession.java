@@ -33,6 +33,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQMapMessage;
+import com.rabbitmq.jms.client.message.RMQStreamMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.util.Util;
 
@@ -96,8 +97,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public StreamMessage createStreamMessage() throws JMSException {
         Util.util().checkClosed(closed,"Session has been closed");
-        // TODO Auto-generated method stub
-        return null;
+        return new RMQStreamMessage();
     }
 
     @Override

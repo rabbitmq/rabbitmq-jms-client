@@ -7,6 +7,7 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
@@ -196,8 +197,20 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
-
     }
+    
+    public Object readObject() throws JMSException {
+        if (!reading)
+            throw new MessageNotReadableException(NOT_READABLE);
+        try {
+            return in.readObject();
+        } catch (ClassNotFoundException x) {
+            throw Util.util().handleException(x);
+        } catch (IOException x) {
+            throw Util.util().handleException(x);
+        }
+    }
+
 
     @Override
     public void writeBoolean(boolean value) throws JMSException {
@@ -334,11 +347,10 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         if (reading)
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
-            RMQBytesMessage.writePrimitive(value, out);
+            writePrimitiveData(value, out);
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
-
     }
 
     @Override
@@ -400,7 +412,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         this.in = new ObjectInputStream(bin);
     }
 
-    public static void writePrimitive(Object s, ObjectOutput out) throws IOException {
+    public void writePrimitiveData(Object s, ObjectOutput out) throws IOException {
         if (s instanceof Boolean) {
             out.writeBoolean(((Boolean) s).booleanValue());
         } else if (s instanceof Byte) {
@@ -419,8 +431,13 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             out.writeUTF((String) s);
         } else if (s instanceof Character) {
             out.writeChar(((Character) s).charValue());
-        } else {
+        } else if (RMQBytesMessage.class.equals(this.getClass())){
+            //bytes message can not contain objects
             throw new IOException(s + " is not a recognized primitive type.");
+        } else if (s instanceof Serializable) {
+            out.writeObject(s);
+        } else {
+            throw new IOException(s + " is not a serializable object.");
         }
     }
 

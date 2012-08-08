@@ -1,10 +1,12 @@
 package com.rabbitmq.jms.message;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
+import javax.jms.StreamMessage;
 
 import org.junit.Test;
 
@@ -29,6 +31,12 @@ public class TestMessages {
         writeMapMessage(message);
         readMapMessage(message);
     }
+    
+    @Test
+    public void testStreamMessage() throws Exception {
+        
+    }
+    
     
     public static void writeMapMessage(MapMessage message) throws JMSException {
         byte[] buf = { (byte) -2, (byte) -3 };
@@ -136,5 +144,61 @@ public class TestMessages {
         message.writeShort(Short.MAX_VALUE);
         message.writeShort((short) 0xFFFF);
         message.writeUTF("TEST");
+        try {
+            message.writeObject(new TestSerializable(6));
+            assertTrue(message instanceof StreamMessage);
+        } catch (Exception x) {
+            //this should only happen if it a bytes message and not stream message
+        }
+    }
+    
+    public static void writeStreamMessage(StreamMessage message) throws JMSException {
+       writeBytesMessage((BytesMessage)message);
+       try {
+           message.writeObject(new TestNonSerializable());
+           assertTrue(false);
+       } catch (Exception x) {
+           
+       }
+    }
+    
+    public static void readStreamMessage(StreamMessage message) throws JMSException {
+        readBytesMessage((BytesMessage)message);
+        assertEquals(new TestSerializable(6), message.readObject());
+     }
+    
+    
+    private static class TestSerializable implements Serializable {
+        int i;
+        @SuppressWarnings("unused")
+        public TestSerializable(int i) {
+            this.i = i;
+        }
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + i;
+            return result;
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            TestSerializable other = (TestSerializable) obj;
+            if (i != other.i)
+                return false;
+            return true;
+        }
+        
+        
+    }
+    
+    private static class TestNonSerializable {
+        
     }
 }
