@@ -208,7 +208,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public MessageConsumer createConsumer(Destination destination) throws JMSException {
         RMQDestination dest = (RMQDestination) destination;
-        String consumerTag = Util.util().generateConsumerTag();
+        String consumerTag = Util.util().generateUUIDTag();
 
         if (!dest.isQueue()) {
             String queueName = consumerTag;
@@ -226,13 +226,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector) throws JMSException {
-        // we are not implementing this optional method
+        // we are not implementing this method yet
         throw new UnsupportedOperationException();
     }
 
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean NoLocal) throws JMSException {
-        // we are not implementing this optional method
+        // we are not implementing this method yet
         throw new UnsupportedOperationException();
     }
 
