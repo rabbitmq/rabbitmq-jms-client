@@ -77,6 +77,8 @@
                 <configuration>
                     <excludes>
                         <exclude>com/rabbitmq/integration/tests/**</exclude>
+                        <exclude>**/*$*.class</exclude>
+
                     </excludes>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
                 </configuration>
