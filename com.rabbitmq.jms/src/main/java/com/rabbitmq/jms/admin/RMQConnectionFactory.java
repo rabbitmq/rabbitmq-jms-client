@@ -24,12 +24,16 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     /** TODO */
     private static final long serialVersionUID = -4953157213762979615L;
-    private static final String DEFAULT_USERNAME = "guest";
-    private static final String DEFAULT_PASSWORD = "guest";
+    
+    private String username = "guest";
+    private String password = "guest";
+    private String virtualHost = "/";
+    private String host = "localhost";
+    private int port = 5672;
 
     @Override
     public Connection createConnection() throws JMSException {
-        return this.createConnection(DEFAULT_USERNAME, DEFAULT_PASSWORD);
+        return this.createConnection(username, password);
     }
 
     @Override
@@ -37,9 +41,9 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
         factory.setUsername(userName);
         factory.setPassword(password);
-        factory.setVirtualHost("/");
-        factory.setHost("localhost");
-        factory.setPort(5672);
+        factory.setVirtualHost(getVirtualHost());
+        factory.setHost(getHost());
+        factory.setPort(getPort());
         com.rabbitmq.client.Connection rabbitConnection = null;
         try {
             rabbitConnection = factory.newConnection();
@@ -74,5 +78,47 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     public QueueConnection createQueueConnection(String userName, String password) throws JMSException {
         return (QueueConnection) this.createConnection(userName, password);
     }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getVirtualHost() {
+        return virtualHost;
+    }
+
+    public void setVirtualHost(String virtualHost) {
+        this.virtualHost = virtualHost;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+    
+    
 
 }
