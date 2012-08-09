@@ -121,6 +121,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public boolean getTransacted() throws JMSException {
+        return getTransactedNoException();
+    }
+    
+    public boolean getTransactedNoException() {
         return this.transacted;
     }
 

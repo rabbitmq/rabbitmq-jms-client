@@ -105,7 +105,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         } else {
             name = this.getUUIDTag();
         }
-        return getSession().getChannel().basicConsume(name, consumer);
+        
+        return getSession().getChannel().basicConsume(name, !getSession().getTransactedNoException(), consumer);
     }
 
     protected void basicCancel(String consumerTag) throws IOException {
@@ -182,6 +183,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     protected class MessageListenerWrapper implements Consumer {
         private MessageListener listener;
         private volatile String consumerTag;
+        
 
         public MessageListenerWrapper(MessageListener listener) {
             this.listener = listener;
@@ -219,8 +221,15 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
         @Override
         public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
-            // TODO Auto-generated method stub
-
+            if (this.consumerTag==null) this.consumerTag = consumerTag;
+            GetResponse response = new GetResponse(envelope, properties, body, 0);
+            try {
+                Message message = processMessage(response);
+                this.listener.onMessage(message);
+            } catch (JMSException x) {
+                x.printStackTrace(); //TO DO pick a logging framework
+                throw new IOException(x);
+            }
         }
 
         @Override
