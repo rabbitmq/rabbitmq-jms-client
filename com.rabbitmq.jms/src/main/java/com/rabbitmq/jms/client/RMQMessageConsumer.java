@@ -209,20 +209,14 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
         @Override
         public void handleConsumeOk(String consumerTag) {
-            // TODO Auto-generated method stub
-
         }
 
         @Override
         public void handleCancelOk(String consumerTag) {
-            // TODO Auto-generated method stub
-
         }
 
         @Override
         public void handleCancel(String consumerTag) throws IOException {
-            // TODO Auto-generated method stub
-
         }
 
         @Override
@@ -233,7 +227,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 Message message = processMessage(response);
                 this.listener.onMessage(message);
             } catch (JMSException x) {
-                x.printStackTrace(); //TO DO pick a logging framework
+                x.printStackTrace(); //TODO logging implementation
                 throw new IOException(x);
             }
         }

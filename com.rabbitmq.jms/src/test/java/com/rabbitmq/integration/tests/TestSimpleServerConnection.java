@@ -33,13 +33,11 @@ import com.rabbitmq.client.Envelope;
 import com.rabbitmq.integration.IntegrationTest;
 
 /**
- * TODO: Document the purpose of this test.
+ * Test to validate that RabbitMQ server is running and working
  */
 @Category(IntegrationTest.class)
 public class TestSimpleServerConnection {
-    // TODO: Refactor into integration test.
-    // TODO: Remove unneeded publics.
-    // TODO: Remove getters and setters?
+
 
     private volatile String username = "guest";
     private volatile String password = "guest";

@@ -55,8 +55,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     @Override
     public Reference getReference() throws NamingException {
-        // TODO Auto-generated method stub
-        return null;
+        return new Reference(RMQConnectionFactory.class.getName());
     }
 
     @Override

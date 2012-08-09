@@ -155,7 +155,7 @@ public class TestSynchronousConsumer {
                 consumer.handleDelivery(fakeConsumerTag, response);
                 success = true;
             } catch (Exception x) {
-                x.printStackTrace();
+                x.printStackTrace(); //TODO logging implementation
                 exception = x;
                 success = false;
                 return;
