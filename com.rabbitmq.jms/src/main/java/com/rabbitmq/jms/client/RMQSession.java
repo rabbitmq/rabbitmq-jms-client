@@ -49,6 +49,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private volatile Channel channel;
     private volatile boolean closed = false;
     private volatile Long lastReceivedTag;
+    private volatile MessageListener messageListener;
 
     public RMQSession(RMQConnection connection, boolean transacted, int mode) throws JMSException {
         assert (mode >= 0 && mode <= 3);
@@ -80,9 +81,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public Message createMessage() throws JMSException {
-        Util.util().checkClosed(this.closed, "Session has been closed");
-        // TODO Auto-generated method stub
-        return null;
+        return createTextMessage();
     }
 
     @Override
@@ -93,9 +92,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public ObjectMessage createObjectMessage(Serializable object) throws JMSException {
-        Util.util().checkClosed(this.closed, "Session has been closed");
-        // TODO Auto-generated method stub
-        return null;
+        ObjectMessage message = createObjectMessage();
+        message.setObject(object);
+        return message;
     }
 
     @Override
@@ -107,14 +106,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public TextMessage createTextMessage() throws JMSException {
         Util.util().checkClosed(this.closed, "Session has been closed");
-        // TODO Auto-generated method stub
-        return null;
+        return new RMQTextMessage();
     }
 
     @Override
     public TextMessage createTextMessage(String text) throws JMSException {
-        Util.util().checkClosed(this.closed, "Session has been closed");
-        RMQTextMessage msg = new RMQTextMessage();
+        TextMessage msg = createTextMessage();
         msg.setText(text);
         return msg;
     }
@@ -188,14 +185,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public MessageListener getMessageListener() throws JMSException {
-        // we are not implementing this optional method
-        throw new UnsupportedOperationException();
+        return this.messageListener;
     }
 
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
-        // we are not implementing this optional method
-        throw new UnsupportedOperationException();
+        this.messageListener = listener;
     }
 
     @Override

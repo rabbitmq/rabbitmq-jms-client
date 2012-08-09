@@ -136,6 +136,12 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 return null;
             this.session.messageReceived(response);
             RMQMessage message = RMQMessage.fromMessage(response.getBody());
+            try {
+                MessageListener listener = getSession().getMessageListener();
+                if (listener!=null) listener.onMessage(message);
+            } catch (JMSException x) {
+                x.printStackTrace(); //TODO logging implementation
+            }
             return message;
         } catch (IOException x) {
             Util.util().handleException(x);
