@@ -1,7 +1,6 @@
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Exchanger;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -9,13 +8,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
 
+import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
-import com.rabbitmq.client.AMQP.BasicProperties;
-import com.rabbitmq.jms.util.Util;
 
 /**
  * Implementation of a one time
