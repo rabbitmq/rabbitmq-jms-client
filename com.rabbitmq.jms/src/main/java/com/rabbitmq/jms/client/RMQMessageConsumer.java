@@ -57,13 +57,15 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
         try {
-            MessageListenerWrapper wrapper = this.wrap(listener);
+            MessageListenerWrapper wrapper = listener==null?null:this.wrap(listener);
             MessageListenerWrapper previous = this.listener.getAndSet(wrapper);
             if (previous != null) {
                 this.basicCancel(previous.getConsumerTag());
             }
-            String consumerTag = basicConsume(wrapper);
-            wrapper.setConsumerTag(consumerTag);
+            if (wrapper!=null) {
+                String consumerTag = basicConsume(wrapper);
+                wrapper.setConsumerTag(consumerTag);
+            }
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -148,8 +150,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
     @Override
     public void close() throws JMSException {
-        // TODO Auto-generated method stub
-
+        setMessageListener(null);
     }
 
     public RMQDestination getDestination() {
