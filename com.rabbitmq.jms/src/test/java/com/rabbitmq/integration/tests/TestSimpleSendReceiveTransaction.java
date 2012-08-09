@@ -13,9 +13,12 @@ import javax.jms.TextMessage;
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import com.rabbitmq.integration.IntegrationTest;
 import com.rabbitmq.jms.TestConnectionFactory;
 
+@Category(IntegrationTest.class)
 public class TestSimpleSendReceiveTransaction {
     static final String QUEUE_NAME = "test.queue." + TestSimpleSendReceiveTransaction.class.getCanonicalName();
     static final String MESSAGE = "Hello " + TestSimpleQueueMessage.class.getName();

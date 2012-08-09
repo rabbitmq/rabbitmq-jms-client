@@ -18,9 +18,12 @@ import javax.jms.TextMessage;
 import static junit.framework.Assert.*;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import com.rabbitmq.integration.IntegrationTest;
 import com.rabbitmq.jms.TestConnectionFactory;
 
+@Category(IntegrationTest.class)
 public class TestAsyncConsumer {
     static final String QUEUE_NAME = "test.queue." + TestAsyncConsumer.class.getCanonicalName();
     static final String MESSAGE = "Hello " + TestAsyncConsumer.class.getName();

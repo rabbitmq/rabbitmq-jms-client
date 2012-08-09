@@ -22,6 +22,7 @@ import java.io.IOException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -29,10 +30,12 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
+import com.rabbitmq.integration.IntegrationTest;
 
 /**
  * TODO: Document the purpose of this test.
  */
+@Category(IntegrationTest.class)
 public class TestSimpleServerConnection {
     // TODO: Refactor into integration test.
     // TODO: Remove unneeded publics.

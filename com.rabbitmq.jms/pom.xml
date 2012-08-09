@@ -62,35 +62,55 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.5.1</version>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.11</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-junit47</artifactId>
+                        <version>2.12</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
                     <includes>
-                        <include>**/**</include>
+                        <include>**/*.class</include>
                     </includes>
-                    <excludes>
-                        <exclude>javax/**</exclude>
-                    </excludes>
+                    <excludedGroups>com.rabbitmq.integration.IntegrationTest</excludedGroups>
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.10</version>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.12</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-junit47</artifactId>
+                        <version>2.12</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
-                    <testFailureIgnore>true</testFailureIgnore>
-                    <excludes>
-                        <exclude>com/rabbitmq/integration/tests/**</exclude>
-                    </excludes>
-                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    <groups>com.rabbitmq.integration.IntegrationTest</groups>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>**/*.class</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
+
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.7</version>
                 <executions>
                     <execution>
-                        <id>test-reports</id>
+                        <id>test-unit-reports</id>
                         <phase>test</phase>
                         <configuration>
                             <tasks>
@@ -100,6 +120,24 @@
                                     </fileset>
                                     <report format="noframes"
                                         todir="target/surefire-reports" />
+                                </junitreport>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>test-integration-reports</id>
+                        <phase>integration-test</phase>
+                        <configuration>
+                            <tasks>
+                                <junitreport todir="target/failsafe-reports">
+                                    <fileset dir="target/failsafe-reports">
+                                        <include name="**/*.xml" />
+                                    </fileset>
+                                    <report format="noframes"
+                                        todir="target/failsafe-reports" />
                                 </junitreport>
                             </tasks>
                         </configuration>
