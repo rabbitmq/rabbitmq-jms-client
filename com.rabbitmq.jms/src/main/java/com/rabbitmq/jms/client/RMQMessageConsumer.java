@@ -1,6 +1,7 @@
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -11,7 +12,11 @@ import javax.jms.QueueReceiver;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
+import com.rabbitmq.client.AMQP.BasicProperties;
+import com.rabbitmq.client.Consumer;
+import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
+import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.util.Util;
 
@@ -19,12 +24,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
     private final RMQDestination destination;
     private final RMQSession session;
-    private final String consumerTag;
+    private final String uuidTag;
+    private AtomicReference<MessageListenerWrapper> listener = new AtomicReference<MessageListenerWrapper>();
 
-    public RMQMessageConsumer(RMQSession session, RMQDestination destination, String consumerTag) {
+    public RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag) {
         this.session = session;
         this.destination = destination;
-        this.consumerTag = consumerTag;
+        this.uuidTag = uuidTag;
     }
 
     @Override
@@ -40,14 +46,29 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
     @Override
     public MessageListener getMessageListener() throws JMSException {
-        // TODO Auto-generated method stub
+        MessageListenerWrapper wrapper = this.listener.get();
+        if (wrapper != null) {
+            return wrapper.getMessageListener();
+        }
         return null;
+
     }
 
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
-        // TODO Auto-generated method stub
-
+        try {
+            MessageListenerWrapper wrapper = listener==null?null:this.wrap(listener);
+            MessageListenerWrapper previous = this.listener.getAndSet(wrapper);
+            if (previous != null) {
+                this.basicCancel(previous.getConsumerTag());
+            }
+            if (wrapper!=null) {
+                String consumerTag = basicConsume(wrapper);
+                wrapper.setConsumerTag(consumerTag);
+            }
+        } catch (IOException x) {
+            Util.util().handleException(x);
+        }
     }
 
     @Override
@@ -58,39 +79,37 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     @Override
     public Message receive(long timeout) throws JMSException {
         Message msg = receiveNoWait();
-        if (msg!=null) {
-            //attempt instant receive first
+        if (msg != null) {
+            // attempt instant receive first
             return msg;
         }
-        if (timeout==0) {
+        if (timeout == 0) {
             timeout = Long.MAX_VALUE;
-        }
-        String name = null;
-        if (this.destination.isQueue()) {
-            name = this.destination.getQueueName();
-        } else {
-            name = this.getConsumerTag();
         }
 
         try {
             SynchronousConsumer sc = new SynchronousConsumer(this.session.getChannel(), timeout);
-            getSession().getChannel().basicConsume(name, sc);
+            String tag = basicConsume(sc);
             GetResponse response = sc.receive();
-            if (response == null)
-                return null;
-            this.session.messageReceived(response);
-            RMQMessage message = RMQMessage.fromMessage(response.getBody());
-            return message;
+            return processMessage(response);
         } catch (IOException x) {
-            Util.util().handleException(x);
-        } catch (ClassNotFoundException x) {
-            Util.util().handleException(x);
-        } catch (IllegalAccessException x) {
-            Util.util().handleException(x);
-        } catch (InstantiationException x) {
             Util.util().handleException(x);
         }
         return null;
+    }
+
+    protected String basicConsume(Consumer consumer) throws IOException {
+        String name = null;
+        if (this.destination.isQueue()) {
+            name = this.destination.getName();
+        } else {
+            name = this.getUUIDTag();
+        }
+        return getSession().getChannel().basicConsume(name, consumer);
+    }
+
+    protected void basicCancel(String consumerTag) throws IOException {
+        getSession().getChannel().basicCancel(consumerTag);
     }
 
     @Override
@@ -100,9 +119,18 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             if (this.destination.isQueue()) {
                 response = this.getSession().getChannel().basicGet(this.destination.getQueueName(), !this.getSession().getTransacted());
             } else {
-                response = this.getSession().getChannel().basicGet(this.getConsumerTag(), !this.getSession().getTransacted());
+                response = this.getSession().getChannel().basicGet(this.getUUIDTag(), !this.getSession().getTransacted());
             }
 
+            return processMessage(response);
+        } catch (IOException x) {
+            Util.util().handleException(x);
+        }
+        return null;
+    }
+
+    private Message processMessage(GetResponse response) throws JMSException {
+        try {
             if (response == null)
                 return null;
             this.session.messageReceived(response);
@@ -122,8 +150,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
     @Override
     public void close() throws JMSException {
-        // TODO Auto-generated method stub
-
+        setMessageListener(null);
     }
 
     public RMQDestination getDestination() {
@@ -134,8 +161,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         return this.session;
     }
 
-    public String getConsumerTag() {
-        return this.consumerTag;
+    public String getUUIDTag() {
+        return this.uuidTag;
     }
 
     @Override
@@ -146,6 +173,68 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     @Override
     public boolean getNoLocal() throws JMSException {
         return false;
+    }
+
+    protected MessageListenerWrapper wrap(MessageListener listener) throws IOException {
+        return new MessageListenerWrapper(listener);
+    }
+    
+    protected class MessageListenerWrapper implements Consumer {
+        private MessageListener listener;
+        private volatile String consumerTag;
+
+        public MessageListenerWrapper(MessageListener listener) {
+            this.listener = listener;
+        }
+
+        public String getConsumerTag() {
+            return consumerTag;
+        }
+
+        public void setConsumerTag(String consumerTag) {
+            this.consumerTag = consumerTag;
+        }
+
+        public MessageListener getMessageListener() {
+            return listener;
+        }
+
+        @Override
+        public void handleConsumeOk(String consumerTag) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void handleCancelOk(String consumerTag) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void handleCancel(String consumerTag) throws IOException {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void handleRecoverOk(String consumerTag) {
+            // TODO Auto-generated method stub
+
+        }
+
     }
 
 }

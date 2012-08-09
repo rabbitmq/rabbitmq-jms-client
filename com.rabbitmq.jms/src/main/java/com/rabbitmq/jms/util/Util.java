@@ -26,7 +26,7 @@ public class Util {
             throw new JMSException(msg != null ? msg : "Closed");
     }
 
-    public String generateConsumerTag() {
+    public String generateUUIDTag() {
         return UUID.randomUUID().toString();
     }
 }

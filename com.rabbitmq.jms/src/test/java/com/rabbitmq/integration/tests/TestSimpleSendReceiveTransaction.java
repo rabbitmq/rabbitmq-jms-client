@@ -17,10 +17,12 @@ import org.junit.Test;
 import com.rabbitmq.jms.TestConnectionFactory;
 
 public class TestSimpleSendReceiveTransaction {
+    static final String QUEUE_NAME = "test.queue." + TestSimpleSendReceiveTransaction.class.getCanonicalName();
+    static final String MESSAGE = "Hello " + TestSimpleQueueMessage.class.getName();
+
     @Test
     public void testQueueSendAndRollback() throws Exception {
-        final String MESSAGE2 = "2. Hello " + TestSimpleQueueMessage.class.getName();
-        final String QUEUE_NAME = "test.queue";
+
         QueueConnection queueConn = null;
         try {
             QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
@@ -30,7 +32,7 @@ public class TestSimpleSendReceiveTransaction {
             Queue queue = queueSession.createQueue(QUEUE_NAME);
             QueueSender queueSender = queueSession.createSender(queue);
             queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-            TextMessage message = queueSession.createTextMessage(MESSAGE2);
+            TextMessage message = queueSession.createTextMessage(MESSAGE);
             queueSender.send(message);
             queueSession.rollback();
         } finally {
@@ -52,8 +54,6 @@ public class TestSimpleSendReceiveTransaction {
 
     @Test
     public void testSendAndCommitAndReceiveMessage() throws Exception {
-        final String MESSAGE2 = "2. Hello " + TestSimpleQueueMessage.class.getName();
-        final String QUEUE_NAME = "test.queue";
         QueueConnection queueConn = null;
         try {
             QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
@@ -63,7 +63,7 @@ public class TestSimpleSendReceiveTransaction {
             Queue queue = queueSession.createQueue(QUEUE_NAME);
             QueueSender queueSender = queueSession.createSender(queue);
             queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-            TextMessage message = queueSession.createTextMessage(MESSAGE2);
+            TextMessage message = queueSession.createTextMessage(MESSAGE);
             queueSender.send(message);
             queueSession.commit();
         } finally {
@@ -77,7 +77,7 @@ public class TestSimpleSendReceiveTransaction {
             Queue queue = queueSession.createQueue(QUEUE_NAME);
             QueueReceiver queueReceiver = queueSession.createReceiver(queue);
             TextMessage message = (TextMessage) queueReceiver.receive();
-            Assert.assertEquals(MESSAGE2, message.getText());
+            Assert.assertEquals(MESSAGE, message.getText());
         } finally {
             queueConn.close();
         }
