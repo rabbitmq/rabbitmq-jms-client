@@ -34,10 +34,34 @@ public class TestSynchronousConsumer {
      * @throws Exception
      */
     @Test
-    public void testSynchronousConsumer1() throws Exception {
+    public void testSynchronousConsumerSuccess() throws Exception {
         Channel channel = mock(Channel.class);
 
         SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT);
+        CountDownLatch tx = new CountDownLatch(1);
+        CountDownLatch rx = new CountDownLatch(1);
+        SenderThread st = new SenderThread(TEST_RESPONSE, consumer, tx);
+        ReceiverThread rt = new ReceiverThread(TEST_RESPONSE, consumer, rx);
+        st.start();
+        rt.start();
+
+        rx.countDown();
+        tx.countDown();
+        
+        rt.join();
+        st.join();
+        
+        verify(channel, atLeastOnce()).basicAck(anyLong(),anyBoolean());
+        verify(channel, atLeastOnce()).basicCancel(anyString());
+        assertTrue(rt.isSuccess());
+        assertTrue(st.isSuccess());
+    }
+    
+    @Test
+    public void testSynchronousConsumerSuccessShortTimeout() throws Exception {
+        Channel channel = mock(Channel.class);
+
+        SynchronousConsumer consumer = new SynchronousConsumer(channel, 1);
         CountDownLatch tx = new CountDownLatch(1);
         CountDownLatch rx = new CountDownLatch(1);
         SenderThread st = new SenderThread(TEST_RESPONSE, consumer, tx);
@@ -63,7 +87,7 @@ public class TestSynchronousConsumer {
      * @throws Exception
      */
     @Test
-    public void testSynchronousConsumer2() throws Exception {
+    public void testSynchronousConsumerReceiverTimeout() throws Exception {
         Channel channel = mock(Channel.class);
 
         SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT);
@@ -94,7 +118,7 @@ public class TestSynchronousConsumer {
      * @throws Exception
      */
     @Test
-    public void testSynchronousConsumer3() throws Exception {
+    public void testSynchronousConsumerReceiverTimeoutNoSender() throws Exception {
         Channel channel = mock(Channel.class);
 
         SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT);
@@ -137,13 +161,15 @@ public class TestSynchronousConsumer {
                 return;
             }
             try {
+                latch.await();
                 consumer.handleDelivery(fakeConsumerTag, response);
                 success = false;
-            } catch (IOException x) {
-                // we should not be able to send more than one message
+            } catch (Exception x) {
+                //this is expected, it's a 2nd invocation
+                exception = x;
                 success = true;
+                return;
             }
-
         }
 
         public boolean isSuccess() {

@@ -5,6 +5,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Exchanger;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
 
@@ -20,13 +21,13 @@ import com.rabbitmq.jms.util.Util;
  * Implementation of a one time
  */
 public class SynchronousConsumer implements Consumer {
-    private static final GetResponse REJECT_MSG = new GetResponse(null, null, null, 0);
     private static final GetResponse ACCEPT_MSG = new GetResponse(null, null, null, 0);
 
     private final Exchanger<GetResponse> exchanger = new Exchanger<GetResponse>();
-    private final CountDownLatch latch = new CountDownLatch(1);
     private final long timeout;
     private final Channel channel;
+    private final AtomicBoolean useOnce = new AtomicBoolean(false);
+    private final AtomicBoolean oneReceived = new AtomicBoolean(false);
 
     public SynchronousConsumer(Channel channel, long timeout) {
         super();
@@ -35,34 +36,17 @@ public class SynchronousConsumer implements Consumer {
     }
 
     public GetResponse receive() throws JMSException {
-        boolean timedout = true;
-        try {
-            timedout = !latch.await(timeout, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException x) {
-            // no op - timed out is set
+        if (!useOnce.compareAndSet(false, true)) {
+            throw new JMSException("SynchronousConsumer.receive can only be used once.");
         }
         GetResponse response = null;
-        if (timedout) {
-            try {
-                exchanger.exchange(REJECT_MSG, 0, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException x) {
-                // this is expected
-            } catch (InterruptedException x) {
-                // this we can ignore
-            }
-        } else {
-            try {
-
-                response = exchanger.exchange(ACCEPT_MSG, 0, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException x) {
-                // this should never happen
-                Util.util().handleException(x);
-            } catch (InterruptedException x) {
-                // this should never happen if we have 0 wait time
-                Util.util().handleException(x);
-            }
+        try {
+            response = exchanger.exchange(ACCEPT_MSG, timeout, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException x) {
+            // this is expected
+        } catch (InterruptedException x) {
+            // this we can ignore
         }
-
         return response;
     }
 
@@ -88,28 +72,31 @@ public class SynchronousConsumer implements Consumer {
     }
 
     public synchronized void handleDelivery(String consumerTag, GetResponse response) throws IOException {
-        if (latch.getCount() == 0)
-            throw new IOException("Not accepting more than one message in this consumer.");
+        boolean success = false;
         try {
-            latch.countDown();
+            // give the other thread enough time to arrive
+            GetResponse waiter = null;
             try {
-                // give the other thread enough time to arrive
-                GetResponse waiter = null;
-                try {
-                    waiter = exchanger.exchange(response, 100, TimeUnit.MILLISECONDS);
-                } catch (InterruptedException x) {
-                    waiter = REJECT_MSG;
-                }catch (TimeoutException x) {
-                    waiter = REJECT_MSG;
+                if (oneReceived.compareAndSet(false, true)) {
+                    success = true;
+                    waiter = exchanger.exchange(response, Math.min(100, this.timeout), TimeUnit.MILLISECONDS);
                 }
-                if (waiter == ACCEPT_MSG) {
-                    channel.basicAck(response.getEnvelope().getDeliveryTag(), false);
-                } else {
-                    channel.basicNack(response.getEnvelope().getDeliveryTag(), false, true);
-                }
-            } catch (Exception x) {
-                x.printStackTrace();
+            } catch (InterruptedException x) {
+                //this is ok, it means we had a message
+                //but no one there to receive it and got
+                //interrupted
+            }catch (TimeoutException x) {
+                
             }
+            if (waiter == ACCEPT_MSG) {
+                channel.basicAck(response.getEnvelope().getDeliveryTag(), false);
+            } else {
+                channel.basicNack(response.getEnvelope().getDeliveryTag(), false, true);
+            }
+            //this shouldn't happen since handleDelivery is synchronized
+            //but if it does, we need to NACK the message
+            //and throw back an IOException to Rabbit
+            if (!success) throw new IOException("multiple invocations of SynchronousConsumer.handleDelivery");
         } finally {
             channel.basicCancel(consumerTag);
         }
