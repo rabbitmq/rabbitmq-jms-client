@@ -23,10 +23,13 @@ import com.rabbitmq.jms.message.TestMessages;
 
 public class TestSimpleQueueMessage {
 
+    static final String QUEUE_NAME = "test.queue."+TestSimpleQueueMessage.class.getCanonicalName();
+    static final String MESSAGE = "Hello " + TestSimpleQueueMessage.class.getName();
+    
     @Test
     public void testSendAndReceiveTextMessage() throws Exception {
-        final String MESSAGE2 = "2. Hello " + TestSimpleQueueMessage.class.getName();
-        final String QUEUE_NAME = "test.queue";
+        
+        
         QueueConnection queueConn = null;
         try {
             QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
@@ -36,7 +39,7 @@ public class TestSimpleQueueMessage {
             Queue queue = queueSession.createQueue(QUEUE_NAME);
             QueueSender queueSender = queueSession.createSender(queue);
             queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-            TextMessage message = queueSession.createTextMessage(MESSAGE2);
+            TextMessage message = queueSession.createTextMessage(MESSAGE);
             queueSender.send(message);
         } finally {
             queueConn.close();
@@ -49,7 +52,7 @@ public class TestSimpleQueueMessage {
             Queue queue = queueSession.createQueue(QUEUE_NAME);
             QueueReceiver queueReceiver = queueSession.createReceiver(queue);
             TextMessage message = (TextMessage) queueReceiver.receive();
-            Assert.assertEquals(MESSAGE2, message.getText());
+            Assert.assertEquals(MESSAGE, message.getText());
         } finally {
             queueConn.close();
         }
@@ -58,7 +61,6 @@ public class TestSimpleQueueMessage {
 
     @Test
     public void testSendAndReceiveBytesMessage() throws Exception {
-        final String QUEUE_NAME = "test.queue";
         QueueConnection queueConn = null;
         try {
             QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
@@ -92,7 +94,6 @@ public class TestSimpleQueueMessage {
 
     @Test
     public void testSendAndReceiveMapMessage() throws Exception {
-        final String QUEUE_NAME = "test.queue";
         QueueConnection queueConn = null;
         try {
             QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
@@ -126,7 +127,6 @@ public class TestSimpleQueueMessage {
 
     @Test
     public void testSendAndReceiveStreamMessage() throws Exception {
-        final String QUEUE_NAME = "test.queue";
         QueueConnection queueConn = null;
         try {
             QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
@@ -159,7 +159,6 @@ public class TestSimpleQueueMessage {
 
     @Test
     public void testSendAndReceiveObjectMessage() throws Exception {
-        final String QUEUE_NAME = "test.queue";
         QueueConnection queueConn = null;
         try {
             QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()

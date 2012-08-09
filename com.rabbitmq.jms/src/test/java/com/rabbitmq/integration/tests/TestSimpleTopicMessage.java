@@ -17,11 +17,10 @@ import org.junit.Test;
 import com.rabbitmq.jms.TestConnectionFactory;
 
 public class TestSimpleTopicMessage {
-
+    final String TOPIC_NAME = "test.topic."+TestSimpleTopicMessage.class.getCanonicalName();
     @Test
     public void testSendAndReceiveTextMessage() throws Exception {
-        final String MESSAGE2 = "2. Hello " + TestSimpleTopicMessage.class.getName();
-        final String TOPIC_NAME = "test.topic";
+        final String MESSAGE2 = "Hello " + TestSimpleTopicMessage.class.getName();
         TopicConnection topicConn = null;
         try {
             TopicConnectionFactory connFactory = (TopicConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
