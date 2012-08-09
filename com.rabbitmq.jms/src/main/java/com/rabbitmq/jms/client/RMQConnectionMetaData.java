@@ -18,6 +18,20 @@ public class RMQConnectionMetaData implements ConnectionMetaData {
     private static final int JMS_MAJOR_VERSION = 1;
     private static final int JMS_MINOR_VERSION = 1;
 
+    private static final Enumeration<String> EMPTY_ENUMERATION = new Enumeration<String>() {
+
+        @Override
+        public boolean hasMoreElements() {
+            return false;
+        }
+
+        @Override
+        public String nextElement() {
+            return null;
+        }
+
+    };
+
     @Override
     public String getJMSVersion() throws JMSException {
         return JMS_VERSION;
@@ -55,8 +69,7 @@ public class RMQConnectionMetaData implements ConnectionMetaData {
 
     @Override
     public Enumeration<String> getJMSXPropertyNames() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return EMPTY_ENUMERATION;
     }
 
 }
