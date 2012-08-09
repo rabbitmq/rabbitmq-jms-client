@@ -20,9 +20,10 @@ import com.rabbitmq.jms.util.Util;
 /**
  * RabbitMQ Implementation of JMS {@link ConnectionFactory}
  */
-@SuppressWarnings("serial")
 public class RMQConnectionFactory implements ConnectionFactory, Referenceable, Serializable, QueueConnectionFactory, TopicConnectionFactory {
 
+    /** TODO */
+    private static final long serialVersionUID = -4953157213762979615L;
     private static final String DEFAULT_USERNAME = "guest";
     private static final String DEFAULT_PASSWORD = "guest";
 

@@ -10,9 +10,10 @@ import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
 
-@SuppressWarnings("serial")
 public class RMQDestination implements Queue, Topic, Destination, Referenceable, Serializable {
 
+    /** TODO */
+    private static final long serialVersionUID = 596966152753718825L;
     private volatile String name;
     private volatile String exchangeName;
     private volatile String routingKey;

@@ -22,12 +22,12 @@ import com.rabbitmq.client.GetResponse;
 
 public class TestSynchronousConsumer {
 
-    static final long TIMEOUT = 100;
-    static final Envelope envelope = mock(Envelope.class);
+    private static final long TIMEOUT = 100;
+    private static final Envelope envelope = mock(Envelope.class);
     static {
         when(envelope.getDeliveryTag()).thenReturn(1l);
     }
-    static final GetResponse TEST_RESPONSE = new GetResponse(envelope, null, null, 0);
+    private static final GetResponse TEST_RESPONSE = new GetResponse(envelope, null, null, 0);
 
     /**
      * This test the message is exchanged successfully
