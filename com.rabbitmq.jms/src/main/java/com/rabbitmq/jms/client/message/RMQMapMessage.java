@@ -19,6 +19,9 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
     private static final String UNABLE_TO_CAST = "Unable to cast the object, %s, into the specified type %s";
     private Map<String, Serializable> data = new HashMap<String, Serializable>();
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean getBoolean(String name) throws JMSException {
         Object o = this.data.get(name);
@@ -32,6 +35,9 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new JMSException(String.format(UNABLE_TO_CAST, o, "boolean"));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public byte getByte(String name) throws JMSException {
         Object o = this.data.get(name);
@@ -45,6 +51,9 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new JMSException(String.format(UNABLE_TO_CAST, o, "byte"));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public short getShort(String name) throws JMSException {
         Object o = this.data.get(name);
@@ -60,6 +69,9 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new JMSException(String.format(UNABLE_TO_CAST, o, "short"));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public char getChar(String name) throws JMSException {
         Object o = this.data.get(name);
@@ -71,6 +83,9 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new JMSException(String.format(UNABLE_TO_CAST, o, "char"));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getInt(String name) throws JMSException {
         Object o = this.data.get(name);
@@ -88,6 +103,9 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new JMSException(String.format(UNABLE_TO_CAST, o, "int"));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long getLong(String name) throws JMSException {
         Object o = this.data.get(name);
@@ -107,6 +125,9 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new JMSException(String.format(UNABLE_TO_CAST, o, "long"));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public float getFloat(String name) throws JMSException {
         Object o = this.data.get(name);
@@ -120,6 +141,9 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new JMSException(String.format(UNABLE_TO_CAST, o, "float"));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public double getDouble(String name) throws JMSException {
         Object o = this.data.get(name);
@@ -135,6 +159,9 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new JMSException(String.format(UNABLE_TO_CAST, o, "double"));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getString(String name) throws JMSException {
         Object o = this.data.get(name);
@@ -146,6 +173,9 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             return o.toString();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public byte[] getBytes(String name) throws JMSException {
         Object o = this.data.get(name);
@@ -157,66 +187,105 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new JMSException(String.format(UNABLE_TO_CAST, o, "byte[]"));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Object getObject(String name) throws JMSException {
         return this.data.get(name);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Enumeration<String> getMapNames() throws JMSException {
         return new IteratorEnum<String>(this.data.keySet().iterator());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setBoolean(String name, boolean value) throws JMSException {
         this.data.put(name, value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setByte(String name, byte value) throws JMSException {
         this.data.put(name, value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setShort(String name, short value) throws JMSException {
         this.data.put(name, value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setChar(String name, char value) throws JMSException {
         this.data.put(name, value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setInt(String name, int value) throws JMSException {
         this.data.put(name, value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setLong(String name, long value) throws JMSException {
         this.data.put(name, value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setFloat(String name, float value) throws JMSException {
         this.data.put(name, value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setDouble(String name, double value) throws JMSException {
         this.data.put(name, value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setString(String name, String value) throws JMSException {
         this.data.put(name, value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setBytes(String name, byte[] value) throws JMSException {
         this.data.put(name, value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setBytes(String name, byte[] value, int offset, int length) throws JMSException {
         if (value == null) {
@@ -232,6 +301,9 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setObject(String name, Object value) throws JMSException {
         if (!(value instanceof Serializable))
@@ -239,16 +311,25 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         this.data.put(name, (Serializable) value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean itemExists(String name) throws JMSException {
         return this.data.containsKey(name);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void clearBody() throws JMSException {
         this.data.clear();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void writeBody(ObjectOutput out) throws IOException {
         int size = this.data.size();
@@ -260,6 +341,9 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void readBody(ObjectInput in) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         int size = in.readInt();

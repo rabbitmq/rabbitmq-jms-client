@@ -14,21 +14,33 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
 
     private Serializable data;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setObject(Serializable object) throws JMSException {
         this.data = object;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Serializable getObject() throws JMSException {
         return this.data;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void clearBody() throws JMSException {
         this.data = null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void writeBody(ObjectOutput out) throws IOException {
         out.writeBoolean(this.data == null);
@@ -37,6 +49,9 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void readBody(ObjectInput in) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         boolean isnull = in.readBoolean();

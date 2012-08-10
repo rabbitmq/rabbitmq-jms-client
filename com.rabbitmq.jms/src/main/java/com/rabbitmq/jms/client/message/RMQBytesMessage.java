@@ -47,6 +47,9 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean readBoolean() throws JMSException {
         if (!this.reading)
@@ -58,6 +61,9 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public byte readByte() throws JMSException {
         if (!this.reading)
@@ -69,6 +75,9 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int readUnsignedByte() throws JMSException {
         if (!this.reading)
@@ -78,9 +87,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public short readShort() throws JMSException {
         if (!this.reading)
@@ -92,6 +103,9 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int readUnsignedShort() throws JMSException {
         if (!this.reading)
@@ -102,9 +116,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public char readChar() throws JMSException {
         if (!this.reading)
@@ -114,9 +130,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int readInt() throws JMSException {
         if (!this.reading)
@@ -129,6 +147,9 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long readLong() throws JMSException {
         if (!this.reading)
@@ -138,9 +159,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public float readFloat() throws JMSException {
         if (!this.reading)
@@ -152,6 +175,9 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public double readDouble() throws JMSException {
         if (!this.reading)
@@ -164,6 +190,9 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String readUTF() throws JMSException {
         if (!this.reading)
@@ -173,9 +202,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int readBytes(byte[] value) throws JMSException {
         if (!this.reading)
@@ -185,9 +216,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int readBytes(byte[] value, int length) throws JMSException {
         if (!this.reading)
@@ -199,6 +232,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         }
     }
 
+    /**
+     * reads an object from the stream that was used to serialize this message
+     * @return the object read
+     * @throws JMSException if a deserialization exception happens
+     */
     public Object readObject() throws JMSException {
         if (!this.reading)
             throw new MessageNotReadableException(NOT_READABLE);
@@ -211,6 +249,9 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void writeBoolean(boolean value) throws JMSException {
         if (this.reading)
@@ -222,6 +263,9 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void writeByte(byte value) throws JMSException {
         if (this.reading)
@@ -231,9 +275,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void writeShort(short value) throws JMSException {
         if (this.reading)
@@ -243,9 +289,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void writeChar(char value) throws JMSException {
         if (this.reading)
@@ -255,9 +303,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void writeInt(int value) throws JMSException {
         if (this.reading)
@@ -269,6 +319,9 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void writeLong(long value) throws JMSException {
         if (this.reading)
@@ -278,9 +331,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void writeFloat(float value) throws JMSException {
         if (this.reading)
@@ -290,9 +345,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void writeDouble(double value) throws JMSException {
         if (this.reading)
@@ -302,9 +359,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void writeUTF(String value) throws JMSException {
         if (this.reading)
@@ -314,9 +373,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void writeBytes(byte[] value) throws JMSException {
         if (this.reading)
@@ -326,9 +387,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void writeBytes(byte[] value, int offset, int length) throws JMSException {
         if (this.reading)
@@ -338,9 +401,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void writeObject(Object value) throws JMSException {
         if (this.reading)
@@ -352,6 +417,9 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void reset() throws JMSException {
         if (this.reading)
@@ -374,11 +442,17 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         this.bout = null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long getBodyLength() throws JMSException {
         return this.reading ? this.bin.available() : this.bout.size();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void clearBody() throws JMSException {
         this.bout = new ByteArrayOutputStream(RMQMessage.DEFAULT_MESSAGE_BODY_SIZE);
@@ -390,9 +464,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         this.bin = null;
         this.in = null;
         this.reading = false;
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void writeBody(ObjectOutput out) throws IOException {
         this.out.flush();
@@ -401,6 +477,9 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         out.write(buf);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void readBody(ObjectInput in) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         int len = in.readInt();
@@ -411,6 +490,12 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         this.in = new ObjectInputStream(this.bin);
     }
 
+    /**
+     * Utility method to write an object as a primitive or as an object
+     * @param s the object to write
+     * @param out the stream to write it to
+     * @throws IOException
+     */
     public void writePrimitiveData(Object s, ObjectOutput out) throws IOException {
         if (s instanceof Boolean) {
             out.writeBoolean(((Boolean) s).booleanValue());
