@@ -7,6 +7,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
@@ -16,7 +17,8 @@ import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
 
 /**
- * Implementation of a one time
+ * Implementation of a one time Consumer used to handle the JMS semantics described in 
+ * {@link MessageConsumer#receive()} and {@link MessageConsumer#receive(long))} 
  */
 public class SynchronousConsumer implements Consumer {
     private static final GetResponse ACCEPT_MSG = new GetResponse(null, null, null, 0);
