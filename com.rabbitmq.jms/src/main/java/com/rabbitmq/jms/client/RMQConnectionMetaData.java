@@ -32,41 +32,66 @@ public class RMQConnectionMetaData implements ConnectionMetaData {
 
     };
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getJMSVersion() throws JMSException {
         return JMS_VERSION;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getJMSMajorVersion() throws JMSException {
         return JMS_MAJOR_VERSION;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getJMSMinorVersion() throws JMSException {
         return JMS_MINOR_VERSION;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getJMSProviderName() throws JMSException {
         return JMS_PROVIDER_NAME;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getProviderVersion() throws JMSException {
         return RABBITMQ_VERSION;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getProviderMajorVersion() throws JMSException {
         return RABBITMQ_MAJOR_VERSION;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getProviderMinorVersion() throws JMSException {
         return RABBITMQ_MINOR_VERSION;
     }
 
+    /**
+     * {@inheritDoc}
+     * This method currently returns an empty enumeration
+     */
     @Override
     public Enumeration<String> getJMSXPropertyNames() throws JMSException {
         return EMPTY_ENUMERATION;
