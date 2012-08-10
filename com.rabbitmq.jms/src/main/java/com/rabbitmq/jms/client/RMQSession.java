@@ -201,6 +201,15 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     @Override
     public MessageProducer createProducer(Destination destination) throws JMSException {
+        RMQDestination dest = (RMQDestination) destination;
+        if (!dest.isDeclared()) {
+            if (dest.isQueue()) {
+                //TODO for a late declared queue, fix this
+                declareQueue(dest,false,true);
+            } else {
+                declareTopic(dest);
+            }
+        }
         return new RMQMessageProducer(this, (RMQDestination) destination);
     }
 
@@ -209,6 +218,15 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         RMQDestination dest = (RMQDestination) destination;
         String consumerTag = Util.util().generateUUIDTag();
 
+        if (!dest.isDeclared()) {
+            if (dest.isQueue()) {
+                //TODO for a late declared queue, fix this
+                declareQueue(dest,false,true);
+            } else {
+                declareTopic(dest);
+            }
+        }
+        
         if (!dest.isQueue()) {
             String queueName = consumerTag;
             // this is a topic, we need to define a queue, and bind to it
@@ -241,27 +259,37 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public Queue createQueue(String queueName) throws JMSException {
         String name = queueName, exchangeName = "", routingKey = name;
-        RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, true);
+        RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, true, true);
         boolean temporary = false;
         boolean durable = true;
+        declareQueue(dest, temporary, durable);
+        return dest;
+    }
+
+    protected void declareQueue(RMQDestination dest, boolean temporary, boolean durable) throws JMSException {
         try {
             this.channel.queueDeclare(dest.getQueueName(), durable, temporary, !durable, new HashMap<String, Object>());
         } catch (IOException x) {
             Util.util().handleException(x);
         }
-        return dest;
+        dest.setDeclared(true);
     }
 
     @Override
     public Topic createTopic(String topicName) throws JMSException {
         String name = topicName, exchangeName = "topic." + topicName, routingKey = name;
-        RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, false);
+        RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, false, true);
+        declareTopic(dest);
+        return dest;
+    }
+
+    protected void declareTopic(RMQDestination dest) throws JMSException {
         try {
-            this.channel.exchangeDeclare(exchangeName, "fanout");
+            this.channel.exchangeDeclare(dest.getExchangeName(), "fanout");
         } catch (IOException x) {
             Util.util().handleException(x);
         }
-        return dest;
+        dest.setDeclared(true);
     }
 
     @Override

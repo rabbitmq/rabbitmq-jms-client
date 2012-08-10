@@ -18,15 +18,17 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     private volatile String exchangeName;
     private volatile String routingKey;
     private volatile boolean queue;
+    private volatile boolean declared;
 
     public RMQDestination() {
     }
 
-    public RMQDestination(String name, String exchangeName, String routingKey, boolean queue) {
+    public RMQDestination(String name, String exchangeName, String routingKey, boolean queue, boolean declared) {
         this.name = name;
         this.exchangeName = exchangeName;
         this.routingKey = routingKey;
         this.queue = queue;
+        this.declared = declared;
     }
 
     public String getName() {
@@ -75,5 +77,15 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     public Reference getReference() throws NamingException {
         return new Reference(this.getClass().getCanonicalName());
     }
+
+    public boolean isDeclared() {
+        return declared;
+    }
+
+    public void setDeclared(boolean declared) {
+        this.declared = declared;
+    }
+    
+    
 
 }
