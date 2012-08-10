@@ -89,7 +89,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
         try {
             SynchronousConsumer sc = new SynchronousConsumer(this.session.getChannel(), timeout);
-            String tag = basicConsume(sc);
+            basicConsume(sc);
             GetResponse response = sc.receive();
             return processMessage(response);
         } catch (IOException x) {
@@ -174,7 +174,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
     @Override
     public Topic getTopic() throws JMSException {
-        return (Topic) this.getDestination();
+        return this.getDestination();
     }
 
     @Override
