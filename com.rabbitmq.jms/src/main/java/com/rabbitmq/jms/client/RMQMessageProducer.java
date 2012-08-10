@@ -33,82 +33,129 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         this.destination = destination;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setDisableMessageID(boolean value) throws JMSException {
         this.disableMessageID = value;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean getDisableMessageID() throws JMSException {
         return this.disableMessageID;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setDisableMessageTimestamp(boolean value) throws JMSException {
         this.disableMessageTimestamp = value;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean getDisableMessageTimestamp() throws JMSException {
         return this.disableMessageTimestamp;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setDeliveryMode(int deliveryMode) throws JMSException {
         this.deliveryMode = deliveryMode;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getDeliveryMode() throws JMSException {
         return this.deliveryMode;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setPriority(int defaultPriority) throws JMSException {
         this.priority = defaultPriority;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getPriority() throws JMSException {
         return this.priority;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setTimeToLive(long timeToLive) throws JMSException {
         this.ttl = timeToLive;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long getTimeToLive() throws JMSException {
         return this.ttl;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Destination getDestination() throws JMSException {
         return this.destination;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void close() throws JMSException {
         // TODO Auto-generated method stub
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void send(Message message) throws JMSException {
         this.send(message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void send(Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         this.send(this.destination, message, deliveryMode, priority, timeToLive);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void send(Destination destination, Message message) throws JMSException {
         this.send(destination, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         try {
@@ -129,50 +176,68 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Queue getQueue() throws JMSException {
         return this.destination;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void send(Queue queue, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         this.send((Destination) this.destination, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void send(Queue queue, Message message) throws JMSException {
         this.send((Destination) queue, message);
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Topic getTopic() throws JMSException {
         return this.destination;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void publish(Message message) throws JMSException {
-        // TODO Auto-generated method stub
-
+        this.send(getTopic(),message);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void publish(Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        // TODO Auto-generated method stub
-
+        this.send(getTopic(), message, deliveryMode, priority, timeToLive);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void publish(Topic topic, Message message) throws JMSException {
-        // TODO Auto-generated method stub
-
+        this.send(getTopic(), message);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void publish(Topic topic, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        // TODO Auto-generated method stub
-
+        this.send(getTopic(), message, deliveryMode, priority, timeToLive);
     }
 
 }

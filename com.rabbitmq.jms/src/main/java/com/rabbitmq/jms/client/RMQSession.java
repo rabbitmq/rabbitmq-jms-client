@@ -51,6 +51,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private volatile Long lastReceivedTag;
     private volatile MessageListener messageListener;
 
+    /**
+     * Creates a session object associated with a connection
+     * @param connection the connection that we will send data on
+     * @param transacted whether this session is transacted or not
+     * @param mode the default ack mode
+     * @throws JMSException if we fail to create a {@link Channel} object on the connection
+     */
     public RMQSession(RMQConnection connection, boolean transacted, int mode) throws JMSException {
         assert (mode >= 0 && mode <= 3);
         this.connection = connection;
@@ -67,29 +74,44 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         assert this.channel != null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public BytesMessage createBytesMessage() throws JMSException {
         Util.util().checkClosed(this.closed, "Session has been closed");
         return new RMQBytesMessage();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public MapMessage createMapMessage() throws JMSException {
         Util.util().checkClosed(this.closed, "Session has been closed");
         return new RMQMapMessage();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Message createMessage() throws JMSException {
         return createTextMessage();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ObjectMessage createObjectMessage() throws JMSException {
         Util.util().checkClosed(this.closed, "Session has been closed");
         return new RMQObjectMessage();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ObjectMessage createObjectMessage(Serializable object) throws JMSException {
         ObjectMessage message = createObjectMessage();
@@ -97,18 +119,27 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         return message;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public StreamMessage createStreamMessage() throws JMSException {
         Util.util().checkClosed(this.closed, "Session has been closed");
         return new RMQStreamMessage();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public TextMessage createTextMessage() throws JMSException {
         Util.util().checkClosed(this.closed, "Session has been closed");
         return new RMQTextMessage();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public TextMessage createTextMessage(String text) throws JMSException {
         TextMessage msg = createTextMessage();
@@ -116,20 +147,35 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         return msg;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean getTransacted() throws JMSException {
         return getTransactedNoException();
     }
     
+    /**
+     * Same as {@link #getTransacted()}
+     * but does not declare a JMSException in the throw claus
+     * @return
+     * @see {@link #getTransacted()}
+     */
     public boolean getTransactedNoException() {
         return this.transacted;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getAcknowledgeMode() throws JMSException {
         return this.acknowledgeMode;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void commit() throws JMSException {
         Util.util().checkClosed(this.closed, "Session has been closed");
@@ -144,6 +190,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void rollback() throws JMSException {
         Util.util().checkClosed(this.closed, "Session has been closed");
@@ -161,6 +210,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void close() throws JMSException {
         if (this.closed)
@@ -175,6 +227,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void recover() throws JMSException {
         Util.util().checkClosed(this.closed, "Session has been closed");
@@ -183,32 +238,64 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public MessageListener getMessageListener() throws JMSException {
         return this.messageListener;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
         this.messageListener = listener;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void run() {
         // TODO Auto-generated method stub
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public MessageProducer createProducer(Destination destination) throws JMSException {
+        RMQDestination dest = (RMQDestination) destination;
+        if (!dest.isDeclared()) {
+            if (dest.isQueue()) {
+                //TODO for a late declared queue, fix this
+                declareQueue(dest,false,true);
+            } else {
+                declareTopic(dest);
+            }
+        }
         return new RMQMessageProducer(this, (RMQDestination) destination);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public MessageConsumer createConsumer(Destination destination) throws JMSException {
         RMQDestination dest = (RMQDestination) destination;
         String consumerTag = Util.util().generateUUIDTag();
 
+        if (!dest.isDeclared()) {
+            if (dest.isQueue()) {
+                //TODO for a late declared queue, fix this
+                declareQueue(dest,false,true);
+            } else {
+                declareTopic(dest);
+            }
+        }
+        
         if (!dest.isQueue()) {
             String queueName = consumerTag;
             // this is a topic, we need to define a queue, and bind to it
@@ -223,12 +310,20 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         return consumer;
     }
 
+    /**
+     * {@inheritDoc}
+     * @throws UnsupportedOperationException - method not implemented
+     */
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector) throws JMSException {
         // we are not implementing this method yet
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * {@inheritDoc}
+     * @throws UnsupportedOperationException - method not implemented
+     */
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean NoLocal) throws JMSException {
         // we are not implementing this method yet
@@ -241,110 +336,194 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public Queue createQueue(String queueName) throws JMSException {
         String name = queueName, exchangeName = "", routingKey = name;
-        RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, true);
+        RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, true, true);
         boolean temporary = false;
         boolean durable = true;
+        declareQueue(dest, temporary, durable);
+        return dest;
+    }
+
+    /**
+     * Invokes {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)} to define a queue on the RabbitMQ broker
+     * this method invokes {@link RMQDestination#setDeclared(boolean)} with a true value
+     * @param dest - the Queue object
+     * @param temporary true if the queue is temporary
+     * @param durable true if the queue should be durable
+     * @throws JMSException if an IOException occurs in the {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)} call
+     */
+    protected void declareQueue(RMQDestination dest, boolean temporary, boolean durable) throws JMSException {
         try {
             this.channel.queueDeclare(dest.getQueueName(), durable, temporary, !durable, new HashMap<String, Object>());
         } catch (IOException x) {
             Util.util().handleException(x);
         }
-        return dest;
+        dest.setDeclared(true);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Topic createTopic(String topicName) throws JMSException {
         String name = topicName, exchangeName = "topic." + topicName, routingKey = name;
-        RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, false);
-        try {
-            this.channel.exchangeDeclare(exchangeName, "fanout");
-        } catch (IOException x) {
-            Util.util().handleException(x);
-        }
+        RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, false, true);
+        declareTopic(dest);
         return dest;
     }
 
+    /**
+     * Invokes {@link Channel#exchangeDeclare(String, String, boolean, boolean, boolean, java.util.Map)} to define
+     * the fanout exchange used to publish topic messages to
+     * this method invokes {@link RMQDestination#setDeclared(boolean)} with a true value
+     * @param dest the topic used to publish to
+     * @throws JMSException
+     */
+    protected void declareTopic(RMQDestination dest) throws JMSException {
+        try {
+            this.channel.exchangeDeclare(dest.getExchangeName(), "fanout");
+        } catch (IOException x) {
+            Util.util().handleException(x);
+        }
+        dest.setDeclared(true);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name) throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public QueueBrowser createBrowser(Queue queue) throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public QueueBrowser createBrowser(Queue queue, String messageSelector) throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public TemporaryQueue createTemporaryQueue() throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public TemporaryTopic createTemporaryTopic() throws JMSException {
         // TODO Auto-generated method stub
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void unsubscribe(String name) throws JMSException {
         // TODO Auto-generated method stub
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public QueueReceiver createReceiver(Queue queue) throws JMSException {
         assert queue instanceof RMQDestination;
         return (QueueReceiver) this.createConsumer(queue);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public QueueReceiver createReceiver(Queue queue, String messageSelector) throws JMSException {
         return (QueueReceiver) this.createConsumer(queue, messageSelector);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public QueueSender createSender(Queue queue) throws JMSException {
         return (QueueSender) this.createProducer(queue);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public TopicSubscriber createSubscriber(Topic topic) throws JMSException {
         return (TopicSubscriber) this.createConsumer(topic);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public TopicSubscriber createSubscriber(Topic topic, String messageSelector, boolean noLocal) throws JMSException {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public TopicPublisher createPublisher(Topic topic) throws JMSException {
         return (TopicPublisher) this.createProducer(topic);
     }
 
+    /**
+     * Returns the connection this session is associated with
+     * @return
+     */
     public RMQConnection getConnection() {
         return this.connection;
     }
 
+    /**
+     * Returns the {@link Channel} this session has created
+     * @return
+     */
     public Channel getChannel() {
         return this.channel;
     }
     
+    /**
+     * Invoked when the {@link RMQMessageConsumer} has received a message
+     * so that we can track the last delivery tag
+     * This is used to NACK messages when a transaction is rolled back
+     * 
+     * @param response
+     * @see {@link Channel#basicNack(long, boolean, boolean)}
+     * @see {@link Session#rollback()}
+     */
     public void messageReceived(GetResponse response) {
         if (!transacted) return; //auto ack
         lastReceivedTag = response.getEnvelope().getDeliveryTag();

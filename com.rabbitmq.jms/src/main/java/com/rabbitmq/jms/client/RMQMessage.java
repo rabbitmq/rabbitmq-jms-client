@@ -46,27 +46,41 @@ public abstract class RMQMessage implements Message, Cloneable {
     public RMQMessage() {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getJMSMessageID() throws JMSException {
         return this.getStringProperty(JMS_MESSAGE_ID);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setJMSMessageID(String id) throws JMSException {
         this.setStringProperty(JMS_MESSAGE_ID, id);
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long getJMSTimestamp() throws JMSException {
         return this.getLongProperty(JMS_MESSAGE_TIMESTAMP);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setJMSTimestamp(long timestamp) throws JMSException {
         this.setLongProperty(JMS_MESSAGE_TIMESTAMP, timestamp);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public byte[] getJMSCorrelationIDAsBytes() throws JMSException {
         String id = this.getStringProperty(JMS_MESSAGE_CORR_ID);
@@ -76,106 +90,162 @@ public abstract class RMQMessage implements Message, Cloneable {
             return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setJMSCorrelationIDAsBytes(byte[] correlationID) throws JMSException {
         String id = correlationID != null ? new String(correlationID, charset) : null;
         this.setStringProperty(JMS_MESSAGE_CORR_ID, id);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setJMSCorrelationID(String correlationID) throws JMSException {
         this.setStringProperty(JMS_MESSAGE_CORR_ID, correlationID);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getJMSCorrelationID() throws JMSException {
         return this.getStringProperty(JMS_MESSAGE_CORR_ID);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Destination getJMSReplyTo() throws JMSException {
         return (Destination) this.getObjectProperty(JMS_MESSAGE_REPLY_TO);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setJMSReplyTo(Destination replyTo) throws JMSException {
         this.setObjectProperty(JMS_MESSAGE_REPLY_TO, replyTo);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Destination getJMSDestination() throws JMSException {
         return (Destination) this.getObjectProperty(JMS_MESSAGE_DESTINATION);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setJMSDestination(Destination destination) throws JMSException {
         this.setObjectProperty(JMS_MESSAGE_DESTINATION, destination);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getJMSDeliveryMode() throws JMSException {
         return this.getIntProperty(JMS_MESSAGE_DELIVERY_MODE);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setJMSDeliveryMode(int deliveryMode) throws JMSException {
         this.setIntProperty(JMS_MESSAGE_DELIVERY_MODE, deliveryMode);
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean getJMSRedelivered() throws JMSException {
         return this.getBooleanProperty(JMS_MESSAGE_REDELIVERED);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setJMSRedelivered(boolean redelivered) throws JMSException {
         this.setBooleanProperty(JMS_MESSAGE_REDELIVERED, redelivered);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getJMSType() throws JMSException {
         return this.getStringProperty(JMS_MESSAGE_TYPE);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setJMSType(String type) throws JMSException {
         this.setStringProperty(JMS_MESSAGE_TYPE, type);
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long getJMSExpiration() throws JMSException {
         return this.getLongProperty(JMS_MESSAGE_EXPIRATION);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setJMSExpiration(long expiration) throws JMSException {
         this.setLongProperty(JMS_MESSAGE_EXPIRATION, expiration);
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getJMSPriority() throws JMSException {
         return this.getIntProperty(JMS_MESSAGE_PRIORITY);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setJMSPriority(int priority) throws JMSException {
         this.setIntProperty(JMS_MESSAGE_PRIORITY, priority);
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void clearProperties() throws JMSException {
         this.jmsProperties.clear();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean propertyExists(String name) throws JMSException {
         return this.jmsProperties.containsKey(name) || this.rmqProperties.containsKey(name);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean getBooleanProperty(String name) throws JMSException {
         Object o = this.getObjectProperty(name);
@@ -190,6 +260,9 @@ public abstract class RMQMessage implements Message, Cloneable {
             throw new JMSException("Unable to convert from class:" + o.getClass().getName());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public byte getByteProperty(String name) throws JMSException {
         Object o = this.getObjectProperty(name);
@@ -208,6 +281,9 @@ public abstract class RMQMessage implements Message, Cloneable {
             throw new JMSException("Unable to convert from class:" + o.getClass().getName());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public short getShortProperty(String name) throws JMSException {
         Object o = this.getObjectProperty(name);
@@ -229,6 +305,9 @@ public abstract class RMQMessage implements Message, Cloneable {
             throw new JMSException("Unable to convert from class:" + o.getClass().getName());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getIntProperty(String name) throws JMSException {
         Object o = this.getObjectProperty(name);
@@ -253,6 +332,9 @@ public abstract class RMQMessage implements Message, Cloneable {
             throw new JMSException("Unable to convert from class:" + o.getClass().getName());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long getLongProperty(String name) throws JMSException {
         Object o = this.getObjectProperty(name);
@@ -280,6 +362,9 @@ public abstract class RMQMessage implements Message, Cloneable {
             throw new JMSException("Unable to convert from class:" + o.getClass().getName());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public float getFloatProperty(String name) throws JMSException {
         Object o = this.getObjectProperty(name);
@@ -298,6 +383,9 @@ public abstract class RMQMessage implements Message, Cloneable {
             throw new JMSException("Unable to convert from class:" + o.getClass().getName());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public double getDoubleProperty(String name) throws JMSException {
         Object o = this.getObjectProperty(name);
@@ -319,6 +407,9 @@ public abstract class RMQMessage implements Message, Cloneable {
             throw new JMSException("Unable to convert from class:" + o.getClass().getName());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getStringProperty(String name) throws JMSException {
         Object o = this.getObjectProperty(name);
@@ -330,6 +421,9 @@ public abstract class RMQMessage implements Message, Cloneable {
             return o.toString();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Object getObjectProperty(String name) throws JMSException {
         if (name.startsWith(PREFIX))
@@ -338,51 +432,81 @@ public abstract class RMQMessage implements Message, Cloneable {
             return this.jmsProperties.get(name);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Enumeration<?> getPropertyNames() throws JMSException {
         return new IteratorEnum<String>(this.jmsProperties.keySet().iterator());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setBooleanProperty(String name, boolean value) throws JMSException {
         this.setObjectProperty(name, Boolean.valueOf(value));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setByteProperty(String name, byte value) throws JMSException {
         this.setObjectProperty(name, value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setShortProperty(String name, short value) throws JMSException {
         this.setObjectProperty(name, value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setIntProperty(String name, int value) throws JMSException {
         this.setObjectProperty(name, value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setLongProperty(String name, long value) throws JMSException {
         this.setObjectProperty(name, value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setFloatProperty(String name, float value) throws JMSException {
         this.setObjectProperty(name, value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setDoubleProperty(String name, double value) throws JMSException {
         this.setObjectProperty(name, value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setStringProperty(String name, String value) throws JMSException {
         this.setObjectProperty(name, value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setObjectProperty(String name, Object value) throws JMSException {
         try {
@@ -396,26 +520,60 @@ public abstract class RMQMessage implements Message, Cloneable {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * TODO NOT YET IMPLEMENTED
+     */
     @Override
     public void acknowledge() throws JMSException {
         // TODO Auto-generated method stub
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public abstract void clearBody() throws JMSException;
 
+    /**
+     *@return the charset used to convert a TextMessage to byte[]
+     */
     public Charset getCharset() {
         return charset;
     }
 
+    /**
+     * Invoked when {@link #toMessage(RMQMessage)} is called to create 
+     * a byte[] from a message. Each subclass must implement this, but ONLY
+     * write it's specific body. All the properties defined in {@link Message}
+     * will be written by the parent class.
+     * @param out - the output which to write the message body to.
+     * @throws IOException you may throw an IOException if the body can not be written
+     */
     public abstract void writeBody(ObjectOutput out) throws IOException;
 
+    /**
+     * Invoked when a message is being deserialized. The implementing class 
+     * should ONLY read it's body from this stream
+     * @param in the stream to read it's body from
+     * @throws IOException - if an IOException occurs - this will prevent message delivery
+     * @throws ClassNotFoundException - if an ClassNotFoundException occurs - this will prevent message delivery
+     * @throws InstantiationException - if an InstantiationException occurs - this will prevent message delivery
+     * @throws IllegalAccessException - if an IllegalAccessException occurs - this will prevent message delivery
+     */
     public abstract void readBody(ObjectInput in) throws IOException,
                                                  ClassNotFoundException,
                                                  InstantiationException,
                                                  IllegalAccessException;
 
+    /**
+     * Serializes a {@link RMQMessage} to a byte array. 
+     * This method invokes the {@link #writeBody(ObjectOutput)} method
+     * on the class that is being serialized
+     * @param msg - the message to serialize  
+     * @return the body in a byte array
+     * @throws IOException if serialization fails
+     */
     public static byte[] toMessage(RMQMessage msg) throws IOException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
         ObjectOutputStream out = new ObjectOutputStream(bout);
@@ -435,6 +593,17 @@ public abstract class RMQMessage implements Message, Cloneable {
         return bout.toByteArray();
     }
 
+    /**
+     * Deserializes a {@link RMQMessage} from a byte array
+     * This method invokes the {@link #readBody(ObjectInput)} method
+     * on the deserialized class
+     * @param b - the message bytes
+     * @return a subclass to a RMQmessage 
+     * @throws ClassNotFoundException - if the class to be deserialized wasn't found
+     * @throws IOException if an exception occurs during deserialization
+     * @throws IllegalAccessException if an exception occurs during class instantiation
+     * @throws InstantiationException if an exception occurs during class instantiation
+     */
     public static RMQMessage fromMessage(byte[] b) throws ClassNotFoundException,
                                                   IOException,
                                                   IllegalAccessException,
@@ -458,6 +627,16 @@ public abstract class RMQMessage implements Message, Cloneable {
         return msg;
     }
 
+    /**
+     * Utility method used to be able to write
+     * primitives and objects to a data stream without keeping track of order and type
+     * this also allows any Object to be written.
+     * The purpose of this method is to optimize the writing of a primitive that is represented as an object
+     * by only writing the type and the primitive value to the stream
+     * @param s the primitive to be written
+     * @param out the stream to write the primitive to.
+     * @throws IOException if an IOException occurs.
+     */
     public static void writePrimitive(Object s, ObjectOutput out) throws IOException {
         if (s == null) {
             out.write(-1);
@@ -498,6 +677,15 @@ public abstract class RMQMessage implements Message, Cloneable {
         }
     }
 
+    /**
+     * Utility method to read objects from a stream. These objects must have 
+     * been written with the method {@link #writePrimitive(Object, ObjectOutput)} otherwise
+     * deserialization will fail and an IOException will be thrown
+     * @param in the stream to read from
+     * @return the Object read
+     * @throws IOException 
+     * @throws ClassNotFoundException
+     */
     public static Object readPrimitive(ObjectInput in) throws IOException, ClassNotFoundException {
         byte b = in.readByte();
         switch (b) {
@@ -532,6 +720,9 @@ public abstract class RMQMessage implements Message, Cloneable {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Object clone() throws CloneNotSupportedException {
         return super.clone();

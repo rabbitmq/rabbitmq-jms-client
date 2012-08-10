@@ -37,6 +37,9 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.rabbitConnection = rabbitConnection;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
         RMQSession session = new RMQSession(this, transacted, acknowledgeMode);
@@ -44,43 +47,67 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         return session;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getClientID() throws JMSException {
         return this.clientID;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setClientID(String clientID) throws JMSException {
         this.clientID = clientID;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ConnectionMetaData getMetaData() throws JMSException {
         return connectionMetaData;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ExceptionListener getExceptionListener() throws JMSException {
         return this.exceptionListener;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setExceptionListener(ExceptionListener listener) throws JMSException {
         this.exceptionListener = listener;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void start() throws JMSException {
         // TODO Auto-generated method stub
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void stop() throws JMSException {
         // TODO Auto-generated method stub
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void close() throws JMSException {
         try {
@@ -95,28 +122,43 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         return this.rabbitConnection;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public TopicSession createTopicSession(boolean transacted, int acknowledgeMode) throws JMSException {
         return (TopicSession) this.createSession(transacted, acknowledgeMode);
     }
 
+    /**
+     * @throws UnsupportedOperationException - method not implemented
+     */
     @Override
     public ConnectionConsumer
             createConnectionConsumer(Topic topic, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public QueueSession createQueueSession(boolean transacted, int acknowledgeMode) throws JMSException {
         return (QueueSession) this.createSession(transacted, acknowledgeMode);
     }
 
+    /**
+     * @throws UnsupportedOperationException - method not implemented
+     */
     @Override
     public ConnectionConsumer
             createConnectionConsumer(Queue queue, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * @throws UnsupportedOperationException - method not implemented
+     */
     @Override
     public ConnectionConsumer createConnectionConsumer(Destination destination,
                                                        String messageSelector,
@@ -125,6 +167,9 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * @throws UnsupportedOperationException - method not implemented
+     */
     @Override
     public ConnectionConsumer createDurableConnectionConsumer(Topic topic,
                                                               String subscriptionName,
@@ -134,7 +179,15 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         throw new UnsupportedOperationException();
     }
 
-    public void sessionClose(RMQSession session) {
+    /**
+     * Internal methods. A connection must track all sessions
+     * that are created, but when we call {@link RMQSession#close()}
+     * we must unregister this session with the connection
+     * This method is called by {@link RMQSession#close()}
+     * and should not be called from anywhere else
+     * @param session - the session that is being closed
+     */
+    protected void sessionClose(RMQSession session) {
         this.sessions.remove(session);
     }
 
