@@ -75,6 +75,7 @@
                     <includes>
                         <include>**/*.class</include>
                     </includes>
+                    <!-- all but @Category(IntegrationTest.class) test classes -->
                     <excludedGroups>com.rabbitmq.integration.IntegrationTest</excludedGroups>
                 </configuration>
             </plugin>
@@ -89,6 +90,7 @@
                     </dependency>
                 </dependencies>
                 <configuration>
+                    <!-- @Category(IntegrationTest.class) test classes -->
                     <groups>com.rabbitmq.integration.IntegrationTest</groups>
                 </configuration>
                 <executions>
