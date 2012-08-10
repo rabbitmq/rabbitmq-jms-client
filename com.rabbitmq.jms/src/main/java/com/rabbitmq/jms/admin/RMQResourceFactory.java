@@ -15,6 +15,9 @@ import javax.naming.spi.ObjectFactory;
 
 public class RMQResourceFactory implements ObjectFactory {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception {
         if ((obj == null) || !(obj instanceof Reference)) {
@@ -33,7 +36,7 @@ public class RMQResourceFactory implements ObjectFactory {
             if (addr.getContent() != null) {
                 value = addr.getContent().toString();
             }
-            if (setProperty(o, param, value, false)) {
+            if (setProperty(o, param, value)) {
 
             } else {
                 // TODO logging implementation
@@ -43,7 +46,15 @@ public class RMQResourceFactory implements ObjectFactory {
         return o;
     }
 
-    public static boolean setProperty(Object o, String name, String value, boolean invokeSetProperty) {
+    /**
+     * Finds the setXXX method to set a generic property on an object
+     * It will attempt to locate a setName property matching the name parameter
+     * @param o - object to invoke setXXX on
+     * @param name - the name of the property. 
+     * @param value - the value to set
+     * @return true if the setXXX method was found and successfully invoked
+     */
+    public static boolean setProperty(Object o, String name, String value) {
         String setter = "set" + capitalize(name);
 
         try {
