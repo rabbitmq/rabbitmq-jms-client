@@ -13,6 +13,7 @@ import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
+import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
@@ -27,23 +28,39 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private final String uuidTag;
     private AtomicReference<MessageListenerWrapper> listener = new AtomicReference<MessageListenerWrapper>();
 
+    /**
+     * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
+     * @param session - the session object that created this consume 
+     * @param destination - the destination for this consumer
+     * @param uuidTag - when creating queues to a topic, we need a unique queue name for each consumer. This is the unique name
+     */
     public RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag) {
         this.session = session;
         this.destination = destination;
         this.uuidTag = uuidTag;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Queue getQueue() throws JMSException {
         return destination;
     }
 
+    /**
+     * {@inheritDoc}
+     * @throws UnsupportedOperationException
+     */
     @Override
     public String getMessageSelector() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        //TODO implement getMessageSelector
+        throw new UnsupportedOperationException();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public MessageListener getMessageListener() throws JMSException {
         MessageListenerWrapper wrapper = this.listener.get();
@@ -54,6 +71,9 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
         try {
@@ -71,11 +91,17 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Message receive() throws JMSException {
         return receive(Long.MAX_VALUE);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Message receive(long timeout) throws JMSException {
         Message msg = receiveNoWait();
@@ -98,6 +124,14 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         return null;
     }
 
+    /**
+     * Register an async listener with the Rabbit API
+     * to receive messages
+     * @param consumer - the consumer
+     * @return the consumer tag created for this consumer
+     * @throws IOException
+     * @see {@link Channel#basicConsume(String, boolean, String, boolean, boolean, java.util.Map, Consumer)}
+     */
     protected String basicConsume(Consumer consumer) throws IOException {
         String name = null;
         if (this.destination.isQueue()) {
@@ -109,10 +143,19 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         return getSession().getChannel().basicConsume(name, !getSession().getTransactedNoException(), consumer);
     }
 
+    /**
+     * Cancels an async consumer on a channel
+     * @param consumerTag the tag to be cancelled
+     * @throws IOException 
+     * @see {@link Channel#basicCancel(String)}
+     */
     protected void basicCancel(String consumerTag) throws IOException {
         getSession().getChannel().basicCancel(consumerTag);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Message receiveNoWait() throws JMSException {
         try {
@@ -130,6 +173,12 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         return null;
     }
 
+    /**
+     * Converts a {@link GetResponse} to a {@link Message}
+     * @param response
+     * @return
+     * @throws JMSException
+     */
     private Message processMessage(GetResponse response) throws JMSException {
         try {
             if (response == null)
@@ -155,38 +204,70 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void close() throws JMSException {
         setMessageListener(null);
     }
 
+    /**
+     * Returns the destination this message consumer is registered with
+     * @return the destination this message consumer is registered with
+     */
     public RMQDestination getDestination() {
         return this.destination;
     }
 
+    /**
+     * Returns the session this consumer was created by
+     * @return the session this consumer was created by
+     */
     public RMQSession getSession() {
         return this.session;
     }
 
+    /**
+     * The unique tag that this consumer holds
+     * @return unique tag that this consumer holds
+     */
     public String getUUIDTag() {
         return this.uuidTag;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Topic getTopic() throws JMSException {
         return (Topic) this.getDestination();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean getNoLocal() throws JMSException {
         return false;
     }
 
-    protected MessageListenerWrapper wrap(MessageListener listener) throws IOException {
+    /**
+     * Wraps a JMS {@link MessageListener} object with an internal object
+     * that can receive messages, a {@link Consumer}
+     * @param listener the {@link MessageListener} object 
+     * @return a wrapper object 
+     */
+    protected MessageListenerWrapper wrap(MessageListener listener) {
         return new MessageListenerWrapper(listener);
     }
     
+    /**
+     * Inner class to wrap MessageListener in order to consume 
+     * messages and propagate them to the calling client
+     */
     protected class MessageListenerWrapper implements Consumer {
+
         private MessageListener listener;
         private volatile String consumerTag;
         
@@ -207,18 +288,30 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             return listener;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void handleConsumeOk(String consumerTag) {
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void handleCancelOk(String consumerTag) {
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void handleCancel(String consumerTag) throws IOException {
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
             if (this.consumerTag==null) this.consumerTag = consumerTag;
@@ -232,12 +325,18 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
             // TODO Auto-generated method stub
 
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void handleRecoverOk(String consumerTag) {
             // TODO Auto-generated method stub
