@@ -16,7 +16,7 @@ import com.rabbitmq.jms.admin.RMQDestination;
 public class RabbitJmsCtsProvider implements Administrator, Provider {
 
     private HashMap<String,Object> lookup = new HashMap<String, Object>();
-    private static SingleConnectionFactory factory = new SingleConnectionFactory();
+    private static TestConnectionFactory factory = new TestConnectionFactory();
     
     @Override
     public void cleanup(boolean arg0) throws JMSException {
@@ -85,28 +85,16 @@ public class RabbitJmsCtsProvider implements Administrator, Provider {
         return lookup.get(name);
     }
     
-    private static class SingleConnectionFactory extends RMQConnectionFactory {
+    private static class TestConnectionFactory extends RMQConnectionFactory {
         /** TODO */
         private static final long serialVersionUID = 1L;
-        private AtomicReference<Connection> connection = new AtomicReference<Connection>();
         @Override
         public Connection createConnection() throws JMSException {
-            Connection result = connection.get();
-            if (result==null) {
-                result = super.createConnection();
-                if (connection.compareAndSet(null, result)) {
-                    
-                } else {
-                    result.close();
-                }
-            }
-            return connection.get();
-            
+            return super.createConnection();
         }
 
         @Override
         public Connection createConnection(String userName, String password) throws JMSException {
-            // TODO Auto-generated method stub
             return super.createConnection(userName, password);
         }
         
