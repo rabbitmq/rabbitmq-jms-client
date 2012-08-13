@@ -3,6 +3,7 @@ package com.rabbitmq.jms.util;
 import java.util.UUID;
 
 import javax.jms.JMSException;
+import javax.jms.JMSSecurityException;
 
 public class Util {
     private static final Util util = new Util();
@@ -41,6 +42,11 @@ public class Util {
         return this.handleException(x, x.getMessage());
     }
 
+    public JMSSecurityException handleSecurityException(Exception x) throws JMSException {
+        JMSSecurityException jx = new JMSSecurityException(x.getMessage());
+        jx.initCause(x);
+        throw jx;
+    }
     /**
      * Throws an exception with the supplied message, or "Closed" if the msg parameter is null,
      * if the closed parameter is true

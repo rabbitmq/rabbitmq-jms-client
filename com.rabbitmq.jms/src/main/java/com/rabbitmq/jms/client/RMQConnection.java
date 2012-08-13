@@ -32,6 +32,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private String clientID;
     private ExceptionListener exceptionListener;
     private List<RMQSession> sessions = Collections.<RMQSession> synchronizedList(new ArrayList<RMQSession>());
+    private volatile boolean closed = false;
 
     public RMQConnection(com.rabbitmq.client.Connection rabbitConnection) {
         this.rabbitConnection = rabbitConnection;
@@ -42,6 +43,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
+        Util.util().checkClosed(closed, "Connection is closed.");
         RMQSession session = new RMQSession(this, transacted, acknowledgeMode);
         this.sessions.add(session);
         return session;
@@ -52,6 +54,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public String getClientID() throws JMSException {
+        Util.util().checkClosed(closed, "Connection is closed.");
         return this.clientID;
     }
 
@@ -60,6 +63,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void setClientID(String clientID) throws JMSException {
+        Util.util().checkClosed(closed, "Connection is closed.");
         this.clientID = clientID;
     }
 
@@ -68,6 +72,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public ConnectionMetaData getMetaData() throws JMSException {
+        Util.util().checkClosed(closed, "Connection is closed.");
         return connectionMetaData;
     }
 
@@ -76,6 +81,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public ExceptionListener getExceptionListener() throws JMSException {
+        Util.util().checkClosed(closed, "Connection is closed.");
         return this.exceptionListener;
     }
 
@@ -84,6 +90,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void setExceptionListener(ExceptionListener listener) throws JMSException {
+        Util.util().checkClosed(closed, "Connection is closed.");
         this.exceptionListener = listener;
     }
 
@@ -92,6 +99,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void start() throws JMSException {
+        Util.util().checkClosed(closed, "Connection is closed.");
         // TODO Auto-generated method stub
 
     }
@@ -101,6 +109,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void stop() throws JMSException {
+        Util.util().checkClosed(closed, "Connection is closed.");
         // TODO Auto-generated method stub
 
     }
@@ -110,12 +119,13 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void close() throws JMSException {
+        if (closed) return;
+        closed = true;
         try {
             this.rabbitConnection.close();
         } catch (IOException x) {
             Util.util().handleException(x);
         }
-
     }
 
     public com.rabbitmq.client.Connection getRabbitConnection() {
@@ -127,6 +137,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public TopicSession createTopicSession(boolean transacted, int acknowledgeMode) throws JMSException {
+        Util.util().checkClosed(closed, "Connection is closed.");
         return (TopicSession) this.createSession(transacted, acknowledgeMode);
     }
 
@@ -144,6 +155,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public QueueSession createQueueSession(boolean transacted, int acknowledgeMode) throws JMSException {
+        Util.util().checkClosed(closed, "Connection is closed.");
         return (QueueSession) this.createSession(transacted, acknowledgeMode);
     }
 

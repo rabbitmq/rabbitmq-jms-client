@@ -54,7 +54,11 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         try {
             rabbitConnection = factory.newConnection();
         } catch (IOException x) {
-            Util.util().handleException(x);
+            if (x.getMessage()!=null && x.getMessage().indexOf("authentication failure")>=0) {
+                Util.util().handleSecurityException(x);
+            } else {
+                Util.util().handleException(x);
+            }
         }
         return new RMQConnection(rabbitConnection);
     }
