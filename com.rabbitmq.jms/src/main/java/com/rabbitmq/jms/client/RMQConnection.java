@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
@@ -33,6 +34,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private ExceptionListener exceptionListener;
     private List<RMQSession> sessions = Collections.<RMQSession> synchronizedList(new ArrayList<RMQSession>());
     private volatile boolean closed = false;
+    private AtomicBoolean stopped = new AtomicBoolean(true);
 
     public RMQConnection(com.rabbitmq.client.Connection rabbitConnection) {
         this.rabbitConnection = rabbitConnection;
@@ -100,7 +102,9 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public void start() throws JMSException {
         Util.util().checkClosed(closed, "Connection is closed.");
-        // TODO Auto-generated method stub
+        if (stopped.compareAndSet(true, false)) {
+            //initiate start
+        }
 
     }
 
@@ -110,8 +114,17 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public void stop() throws JMSException {
         Util.util().checkClosed(closed, "Connection is closed.");
-        // TODO Auto-generated method stub
-
+        if (stopped.compareAndSet(false, true)) {
+            //initiate stop
+        }
+    }
+    
+    /**
+     * Returns true if this connection is in a stopped state
+     * @return
+     */
+    public boolean isStopped() {
+        return stopped.get();
     }
 
     /**
