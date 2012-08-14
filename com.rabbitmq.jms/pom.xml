@@ -80,6 +80,7 @@
                     </dependency>
                 </dependencies>
                 <configuration>
+                    <encoding>UTF-8</encoding>
                     <includes>
                         <include>**/*.class</include>
                     </includes>
@@ -98,6 +99,7 @@
                     </dependency>
                 </dependencies>
                 <configuration>
+                    <encoding>UTF-8</encoding>
                     <!-- @Category(IntegrationTest.class) test classes -->
                     <groups>com.rabbitmq.integration.IntegrationTest</groups>
                 </configuration>
