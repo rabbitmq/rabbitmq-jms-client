@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.CountDownLatch;
 
+import javax.jms.Session;
+
 import org.junit.Test;
 
 import com.rabbitmq.client.Channel;
@@ -37,7 +39,7 @@ public class TestSynchronousConsumer {
     public void testSynchronousConsumerSuccess() throws Exception {
         Channel channel = mock(Channel.class);
 
-        SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT);
+        SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT,Session.AUTO_ACKNOWLEDGE);
         CountDownLatch tx = new CountDownLatch(1);
         CountDownLatch rx = new CountDownLatch(1);
         SenderThread st = new SenderThread(TEST_RESPONSE, consumer, tx);
@@ -61,7 +63,7 @@ public class TestSynchronousConsumer {
     public void testSynchronousConsumerSuccessShortTimeout() throws Exception {
         Channel channel = mock(Channel.class);
 
-        SynchronousConsumer consumer = new SynchronousConsumer(channel, 1);
+        SynchronousConsumer consumer = new SynchronousConsumer(channel, 1, Session.AUTO_ACKNOWLEDGE);
         CountDownLatch tx = new CountDownLatch(1);
         CountDownLatch rx = new CountDownLatch(1);
         SenderThread st = new SenderThread(TEST_RESPONSE, consumer, tx);
@@ -90,7 +92,7 @@ public class TestSynchronousConsumer {
     public void testSynchronousConsumerReceiverTimeout() throws Exception {
         Channel channel = mock(Channel.class);
 
-        SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT);
+        SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT,Session.AUTO_ACKNOWLEDGE);
         CountDownLatch tx = new CountDownLatch(1);
         CountDownLatch rx = new CountDownLatch(1);
         SenderThread st = new SenderThread(TEST_RESPONSE, consumer, tx);
@@ -121,7 +123,7 @@ public class TestSynchronousConsumer {
     public void testSynchronousConsumerReceiverTimeoutNoSender() throws Exception {
         Channel channel = mock(Channel.class);
 
-        SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT);
+        SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT,Session.AUTO_ACKNOWLEDGE);
         CountDownLatch rx = new CountDownLatch(1);
         ReceiverThread rt = new ReceiverThread(TEST_RESPONSE, consumer, rx);
         rt.start();

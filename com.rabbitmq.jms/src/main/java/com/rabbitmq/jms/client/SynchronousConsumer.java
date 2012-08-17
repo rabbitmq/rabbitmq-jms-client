@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
+import javax.jms.Session;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
@@ -26,13 +27,15 @@ public class SynchronousConsumer implements Consumer {
     private final Exchanger<GetResponse> exchanger = new Exchanger<GetResponse>();
     private final long timeout;
     private final Channel channel;
+    private final int acknowledgeMode;
     private final AtomicBoolean useOnce = new AtomicBoolean(false);
     private final AtomicBoolean oneReceived = new AtomicBoolean(false);
 
-    public SynchronousConsumer(Channel channel, long timeout) {
+    public SynchronousConsumer(Channel channel, long timeout, int messageAckMode) {
         super();
         this.timeout = timeout;
         this.channel = channel;
+        this.acknowledgeMode = messageAckMode;
     }
 
     public GetResponse receive() throws JMSException {
@@ -89,7 +92,10 @@ public class SynchronousConsumer implements Consumer {
                 
             }
             if (waiter == ACCEPT_MSG) {
-                channel.basicAck(response.getEnvelope().getDeliveryTag(), false);
+                //we only ack if we need to
+                if (acknowledgeMode==Session.DUPS_OK_ACKNOWLEDGE || acknowledgeMode==Session.AUTO_ACKNOWLEDGE) {
+                    channel.basicAck(response.getEnvelope().getDeliveryTag(), false);
+                }
             } else {
                 channel.basicNack(response.getEnvelope().getDeliveryTag(), false, true);
             }

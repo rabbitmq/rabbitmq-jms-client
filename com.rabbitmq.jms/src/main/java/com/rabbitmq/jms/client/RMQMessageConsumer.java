@@ -19,6 +19,7 @@ import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.admin.RMQDestination;
+import com.rabbitmq.jms.util.PauseLatch;
 import com.rabbitmq.jms.util.Util;
 
 public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscriber {
@@ -27,6 +28,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private final RMQSession session;
     private final String uuidTag;
     private AtomicReference<MessageListenerWrapper> listener = new AtomicReference<MessageListenerWrapper>();
+    private final PauseLatch pauseLatch = new PauseLatch(false);
 
     /**
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
@@ -114,7 +116,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         }
 
         try {
-            SynchronousConsumer sc = new SynchronousConsumer(this.session.getChannel(), timeout);
+            SynchronousConsumer sc = new SynchronousConsumer(this.session.getChannel(), timeout, session.getAcknowledgeMode());
             basicConsume(sc);
             GetResponse response = sc.receive();
             return processMessage(response);
@@ -209,7 +211,16 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public void close() throws JMSException {
-        setMessageListener(null);
+        getSession().consumerClose(this);
+        internalClose();
+    }
+    
+    /**
+     * Method called internally or by the Session
+     * when system is shutting down
+     */
+    protected void internalClose() throws JMSException {
+        setMessageListener(null);        
     }
 
     /**
@@ -260,6 +271,64 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     protected MessageListenerWrapper wrap(MessageListener listener) {
         return new MessageListenerWrapper(listener);
+    }
+    
+    
+    /**
+     * Returns true if we are currently not receiving any messages
+     * due to a connection pause. 
+     * @see {@link javax.jms.Connection#stop()}
+     * @return true if we are not receiving any messages at this time
+     */
+    public boolean isPaused() {
+        return pauseLatch.isPaused();
+    }
+    
+    /**
+     * Stops this consumer from receiving messages.
+     * This is called by the session indirectly after 
+     * {@link javax.jms.Connection#stop()} has been invoked.
+     * In this implementation, any async consumers will be 
+     * cancelled, only to be re-subscribed when 
+     */
+    public void pause() throws JMSException {
+        try {
+            pauseLatch.pause();
+        } catch (IllegalStateException x) {
+            Util.util().handleException(x);
+        }
+    }
+    
+    /** 
+     * Resubscribes all async listeners
+     * and continues to receive messages
+     * @see {@link javax.jms.Connection#stop()}
+     */
+    public void resume() throws JMSException  {
+        try {
+            pauseLatch.resume();
+        } catch (IllegalStateException x) {
+            Util.util().handleException(x);
+        }
+    }
+    
+    /**
+     * Redelivers all the messages this 
+     * consumer has received but not acknowledged
+     * @see {@link javax.jms.Session#recover()}
+     */
+    public void recover() throws JMSException {
+        
+    }
+    
+    /**
+     * Acknowledges a message manually.
+     * Invoked when the method 
+     * {@link javax.jms.Message#acknowledge()}
+     * @param message - the message to be acknowledged
+     */
+    public void acknowledge(RMQMessage message) {
+        
     }
     
     /**

@@ -2,6 +2,7 @@ package com.rabbitmq.jms.client;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import javax.jms.BytesMessage;
@@ -50,6 +51,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private volatile boolean closed = false;
     private volatile Long lastReceivedTag;
     private volatile MessageListener messageListener;
+    private ArrayList<RMQMessageProducer> producers = new ArrayList<RMQMessageProducer>();
+    private ArrayList<RMQMessageConsumer> consumers = new ArrayList<RMQMessageConsumer>();
 
     /**
      * Creates a session object associated with a connection
@@ -218,6 +221,20 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (this.closed)
             return;
         this.closed = true;
+
+        for (RMQMessageProducer producer : producers) {
+            producer.internalClose();
+        }
+        producers.clear();
+        for (RMQMessageConsumer consumer : consumers) {
+            try {
+                consumer.internalClose();
+            }catch (JMSException x) {
+                x.printStackTrace(); //TODO logging implementation
+                
+            }
+        }
+        consumers.clear();
         try {
             this.channel.close();
         } catch (IOException x) {
@@ -276,7 +293,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 declareTopic(dest);
             }
         }
-        return new RMQMessageProducer(this, (RMQDestination) destination);
+        RMQMessageProducer producer = new RMQMessageProducer(this, (RMQDestination) destination);
+        producers.add(producer);
+        return producer;
     }
 
     /**
@@ -307,6 +326,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             }
         }
         RMQMessageConsumer consumer = new RMQMessageConsumer(this, (RMQDestination) destination, consumerTag);
+        consumers.add(consumer);
         return consumer;
     }
 
@@ -529,6 +549,17 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         lastReceivedTag = response.getEnvelope().getDeliveryTag();
     }
     
+    public void consumerClose(RMQMessageConsumer consumer) {
+        this.consumers.remove(consumer);
+    }
+    
+    public void producerClose(RMQMessageProducer producer) {
+        this.producers.remove(producer);
+    }
+    
+    public boolean isAutoAck() throws JMSException {
+        return (getAcknowledgeMode()==Session.AUTO_ACKNOWLEDGE) || (getAcknowledgeMode()==Session.DUPS_OK_ACKNOWLEDGE);
+    }
     
 
 }

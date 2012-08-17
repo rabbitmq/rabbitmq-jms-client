@@ -126,7 +126,16 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void close() throws JMSException {
-        // TODO Auto-generated method stub
+        this.session.producerClose(this);
+        internalClose();
+    }
+    
+    /**
+     * Method called internally or by the Session
+     * when system is shutting down
+     */
+    protected void internalClose() {
+        
     }
 
     /**

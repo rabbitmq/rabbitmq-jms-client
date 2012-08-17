@@ -1,7 +1,6 @@
 package com.rabbitmq.integration.jmscts;
 
 import java.util.HashMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
