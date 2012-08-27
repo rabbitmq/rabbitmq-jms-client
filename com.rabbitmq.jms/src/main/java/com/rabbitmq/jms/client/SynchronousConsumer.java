@@ -74,7 +74,7 @@ public class SynchronousConsumer implements Consumer {
         handleDelivery(consumerTag,response);
     }
 
-    public void handleDelivery(String consumerTag, GetResponse response) throws IOException {
+    protected void handleDelivery(String consumerTag, GetResponse response) throws IOException {
         boolean success = false;
         IOException iox = null;
         try {
