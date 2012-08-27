@@ -1,6 +1,7 @@
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.JMSException;
@@ -9,6 +10,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Queue;
 import javax.jms.QueueReceiver;
+import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
@@ -29,6 +31,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private final String uuidTag;
     private AtomicReference<MessageListenerWrapper> listener = new AtomicReference<MessageListenerWrapper>();
     private final PauseLatch pauseLatch = new PauseLatch(false);
+    private volatile java.util.Queue<RMQMessage> receivedMessages = new ConcurrentLinkedQueue<RMQMessage>();
+    private volatile java.util.Queue<RMQMessage> recoveredMessages = new ConcurrentLinkedQueue<RMQMessage>();
 
     /**
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
@@ -119,11 +123,19 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             SynchronousConsumer sc = new SynchronousConsumer(this.session.getChannel(), timeout, session.getAcknowledgeMode());
             basicConsume(sc);
             GetResponse response = sc.receive();
-            return processMessage(response);
+            return processMessage(response, isAutoAck());
         } catch (IOException x) {
             Util.util().handleException(x);
         }
         return null;
+    }
+    
+    /**
+     * Returns true if messages are auto acknowledged
+     * @return
+     */
+    private boolean isAutoAck() throws JMSException {
+        return (getSession().getAcknowledgeMode()==Session.DUPS_OK_ACKNOWLEDGE || getSession().getAcknowledgeMode()==Session.AUTO_ACKNOWLEDGE);
     }
 
     /**
@@ -160,15 +172,20 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public Message receiveNoWait() throws JMSException {
+        RMQMessage message = recoveredMessages.poll();
+        if (message!=null) {
+            //we have recovered messages
+            return message;
+        }
         try {
             GetResponse response = null;
             if (this.destination.isQueue()) {
-                response = this.getSession().getChannel().basicGet(this.destination.getQueueName(), !this.getSession().getTransacted());
+                response = this.getSession().getChannel().basicGet(this.destination.getQueueName(), isAutoAck());
             } else {
-                response = this.getSession().getChannel().basicGet(this.getUUIDTag(), !this.getSession().getTransacted());
+                response = this.getSession().getChannel().basicGet(this.getUUIDTag(), isAutoAck());
             }
 
-            return processMessage(response);
+            return processMessage(response, isAutoAck());
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -181,12 +198,15 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @return
      * @throws JMSException
      */
-    private Message processMessage(GetResponse response) throws JMSException {
+    private Message processMessage(GetResponse response, boolean acknowledged) throws JMSException {
         try {
             if (response == null)
                 return null;
             this.session.messageReceived(response);
             RMQMessage message = RMQMessage.fromMessage(response.getBody());
+            message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());
+            message.setRabbitConsumer(this);
+            receivedMessages.add(message);
             try {
                 MessageListener listener = getSession().getMessageListener();
                 if (listener!=null) listener.onMessage(message);
@@ -290,6 +310,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * {@link javax.jms.Connection#stop()} has been invoked.
      * In this implementation, any async consumers will be 
      * cancelled, only to be re-subscribed when 
+     * @throws {@link javax.jms.JMSException} if the thread is interrupted
      */
     public void pause() throws JMSException {
         try {
@@ -303,6 +324,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * Resubscribes all async listeners
      * and continues to receive messages
      * @see {@link javax.jms.Connection#stop()}
+     * @throws {@link javax.jms.JMSException} if the thread is interrupted
      */
     public void resume() throws JMSException  {
         try {
@@ -318,7 +340,16 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @see {@link javax.jms.Session#recover()}
      */
     public void recover() throws JMSException {
-        
+        java.util.Queue<RMQMessage> tmp = receivedMessages;
+        receivedMessages = new ConcurrentLinkedQueue<RMQMessage>();
+        recoveredMessages.addAll(tmp);
+        RMQMessage message = null;
+        MessageListener listener = getMessageListener(); 
+        if (listener!=null) {
+            while ((message = recoveredMessages.poll()) != null) {
+                listener.onMessage(message);
+            }
+        }
     }
     
     /**
@@ -327,8 +358,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * {@link javax.jms.Message#acknowledge()}
      * @param message - the message to be acknowledged
      */
-    public void acknowledge(RMQMessage message) {
-        
+    public void acknowledge(RMQMessage message) throws JMSException{
+        try {
+            receivedMessages.remove(message);
+            getSession().getChannel().basicAck(message.getRabbitDeliveryTag(), false);
+        } catch (IOException x) {
+            Util.util().handleException(x);
+        }
     }
     
     /**
@@ -386,7 +422,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             if (this.consumerTag==null) this.consumerTag = consumerTag;
             GetResponse response = new GetResponse(envelope, properties, body, 0);
             try {
-                Message message = processMessage(response);
+                Message message = processMessage(response, isAutoAck());
                 this.listener.onMessage(message);
             } catch (JMSException x) {
                 x.printStackTrace(); //TODO logging implementation

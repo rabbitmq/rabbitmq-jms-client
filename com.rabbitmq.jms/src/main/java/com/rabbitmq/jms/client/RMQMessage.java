@@ -43,6 +43,22 @@ public abstract class RMQMessage implements Message, Cloneable {
     private Map<String, Serializable> rmqProperties = new HashMap<String, Serializable>();
     private Map<String, Serializable> jmsProperties = new HashMap<String, Serializable>();
 
+    private long rabbitDeliveryTag = -1;
+    public long getRabbitDeliveryTag() {
+        return rabbitDeliveryTag;
+    }
+    public void setRabbitDeliveryTag(long rabbitDeliveryTag) {
+        this.rabbitDeliveryTag = rabbitDeliveryTag;
+    }
+    
+    private RMQMessageConsumer rabbitConsumer = null;
+    public RMQMessageConsumer getRabbitConsumer() {
+        return rabbitConsumer;
+    }
+    public void setRabbitConsumer(RMQMessageConsumer rabbitConsumer) {
+        this.rabbitConsumer = rabbitConsumer;
+    }
+    
     public RMQMessage() {
     }
 
@@ -526,7 +542,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public void acknowledge() throws JMSException {
-        // TODO Auto-generated method stub
+        getRabbitConsumer().acknowledge(this);
     }
 
     /**

@@ -17,14 +17,24 @@ public class PauseLatch {
             setState(paused?1:0);
         }
 
+        /**
+         * Returns true if the state is paused
+         * @return
+         */
         boolean isPaused() {
             return getState() == 1; 
         }
 
+        /**
+         * {@inheritDoc}
+         */
         public int tryAcquireShared(int acquires) {
             return isPaused() ? -1 : 1;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         public boolean tryReleaseShared(int releases) {
             for (;;) {
                 int c = getState();

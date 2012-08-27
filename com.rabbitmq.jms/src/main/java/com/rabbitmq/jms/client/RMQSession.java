@@ -250,9 +250,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public void recover() throws JMSException {
         Util.util().checkClosed(this.closed, "Session has been closed");
-
-        // TODO Auto-generated method stub
-
+        for (RMQMessageConsumer consumer : consumers) {
+            try {
+                consumer.recover();
+            }catch (JMSException x) {
+                x.printStackTrace(); //TODO logging implementation
+                
+            }
+        }
     }
 
     /**
