@@ -74,38 +74,45 @@ public class SynchronousConsumer implements Consumer {
         handleDelivery(consumerTag,response);
     }
 
-    public synchronized void handleDelivery(String consumerTag, GetResponse response) throws IOException {
+    public void handleDelivery(String consumerTag, GetResponse response) throws IOException {
         boolean success = false;
+        IOException iox = null;
         try {
-            // give the other thread enough time to arrive
-            GetResponse waiter = null;
-            try {
-                if (oneReceived.compareAndSet(false, true)) {
-                    success = true;
-                    waiter = exchanger.exchange(response, Math.min(100, this.timeout), TimeUnit.MILLISECONDS);
-                }
-            } catch (InterruptedException x) {
-                //this is ok, it means we had a message
-                //but no one there to receive it and got
-                //interrupted
-            }catch (TimeoutException x) {
-                
-            }
-            if (waiter == ACCEPT_MSG) {
-                //we only ack if we need to
-                if (acknowledgeMode==Session.DUPS_OK_ACKNOWLEDGE || acknowledgeMode==Session.AUTO_ACKNOWLEDGE) {
-                    channel.basicAck(response.getEnvelope().getDeliveryTag(), false);
-                }
-            } else {
-                channel.basicNack(response.getEnvelope().getDeliveryTag(), false, true);
-            }
-            //this shouldn't happen since handleDelivery is synchronized
-            //but if it does, we need to NACK the message
-            //and throw back an IOException to Rabbit
-            if (!success) throw new IOException("multiple invocations of SynchronousConsumer.handleDelivery");
-        } finally {
             channel.basicCancel(consumerTag);
+        } catch (IOException x) {
+            iox = x;
         }
+
+        // give the other thread enough time to arrive
+        GetResponse waiter = null;
+        try {
+            if (oneReceived.compareAndSet(false, true)) {
+                success = true;
+                waiter = exchanger.exchange(response, Math.min(100, this.timeout), TimeUnit.MILLISECONDS);
+            }
+        } catch (InterruptedException x) {
+            // this is ok, it means we had a message
+            // but no one there to receive it and got
+            // interrupted
+        } catch (TimeoutException x) {
+
+        }
+        if (waiter == ACCEPT_MSG) {
+            // we only ack if we need to
+            if (acknowledgeMode == Session.DUPS_OK_ACKNOWLEDGE || acknowledgeMode == Session.AUTO_ACKNOWLEDGE) {
+                channel.basicAck(response.getEnvelope().getDeliveryTag(), false);
+            }
+        } else {
+            channel.basicNack(response.getEnvelope().getDeliveryTag(), false, true);
+        }
+        // this shouldn't happen since handleDelivery is synchronized
+        // but if it does, we need to NACK the message
+        // and throw back an IOException to Rabbit
+        if (!success)
+            throw new IOException("multiple invocations of SynchronousConsumer.handleDelivery");
+
+        if (iox != null)
+            throw iox;
     }
 
     @Override
@@ -126,6 +133,6 @@ public class SynchronousConsumer implements Consumer {
         return channel;
     }
 
-    
+
 
 }
