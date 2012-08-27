@@ -32,9 +32,9 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private static final ConnectionMetaData connectionMetaData = new RMQConnectionMetaData();
     private String clientID;
     private ExceptionListener exceptionListener;
-    private List<RMQSession> sessions = Collections.<RMQSession> synchronizedList(new ArrayList<RMQSession>());
+    private final List<RMQSession> sessions = Collections.<RMQSession> synchronizedList(new ArrayList<RMQSession>());
     private volatile boolean closed = false;
-    private AtomicBoolean stopped = new AtomicBoolean(true);
+    private final AtomicBoolean stopped = new AtomicBoolean(true);
 
     public RMQConnection(com.rabbitmq.client.Connection rabbitConnection) {
         this.rabbitConnection = rabbitConnection;
@@ -103,7 +103,9 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     public void start() throws JMSException {
         Util.util().checkClosed(closed, "Connection is closed.");
         if (stopped.compareAndSet(true, false)) {
-            //initiate start
+            for (RMQSession session : this.sessions) {
+                session.resume();
+            }
         }
 
     }
@@ -115,10 +117,12 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     public void stop() throws JMSException {
         Util.util().checkClosed(closed, "Connection is closed.");
         if (stopped.compareAndSet(false, true)) {
-            //initiate stop
+            for (RMQSession session : this.sessions) {
+                session.pause();
+            }
         }
     }
-    
+
     /**
      * Returns true if this connection is in a stopped state
      * @return
@@ -159,7 +163,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public ConnectionConsumer
-            createConnectionConsumer(Topic topic, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
+    createConnectionConsumer(Topic topic, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
         throw new UnsupportedOperationException();
     }
 
@@ -177,7 +181,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public ConnectionConsumer
-            createConnectionConsumer(Queue queue, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
+    createConnectionConsumer(Queue queue, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
         throw new UnsupportedOperationException();
     }
 

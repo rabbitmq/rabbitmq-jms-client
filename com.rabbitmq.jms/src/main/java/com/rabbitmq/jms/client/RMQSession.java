@@ -51,8 +51,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private volatile boolean closed = false;
     private volatile Long lastReceivedTag;
     private volatile MessageListener messageListener;
-    private ArrayList<RMQMessageProducer> producers = new ArrayList<RMQMessageProducer>();
-    private ArrayList<RMQMessageConsumer> consumers = new ArrayList<RMQMessageConsumer>();
+    private final ArrayList<RMQMessageProducer> producers = new ArrayList<RMQMessageProducer>();
+    private final ArrayList<RMQMessageConsumer> consumers = new ArrayList<RMQMessageConsumer>();
 
     /**
      * Creates a session object associated with a connection
@@ -157,7 +157,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public boolean getTransacted() throws JMSException {
         return getTransactedNoException();
     }
-    
+
     /**
      * Same as {@link #getTransacted()}
      * but does not declare a JMSException in the throw claus
@@ -187,7 +187,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         try {
             this.channel.txCommit();
             lastReceivedTag = null;
-           
+
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -207,7 +207,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 channel.basicNack(lastReceivedTag, true, true);
                 lastReceivedTag = null;
             }
-            
+
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -231,7 +231,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 consumer.internalClose();
             }catch (JMSException x) {
                 x.printStackTrace(); //TODO logging implementation
-                
+
             }
         }
         consumers.clear();
@@ -255,7 +255,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 consumer.recover();
             }catch (JMSException x) {
                 x.printStackTrace(); //TODO logging implementation
-                
+
             }
         }
     }
@@ -319,7 +319,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 declareTopic(dest);
             }
         }
-        
+
         if (!dest.isQueue()) {
             String queueName = consumerTag;
             // this is a topic, we need to define a queue, and bind to it
@@ -539,7 +539,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public Channel getChannel() {
         return this.channel;
     }
-    
+
     /**
      * Invoked when the {@link RMQMessageConsumer} has received a message
      * so that we can track the last delivery tag
@@ -553,18 +553,51 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (!transacted) return; //auto ack
         lastReceivedTag = response.getEnvelope().getDeliveryTag();
     }
-    
+
     public void consumerClose(RMQMessageConsumer consumer) {
         this.consumers.remove(consumer);
     }
-    
+
     public void producerClose(RMQMessageProducer producer) {
         this.producers.remove(producer);
     }
-    
+
     public boolean isAutoAck() throws JMSException {
         return (getAcknowledgeMode()==Session.AUTO_ACKNOWLEDGE) || (getAcknowledgeMode()==Session.DUPS_OK_ACKNOWLEDGE);
     }
-    
+
+    /**
+     * Stops all consumers from receiving messages. This is called by the
+     * session indirectly after {@link javax.jms.Connection#stop()} has been
+     * invoked. In this implementation, any async consumers will be cancelled,
+     * only to be re-subscribed when
+     * 
+     * @throws {@link javax.jms.JMSException} if the thread is interrupted
+     */
+    public void pause() throws JMSException {
+        for (RMQMessageConsumer consumer : this.consumers) {
+            try {
+                consumer.pause();
+            } catch (IllegalStateException x) {
+                Util.util().handleException(x);
+            }
+        }
+    }
+
+    /**
+     * Resubscribes all async listeners and continues to receive messages
+     * 
+     * @see {@link javax.jms.Connection#stop()}
+     * @throws {@link javax.jms.JMSException} if the thread is interrupted
+     */
+    public void resume() throws JMSException {
+        for (RMQMessageConsumer consumer : this.consumers) {
+            try {
+                consumer.resume();
+            } catch (IllegalStateException x) {
+                Util.util().handleException(x);
+            }
+        }
+    }
 
 }
