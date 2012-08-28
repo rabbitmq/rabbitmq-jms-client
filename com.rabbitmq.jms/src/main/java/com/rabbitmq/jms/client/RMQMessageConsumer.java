@@ -154,7 +154,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             name = this.getUUIDTag();
         }
         
-        return getSession().getChannel().basicConsume(name, !getSession().getTransactedNoException(), consumer);
+        return getSession().getChannel().basicConsume(name, getSession().isAutoAck() , consumer);
     }
 
     /**
@@ -339,10 +339,15 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * consumer has received but not acknowledged
      * @see {@link javax.jms.Session#recover()}
      */
-    public void recover() throws JMSException {
+    public synchronized void recover() throws JMSException {
         java.util.Queue<RMQMessage> tmp = receivedMessages;
         receivedMessages = new ConcurrentLinkedQueue<RMQMessage>();
         recoveredMessages.addAll(tmp);
+        
+        for (RMQMessage msg : recoveredMessages) {
+            msg.setJMSRedelivered(true);
+        }
+        
         RMQMessage message = null;
         MessageListener listener = getMessageListener(); 
         if (listener!=null) {

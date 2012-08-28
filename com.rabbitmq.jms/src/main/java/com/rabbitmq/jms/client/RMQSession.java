@@ -173,6 +173,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public int getAcknowledgeMode() throws JMSException {
+        return getAcknowledgeModeNoException();
+    }
+    
+    public int getAcknowledgeModeNoException() {
         return this.acknowledgeMode;
     }
 
@@ -562,8 +566,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.producers.remove(producer);
     }
 
-    public boolean isAutoAck() throws JMSException {
-        return (getAcknowledgeMode()==Session.AUTO_ACKNOWLEDGE) || (getAcknowledgeMode()==Session.DUPS_OK_ACKNOWLEDGE);
+    public boolean isAutoAck() {
+        return (getAcknowledgeModeNoException()==Session.AUTO_ACKNOWLEDGE) || (getAcknowledgeModeNoException()==Session.DUPS_OK_ACKNOWLEDGE);
     }
 
     /**
