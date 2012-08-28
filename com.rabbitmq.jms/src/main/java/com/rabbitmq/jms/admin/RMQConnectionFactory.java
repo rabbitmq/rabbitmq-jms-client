@@ -32,6 +32,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private String host = "localhost";
     private int port = 5672;
     private int threadsPerConnection = 2;
+    private String threadPrefix = null;
 
     /**
      * {@inheritDoc}
@@ -54,6 +55,9 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         factory.setPort(getPort());
         com.rabbitmq.client.Connection rabbitConnection = null;
         PausableExecutorService es = new PausableExecutorService(getThreadsPerConnection());
+        if (getThreadPrefix()!=null) {
+            es.setServiceId(getThreadPrefix());
+        }
         try {
             rabbitConnection = factory.newConnection(es);
         } catch (IOException x) {
@@ -224,6 +228,24 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     public void setThreadsPerConnection(int threadsPerConnection) {
         this.threadsPerConnection = threadsPerConnection;
     }
+
+    /**
+     * Returns the thread prefix used
+     * @return the thread prefix used
+     */
+    public String getThreadPrefix() {
+        return threadPrefix;
+    }
+
+    /**
+     * Sets the thread prefix to be used when threads are created in this system.
+     * @param threadPrefix the prefix such as &quot;Rabbit JMS Thread #&quot;
+     */
+    public void setThreadPrefix(String threadPrefix) {
+        this.threadPrefix = threadPrefix;
+    }
+    
+    
     
     
 
