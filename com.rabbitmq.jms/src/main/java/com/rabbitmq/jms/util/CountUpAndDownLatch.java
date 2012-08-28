@@ -22,11 +22,8 @@ public class CountUpAndDownLatch {
         }
 
         public boolean tryReleaseShared(int releases) {
-            // Decrement count; signal when transition to zero
             for (;;) {
                 int c = getState();
-                if (c == 0)
-                    return false;
                 int nextc = c + releases;
                 if (compareAndSetState(c, nextc))
                     return nextc == 0;
