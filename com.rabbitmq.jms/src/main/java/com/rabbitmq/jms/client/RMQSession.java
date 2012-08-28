@@ -175,7 +175,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public int getAcknowledgeMode() throws JMSException {
         return getAcknowledgeModeNoException();
     }
-    
+
     public int getAcknowledgeModeNoException() {
         return this.acknowledgeMode;
     }
@@ -382,7 +382,22 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     protected void declareQueue(RMQDestination dest, boolean temporary, boolean durable) throws JMSException {
         try {
-            this.channel.queueDeclare(dest.getQueueName(), durable, temporary, !durable, new HashMap<String, Object>());
+
+            this.channel.queueDeclare(dest.getQueueName(), // the name of the
+                                                           // queue inside
+                                                           // rabbit
+                                      !temporary, // rabbit durable means
+                                                  // survive server restart, all
+                                                  // JMS destinations, except
+                                                  // temp destination survive
+                                                  // restarts
+                                      temporary, // temporary destinations are
+                                                 // rabbit exclusive
+                                      !durable, // JMS durable means that we
+                                                // don't want to auto delete the
+                                                // destination
+                                      new HashMap<String, Object>()); // rabbit
+                                                                      // properties
         } catch (IOException x) {
             Util.util().handleException(x);
         }

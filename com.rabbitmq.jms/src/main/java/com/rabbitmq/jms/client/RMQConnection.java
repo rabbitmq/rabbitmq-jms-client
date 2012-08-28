@@ -139,6 +139,9 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         if (closed) return;
         closed = true;
         try {
+            for (RMQSession session : this.sessions) {
+                session.close();
+            }
             this.rabbitConnection.close();
         } catch (IOException x) {
             Util.util().handleException(x);

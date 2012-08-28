@@ -12,6 +12,7 @@ import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -40,8 +41,9 @@ public abstract class RMQMessage implements Message, Cloneable {
 
     private static final Charset charset = Charset.forName("UTF-8");
 
-    private Map<String, Serializable> rmqProperties = new HashMap<String, Serializable>();
-    private Map<String, Serializable> jmsProperties = new HashMap<String, Serializable>();
+    private final Map<String, Serializable> rmqProperties = new HashMap<String, Serializable>();
+    private final Map<String, Serializable> jmsProperties = new HashMap<String, Serializable>();
+    private final AtomicBoolean isAcked = new AtomicBoolean(false);
 
     private long rabbitDeliveryTag = -1;
     public long getRabbitDeliveryTag() {
@@ -50,7 +52,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     public void setRabbitDeliveryTag(long rabbitDeliveryTag) {
         this.rabbitDeliveryTag = rabbitDeliveryTag;
     }
-    
+
     private RMQMessageConsumer rabbitConsumer = null;
     public RMQMessageConsumer getRabbitConsumer() {
         return rabbitConsumer;
@@ -58,7 +60,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     public void setRabbitConsumer(RMQMessageConsumer rabbitConsumer) {
         this.rabbitConsumer = rabbitConsumer;
     }
-    
+
     public RMQMessage() {
     }
 
@@ -538,11 +540,12 @@ public abstract class RMQMessage implements Message, Cloneable {
 
     /**
      * {@inheritDoc}
-     * TODO NOT YET IMPLEMENTED
      */
     @Override
     public void acknowledge() throws JMSException {
-        getRabbitConsumer().acknowledge(this);
+        if (isAcked.compareAndSet(false, true)) {
+            getRabbitConsumer().acknowledge(this);
+        }
     }
 
     /**
@@ -578,9 +581,9 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @throws IllegalAccessException - if an IllegalAccessException occurs - this will prevent message delivery
      */
     public abstract void readBody(ObjectInput in) throws IOException,
-                                                 ClassNotFoundException,
-                                                 InstantiationException,
-                                                 IllegalAccessException;
+    ClassNotFoundException,
+    InstantiationException,
+    IllegalAccessException;
 
     /**
      * Serializes a {@link RMQMessage} to a byte array. 
@@ -621,9 +624,11 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @throws InstantiationException if an exception occurs during class instantiation
      */
     public static RMQMessage fromMessage(byte[] b) throws ClassNotFoundException,
-                                                  IOException,
-                                                  IllegalAccessException,
-                                                  InstantiationException {
+    IOException,
+    IllegalAccessException,
+    InstantiationException {
+        // TODO If we don't recognize the message format then we need to
+        // create a generic BytesMessage
         ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(b));
         String clazz = in.readUTF();
         RMQMessage msg = (RMQMessage) Class.forName(clazz, true, Thread.currentThread().getContextClassLoader()).newInstance();
@@ -655,7 +660,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     public static void writePrimitive(Object s, ObjectOutput out) throws IOException {
         if (s == null) {
-            out.write(-1);
+            out.writeByte(-1);
         } else if (s instanceof Boolean) {
             out.writeByte(1);
             out.writeBoolean(((Boolean) s).booleanValue());
