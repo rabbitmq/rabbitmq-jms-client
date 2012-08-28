@@ -15,7 +15,7 @@ import com.rabbitmq.jms.client.RMQSession;
 
 public class RMQDestination implements Queue, Topic, Destination, Referenceable, Serializable {
 
-    /** TODO */
+    /** TODO - Serial ID?*/
     private static final long serialVersionUID = 596966152753718825L;
     private volatile String name;
     private volatile String exchangeName;
