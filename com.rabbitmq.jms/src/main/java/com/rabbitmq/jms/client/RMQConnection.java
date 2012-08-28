@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
@@ -21,6 +22,7 @@ import javax.jms.Topic;
 import javax.jms.TopicConnection;
 import javax.jms.TopicSession;
 
+import com.rabbitmq.jms.util.PausableExecutorService;
 import com.rabbitmq.jms.util.Util;
 
 /**
@@ -35,9 +37,11 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private final List<RMQSession> sessions = Collections.<RMQSession> synchronizedList(new ArrayList<RMQSession>());
     private volatile boolean closed = false;
     private final AtomicBoolean stopped = new AtomicBoolean(true);
+    private final PausableExecutorService threadPool;
 
-    public RMQConnection(com.rabbitmq.client.Connection rabbitConnection) {
+    public RMQConnection(PausableExecutorService threadPool, com.rabbitmq.client.Connection rabbitConnection) {
         this.rabbitConnection = rabbitConnection;
+        this.threadPool = threadPool;
     }
 
     /**
@@ -103,11 +107,11 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     public void start() throws JMSException {
         Util.util().checkClosed(closed, "Connection is closed.");
         if (stopped.compareAndSet(true, false)) {
+            this.threadPool.resume();
             for (RMQSession session : this.sessions) {
                 session.resume();
             }
         }
-
     }
 
     /**
@@ -117,6 +121,12 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     public void stop() throws JMSException {
         Util.util().checkClosed(closed, "Connection is closed.");
         if (stopped.compareAndSet(false, true)) {
+            try {
+                this.threadPool.pause();
+            } catch (InterruptedException x) {
+                stopped.set(false);
+                Util.util().handleException(x);
+            }
             for (RMQSession session : this.sessions) {
                 session.pause();
             }
@@ -125,6 +135,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
     /**
      * Returns true if this connection is in a stopped state
+     * 
      * @return
      */
     public boolean isStopped() {
@@ -136,12 +147,19 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void close() throws JMSException {
-        if (closed) return;
+        if (closed)
+            return;
         closed = true;
         try {
+            this.threadPool.shutdown();
             for (RMQSession session : this.sessions) {
                 session.close();
             }
+            this.threadPool.awaitTermination(60, TimeUnit.SECONDS);
+        } catch(InterruptedException x) {
+            //do nothing - proceed
+        }
+        try {
             this.rabbitConnection.close();
         } catch (IOException x) {
             Util.util().handleException(x);
@@ -166,7 +184,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public ConnectionConsumer
-    createConnectionConsumer(Topic topic, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
+            createConnectionConsumer(Topic topic, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
         throw new UnsupportedOperationException();
     }
 
@@ -184,7 +202,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public ConnectionConsumer
-    createConnectionConsumer(Queue queue, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
+            createConnectionConsumer(Queue queue, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
         throw new UnsupportedOperationException();
     }
 
@@ -212,11 +230,11 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     }
 
     /**
-     * Internal methods. A connection must track all sessions
-     * that are created, but when we call {@link RMQSession#close()}
-     * we must unregister this session with the connection
-     * This method is called by {@link RMQSession#close()}
-     * and should not be called from anywhere else
+     * Internal methods. A connection must track all sessions that are created,
+     * but when we call {@link RMQSession#close()} we must unregister this
+     * session with the connection This method is called by
+     * {@link RMQSession#close()} and should not be called from anywhere else
+     * 
      * @param session - the session that is being closed
      */
     protected void sessionClose(RMQSession session) {

@@ -15,6 +15,7 @@ import javax.naming.Reference;
 import javax.naming.Referenceable;
 
 import com.rabbitmq.jms.client.RMQConnection;
+import com.rabbitmq.jms.util.PausableExecutorService;
 import com.rabbitmq.jms.util.Util;
 
 /**
@@ -30,6 +31,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private String virtualHost = "/";
     private String host = "localhost";
     private int port = 5672;
+    private int threadsPerConnection = 2;
 
     /**
      * {@inheritDoc}
@@ -51,8 +53,9 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         factory.setHost(getHost());
         factory.setPort(getPort());
         com.rabbitmq.client.Connection rabbitConnection = null;
+        PausableExecutorService es = new PausableExecutorService(getThreadsPerConnection());
         try {
-            rabbitConnection = factory.newConnection();
+            rabbitConnection = factory.newConnection(es);
         } catch (IOException x) {
             if (x.getMessage()!=null && x.getMessage().indexOf("authentication failure")>=0) {
                 Util.util().handleSecurityException(x);
@@ -60,7 +63,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
                 Util.util().handleException(x);
             }
         }
-        return new RMQConnection(rabbitConnection);
+        return new RMQConnection(es, rabbitConnection);
     }
 
     /**
@@ -204,5 +207,24 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     public void setPort(int port) {
         this.port = port;
     }
+
+    /**
+     * Returns the number of threads that are configured for each connection.
+     * @return the number of threads that are used for each connection, default is 2
+     */
+    public int getThreadsPerConnection() {
+        return threadsPerConnection;
+    }
+
+    /**
+     * Configures how many threads should be used to receive messages for each TCP
+     * connection that is established. 
+     * @param threadsPerConnection the number of threads for each executor service to handle a TCP connection
+     */
+    public void setThreadsPerConnection(int threadsPerConnection) {
+        this.threadsPerConnection = threadsPerConnection;
+    }
+    
+    
 
 }

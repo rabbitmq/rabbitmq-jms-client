@@ -28,8 +28,6 @@ import com.rabbitmq.jms.util.Util;
 
 public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscriber {
 
-    private final static long DEFAULT_PAUSE_TIMEOUT = Long.getLong("rabbit.jms.DEFAULT_PAUSE_TIMEOUT", 300000);
-
     private final RMQDestination destination;
     private final RMQSession session;
     private final String uuidTag;
@@ -117,16 +115,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     public Message receive(long timeout) throws JMSException {
         long now = System.currentTimeMillis();
 
-        try {
-            // the connection may be stopped
-            if (!pauseLatch.await(timeout, TimeUnit.MILLISECONDS)) {
-                return null; // timeout happened before we got a chance to look
-                             // for a message
-            }
-        } catch (InterruptedException x) {
-            // TODO logging implementation
-            return null;
-        }
         timeout -= (System.currentTimeMillis() - now);
 
         Message msg = receiveNoWait();
@@ -142,7 +130,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             SynchronousConsumer sc = new SynchronousConsumer(this.session.getChannel(), timeout, session.getAcknowledgeMode());
             basicConsume(sc);
             GetResponse response = sc.receive();
-            return processMessage(response, isAutoAck(), timeout);
+            return processMessage(response, isAutoAck());
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -191,6 +179,22 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public Message receiveNoWait() throws JMSException {
+        return receiveNoWait(0);
+    }
+    
+    public Message receiveNoWait(long timeout) throws JMSException {
+        try {
+            // the connection may be stopped
+            if (!pauseLatch.await(timeout, TimeUnit.MILLISECONDS)) {
+                return null; // timeout happened before we got a chance to look
+                             // for a message meaning we need to time out
+            }
+        } catch (InterruptedException x) {
+            // TODO logging implementation
+            return null;
+        }
+
+        
         RMQMessage message = recoveredMessages.poll();
         if (message!=null) {
             //we have recovered messages
@@ -204,7 +208,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 response = this.getSession().getChannel().basicGet(this.getUUIDTag(), isAutoAck());
             }
 
-            return processMessage(response, isAutoAck(), 0);
+            return processMessage(response, isAutoAck());
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -217,7 +221,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @return
      * @throws JMSException
      */
-    private Message processMessage(GetResponse response, boolean acknowledged, long timeoutMillis) throws JMSException {
+    private Message processMessage(GetResponse response, boolean acknowledged) throws JMSException {
         try {
             if (response == null)
                 return null;
@@ -229,11 +233,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 receivedMessages.add(message);
             }
             try {
-                try {
-                    this.pauseLatch.await(timeoutMillis, TimeUnit.MILLISECONDS);
-                } catch (InterruptedException x) {
-                    // TODO logging implementation
-                }
                 MessageListener listener = getSession().getMessageListener();
                 if (listener != null) {
                     try {
@@ -348,18 +347,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @throws {@link javax.jms.JMSException} if the thread is interrupted
      */
     public void pause() throws JMSException {
-        try {
-            while (listenerRunning.get() > 0) {
-                // TODO implement a pause
-                // TODO put a countdown latch we can wait on - steal from tomcat
-                // code
-                // TODO look into supplying our own executors and simple pausing
-                // them
-            }
-            pauseLatch.pause();
-        } catch (IllegalStateException x) {
-            Util.util().handleException(x);
-        }
+        pauseLatch.pause();
     }
 
     /** 
@@ -369,11 +357,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @throws {@link javax.jms.JMSException} if the thread is interrupted
      */
     public void resume() throws JMSException  {
-        try {
-            pauseLatch.resume();
-        } catch (IllegalStateException x) {
-            Util.util().handleException(x);
-        }
+        pauseLatch.resume();
     }
 
     /**
@@ -469,7 +453,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             if (this.consumerTag==null) this.consumerTag = consumerTag;
             GetResponse response = new GetResponse(envelope, properties, body, 0);
             try {
-                Message message = processMessage(response, isAutoAck(), DEFAULT_PAUSE_TIMEOUT);
+                Message message = processMessage(response, isAutoAck());
                 try {
                     listenerRunning.incrementAndGet();
                     this.listener.onMessage(message);
