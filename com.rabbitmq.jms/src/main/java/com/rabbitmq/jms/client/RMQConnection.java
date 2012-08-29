@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -12,6 +13,7 @@ import javax.jms.ConnectionConsumer;
 import javax.jms.ConnectionMetaData;
 import javax.jms.Destination;
 import javax.jms.ExceptionListener;
+import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
@@ -51,7 +53,11 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private final AtomicBoolean stopped = new AtomicBoolean(true);
     /** The thread pool that receives incoming messages */
     private final PausableExecutorService threadPool;
+    
+    private static ConcurrentHashMap<String, String> CLIENT_IDS = new ConcurrentHashMap<String, String>(); 
 
+    /** This is used for JMSCTS test cases, as ClientID should only be configurable right after the connection has been created */
+    private volatile boolean canSetClientID = true;
     /**
      * Creates an RMQConnection object
      * @param threadPool the thread pool that was used to create the rabbit connection {@link com.rabbitmq.client.Connection} object 
@@ -67,7 +73,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
-        Util.util().checkClosed(closed, "Connection is closed.");
+        canSetClientID = false;
+        Util.util().checkTrue(closed, "Connection is closed.");
         RMQSession session = new RMQSession(this, transacted, acknowledgeMode);
         this.sessions.add(session);
         return session;
@@ -78,7 +85,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public String getClientID() throws JMSException {
-        Util.util().checkClosed(closed, "Connection is closed.");
+        Util.util().checkTrue(closed, "Connection is closed.");
         return this.clientID;
     }
 
@@ -87,8 +94,18 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void setClientID(String clientID) throws JMSException {
-        Util.util().checkClosed(closed, "Connection is closed.");
-        this.clientID = clientID;
+        Util.util().checkTrue(!canSetClientID, "Client ID can only be set right after connection creation");
+        Util.util().checkTrue(closed, "Connection is closed.");
+        if (this.clientID==null) {
+            if (CLIENT_IDS.putIfAbsent(clientID, clientID)==null) {
+                this.clientID = clientID;
+            } else {
+                throw new InvalidClientIDException("A connection with that client ID alreayd exists.["+clientID+"]");
+            }
+        } else {
+            throw new JMSException("Client ID already set.");
+        }
+        
     }
 
     /**
@@ -96,7 +113,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public ConnectionMetaData getMetaData() throws JMSException {
-        Util.util().checkClosed(closed, "Connection is closed.");
+        canSetClientID = false;
+        Util.util().checkTrue(closed, "Connection is closed.");
         return connectionMetaData;
     }
 
@@ -105,7 +123,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public ExceptionListener getExceptionListener() throws JMSException {
-        Util.util().checkClosed(closed, "Connection is closed.");
+        canSetClientID = false;
+        Util.util().checkTrue(closed, "Connection is closed.");
         return this.exceptionListener;
     }
 
@@ -114,7 +133,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void setExceptionListener(ExceptionListener listener) throws JMSException {
-        Util.util().checkClosed(closed, "Connection is closed.");
+        canSetClientID = false;
+        Util.util().checkTrue(closed, "Connection is closed.");
         this.exceptionListener = listener;
     }
 
@@ -123,7 +143,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void start() throws JMSException {
-        Util.util().checkClosed(closed, "Connection is closed.");
+        canSetClientID = false;
+        Util.util().checkTrue(closed, "Connection is closed.");
         if (stopped.compareAndSet(true, false)) {
             this.threadPool.resume();
             for (RMQSession session : this.sessions) {
@@ -137,7 +158,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void stop() throws JMSException {
-        Util.util().checkClosed(closed, "Connection is closed.");
+        canSetClientID = false;
+        Util.util().checkTrue(closed, "Connection is closed.");
         if (stopped.compareAndSet(false, true)) {
             try {
                 this.threadPool.pause();
@@ -167,16 +189,20 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     public void close() throws JMSException {
         if (closed)
             return;
+        String clientID = getClientID();
         closed = true;
+        if (clientID!=null) CLIENT_IDS.remove(clientID);
         try {
-            this.threadPool.shutdown();
-            for (RMQSession session : this.sessions) {
+            while (this.sessions.size()>0) {
+                RMQSession session = sessions.get(0);
                 session.close();
             }
+            this.threadPool.shutdown();
             this.threadPool.awaitTermination(60, TimeUnit.SECONDS);
         } catch(InterruptedException x) {
             //do nothing - proceed
         }
+
         try {
             this.rabbitConnection.close();
         } catch (IOException x) {
@@ -193,7 +219,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public TopicSession createTopicSession(boolean transacted, int acknowledgeMode) throws JMSException {
-        Util.util().checkClosed(closed, "Connection is closed.");
+        Util.util().checkTrue(closed, "Connection is closed.");
         return (TopicSession) this.createSession(transacted, acknowledgeMode);
     }
 
@@ -211,7 +237,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public QueueSession createQueueSession(boolean transacted, int acknowledgeMode) throws JMSException {
-        Util.util().checkClosed(closed, "Connection is closed.");
+        Util.util().checkTrue(closed, "Connection is closed.");
         return (QueueSession) this.createSession(transacted, acknowledgeMode);
     }
 

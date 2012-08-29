@@ -49,13 +49,13 @@ public class Util {
     }
     /**
      * Throws an exception with the supplied message, or "Closed" if the msg parameter is null,
-     * if the closed parameter is true
-     * @param closed throws a JMSException if this parameter is set to true
+     * if the bool parameter is true
+     * @param bool throws a JMSException if this parameter is set to true
      * @param msg
      * @throws JMSException
      */
-    public void checkClosed(boolean closed, String msg) throws JMSException {
-        if (closed)
+    public void checkTrue(boolean bool, String msg) throws JMSException {
+        if (bool)
             throw new JMSException(msg != null ? msg : "Closed");
     }
 

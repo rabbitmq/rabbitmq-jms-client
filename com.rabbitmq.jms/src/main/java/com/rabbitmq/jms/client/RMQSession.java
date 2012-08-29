@@ -82,7 +82,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public BytesMessage createBytesMessage() throws JMSException {
-        Util.util().checkClosed(this.closed, "Session has been closed");
+        Util.util().checkTrue(this.closed, "Session has been closed");
         return new RMQBytesMessage();
     }
 
@@ -91,7 +91,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public MapMessage createMapMessage() throws JMSException {
-        Util.util().checkClosed(this.closed, "Session has been closed");
+        Util.util().checkTrue(this.closed, "Session has been closed");
         return new RMQMapMessage();
     }
 
@@ -108,7 +108,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public ObjectMessage createObjectMessage() throws JMSException {
-        Util.util().checkClosed(this.closed, "Session has been closed");
+        Util.util().checkTrue(this.closed, "Session has been closed");
         return new RMQObjectMessage();
     }
 
@@ -127,7 +127,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public StreamMessage createStreamMessage() throws JMSException {
-        Util.util().checkClosed(this.closed, "Session has been closed");
+        Util.util().checkTrue(this.closed, "Session has been closed");
         return new RMQStreamMessage();
     }
 
@@ -136,7 +136,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public TextMessage createTextMessage() throws JMSException {
-        Util.util().checkClosed(this.closed, "Session has been closed");
+        Util.util().checkTrue(this.closed, "Session has been closed");
         return new RMQTextMessage();
     }
 
@@ -192,7 +192,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public void commit() throws JMSException {
-        Util.util().checkClosed(this.closed, "Session has been closed");
+        Util.util().checkTrue(this.closed, "Session has been closed");
         if (!this.transacted)
             return;
         try {
@@ -210,7 +210,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public void rollback() throws JMSException {
-        Util.util().checkClosed(this.closed, "Session has been closed");
+        Util.util().checkTrue(this.closed, "Session has been closed");
         if (!this.transacted)
             return;
         try {
@@ -267,7 +267,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public void recover() throws JMSException {
-        Util.util().checkClosed(this.closed, "Session has been closed");
+        Util.util().checkTrue(this.closed, "Session has been closed");
         //each consumer contains a list of messages received and 
         //not acknowledged
         for (RMQMessageConsumer consumer : consumers) {
