@@ -285,7 +285,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public void run() {
-        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException();
     }
 
     /**

@@ -471,7 +471,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
          */
         @Override
         public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
-            // TODO Auto-generated method stub
+            // noop
 
         }
 
@@ -480,7 +480,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
          */
         @Override
         public void handleRecoverOk(String consumerTag) {
-            // TODO Auto-generated method stub
+            // noop
 
         }
 
