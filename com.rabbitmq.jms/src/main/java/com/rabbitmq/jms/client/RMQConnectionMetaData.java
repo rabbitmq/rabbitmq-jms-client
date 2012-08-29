@@ -1,6 +1,7 @@
 package com.rabbitmq.jms.client;
 
 import java.util.Enumeration;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.ConnectionMetaData;
 import javax.jms.JMSException;
@@ -9,7 +10,9 @@ import javax.jms.JMSException;
  * Meta data for {@link RMQConnection}
  */
 public class RMQConnectionMetaData implements ConnectionMetaData {
-
+    
+    private static final AtomicInteger GROUP_SEQ = new AtomicInteger(0);
+    
     private static final String JMS_PROVIDER_NAME = "RabbitMQ";
     private static final String RABBITMQ_VERSION = "2.8.3";
     private static final int RABBITMQ_MINOR_VERSION = 8;
@@ -17,20 +20,13 @@ public class RMQConnectionMetaData implements ConnectionMetaData {
     private static final String JMS_VERSION = "1.1";
     private static final int JMS_MAJOR_VERSION = 1;
     private static final int JMS_MINOR_VERSION = 1;
-
-    private static final Enumeration<String> EMPTY_ENUMERATION = new Enumeration<String>() {
-
-        @Override
-        public boolean hasMoreElements() {
-            return false;
-        }
-
-        @Override
-        public String nextElement() {
-            return null;
-        }
-
-    };
+    
+    /**
+     * These two are currently not used, they are needed for a JMSCTS test
+     * We need to make sure these properties get into the messages
+     */
+    private static final String JMSX_GROUP_ID_LABEL = "JMSXGroupID"; //value should be VMW
+    private static final String JMSX_GROUP_SEQ_LABEL = "JMSXGroupSeq";
 
     /**
      * {@inheritDoc}
@@ -94,7 +90,25 @@ public class RMQConnectionMetaData implements ConnectionMetaData {
      */
     @Override
     public Enumeration<String> getJMSXPropertyNames() throws JMSException {
-        return EMPTY_ENUMERATION;
+        return new JmsXEnumerator();
+    }
+    
+    public class JmsXEnumerator implements Enumeration<String> {
+        int idx = 0;
+        @Override
+        public boolean hasMoreElements() {
+            return idx < 2;
+        }
+
+        @Override
+        public String nextElement() {
+            switch (idx++) {
+            case 0 : return JMSX_GROUP_ID_LABEL;
+            case 1 : return JMSX_GROUP_SEQ_LABEL;
+            default: return null;
+            }
+        }
+        
     }
 
 }
