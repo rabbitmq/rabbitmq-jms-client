@@ -36,7 +36,7 @@ public class RabbitJmsCtsProvider implements Administrator, Provider {
 
     @Override
     public void createDestination(String name, boolean queue) throws JMSException {
-        RMQDestination dest = new RMQDestination(name, queue);
+        RMQDestination dest = new RMQDestination(name, queue, false);
         lookup.put(name, dest);
     }
 

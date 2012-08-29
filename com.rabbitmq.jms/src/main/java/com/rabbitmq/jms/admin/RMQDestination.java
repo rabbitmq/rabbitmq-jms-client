@@ -5,6 +5,8 @@ import java.io.Serializable;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Queue;
+import javax.jms.TemporaryQueue;
+import javax.jms.TemporaryTopic;
 import javax.jms.Topic;
 import javax.naming.NamingException;
 import javax.naming.Reference;
@@ -17,7 +19,7 @@ import com.rabbitmq.jms.client.RMQSession;
  * Implementation of a {@link Topic} and {@link Queue} This implementation is
  * serializable as it can be stored in a JNDI tree.
  */
-public class RMQDestination implements Queue, Topic, Destination, Referenceable, Serializable {
+public class RMQDestination implements Queue, Topic, Destination, Referenceable, Serializable, TemporaryQueue, TemporaryTopic {
 
     /** TODO - Serial ID? */
     private static final long serialVersionUID = 596966152753718825L;
@@ -26,6 +28,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     private volatile String routingKey;
     private volatile boolean queue;
     private volatile boolean declared;
+    private volatile boolean temporary;
 
     /**
      * Constructor used when object is deserialized using Java serialization
@@ -37,14 +40,15 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * Creates a destination in RabbitMQ
      * @param name the name of the topic or queue
      * @param queue true if this represent a queue
+     * @param temporary true if this is a temporary destination
      */
-    public RMQDestination(String name, boolean queue) {
+    public RMQDestination(String name, boolean queue, boolean temporary) {
         if (queue) {
             String exchangeName = "", routingKey = name;
-            init(name, exchangeName, routingKey, true, false);
+            init(name, exchangeName, routingKey, true, false, temporary);
         } else {
             String topicName = name, exchangeName = "topic." + topicName, routingKey = name;
-            init(name, exchangeName, routingKey, false, false);
+            init(name, exchangeName, routingKey, false, false, temporary);
         }
     }
 
@@ -68,8 +72,9 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      *            to represent this queue/topic in the RabbitMQ broker. If
      *            creating a topic/queue to bind in JNDI, this value must be set
      *            to FALSE
+     * @param temporary true if this is a temporary destination
      */
-    protected void init(String name, String exchangeName, String routingKey, boolean queue, boolean declared) {
+    protected void init(String name, String exchangeName, String routingKey, boolean queue, boolean declared, boolean temporary) {
         this.name = name;
         this.exchangeName = exchangeName;
         this.routingKey = routingKey;
@@ -220,5 +225,22 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     public void setDeclared(boolean declared) {
         this.declared = declared;
     }
+
+    /**
+     * Returns true if this is a temporary destination
+     * @return true if this is a temporary destination
+     */
+    public boolean isTemporary() {
+        return temporary;
+    }
+
+    @Override
+    public void delete() throws JMSException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    
+    
 
 }

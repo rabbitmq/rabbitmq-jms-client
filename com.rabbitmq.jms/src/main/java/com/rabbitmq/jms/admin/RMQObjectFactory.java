@@ -156,7 +156,7 @@ public class RMQObjectFactory implements ObjectFactory {
      */
     public Object createDestination(Reference ref, Name name, boolean topic) throws NamingException {
         String dname = getStringProperty(ref, "destinationName", false, null);
-        RMQDestination d = new RMQDestination(dname, !topic);
+        RMQDestination d = new RMQDestination(dname, !topic, false);
         return d;
     }
 

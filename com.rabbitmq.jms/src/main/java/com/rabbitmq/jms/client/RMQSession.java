@@ -332,7 +332,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         RMQDestination dest = (RMQDestination) destination;
         if (!dest.isDeclared()) {
             if (dest.isQueue()) {
-                declareQueue(dest,false,true);
+                declareQueue(dest,dest.isTemporary(),true);
             } else {
                 declareTopic(dest);
             }
@@ -355,7 +355,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @param destination
      * @param autoDelete true if the queue created should be autoDelete==true. This flag is ignored if the destination is a queue
      * @return {@link #createConsumer(Destination)}
-     * @throws JMSException
+     * @throws JMSException if destination is null or we fail to create the destination on the broker
      * @see {@link #createConsumer(Destination)}
      */
     public MessageConsumer createConsumer(Destination destination, boolean autoDelete, String uuidTag) throws JMSException {
@@ -364,7 +364,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
         if (!dest.isDeclared()) {
             if (dest.isQueue()) {
-                declareQueue(dest,false,true);
+                declareQueue(dest,dest.isTemporary(),true);
             } else {
                 declareTopic(dest);
             }
@@ -377,7 +377,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             try {
                 //we can set auto delete for a topic queue, since if the consumer disappears he is no longer 
                 //participating in the topic.  
-                this.channel.queueDeclare(queueName, true, false, autoDelete, new HashMap<String, Object>());
+                this.channel.queueDeclare(queueName, true, dest.isTemporary(), autoDelete, new HashMap<String, Object>());
                 //bind the queue to the exchange and routing key
                 this.channel.queueBind(queueName, dest.getExchangeName(), dest.getRoutingKey());
             } catch (IOException x) {
@@ -414,10 +414,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public Queue createQueue(String queueName) throws JMSException {
-        RMQDestination dest = new RMQDestination(queueName, true);
-        boolean temporary = false;
+        RMQDestination dest = new RMQDestination(queueName, true, false);
         boolean durable = true;
-        declareQueue(dest, temporary, durable);
+        declareQueue(dest, dest.isTemporary(), durable);
         return dest;
     }
 
@@ -458,7 +457,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public Topic createTopic(String topicName) throws JMSException {
-        RMQDestination dest = new RMQDestination(topicName, false);
+        RMQDestination dest = new RMQDestination(topicName, false, false);
         declareTopic(dest);
         return dest;
     }
@@ -526,8 +525,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public TemporaryQueue createTemporaryQueue() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return new RMQDestination(Util.util().generateUUIDTag(), true, true);
     }
 
     /**
@@ -535,8 +533,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public TemporaryTopic createTemporaryTopic() throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        return new RMQDestination(Util.util().generateUUIDTag(), false, true);
     }
 
     /**
