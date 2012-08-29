@@ -37,6 +37,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private volatile java.util.Queue<RMQMessage> receivedMessages = new ConcurrentLinkedQueue<RMQMessage>();
     private volatile java.util.Queue<RMQMessage> recoveredMessages = new ConcurrentLinkedQueue<RMQMessage>();
     private final CountUpAndDownLatch listenerRunning = new CountUpAndDownLatch(0);
+    private AtomicReference<Thread> currentSynchronousReceiver = new AtomicReference<Thread>(null);
+    private volatile boolean closed = false;
 
     /**
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
@@ -113,7 +115,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * {@inheritDoc}
      */
     @Override
-    public Message receive(long timeout) throws JMSException {
+    public synchronized Message receive(long timeout) throws JMSException {
+        Util.util().checkTrue(closed, "Consumer has already been closed.");
         long now = System.currentTimeMillis();
 
         timeout -= (System.currentTimeMillis() - now);
@@ -128,12 +131,15 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         }
 
         try {
+            this.currentSynchronousReceiver.set(Thread.currentThread());
             SynchronousConsumer sc = new SynchronousConsumer(this.session.getChannel(), timeout, session.getAcknowledgeMode());
             basicConsume(sc);
             GetResponse response = sc.receive();
             return processMessage(response, isAutoAck());
         } catch (IOException x) {
             Util.util().handleException(x);
+        } finally {
+            this.currentSynchronousReceiver.set(null);
         }
         return null;
     }
@@ -279,11 +285,15 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         pauseLatch.resume();
         setMessageListener(null);
         try {
+            Thread t = currentSynchronousReceiver.get();
+            if (t!=null) t.interrupt();
             long timeoutMillis = getSession().getConnection().getTerminationTimeout();
             listenerRunning.awaitZero(timeoutMillis, TimeUnit.SECONDS);
         }catch (InterruptedException x) {
             //do nothing
             //TODO log debug level message
+        } finally {
+            closed = true;
         }
         
 
