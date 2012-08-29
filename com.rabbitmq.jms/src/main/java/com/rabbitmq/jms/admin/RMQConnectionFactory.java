@@ -39,6 +39,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private int port = 5672;
     /** Nr of threads each connection executor will have */
     private int threadsPerConnection = 2;
+    /** The time to wait for threads/messages to terminate during {@link Connection#close()} */
+    private volatile long terminationTimeout = Long.getLong("rabbit.jms.terminationTimeout",15000);
     /** 
      * The thread prefix for threads created by the executor 
      * If this is null, the value 
@@ -85,7 +87,9 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         } else {
             es.setServiceId("Rabbit JMS Connection["+rabbitConnection.getAddress()+"]-");
         }
-        return new RMQConnection(es, rabbitConnection);
+        RMQConnection conn = new RMQConnection(es, rabbitConnection);
+        conn.setTerminationTimeout(getTerminationTimeout());
+        return conn;
     }
 
     /**
@@ -263,5 +267,24 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     public void setThreadPrefix(String threadPrefix) {
         this.threadPrefix = threadPrefix;
     }
+
+    /**
+     * The time to wait in milliseconds when {@link Connection#close()} has
+     * been called for listeners and threads to complete.
+     * @return the time in milliseconds the {@link Connection#close()} before continusing shutdown sequence
+     */
+    public long getTerminationTimeout() {
+        return terminationTimeout;
+    }
+
+    /**
+     * Sets the time in milliseconds a {@link Connection#close()} should wait for threads/tasks/listeners to complete
+     * @param terminationTimeout time in milliseonds
+     */
+    public void setTerminationTimeout(long terminationTimeout) {
+        this.terminationTimeout = terminationTimeout;
+    }
+    
+    
 
 }

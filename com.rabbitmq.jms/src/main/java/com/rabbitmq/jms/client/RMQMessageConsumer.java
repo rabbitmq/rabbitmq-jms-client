@@ -279,7 +279,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         pauseLatch.resume();
         setMessageListener(null);
         try {
-            listenerRunning.awaitZero(60, TimeUnit.SECONDS);
+            long timeoutMillis = getSession().getConnection().getTerminationTimeout();
+            listenerRunning.awaitZero(timeoutMillis, TimeUnit.SECONDS);
         }catch (InterruptedException x) {
             //do nothing
             //TODO log debug level message

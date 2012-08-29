@@ -54,6 +54,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     /** The thread pool that receives incoming messages */
     private final PausableExecutorService threadPool;
     
+    private volatile long terminationTimeout = 15000;
+    
     private static ConcurrentHashMap<String, String> CLIENT_IDS = new ConcurrentHashMap<String, String>(); 
 
     /** This is used for JMSCTS test cases, as ClientID should only be configurable right after the connection has been created */
@@ -198,7 +200,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
                 session.close();
             }
             this.threadPool.shutdown();
-            this.threadPool.awaitTermination(60, TimeUnit.SECONDS);
+            this.threadPool.awaitTermination(getTerminationTimeout(), TimeUnit.MILLISECONDS);
         } catch(InterruptedException x) {
             //do nothing - proceed
         }
@@ -284,5 +286,15 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     protected void sessionClose(RMQSession session) {
         this.sessions.remove(session);
     }
+
+    public long getTerminationTimeout() {
+        return terminationTimeout;
+    }
+
+    public void setTerminationTimeout(long terminationTimeout) {
+        this.terminationTimeout = terminationTimeout;
+    }
+    
+    
 
 }

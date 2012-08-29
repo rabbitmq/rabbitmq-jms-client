@@ -55,6 +55,7 @@ import javax.naming.spi.ObjectFactory;
  *  <li>port</li>
  *  <li>threadsPerConnection</li>
  *  <li>threadPrefix</li>
+ *  <li>terminationTimeout</li>
  * </ul>  
  * Properties for a topic or a queue are:
  * <ul>
@@ -131,6 +132,7 @@ public class RMQObjectFactory implements ObjectFactory {
         int port = getIntProperty(ref, "port", true, 5672);
         int threadsPerConnection = getIntProperty(ref, "threadPerConnection", true, 2);
         String threadPrefix = getStringProperty(ref, "threadPrefix", true, "Rabbit JMS Thread #");
+        int terminationTimeout = getIntProperty(ref, "terminationTimeout", true, 15000);
 
         f.setUsername(username);
         f.setPassword(password);
@@ -139,6 +141,7 @@ public class RMQObjectFactory implements ObjectFactory {
         f.setPort(port);
         f.setThreadsPerConnection(threadsPerConnection);
         f.setThreadPrefix(threadPrefix);
+        f.setTerminationTimeout(terminationTimeout);
         
         return f;
     }
