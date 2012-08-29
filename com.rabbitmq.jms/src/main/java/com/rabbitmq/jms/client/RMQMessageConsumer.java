@@ -306,6 +306,9 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public Topic getTopic() throws JMSException {
+        if (this.getDestination().isQueue()) {
+            throw new JMSException("Destination is of type Queue, not Topic");
+        }
         return this.getDestination();
     }
 

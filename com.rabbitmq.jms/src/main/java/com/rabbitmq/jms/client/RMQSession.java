@@ -160,8 +160,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * Same as {@link #getTransacted()}
-     * but does not declare a JMSException in the throw claus
-     * @return
+     * but does not declare a JMSException in the throw clause
+     * @return true if this session is transacted
      * @see {@link #getTransacted()}
      */
     public boolean getTransactedNoException() {
@@ -176,6 +176,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         return getAcknowledgeModeNoException();
     }
 
+    /**
+     * Same as {@link RMQSession#getAcknowledgeMode()} but without 
+     * a declared exception in the throw clause
+     * @return the acknowledge mode, one of {@link Session#AUTO_ACKNOWLEDGE},
+     * {@link Session#CLIENT_ACKNOWLEDGE}, {@link Session#DUPS_OK_ACKNOWLEDGE} or 
+     * {@link Session#SESSION_TRANSACTED}
+     */
     public int getAcknowledgeModeNoException() {
         return this.acknowledgeMode;
     }
@@ -189,9 +196,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (!this.transacted)
             return;
         try {
+            //call commit on the channel
             this.channel.txCommit();
+            //this should ack all messages
             lastReceivedTag = null;
-
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -206,12 +214,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (!this.transacted)
             return;
         try {
+            //call rollback
             this.channel.txRollback();
+            //TODO if we have messages, do we need to NACK them?
             if (lastReceivedTag != null) {
                 channel.basicNack(lastReceivedTag, true, true);
                 lastReceivedTag = null;
             }
-
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -226,10 +235,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             return;
         this.closed = true;
 
+        //close all producers created by this session
         for (RMQMessageProducer producer : producers) {
             producer.internalClose();
         }
         producers.clear();
+        //close all consumers created by this session
         for (RMQMessageConsumer consumer : consumers) {
             try {
                 consumer.internalClose();
@@ -239,11 +250,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             }
         }
         consumers.clear();
+        //close the channel itself
         try {
             this.channel.close();
         } catch (IOException x) {
             Util.util().handleException(x);
         } finally {
+            //notify the connection that this session is closed
+            //so that it can be removed from the list of sessions
             this.getConnection().sessionClose(this);
         }
     }
@@ -254,6 +268,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public void recover() throws JMSException {
         Util.util().checkClosed(this.closed, "Session has been closed");
+        //each consumer contains a list of messages received and 
+        //not acknowledged
         for (RMQMessageConsumer consumer : consumers) {
             try {
                 consumer.recover();
@@ -285,6 +301,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public void run() {
+        //this will not be implemented
         throw new UnsupportedOperationException();
     }
 
@@ -296,7 +313,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         RMQDestination dest = (RMQDestination) destination;
         if (!dest.isDeclared()) {
             if (dest.isQueue()) {
-                //TODO for a late declared queue, fix this
                 declareQueue(dest,false,true);
             } else {
                 declareTopic(dest);
@@ -312,12 +328,23 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public MessageConsumer createConsumer(Destination destination) throws JMSException {
+        return createConsumer(destination, true, null);
+    }
+    
+    /**
+     * Creates a consumer for a destination. If this is a topic, we can specify the autoDelete flag
+     * @param destination
+     * @param autoDelete true if the queue created should be autoDelete==true. This flag is ignored if the destination is a queue
+     * @return {@link #createConsumer(Destination)}
+     * @throws JMSException
+     * @see {@link #createConsumer(Destination)}
+     */
+    public MessageConsumer createConsumer(Destination destination, boolean autoDelete, String uuidTag) throws JMSException {
         RMQDestination dest = (RMQDestination) destination;
-        String consumerTag = Util.util().generateUUIDTag();
+        String consumerTag = uuidTag != null ? uuidTag : Util.util().generateUUIDTag();
 
         if (!dest.isDeclared()) {
             if (dest.isQueue()) {
-                //TODO for a late declared queue, fix this
                 declareQueue(dest,false,true);
             } else {
                 declareTopic(dest);
@@ -327,8 +354,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (!dest.isQueue()) {
             String queueName = consumerTag;
             // this is a topic, we need to define a queue, and bind to it
+            // the queue name is a unique ID for each consumer 
             try {
-                this.channel.queueDeclare(queueName, true, false, false, new HashMap<String, Object>());
+                //we can set auto delete for a topic queue, since if the consumer disappears he is no longer 
+                //participating in the topic.  
+                this.channel.queueDeclare(queueName, true, false, autoDelete, new HashMap<String, Object>());
+                //bind the queue to the exchange and routing key
                 this.channel.queueBind(queueName, dest.getExchangeName(), dest.getRoutingKey());
             } catch (IOException x) {
                 Util.util().handleException(x);
@@ -341,7 +372,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * {@inheritDoc}
-     * @throws UnsupportedOperationException - method not implemented
+     * @throws UnsupportedOperationException - method not implemented until we support selectors
      */
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector) throws JMSException {
@@ -351,7 +382,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * {@inheritDoc}
-     * @throws UnsupportedOperationException - method not implemented
+     * @throws UnsupportedOperationException - method not implemented until we support selectors
      */
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean NoLocal) throws JMSException {
@@ -434,17 +465,18 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        //this creates a durable subscription by setting autoDelete==false on the queue it binds 
+        //to the fanout exchange
+        return (RMQMessageConsumer)createConsumer(topic, false, name);
     }
 
     /**
      * {@inheritDoc}
+     * @throws UnsupportedOperationException selectors not yet implemented
      */
     @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -488,8 +520,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public void unsubscribe(String name) throws JMSException {
-        // TODO Auto-generated method stub
-
+        try {
+            //remove the queue from the fanout exchange
+            this.channel.queueDelete(name);
+        }catch (IOException x) {
+            Util.util().handleException(x);
+        }
     }
 
     /**
@@ -497,7 +533,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public QueueReceiver createReceiver(Queue queue) throws JMSException {
-        assert queue instanceof RMQDestination;
         return (QueueReceiver) this.createConsumer(queue);
     }
 

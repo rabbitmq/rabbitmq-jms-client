@@ -26,19 +26,37 @@ import com.rabbitmq.jms.util.PausableExecutorService;
 import com.rabbitmq.jms.util.Util;
 
 /**
- *
+ * Implementation of the {@link Connection}, {@link QueueConnection} and {@link TopicConnection} interfaces.
+ * A {@link RMQConnection} object holds a list of {@link RMQSession} objects as well as the actual
+ * {link com.rabbitmq.client.Connection} object that represents the TCP connection to the RabbitMQ broker. <br/>
+ * This implementation also holds a reference to the executor service that is used by the connection so that we 
+ * can pause incoming messages.
+ * 
  */
 public class RMQConnection implements Connection, QueueConnection, TopicConnection {
 
+    /** the TCP connection wrapper to the RabbitMQ broker */
     private final com.rabbitmq.client.Connection rabbitConnection;
+    /** Hard coded connection meta data returned in the call {@link #getMetaData()} call */
     private static final ConnectionMetaData connectionMetaData = new RMQConnectionMetaData();
+    /** The client ID for this connection */
     private String clientID;
+    /** The exception listener - TODO implement usage of exception listener */
     private ExceptionListener exceptionListener;
+    /** The list of all {@link RMQSession} objects created by this connection */
     private final List<RMQSession> sessions = Collections.<RMQSession> synchronizedList(new ArrayList<RMQSession>());
+    /** value to see if this connection has been closed */
     private volatile boolean closed = false;
+    /** atomic flag to pause and unpause the connection by calling the {@link #start()} and {@link #stop()} methods */
     private final AtomicBoolean stopped = new AtomicBoolean(true);
+    /** The thread pool that receives incoming messages */
     private final PausableExecutorService threadPool;
 
+    /**
+     * Creates an RMQConnection object
+     * @param threadPool the thread pool that was used to create the rabbit connection {@link com.rabbitmq.client.Connection} object 
+     * @param rabbitConnection the TCP connection wrapper to the RabbitMQ broker
+     */
     public RMQConnection(PausableExecutorService threadPool, com.rabbitmq.client.Connection rabbitConnection) {
         this.rabbitConnection = rabbitConnection;
         this.threadPool = threadPool;
