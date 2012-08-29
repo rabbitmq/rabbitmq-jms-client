@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
@@ -29,6 +30,7 @@ import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
+import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
@@ -37,6 +39,7 @@ import com.rabbitmq.jms.client.message.RMQMapMessage;
 import com.rabbitmq.jms.client.message.RMQObjectMessage;
 import com.rabbitmq.jms.client.message.RMQStreamMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
+import com.rabbitmq.jms.util.CountUpAndDownLatch;
 import com.rabbitmq.jms.util.Util;
 
 /**
@@ -53,6 +56,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private volatile MessageListener messageListener;
     private final ArrayList<RMQMessageProducer> producers = new ArrayList<RMQMessageProducer>();
     private final ArrayList<RMQMessageConsumer> consumers = new ArrayList<RMQMessageConsumer>();
+    private final CountUpAndDownLatch runningListener = new CountUpAndDownLatch(0);
+    
+    private final ConcurrentHashMap<String, String> subscriptions = new ConcurrentHashMap<String, String>();
 
     /**
      * Creates a session object associated with a connection
@@ -200,7 +206,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             this.channel.txCommit();
             //this should ack all messages
             lastReceivedTag = null;
-        } catch (IOException x) {
+        } catch (Exception x) {
             Util.util().handleException(x);
         }
     }
@@ -230,38 +236,51 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * {@inheritDoc}
      */
     @Override
-    public void close() throws JMSException {
+    public synchronized void close() throws JMSException {
         if (this.closed)
             return;
-        this.closed = true;
-
-        //close all producers created by this session
-        for (RMQMessageProducer producer : producers) {
-            producer.internalClose();
-        }
-        producers.clear();
-        //close all consumers created by this session
-        for (RMQMessageConsumer consumer : consumers) {
-            try {
-                consumer.internalClose();
-            }catch (JMSException x) {
-                x.printStackTrace(); //TODO logging implementation
-
-            }
-        }
-        consumers.clear();
-        //close the channel itself
+        
         try {
-            this.channel.close();
-        } catch (IOException x) {
-            Util.util().handleException(x);
+            //close all producers created by this session
+            for (RMQMessageProducer producer : producers) {
+                producer.internalClose();
+            }
+            producers.clear();
+
+            //close all consumers created by this session
+            for (RMQMessageConsumer consumer : consumers) {
+                try {
+                    consumer.internalClose();
+                }catch (JMSException x) {
+                    x.printStackTrace(); //TODO logging implementation
+
+                }
+            }
+            consumers.clear();
+
+            this.setMessageListener(null);
+
+            if (this.getTransacted()) {
+                this.rollback();
+            }
+            
+            //close the channel itself
+            try {
+                this.channel.close();
+            } catch (AlreadyClosedException x) {
+                //nothing to do
+            } catch (IOException x) {
+                Util.util().handleException(x);
+            } finally {
+                //notify the connection that this session is closed
+                //so that it can be removed from the list of sessions
+                this.getConnection().sessionClose(this);
+            }
         } finally {
-            //notify the connection that this session is closed
-            //so that it can be removed from the list of sessions
-            this.getConnection().sessionClose(this);
+            this.closed = true;
         }
     }
-
+    
     /**
      * {@inheritDoc}
      */
@@ -293,7 +312,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
-        this.messageListener = listener;
+        this.messageListener = new MessageListenerWrapper(listener);
     }
 
     /**
@@ -465,9 +484,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name) throws JMSException {
-        //this creates a durable subscription by setting autoDelete==false on the queue it binds 
-        //to the fanout exchange
-        return (RMQMessageConsumer)createConsumer(topic, false, name);
+        if (subscriptions.putIfAbsent(name, name)==null) {
+            //this creates a durable subscription by setting autoDelete==false on the queue it binds 
+            //to the fanout exchange
+            RMQMessageConsumer result = (RMQMessageConsumer)createConsumer(topic, false, name);
+            return result;
+        } else {
+            throw new JMSException("Subscription already exists["+name+"]");
+        }
     }
 
     /**
@@ -521,8 +545,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public void unsubscribe(String name) throws JMSException {
         try {
-            //remove the queue from the fanout exchange
-            this.channel.queueDelete(name);
+            if (name!=null && name.equals(subscriptions.remove(name))) {
+                //remove the queue from the fanout exchange
+                this.channel.queueDelete(name);
+            }
         }catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -650,6 +676,25 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 Util.util().handleException(x);
             }
         }
+    }
+    
+    private final class MessageListenerWrapper implements MessageListener {
+        private final MessageListener listener;
+        public MessageListenerWrapper(MessageListener listener) {
+            this.listener = listener;
+        }
+        
+        @Override
+        public void onMessage(Message message) {
+            runningListener.countUp();
+            try {
+                listener.onMessage(message);
+            } finally {
+                runningListener.countDown();
+            }
+            
+        }
+        
     }
 
 }

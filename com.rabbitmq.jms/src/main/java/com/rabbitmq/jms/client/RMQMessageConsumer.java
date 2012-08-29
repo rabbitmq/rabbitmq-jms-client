@@ -23,6 +23,7 @@ import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.admin.RMQDestination;
+import com.rabbitmq.jms.util.CountUpAndDownLatch;
 import com.rabbitmq.jms.util.PauseLatch;
 import com.rabbitmq.jms.util.Util;
 
@@ -35,7 +36,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private final PauseLatch pauseLatch = new PauseLatch(false);
     private volatile java.util.Queue<RMQMessage> receivedMessages = new ConcurrentLinkedQueue<RMQMessage>();
     private volatile java.util.Queue<RMQMessage> recoveredMessages = new ConcurrentLinkedQueue<RMQMessage>();
-    private final AtomicInteger listenerRunning = new AtomicInteger(0);
+    private final CountUpAndDownLatch listenerRunning = new CountUpAndDownLatch(0);
 
     /**
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
@@ -236,10 +237,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 MessageListener listener = getSession().getMessageListener();
                 if (listener != null) {
                     try {
-                        listenerRunning.incrementAndGet();
+                        listenerRunning.countUp();
                         listener.onMessage(message);
                     } finally {
-                        listenerRunning.decrementAndGet();
+                        listenerRunning.countDown();
                     }
                 }
             } catch (JMSException x) {
@@ -263,8 +264,11 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public void close() throws JMSException {
-        getSession().consumerClose(this);
-        internalClose();
+        try {
+            internalClose();
+        } finally {
+            getSession().consumerClose(this);
+        }
     }
 
     /**
@@ -274,6 +278,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     protected void internalClose() throws JMSException {
         pauseLatch.resume();
         setMessageListener(null);
+        try {
+            listenerRunning.awaitZero(60, TimeUnit.SECONDS);
+        }catch (InterruptedException x) {
+            //do nothing
+            //TODO log debug level message
+        }
+        
 
     }
 
@@ -458,10 +469,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             try {
                 Message message = processMessage(response, isAutoAck());
                 try {
-                    listenerRunning.incrementAndGet();
+                    listenerRunning.countUp();
                     this.listener.onMessage(message);
                 } finally {
-                    listenerRunning.decrementAndGet();
+                    listenerRunning.countDown();
                 }
             } catch (JMSException x) {
                 x.printStackTrace(); //TODO logging implementation

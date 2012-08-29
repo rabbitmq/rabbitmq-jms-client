@@ -168,6 +168,9 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         try {
+            if (deliveryMode<1 || deliveryMode>2) {
+                deliveryMode = javax.jms.DeliveryMode.NON_PERSISTENT;
+            }
             RMQMessage msg = (RMQMessage) ((RMQMessage) message);
             RMQDestination dest = (RMQDestination) destination;
             AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
