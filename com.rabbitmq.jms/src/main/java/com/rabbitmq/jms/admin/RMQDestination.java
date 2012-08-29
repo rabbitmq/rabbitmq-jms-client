@@ -13,9 +13,13 @@ import javax.naming.Referenceable;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.jms.client.RMQSession;
 
+/**
+ * Implementation of a {@link Topic} and {@link Queue} This implementation is
+ * serializable as it can be stored in a JNDI tree.
+ */
 public class RMQDestination implements Queue, Topic, Destination, Referenceable, Serializable {
 
-    /** TODO - Serial ID?*/
+    /** TODO - Serial ID? */
     private static final long serialVersionUID = 596966152753718825L;
     private volatile String name;
     private volatile String exchangeName;
@@ -23,24 +27,49 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     private volatile boolean queue;
     private volatile boolean declared;
 
+    /**
+     * Constructor used when object is deserialized using Java serialization
+     */
     public RMQDestination() {
     }
 
     /**
-     * Creates a destination, either a queue or a topic.
+     * Creates a destination in RabbitMQ
+     * @param name the name of the topic or queue
+     * @param queue true if this represent a queue
+     */
+    public RMQDestination(String name, boolean queue) {
+        if (queue) {
+            String exchangeName = "", routingKey = name;
+            init(name, exchangeName, routingKey, true, false);
+        } else {
+            String topicName = name, exchangeName = "topic." + topicName, routingKey = name;
+            init(name, exchangeName, routingKey, false, false);
+        }
+    }
+
+    /**
+     * Creates a destination, either a queue or a topic, this method initializes
+     * all the values appropriately
+     * Unless used appropriately, this is an internal method.
      * 
      * @param name - the name of the topic or the queue
-     * @param exchangeName - the exchange we will publish to and bind queues to
-     * @param routingKey - the routing key used for this destination
+     * @param exchangeName - the exchange we will publish to and bind queues to.
+     *            If this is a queue, then set this value to an empty string
+     *            <code>&quot;&quot;</code>. If this is a topic, the
+     *            exchangeName should be <code>&quot;topic.&quot;+name</code>
+     * @param routingKey - the routing key used for this destination. the
+     *            routingKey should be the same value as the name parameter.
      * @param queue - true if this is a queue, false if this is a topic
      * @param declared - true if we have called
      *            {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)}
      *            or
      *            {@link Channel#exchangeDeclare(String, String, boolean, boolean, boolean, java.util.Map)
-     *            to represent this queue/topic in the RabbitMQ broker. If creating a topic/queue to
-     *            bind in JNDI, this value must be set to FALSE
+     *            to represent this queue/topic in the RabbitMQ broker. If
+     *            creating a topic/queue to bind in JNDI, this value must be set
+     *            to FALSE
      */
-    public RMQDestination(String name, String exchangeName, String routingKey, boolean queue, boolean declared) {
+    protected void init(String name, String exchangeName, String routingKey, boolean queue, boolean declared) {
         this.name = name;
         this.exchangeName = exchangeName;
         this.routingKey = routingKey;
@@ -50,6 +79,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     /**
      * Returns the name of the queue/topic
+     * 
      * @return the name of the queue/topic
      */
     public String getName() {
@@ -57,16 +87,19 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     /**
-     * Returns the name of the RabbitMQ Exchange used to publish/send messages to
-     * @return the name of the RabbitMQ Exchange used to publish/send messages to
+     * Returns the name of the RabbitMQ Exchange used to publish/send messages
+     * to
+     * 
+     * @return the name of the RabbitMQ Exchange used to publish/send messages
+     *         to
      */
     public String getExchangeName() {
         return this.exchangeName;
     }
 
-    
     /**
      * Returns the routingKey used to publish/send messages with
+     * 
      * @return the routingKey used to publish/send messages with
      */
     public String getRoutingKey() {
@@ -75,6 +108,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     /**
      * Returns true if this is a queue, false if it is a topic
+     * 
      * @return true if this is a queue, false if it is a topic
      */
     public boolean isQueue() {
@@ -82,42 +116,58 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     /**
-     * Sets the name of the queue/topic - should only be used when binding into JNDI
+     * Sets the name of the queue/topic - should only be used when binding into
+     * JNDI
+     * 
      * @param name
-     * @throws IllegalStateException if the queue has already been declared {@link RMQDestination#isDeclared()} return true
+     * @throws IllegalStateException if the queue has already been declared
+     *             {@link RMQDestination#isDeclared()} return true
      */
     public void setName(String name) {
-        if (isDeclared()) throw new IllegalStateException();
+        if (isDeclared())
+            throw new IllegalStateException();
         this.name = name;
     }
 
     /**
-     * Sets the name of the exchange in the RabbitMQ broker - should only be used when binding into JNDI
+     * Sets the name of the exchange in the RabbitMQ broker - should only be
+     * used when binding into JNDI
+     * 
      * @param exchangeName
-     * @throws IllegalStateException if the queue has already been declared {@link RMQDestination#isDeclared()} return true
+     * @throws IllegalStateException if the queue has already been declared
+     *             {@link RMQDestination#isDeclared()} return true
      */
     public void setExchangeName(String exchangeName) {
-        if (isDeclared()) throw new IllegalStateException();
+        if (isDeclared())
+            throw new IllegalStateException();
         this.exchangeName = exchangeName;
     }
 
     /**
-     * Sets the routing key when sending/receiving messages for this queue/topic - should only be used when binding into JNDI
+     * Sets the routing key when sending/receiving messages for this queue/topic
+     * - should only be used when binding into JNDI
+     * 
      * @param routingKey
-     * @throws IllegalStateException if the queue has already been declared {@link RMQDestination#isDeclared()} return true
+     * @throws IllegalStateException if the queue has already been declared
+     *             {@link RMQDestination#isDeclared()} return true
      */
     public void setRoutingKey(String routingKey) {
-        if (isDeclared()) throw new IllegalStateException();
+        if (isDeclared())
+            throw new IllegalStateException();
         this.routingKey = routingKey;
     }
 
     /**
-     * Set to true if this is a queue, false if this is a topic - should only be used when binding into JNDI
+     * Set to true if this is a queue, false if this is a topic - should only be
+     * used when binding into JNDI
+     * 
      * @param queue
-     * @throws IllegalStateException if the queue has already been declared {@link RMQDestination#isDeclared()} return true
+     * @throws IllegalStateException if the queue has already been declared
+     *             {@link RMQDestination#isDeclared()} return true
      */
     public void setQueue(boolean queue) {
-        if (isDeclared()) throw new IllegalStateException();
+        if (isDeclared())
+            throw new IllegalStateException();
         this.queue = queue;
     }
 
@@ -145,16 +195,14 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
         return new Reference(this.getClass().getCanonicalName());
     }
 
-
     /**
-     * 
      * @return true if we have called
-     *            {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)}
-     *            or
-     *            {@link Channel#exchangeDeclare(String, String, boolean, boolean, boolean, java.util.Map)
-     *            to represent this queue/topic in the RabbitMQ broker. If creating a topic/queue to
-     *            bind in JNDI, this value will be set to false until the queue/topic has been
-     *            setup in the RabbitMQ broker
+     *         {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)}
+     *         or
+     *         {@link Channel#exchangeDeclare(String, String, boolean, boolean, boolean, java.util.Map)
+     *         to represent this queue/topic in the RabbitMQ broker. If creating
+     *         a topic/queue to bind in JNDI, this value will be set to false
+     *         until the queue/topic has been setup in the RabbitMQ broker
      */
     public boolean isDeclared() {
         return declared;
@@ -162,8 +210,11 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     /**
      * Should only be used internally by {@link RMQSession}
-     * @param declared - set to true if the queue/topic has been defined in the RabbitMQ broker
-     * @throws IllegalStateException if the queue has already been declared {@link RMQDestination#isDeclared()} return true
+     * 
+     * @param declared - set to true if the queue/topic has been defined in the
+     *            RabbitMQ broker
+     * @throws IllegalStateException if the queue has already been declared
+     *             {@link RMQDestination#isDeclared()} return true
      * @see {@link #isDeclared()}
      */
     public void setDeclared(boolean declared) {

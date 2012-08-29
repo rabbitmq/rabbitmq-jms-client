@@ -36,15 +36,8 @@ public class RabbitJmsCtsProvider implements Administrator, Provider {
 
     @Override
     public void createDestination(String name, boolean queue) throws JMSException {
-        if (queue) {
-            String exchangeName = "", routingKey = name;
-            RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, true, false);
-            lookup.put(name, dest);
-        } else {
-            String topicName = name, exchangeName = "topic." + topicName, routingKey = name;
-            RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, false, false);
-            lookup.put(name, dest);
-        }
+        RMQDestination dest = new RMQDestination(name, queue);
+        lookup.put(name, dest);
     }
 
     @Override

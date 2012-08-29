@@ -364,8 +364,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public Queue createQueue(String queueName) throws JMSException {
-        String name = queueName, exchangeName = "", routingKey = name;
-        RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, true, true);
+        RMQDestination dest = new RMQDestination(queueName, true);
         boolean temporary = false;
         boolean durable = true;
         declareQueue(dest, temporary, durable);
@@ -409,8 +408,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public Topic createTopic(String topicName) throws JMSException {
-        String name = topicName, exchangeName = "topic." + topicName, routingKey = name;
-        RMQDestination dest = new RMQDestination(name, exchangeName, routingKey, false, true);
+        RMQDestination dest = new RMQDestination(topicName, false);
         declareTopic(dest);
         return dest;
     }
