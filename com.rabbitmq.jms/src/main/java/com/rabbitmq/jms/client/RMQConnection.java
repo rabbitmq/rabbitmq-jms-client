@@ -24,6 +24,8 @@ import javax.jms.Topic;
 import javax.jms.TopicConnection;
 import javax.jms.TopicSession;
 
+import com.rabbitmq.client.AlreadyClosedException;
+import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.util.PausableExecutorService;
 import com.rabbitmq.jms.util.Util;
 
@@ -207,6 +209,10 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
         try {
             this.rabbitConnection.close();
+        } catch (AlreadyClosedException x) {
+            //nothing to do
+        } catch (ShutdownSignalException x) {
+            //nothing to do
         } catch (IOException x) {
             Util.util().handleException(x);
         }
