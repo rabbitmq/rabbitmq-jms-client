@@ -86,7 +86,7 @@ JAVAX_OPTS=-Djavax.xml.transform.TransformerFactory=org.apache.xalan.processor.T
 
 
 # Execute the requested command
-
+CLASSPATH=$TESTCLASSPATH
 echo "Using JMSCTS_HOME: $JMSCTS_HOME"
 echo "Using JAVA_HOME:   $JAVA_HOME"
 echo "Using CLASSPATH:   $CLASSPATH"

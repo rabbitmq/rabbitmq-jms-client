@@ -10,8 +10,6 @@
 
 # Configure the CLASSPATH
 #
-CLASSPATH=$OPENJMS_HOME/lib/openjms-0.7.6.jar
-
 # Configure JVM options
 #
 JAVA_OPTS=-Xmx256m
@@ -19,4 +17,7 @@ JAVA_OPTS="$JAVA_OPTS \
            -Dopenjms.home=$OPENJMS_HOME \
            -Djavax.net.ssl.trustStore=$OPENJMS_HOME/config/client.keystore \
            -Djavax.net.ssl.keyStore=$OPENJMS_HOME/config/client.keystore \
-           -Djavax.net.ssl.keyStorePassword=openjms"
+           -Djavax.net.ssl.keyStorePassword=openjms \
+           -Drabbit.jms.terminationTimeout=5000"
+
+TESTCLASSPATH=../target/classes:../../com.rabbitmq.jms/target\classes:../../com.rabbitmq.jms/target\test-classes:~/.m2/repository/com/rabbitmq/amqp-client/2.8.4/amqp-client-2.8.4.jar
