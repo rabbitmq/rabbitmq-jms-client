@@ -1,7 +1,6 @@
 package com.rabbitmq.jms.client;
 
 import java.util.Enumeration;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.ConnectionMetaData;
 import javax.jms.JMSException;
@@ -10,9 +9,7 @@ import javax.jms.JMSException;
  * Meta data for {@link RMQConnection}
  */
 public class RMQConnectionMetaData implements ConnectionMetaData {
-    
-    private static final AtomicInteger GROUP_SEQ = new AtomicInteger(0);
-    
+
     private static final String JMS_PROVIDER_NAME = "RabbitMQ";
     private static final String RABBITMQ_VERSION = "2.8.3";
     private static final int RABBITMQ_MINOR_VERSION = 8;
@@ -20,13 +17,15 @@ public class RMQConnectionMetaData implements ConnectionMetaData {
     private static final String JMS_VERSION = "1.1";
     private static final int JMS_MAJOR_VERSION = 1;
     private static final int JMS_MINOR_VERSION = 1;
-    
+
     /**
      * These two are currently not used, they are needed for a JMSCTS test
      * We need to make sure these properties get into the messages
      */
-    private static final String JMSX_GROUP_ID_LABEL = "JMSXGroupID"; //value should be VMW
-    private static final String JMSX_GROUP_SEQ_LABEL = "JMSXGroupSeq";
+    public static final String JMSX_GROUP_ID_LABEL = "JMSXGroupID"; // value
+                                                                    // should be
+                                                                    // VMW
+    public static final String JMSX_GROUP_SEQ_LABEL = "JMSXGroupSeq";
 
     /**
      * {@inheritDoc}
@@ -92,7 +91,7 @@ public class RMQConnectionMetaData implements ConnectionMetaData {
     public Enumeration<String> getJMSXPropertyNames() throws JMSException {
         return new JmsXEnumerator();
     }
-    
+
     public class JmsXEnumerator implements Enumeration<String> {
         int idx = 0;
         @Override
@@ -108,7 +107,7 @@ public class RMQConnectionMetaData implements ConnectionMetaData {
             default: return null;
             }
         }
-        
+
     }
 
 }

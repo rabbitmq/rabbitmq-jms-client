@@ -3,7 +3,6 @@ package com.rabbitmq.jms.admin;
 import java.util.Hashtable;
 
 import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
 import javax.jms.Queue;
 import javax.jms.QueueConnectionFactory;
 import javax.jms.Topic;

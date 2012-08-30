@@ -3,7 +3,6 @@ package com.rabbitmq.jms.client;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.JMSException;
@@ -37,7 +36,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private volatile java.util.Queue<RMQMessage> receivedMessages = new ConcurrentLinkedQueue<RMQMessage>();
     private volatile java.util.Queue<RMQMessage> recoveredMessages = new ConcurrentLinkedQueue<RMQMessage>();
     private final CountUpAndDownLatch listenerRunning = new CountUpAndDownLatch(0);
-    private AtomicReference<Thread> currentSynchronousReceiver = new AtomicReference<Thread>(null);
+    private final AtomicReference<Thread> currentSynchronousReceiver = new AtomicReference<Thread>(null);
     private volatile boolean closed = false;
 
     /**
