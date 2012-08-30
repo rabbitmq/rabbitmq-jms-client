@@ -9,6 +9,9 @@ import org.exolab.jmscts.test.ComplianceTestSuite;
 public class MainTest extends TestCase {
 
     public void testAll() throws Exception {
+        if (System.getProperty("basedir")==null) {
+            System.setProperty("basedir",".");
+        }
         System.setProperty("jmscts.home", System.getProperty("basedir"));
         if (System.getProperty("rabbit.jms.terminationTimeout") == null) {
             System.setProperty("rabbit.jms.terminationTimeout", "5000");
