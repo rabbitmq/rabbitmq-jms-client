@@ -1,0 +1,199 @@
+<?xml version="1.0"?>
+
+<selectors>
+
+  <selector name="true like expression 1" selects="all">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                value="France" />
+    <expression>Country like 'France'</expression>
+  </selector>
+
+  <selector name="false like expression 1" selects="none">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                value="France" />
+    <expression>Country NOT LIKE 'France'</expression>
+  </selector>
+
+  <selector name="false like expression 2" selects="none">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                value="France" />
+    <expression>Country like 'UK'</expression>
+  </selector>
+
+  <selector name="true like expression 2" selects="all">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                value="France" />
+    <expression>Country not like 'UK'</expression>
+  </selector>
+
+  <selector name="true like expression 3" selects="all">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                value="France" />
+    <expression>Country like 'F%'</expression>
+  </selector>
+
+  <selector name="like expression 6" selects="none">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                value="France" />
+    <expression>Country like 'UK%'</expression>
+  </selector>
+
+  <selector name="like expression 7" selects="all">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                value="France" />
+    <expression>Country like '%e'</expression>
+  </selector>
+
+  <selector name="like expression 8" selects="all">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                value="France" />
+    <expression>Country like '%e%'</expression>
+  </selector>
+
+  <selector name="like expression 9" selects="none">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                value="France" />
+    <expression>Country like '%E%'</expression>
+  </selector>
+
+  <selector name="like expression 10" selects="all">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                value="France" />
+    <expression>Country like '_rance'</expression>
+  </selector>
+
+  <selector name="like expression 11" selects="all">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                value="France" />
+    <expression>Country like 'Franc_'</expression>
+  </selector>
+
+  <selector name="like expression 12" selects="all">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                value="France" />
+    <expression>Country like 'F____e'</expression>
+  </selector>
+
+  <selector name="like expression 13" selects="none">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                value="France" />
+    <expression>Country like 'F____E'</expression>
+  </selector>
+
+  <selector name="like expression 14" selects="all">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                value="France" />
+    <expression>Country like 'F____%'</expression>
+  </selector>
+
+  <selector name="like expression 15" selects="none">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                value="France" />
+    <expression>Country like 'F____'</expression>
+  </selector>
+
+  <selector name="like expression 16" selects="all">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                value="France" />
+    <expression>Country like 'F__%_'</expression>
+  </selector>
+
+  <selector name="like expression 17" selects="all">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="percent" type="java.lang.String" value="80%" />
+    <expression>percent like '8_\%' escape '\'</expression>
+  </selector>
+
+  <selector name="like expression 18" selects="none">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="percent" type="java.lang.String" value="80%" />
+    <expression>percent like '\%' escape '\'</expression>
+  </selector>
+
+  <selector name="like expression 19" selects="all">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="empty" type="java.lang.String" value="" />
+    <expression>empty like ''</expression>
+  </selector>
+
+  <selector name="like expression 20" selects="none">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="empty" type="java.lang.String" value="" />
+    <expression>empty not like ''</expression>
+  </selector>
+
+  <selector name="like expression 21" selects="all">
+    <requirementId>selector.operator.like</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="underscored" type="java.lang.String" 
+                value="a_b_c_d_e" />
+    <expression>underscored like 'a^_b^_c%' escape '^'</expression>
+  </selector>
+
+  <selector name="invalid like expression 1" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>underscored like 'a%' escape ''</expression>
+  </selector>
+
+  <selector name="invalid like expression 2" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>underscored like 'a^^_' escape '^^'</expression>
+  </selector>
+
+  <selector name="invalid like expression 3" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>underscored like 'a^_^' escape '^'</expression>
+  </selector>
+
+  <selector name="invalid like expression 4" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>like Country 'Franc%'</expression>
+  </selector>
+
+  <selector name="invalid like expression 5" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>Country like Franc%</expression>
+  </selector>
+
+</selectors>

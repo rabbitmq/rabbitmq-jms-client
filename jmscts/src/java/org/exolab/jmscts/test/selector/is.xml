@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+
+<selectors>
+
+  <selector name="is expression 1" selects="none">
+    <requirementId>selector.operator.is</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                         value="France" />
+    <expression>Country is null</expression>
+  </selector>
+
+  <selector name="is expression 2" selects="all">
+    <requirementId>selector.operator.is</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                         value="France" />
+    <expression>Country IS NOT null</expression>
+  </selector>
+
+  <selector name="is expression 3" selects="all">
+    <requirementId>selector.operator.is</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>country is null</expression>
+  </selector>
+
+  <selector name="is expression 4" selects="none">
+    <requirementId>selector.operator.is</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>country is not null</expression>
+  </selector>
+
+  <selector name="invalid is expression 1" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>'Country' is null</expression>
+  </selector>
+
+  <selector name="invalid is expression 2" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>false is null</expression>
+  </selector>
+
+  <selector name="invalid is expression 3" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <expression>0 is null</expression>
+  </selector>
+
+  <selector name="invalid is expression 4" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <expression>is Country null</expression>
+  </selector>
+     
+</selectors>

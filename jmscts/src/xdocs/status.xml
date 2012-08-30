@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<document>
+  <properties>
+    <title>News and Status</title>
+  </properties>
+
+  <body>
+    <section name="News and Status">
+      <p>
+        This document contains the latest news and status regarding the 
+        JMS CTS project.
+        It is here you'll find announcements related to JMS CTS.
+      </p>
+      <subsection name="Current Status">
+        <p>
+          We are currently working on JMS CTS 0.5.
+        </p>
+      </subsection>
+
+      <subsection name="February 4, 2004 - JMS CTS 0.5 beta 2 released!">
+        <p>
+          This includes the following changes since 0.5-b1:
+          <ul>
+            <li>
+              Added coverage of MessageProducer.getTimeToLive() and
+              MessageProducer.setTimeToLive().
+            </li>
+            <li>
+              Added coverage of section 3.4.7 - JMSRedelivered, as per 
+              RFE 817173.
+            </li>
+            <li>Added coverage of section 3.4.9 - JMSExpiration</li>
+            <li>
+              Added coverage for message republication, as per RFE 823464
+            </li>
+            <li>
+              Changed reporting for RFE 826562 - order requirements, test cases
+              in coverage.html
+            </li>
+            <li>
+              Changed reporting to include stack traces in failure 
+              descriptions.
+            </li>
+            <li>
+              Added coverage of section 3.12 - Provider Implementations of JMS
+              Message Interfaces, as per RFE 867564.
+            </li>
+            <li>Fixed bug 819193 - Can't filter tests on ack type</li>
+            <li>
+              Fixed bug 818994 - Errors in test setUp() and tearDown() not
+              reported
+            </li>
+            <li>
+              Fixed bug 887462 - QueueBrowser should be excluded from
+              connection.stopped test
+            </li>
+            <li>
+              Fixed bug 879678 - StreamMessageTest.testIncrementalReadBytes()
+              not compliant
+            </li>
+          </ul>           
+        </p>
+      </subsection>
+       
+      <subsection name="October 1, 2003 - JMS CTS 0.5 beta 1 released">
+        <p>
+          After a long incubation, the first public release of JMS CTS
+          is <a href="downloads.html">now available</a>.
+        </p>
+      </subsection>
+
+      <subsection name="May, 2003 - JMS CTS moves">
+        <p>
+          The JMS CTS has moved to a new home, 
+          <a href="http://jmscts.sourceforge.net">
+          http://jmscts.sourceforge.net</a>. <br/>
+          It was originally part of the 
+          <a href="http://openjms.sourceforge.net">OpenJMS</a> project.
+        </p>
+      </subsection>
+    </section>
+  </body>
+</document>

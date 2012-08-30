@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<selectors>
+
+  <selector name="true arithmetic expression 1" selects="all">
+    <requirementId>selector.expression.arithmetic</requirementId>
+    <properties:property name="value1" type="java.lang.Integer" value="1" />
+    <properties:property name="value2" type="java.lang.Integer" value="2" />
+    <expression>(value1 + 1) * 3 = 2 + 2.0 * value2</expression>
+  </selector>
+
+  <selector name="false arithmetic expression 1" selects="none">
+    <requirementId>selector.expression.arithmetic</requirementId>
+    <properties:property name="value1" type="java.lang.Integer" value="1" />
+    <properties:property name="value2" type="java.lang.Integer" value="2" />
+    <expression>(value1 + 1) * 3 &lt;&gt; 2 + 2.0 * value2</expression>
+  </selector>
+
+  <selector name="true condition expression 1" selects="all">
+    <requirementId>selector.expression.condition</requirementId>
+    <properties:property name="value" type="java.lang.Integer" value="2" />
+    <properties:property name="flag" type="java.lang.Boolean" value="true" />
+    <expression>value between 1 and 3 and flag = true</expression>
+  </selector>
+
+  <selector name="false condition expression 1" selects="none">
+    <requirementId>selector.expression.condition</requirementId>
+    <properties:property name="value" type="java.lang.Integer" value="2" />
+    <properties:property name="flag" type="java.lang.Boolean" value="true" />
+    <expression>value between 1 and 3 and flag &lt;&gt; true</expression>
+  </selector>
+
+</selectors>
+

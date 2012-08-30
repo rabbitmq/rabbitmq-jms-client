@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="JMS CTS" href="http://jmscts.sourceforge.net">
+  <title>JMS CTS: The JMS Compliance Test Suite</title>
+  <body>
+    <links>
+      <item name="Home Page" href="http://jmscts.sourceforge.net/"/>
+      <item name="SourceForge Project Page"   
+                  href="http://sourceforge.net/projects/jmscts/"/>
+      <item name="JMS" href="http://java.sun.com/jms/"/>
+      <item name="OpenJMS" href="http://openjms.sourceforge.net/"/>
+    </links>
+    <menu name="JMS CTS">
+      <item name="Overview" href="/index.html"/>
+      <item name="News and Status" href="/status.html"/>
+      <item name="Downloads" href="/downloads.html"/>
+      <item name="Installation" href="/install.html"/>
+      <item name="Getting Started" href="/gettingstarted.html"/>
+      <item name="Running JMS CTS" href="/running.html"/>
+      <item name="Using JMS CTS" href="/using.html"/>
+      <item name="Filters" href="/filter.html"/>
+    </menu>
+    <menu name="Reference">
+      <item name="Test Cases" href="/tests2requirements.html"/>
+      <item name="Requirements" href="/requirements2tests.html"/>
+    </menu>
+
+    <footer>
+      <a href="http://sourceforge.net/projects/jmscts">
+        <img src="http://sourceforge.net/sflogo.php?group_id=81568" 
+             border="0" alt="sf logo"/>
+      </a>
+    </footer>
+
+  </body>
+</project>

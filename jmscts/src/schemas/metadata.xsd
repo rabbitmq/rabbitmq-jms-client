@@ -1,0 +1,62 @@
+<?xml version="1.0" ?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:types="http://jmscts.sourceforge.net/types"
+            targetNamespace="http://jmscts.sourceforge.net/metadata">
+
+  <!-- $Id: metadata.xsd,v 1.1 2003/07/20 14:36:15 tanderson Exp $ -->
+
+  <xsd:import namespace="http://jmscts.sourceforge.net/types" 
+              schemaLocation="types.xsd"/>
+
+  <xsd:annotation>
+    <xsd:documentation xml:lang="en">
+      This schema describes class meta data
+      Author: Tim Anderson (tma@netspace.net.au)
+    </xsd:documentation>
+  </xsd:annotation>
+ 
+  <xsd:element name="meta-data">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="class-meta" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+  <xsd:complexType name="meta">
+    <xsd:sequence>
+      <xsd:element name="name" type="xsd:string"/>
+      <xsd:element name="description" type="types:text"/>
+      <xsd:element ref="attribute" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:element name="class-meta">
+    <xsd:complexType>
+      <xsd:complexContent>
+        <xsd:extension base="meta">
+          <xsd:sequence>
+            <xsd:element ref="method-meta" minOccurs="0" 
+                         maxOccurs="unbounded"/>
+          </xsd:sequence>
+        </xsd:extension>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+
+  <xsd:element name="method-meta">
+    <xsd:complexType>
+      <xsd:complexContent>
+        <xsd:extension base="meta"/>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>  
+
+  <xsd:element name="attribute">
+    <xsd:complexType>
+      <xsd:attribute name="name" type="xsd:string" use="required"/>
+      <xsd:attribute name="value" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+  </xsd:element>
+
+</xsd:schema>

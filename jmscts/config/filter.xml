@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+
+<!-- ====================================================================== -->
+<!-- Sample test case filter                                                -->
+<!--                                                                        -->
+<!-- This excludes tests using XAQueueConnectionFactory and                 -->
+<!-- XATopicConnectionFactory which are not supported by OpenJMS 0.7.6      -->
+<!-- ====================================================================== -->
+
+<filter>
+  
+  <exclude>
+    <factory>XAQueueConnectionFactory</factory>
+  </exclude>
+
+  <exclude>
+    <factory>XATopicConnectionFactory</factory>
+  </exclude>
+  <!--
+  <include>
+    <test>org.exolab.jmscts.test.connection.AuthTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.connection.ClientIdentifierTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.connection.ConnectionCloseTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.connection.ListenerTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.connection.MetaDataTest.*</test>
+  </include>
+  -->
+  <include>
+    <test>org.exolab.jmscts.test.connection.ReceiverTest.*</test>
+  </include>
+  
+  
+  
+  <exclude>
+    <!--This tests Connection Consumers - we don't supprot that -->
+    <test>org.exolab.jmscts.test.asf.ConnectionConsumerTest.test</test>
+  </exclude>
+  
+</filter>

@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+
+<selectors>
+
+  <selector name="true int expression 1" selects="all">
+    <requirementId>selector.expression.condition</requirementId>
+    <expression>0 = 0</expression>
+  </selector>
+
+  <selector name="true int expression 2" selects="all">
+    <requirementId>selector.expression.condition</requirementId>
+    <expression>1 &lt; 2</expression>
+  </selector>
+
+  <selector name="false int expression 1" selects="none">
+    <requirementId>selector.expression.condition</requirementId>
+    <expression>1 &gt; 2</expression>
+  </selector>
+
+  <selector name="false int expression 2" selects="none">
+    <requirementId>selector.expression.condition</requirementId>
+    <expression>1 = 2</expression>
+  </selector>
+
+  <selector name="true int expression 3" selects="all">
+    <requirementId>selector.expression.condition</requirementId>
+    <expression>1 &lt;&gt; 2</expression>
+  </selector>
+
+  <selector name="true int expression 4" selects="all">
+    <requirementId>selector.expression.condition</requirementId>
+    <expression>1 &lt;= 2</expression>
+  </selector>
+
+  <selector name="false int expression 3" selects="none">
+    <requirementId>selector.expression.condition</requirementId>
+    <expression>1 &gt;= 2</expression>
+  </selector>
+
+  <selector name="false int expression 4" selects="none">
+    <requirementId>selector.expression.condition</requirementId>
+    <expression>2 &lt;= 1</expression>
+  </selector>
+
+  <selector name="true int expression 5" selects="all">
+    <requirementId>selector.expression.condition</requirementId>
+    <expression>2 &gt;= 1</expression>
+  </selector>
+
+  <selector name="false int expression 5" selects="none">
+    <requirementId>selector.expression.condition</requirementId>
+    <expression>-1 = 1</expression>
+  </selector>
+
+  <selector name="true int expression 6" selects="all">
+    <requirementId>selector.expression.condition</requirementId>
+    <expression>--1 = 1</expression>
+  </selector>
+
+  <selector name="true int expression 7" selects="all">
+    <requirementId>selector.expression.condition</requirementId>
+    <expression>---9223372036854775808 = -9223372036854775808</expression>
+  </selector>
+
+  <selector name="unknown int expression 1" selects="none">
+    <requirementId>selector.expression</requirementId>
+    <requirementId>selector.values.null</requirementId>
+    <expression>dummy + 10 = 10</expression>
+  </selector>
+
+  <selector name="unknown int expression 2" selects="none">
+    <requirementId>selector.expression</requirementId>
+    <requirementId>selector.values.null</requirementId>
+    <expression>10 + dummy = 10</expression>
+  </selector>
+
+  <selector name="unknown int expression 3" selects="none">
+    <requirementId>selector.expression</requirementId>
+    <requirementId>selector.values.null</requirementId>
+    <expression>dummy - 10 = -10</expression>
+  </selector>
+
+  <selector name="unknown int expression 4" selects="none">
+    <requirementId>selector.expression</requirementId>
+    <requirementId>selector.values.null</requirementId>
+    <expression>10 - dummy = 10</expression>
+  </selector>
+
+  <selector name="unknown int expression 5" selects="none">
+    <requirementId>selector.expression</requirementId>
+    <requirementId>selector.values.null</requirementId>
+    <expression>dummy * 10 = 0</expression>
+  </selector>
+
+  <selector name="unknown int expression 6" selects="none">
+    <requirementId>selector.expression</requirementId>
+    <requirementId>selector.values.null</requirementId>
+    <expression>10 * dummy = 0</expression>
+  </selector>
+
+  <selector name="unknown int expression 7" selects="none">
+    <requirementId>selector.expression</requirementId>
+    <requirementId>selector.values.null</requirementId>
+    <expression>dummy / 10 = 0</expression>
+  </selector>
+
+  <selector name="unknown int expression 8" selects="none">
+    <requirementId>selector.expression</requirementId>
+    <requirementId>selector.values.null</requirementId>
+    <expression>10 / dummy = 10</expression>
+  </selector>
+
+  <selector name="unknown int expression 9" selects="none">
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="zero" type="java.lang.Integer" 
+                value="0" />
+    <expression>10 / zero = 10</expression>
+  </selector>
+
+</selectors>

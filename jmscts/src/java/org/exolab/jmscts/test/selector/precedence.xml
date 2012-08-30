@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+
+<selectors>
+
+  <selector name="logical precedence 1" selects="all">
+    <requirementId>selector.operator.logical.precedence</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>true and false or true</expression>
+  </selector>
+
+  <selector name="logical precedence 2" selects="none">
+    <requirementId>selector.operator.logical.precedence</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>not true and true</expression>
+  </selector>
+
+  <selector name="logical precedence 3" selects="all">
+    <requirementId>selector.operator.logical.precedence</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>not false and true</expression>
+  </selector>
+
+  <selector name="logical precedence 4" selects="none">
+    <requirementId>selector.operator.logical.precedence</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>false or false and true</expression>
+  </selector>
+
+  <selector name="logical precedence 5" selects="all">
+    <requirementId>selector.operator.logical.precedence</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>not false or false and true</expression>
+  </selector>
+
+  <selector name="arithmetic precedence 1.1" selects="all">
+    <requirementId>selector.operator.arithmetic.precedence</requirementId>
+    <requirementId>selector.expression.arithmetic</requirementId>
+    <expression>2 + 2 / 2 = 3</expression>
+  </selector>
+
+  <selector name="arithmetic precedence 1.2" selects="none">
+    <requirementId>selector.operator.arithmetic.precedence</requirementId>
+    <requirementId>selector.expression.arithmetic</requirementId>
+    <expression>2 + 2 / 2 = 2</expression>
+  </selector>
+
+  <selector name="arithmetic precedence 2.1" selects="all">
+    <requirementId>selector.operator.arithmetic.precedence</requirementId>
+    <requirementId>selector.expression.arithmetic</requirementId>
+    <expression>3 + 9 / 3 = 6</expression>
+  </selector>
+
+  <selector name="arithmetic precedence 2.2" selects="none">
+    <requirementId>selector.operator.arithmetic.precedence</requirementId>
+    <requirementId>selector.expression.arithmetic</requirementId>
+    <expression>3.0 + 9.0 / 3.0 = 4.0</expression>
+  </selector>
+
+  <selector name="arithmetic precedence 3.1" selects="all">
+    <requirementId>selector.operator.arithmetic.precedence</requirementId>
+    <requirementId>selector.expression.arithmetic</requirementId>
+    <expression>1.0 + 2.0 * 3.0 / 3.0 = 3.0</expression>
+  </selector>
+
+  <selector name="arithmetic precedence 3.2" selects="all">
+    <requirementId>selector.operator.arithmetic.precedence</requirementId>
+    <requirementId>selector.expression.arithmetic</requirementId>
+    <expression>1 + 2 * 3 / 3 = 3</expression>
+  </selector>
+
+  <selector name="arithmetic precedence 4.1" selects="all">
+    <requirementId>selector.operator.arithmetic.precedence</requirementId>
+    <requirementId>selector.expression.arithmetic</requirementId>
+    <expression>3.0 / 3.0 * 2.0 = 0.5</expression>
+  </selector>
+
+  <selector name="arithmetic precedence 4.2" selects="none">
+    <requirementId>selector.operator.arithmetic.precedence</requirementId>
+    <requirementId>selector.expression.arithmetic</requirementId>
+    <expression>3.0 / 3.0 * 2.0 = 2.0</expression>
+  </selector>
+
+  <selector name="arithmetic precedence 5.1" selects="all">
+    <requirementId>selector.operator.arithmetic.precedence</requirementId>
+    <requirementId>selector.expression.arithmetic</requirementId>
+    <expression>--1 + 1 = 2</expression>
+  </selector>
+
+  <selector name="arithmetic precedence 5.2" selects="none">
+    <requirementId>selector.operator.arithmetic.precedence</requirementId>
+    <requirementId>selector.expression.arithmetic</requirementId>
+    <expression>--1 + 1 = -2</expression>
+  </selector>
+
+  <selector name="comparison precedence 1" selects="all">
+    <requirementId>selector.operator.comparison.precedence</requirementId>
+    <expression>1 = 2 = true</expression>
+  </selector>
+
+</selectors>
+

@@ -1,0 +1,99 @@
+<?xml version="1.0" ?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://jmscts.sourceforge.net/requirements">
+
+  <xsd:annotation>
+    <xsd:documentation xml:lang="en">
+      This schema defines JMS requirements to enable test cases to be
+      correlated with the JMS specification
+      Author: Tim Anderson (tma@netspace.net.au)
+    </xsd:documentation>
+  </xsd:annotation>
+
+
+  <xsd:element name="document">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        The document element is the root element of all requirements 
+        documents.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="description" type="text" />
+        <xsd:element ref="include" minOccurs="0" maxOccurs="unbounded" />
+        <xsd:element ref="reference" minOccurs="0" maxOccurs="unbounded" />
+        <xsd:element ref="requirement" minOccurs="0" maxOccurs="unbounded" />
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+
+  <xsd:element name="include">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        This element includes requirements from another requirements document.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:attribute name="path" type="xsd:string" use="required" />
+    </xsd:complexType>
+  </xsd:element>
+
+
+  <xsd:element name="requirement">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        This element specifies a requirement, defined by the JMS specification
+        or associated API documentation. A requirement may be optional.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="description" type="text" />
+        <xsd:choice minOccurs="1" maxOccurs="unbounded">
+          <xsd:element name="referenceId" type="xsd:string" />
+          <xsd:element ref="reference" />
+        </xsd:choice>
+      </xsd:sequence>
+      <xsd:attribute name="requirementId" type="xsd:string" use="required" />
+      <xsd:attribute name="optional" type="xsd:boolean" use="optional" 
+                     value="false" />
+    </xsd:complexType>
+  </xsd:element>
+
+
+  <xsd:element name="reference">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        This element specifies a requirement reference.
+      </xsd:documentation>  
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:sequence>
+        <!-- the following elements should be a choice, if castor would support
+             it -->
+        <xsd:element name="section" minOccurs="0">
+          <xsd:complexType>
+            <xsd:attribute name="name" type="xsd:string" use="required" />
+            <xsd:attribute name="title" type="xsd:string" use="required" />
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="table" type="xsd:string" minOccurs="0" />
+        <xsd:element name="url" type="xsd:anyURI" minOccurs="0" />
+      </xsd:sequence>
+      <xsd:attribute name="referenceId" type="xsd:string" use="optional" /> 
+    </xsd:complexType>
+  </xsd:element>
+
+  <xsd:complexType name="text">
+    <xsd:complexContent mixed="true">
+      <xsd:restriction base="xsd:anyType">
+        <xsd:sequence>
+          <xsd:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+      </xsd:restriction>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+</xsd:schema>

@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<document>
+
+  <properties>
+    <title>Installation</title>
+    <author email="tma@netspace.net.au">Tim Anderson</author>
+  </properties>
+
+  <body>
+    <section name="Installing JMS CTS">
+      <p>
+        This document describes how to install JMS CTS from an install 
+        archive. Refer to the <a href="downloads.html">Downloads</a> document
+        for instructions on obtaining a copy.
+      </p>
+
+      <subsection name="Requirements">
+        <p>
+          JMS CTS will run on any platform where there is a suitable 
+          <a href="http://java.sun.com/j2se">Java 2 runtime environment</a>
+        </p>
+      </subsection>
+
+      <subsection name="Unpacking the install archive">   
+        <p>
+          The install archive contains everything required to run 
+          JMS CTS on your system. The archive has a single top-level directory 
+          named <strong>jmscts-@RELEASE-VERSION@</strong> with all the JMS CTS 
+          related files beneath that.
+        </p>
+        <p>
+          Install archives with a <strong>.zip</strong> extension can be 
+          unpacked using <a href="http://www.winzip.com">winzip</a>, or the
+          <strong>jar</strong> tool (distributed with the Java 2 SDK). E.g.:
+          <source>
+jar xvf jmscts-@RELEASE-VERSION@.zip
+          </source>
+        </p>
+        <p>
+          Install archives with a <strong>.tar.gz</strong> extension can be 
+          unpacked with 
+          <a href="http://www.gnu.org/software/gzip/">gzip</a>
+          and <a href="http://www.gnu.org/software/tar/">tar</a>. E.g.:
+          <source>
+gzip -cd jmscts-@RELEASE-VERSION@.tar.gz | tar xvf -
+          </source> 
+        </p>      
+      </subsection>
+
+      <subsection name="Environment variables">
+        <p>
+          The JMS CTS server requires that the following environment variables
+          be set:
+          <ul>
+            <li>
+              <strong>JAVA_HOME</strong> - the Java 2 runtime environment
+              installation directory.
+            </li>
+          </ul>
+        </p>
+      </subsection>
+
+      <subsection name="Directory structure">
+        <p>
+          The <code>bin</code> directory contains Unix shell 
+          scripts and Windows batch files to run the JMS CTS.
+        </p>
+        <p>
+          The <code>docs</code> directory contains the full set of JMS CTS 
+          documentation.
+        </p>
+        <p>
+          The <code>lib</code> directory contains JARs required to run the 
+          JMS CTS.
+        </p>
+        <p>
+          The <code>config</code> directory contains the JMS CTS configuration
+          files.
+        </p>
+        <p>
+          The <code>src</code> directory contains the sources to the sample
+          provider proxies.
+        </p>
+      </subsection>
+
+    </section>
+  </body>
+
+</document>

@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<document>
+
+  <properties>
+    <title>Running JMS CTS</title>
+    <author email="tma@netspace.net.au">Tim Anderson</author>
+  </properties>
+
+  <body>
+    <section name="Running JMS CTS">
+      <p>
+        JMS CTS is run via the <em>jmscts.bat</em> script (Windows) or
+        the <em>jmscts.sh</em> script (Unix).
+      </p>
+      <p>
+        These are located in the <strong>$JMSCTS_HOME/bin</strong> directory.
+      </p>
+    </section>
+
+    <section name="Running compliance tests">
+      <p>
+        To run the compliance tests:
+      </p>
+      <p>
+        <em>Windows</em>
+        <source>
+> cd %JMSCTS_HOME%\bin
+> jmscts.bat run          
+        </source>
+      </p>
+      <p>
+        <em>Unix</em>
+        <source>
+> cd $JMSCTS_HOME/bin
+> jmscts.sh run         
+        </source>
+      </p>
+      <p>
+        On completion, a coverage report report is written to 
+        <strong>$JMSCTS_HOME/report/html/coverage.html</strong>.
+        This contains tests run, requirements covered, and the number of 
+        passes and failures.
+      </p>
+    </section>
+
+    <section name="Running stress tests">
+      <p>
+        To run the stress tests:
+      </p>
+      <p>
+        <em>Windows</em>
+        <source>
+> cd %JMSCTS_HOME%\bin
+> jmscts.bat stress
+        </source>
+      </p>
+      <p>
+        <em>Unix</em>
+        <source>
+> cd $JMSCTS_HOME/bin
+> jmscts.sh stress
+        </source>
+      </p>
+      <p>
+        On completion, a statistics report report is written to 
+        <strong>$JMSCTS_HOME/report/statistics.html</strong>.
+        This indicates the elapsed time for each test.
+      </p>
+    </section>
+
+    <section name="Taking snapshot reports">
+      <p>
+        The compliance and stress tests take some time to run, so it is
+        often useful to take a "snapshot" while they are running:
+      </p>
+      <p>
+        <em>Windows</em>
+        <source>
+> cd %JMSCTS_HOME%\bin
+> jmscts.bat snapshot ../report
+        </source>
+      </p>
+      <p>
+        <em>Unix</em>
+        <source>
+> cd $JMSCTS_HOME/bin
+> jmscts.sh snapshot ../report
+        </source>
+      </p>
+      <p>
+        This will generate reports as indicated in the previous sections.
+      </p>
+    </section>
+
+    <section name="Stopping JMS CTS">
+      <p>
+        To stop the test suite:
+      </p>
+      <p>
+        <em>Windows</em>
+        <source>
+> cd %JMSCTS_HOME%\bin
+> jmscts.bat stop
+        </source>
+      </p>
+      <p>
+        <em>Unix</em>
+        <source>
+> cd $JMSCTS_HOME/bin
+> jmscts.sh stop
+        </source>
+      </p>
+      <p>
+        This will perform an orderly shutdown of JMS CTS, and generate reports 
+        as indicated in the previous sections.
+      </p>
+      <p>
+        To abort a test (perhaps because it has hung), replace the 
+        <strong>stop</strong> argument with <strong>abort</strong>
+      </p>
+    </section>
+
+  </body>
+
+</document>

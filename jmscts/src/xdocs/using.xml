@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+<document>
+  <properties>
+    <title>Using JMS CTS</title>
+    <author email="tma@netspace.net.au">Tim Anderson</author>
+  </properties>
+
+  <body>
+    <section name="Using JMS CTS">
+      <p>
+        In order to use JMS CTS, the following are required:
+        <ul>
+          <li>A JMS provider</li>
+          <li>A proxy to enable the JMS CTS to connect to, and administer, the 
+              JMS provider</li>
+          <li>A configuration file to enable the JMS CTS to locate the
+              proxy classes</li>
+        </ul>
+        These are discussed in the following sections.
+      </p>
+
+      <subsection name="JMS Providers">
+        <p>
+          There are many JMS providers available, both commercial and 
+          opensource, some of which are listed below:
+          <table>
+            <tr>
+              <td><a href="http://openjms.sourceforge.net/">OpenJMS</a></td>
+            </tr>
+            <tr>
+              <td><a href="http://jboss.org/">JBossMQ</a></td>
+            </tr>
+            <tr>
+              <td><a href="http://joram.objectweb.org/">JORAM</a></td>
+            </tr>
+            <tr>
+              <td><a href="http://www.sonicsoftware.com/">SonicMQ</a></td>
+            </tr>
+            <tr>
+              <td><a href="http://www.swiftmq.com/">SwiftMQ</a></td>
+            </tr>
+            <tr>
+              <td><a href="http://www.fiorano.com/">FioranoMQ</a></td>
+            </tr>
+            <tr>
+              <td><a href="http://www.softwired-inc.com/">
+                  iBus//MessageServer</a>
+              </td>
+            </tr>
+          </table>
+        </p>
+      </subsection>
+
+      <subsection name="Proxies">
+        <p>
+          The JMS CTS requires a set of proxy classes to connect to a JMS 
+          provider and administer it.
+        </p>
+        <p>
+          These are needed as the JMS specification does not mandate how a 
+          JMS provider should be connected to, or administered.
+        </p>
+        <p>
+          The JMS CTS is distributed with sample proxies for 
+          <a href="http://openjms.sourceforge.net">OpenJMS</a>,
+          <a href="http://www.fiorano.com">FioranoMQ</a> and 
+          <a href="http://www.softwired-inc.com">iBus//MessageServer</a>.
+          These can be used as guides when developing proxies for other JMS 
+          implementations. 
+        </p>
+      </subsection>
+
+      <subsection name="Configuration">
+        <p>
+          To configure the JMS CTS to test a JMS provider, the provider proxy
+          and any dependent JARS need to be added to 
+          <strong>$JMSCTS_HOME/config/providers.xml</strong>. E.g.:
+        </p>           
+<source><![CDATA[
+<?xml version="1.0"?>
+<configuration>
+
+  <provider>
+    <name>OpenJMS</name>
+    <class>org.exolab.jmscts.openjms.OpenJMSProvider</class>
+    <paths>
+      <path>${jmscts.home}/lib/openjms-provider-@RELEASE-VERSION@.jar</path>
+      <path>${openjms.home}/lib/openjms-0.7.6-rc2.jar</path>
+    </paths>
+    <config>
+      <path>${openjms.home}/config/openjms.xml</path>
+    </config>
+  </provider>
+
+</configuration>
+]]></source>
+        <p>
+          In the above:
+          <ul>
+            <li>
+              <em>&lt;class&gt;</em> specifies a class implementing the 
+              <a href="apidocs\org\exolab\jmscts\provider\Provider.html">
+                 Provider</a> interface.
+            </li>
+            <li>
+              <em>&lt;paths&gt;</em> lists the JARS that are required to
+              test the provider.
+            </li>
+            <li>
+              <em>&lt;config&gt;</em> specifies properties to configure the
+              provider with, using java bean naming conventions.
+            </li>
+          </ul>
+        </p>
+      </subsection>
+
+    </section>
+  </body>
+</document>

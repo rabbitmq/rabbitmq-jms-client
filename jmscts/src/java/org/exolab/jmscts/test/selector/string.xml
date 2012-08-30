@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+
+<selectors>
+
+  <selector name="string expression 1" selects="none">
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="Country" type="java.lang.String" 
+                         value="France" />
+    <expression>Country = 'france'</expression>
+  </selector>
+
+  <selector name="invalid string expression 1" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <expression>'abc' &lt; 'abc'</expression>
+  </selector>
+
+  <selector name="invalid string expression 2" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <expression>'abc' &gt; 'abc'</expression>
+  </selector>
+
+  <selector name="invalid string expression 3" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <expression>'abc' &lt;= 'abc'</expression>
+  </selector>
+
+  <selector name="invalid string expression 4" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <expression>'abc' &gt;= 'abc'</expression>
+  </selector>
+
+  <selector name="invalid string expression 5" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <expression>'abc' - 'true'</expression>
+  </selector>
+
+  <selector name="invalid string expression 6" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <expression>'abc' + 'abc'</expression>
+  </selector>
+
+  <selector name="invalid string expression 7" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <expression>'abc' / 'abc'</expression>
+  </selector>
+
+  <selector name="invalid string expression 8" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <expression>'abc' * 'abc'</expression>
+  </selector>
+
+  <selector name="invalid string expression 9" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <expression>JMSBadHeaderIdentifier = '10'</expression>
+  </selector>
+     
+</selectors>

@@ -1,0 +1,120 @@
+<?xml version="1.0" ?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:types="http://jmscts.sourceforge.net/types"
+            targetNamespace="http://jmscts.sourceforge.net/test">
+
+  <!-- $Id: test.xsd,v 1.4 2003/10/24 08:45:59 tanderson Exp $ -->
+
+  <xsd:import namespace="http://jmscts.sourceforge.net/types" 
+              schemaLocation="types.xsd"/>
+
+  <xsd:element name="testRuns">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        This element describes the results of each run of a test.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="test" type="xsd:string"/>
+        <xsd:element name="testRun" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+
+  <xsd:element name="testRun">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        This element describes the results of a single test run.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="context" minOccurs="0"/>
+        <xsd:element ref="failure" minOccurs="0"/>
+        <xsd:element ref="statistic" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+
+  <xsd:element name="failure">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        This element describes a test case failure.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="description" type="xsd:string" />
+        <xsd:element name="cause" type="types:text" minOccurs="0" />
+        <xsd:element name="rootCause" type="types:text" minOccurs="0" />
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+
+  <xsd:element name="statistic">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        A statistic collected during a test run.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="type" type="statisticType"/>
+        <xsd:element name="count" type="xsd:integer"/>
+        <xsd:element name="time" type="xsd:time"/>
+        <xsd:element name="rate" type="xsd:double"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+
+  <xsd:simpleType name="statisticType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="send" />
+      <xsd:enumeration value="receive" />
+    </xsd:restriction>
+  </xsd:simpleType>
+
+
+  <xsd:element name="context">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        This element specifies the context of a test case.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="factory" />
+        <xsd:element name="session" type="types:sessionType" minOccurs="0" />
+        <xsd:element name="message" type="types:messageType" minOccurs="0" />
+        <xsd:element ref="behaviour" minOccurs="0" />
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+
+  <xsd:element name="factory">
+    <xsd:complexType>
+      <xsd:attribute name="type" type="types:factoryType" use="required" />
+      <xsd:attribute name="user" type="xsd:string" use="optional" />
+      <xsd:attribute name="password" type="xsd:string" use="optional" />
+    </xsd:complexType>
+  </xsd:element>
+
+
+  <xsd:element name="behaviour">
+    <xsd:complexType>
+      <xsd:attribute name="deliveryMode" type="types:deliveryModeType"
+                     use="required"/>
+      <xsd:attribute name="receiver" type="types:receiverType" 
+                     use="optional"/>
+      <xsd:attribute name="destination" type="types:destinationType" 
+                     use="required"/>
+    </xsd:complexType>
+  </xsd:element>
+
+</xsd:schema>

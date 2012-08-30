@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+
+<selectors>
+
+  <selector name="true or expression 1" selects="all">
+    <requirementId>selector.operator.or</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>true or true</expression>
+  </selector>
+
+  <selector name="true or expression 2" selects="all">
+    <requirementId>selector.operator.or</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>true or false</expression>
+  </selector>
+
+  <selector name="true or expression 3" selects="all">
+    <requirementId>selector.operator.or</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>true or dummy</expression>
+  </selector>
+
+  <selector name="true or expression 4" selects="all">
+    <requirementId>selector.operator.or</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>false or true</expression>
+  </selector>
+
+  <selector name="true or expression 5" selects="all">
+    <requirementId>selector.operator.or</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>dummy or true</expression>
+  </selector>
+
+  <selector name="false or expression 1" selects="none">
+    <requirementId>selector.operator.or</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>false or false</expression>
+  </selector>
+
+  <selector name="unknown or expression 1" selects="none">
+    <requirementId>selector.operator.or</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>false or dummy</expression>
+  </selector>
+
+  <selector name="unknown or expression 2" selects="none">
+    <requirementId>selector.operator.or</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>dummy or false</expression>
+  </selector>
+
+  <selector name="unknown or expression 3" selects="none">
+    <requirementId>selector.operator.or</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <expression>dummy or dummy</expression>
+  </selector>
+
+  <selector name="invalid or expression 1" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <expression>or</expression>
+  </selector>
+
+  <selector name="invalid or expression 2" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <expression>true or</expression>
+  </selector>
+
+  <selector name="invalid or expression 3" selects="none" valid="false">
+    <requirementId>selector.validation</requirementId>
+    <expression>or true</expression>
+  </selector>
+     
+</selectors>

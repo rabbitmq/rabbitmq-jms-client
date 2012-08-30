@@ -1,0 +1,161 @@
+<?xml version="1.0"?>
+<document>
+  <properties>
+    <title>Getting Started</title>
+    <author email="tma@netspace.net.au">Tim Anderson</author>
+  </properties>
+
+  <body>
+    <section name="Getting Started">
+      <p>
+        The purpose of this document is to demonstrate the JMS CTS,
+        using OpenJMS as the test subject.
+      </p>
+      <p>
+        In order to do this:
+        <ol>
+          <li>
+            <a href="downloads.html">Download</a> and 
+            <a href="install.html">install</a> JMS CTS.
+          </li>
+          <li><a href="#Setting up OpenJMS">Set up OpenJMS</a></li>
+          <li><a href="#Setting up JMS CTS">Set up JMS CTS</a></li>
+          <li>
+            <a href="#Running the compliance tests">
+              Run the compliance tests
+            </a>
+          </li>
+        </ol>
+      </p>
+    </section>
+
+    <section name="Setting up OpenJMS">
+      <p>
+        OpenJMS can be obtained from 
+        <a href="http://openjms.sourceforge.net/">
+          http://openjms.sourceforge.net/
+        </a>
+      </p>
+      <p>
+        See the 
+        <a href="http://openjms.sourceforge.net/gettingstarted.html">
+          Getting Started
+        </a>
+        guide for instructions on downloading, installing, and running OpenJMS.
+      </p>
+    </section>
+
+    <section name="Setting up JMS CTS">
+      <p>
+        To set up JMS CTS to test OpenJMS:
+        <ol>
+          <li>
+            Configure <strong>$JMSCTS_HOME/config/providers.xml</strong>
+            <p>
+              E.g:
+              <source><![CDATA[
+<configuration>
+  <provider>
+    <name>OpenJMS</name>
+    <class>org.exolab.jmscts.openjms.OpenJMSProvider</class>
+    <paths>
+      <path>${jmscts.home}/lib/openjms-provider-@RELEASE-VERSION@.jar</path>
+    </paths>
+    <config>
+      <path>${openjms.home}/config/openjms.xml</path>
+    </config>
+  </provider>
+</configuration>]]>              
+              </source>
+            </p>
+          </li>
+          <li>
+            Configure the environment script
+            <p>
+              This is a shell script which can be used to add JARS to the 
+              CLASSPATH and configure JVM options.
+            </p>
+            <p>
+              On Windows, this is the 
+              <strong>$JMSCTS_HOME/bin/setenv.bat</strong> batch file. E.g:
+              <source>
+rem ---------------------------------------------------------------------------
+rem Sample environment script for JMS CTS
+rem
+rem This is invoked by jmscts.bat to configure:
+rem . the CLASSPATH, for JMS provider jars
+rem . JVM options
+rem
+rem The following configures the JMS CTS for OpenJMS 0.7.6-rc2
+rem ---------------------------------------------------------------------------
+
+rem Configure the CLASSPATH
+rem
+set CLASSPATH=%OPENJMS_HOME%/lib/openjms-0.7.6-rc2.jar
+
+rem Configure JVM options
+rem
+set JAVA_OPTS=-Xmx256m
+set JAVA_OPTS=%JAVA_OPTS% -Dopenjms.home=%OPENJMS_HOME% 
+              </source>
+            </p>
+            <p>
+              On Unix, it is the <strong>$JMSCTS_HOME/bin/setenv.sh</strong>
+              script. E.g:
+              <source>
+# ---------------------------------------------------------------------------
+# Sample environment script for JMS CTS
+#
+# This is invoked by jmscts.sh to configure:
+# . the CLASSPATH, for JMS provider jars
+# . JVM options
+#
+# The following configures the JMS CTS for OpenJMS 0.7.6-rc2
+# ---------------------------------------------------------------------------
+
+# Configure the CLASSPATH
+#
+CLASSPATH=$OPENJMS_HOME/lib/openjms-0.7.6-rc2.jar
+
+# Configure JVM options
+#
+JAVA_OPTS=-Xmx256m
+              </source>
+            </p>
+          </li>
+        </ol>
+      </p>
+    </section>
+
+    <section name="Running the compliance tests">
+      <p>
+        To run the compliance test suite, enter the following in a command 
+        prompt:
+      </p>
+      <p>        
+        <em>Windows</em>
+        <source>
+> cd %JMSCTS_HOME%\bin
+> jmscts.bat run
+        </source>
+      </p>
+      <p>
+        <em>Unix</em>
+        <source>
+> cd $JMSCTS_HOME/bin
+> jmscts.sh run
+        </source>
+      </p>
+      <p>
+        The tests take several hours to run. On completion, a report is
+        written to <strong>$JMSCTS_HOME/report/html/coverage.html</strong>, 
+        indicating the tests run, requirements covered, and the number of 
+        passes and failures.
+      </p> 
+      <p>
+        For runtime options, see <a href="running.html">Running JMS CTS</a>.
+      </p>
+    </section>
+
+  </body>
+</document>

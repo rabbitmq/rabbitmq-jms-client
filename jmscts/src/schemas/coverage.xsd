@@ -1,0 +1,82 @@
+<?xml version="1.0" ?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:requirements="http://jmscts.sourceforge.net/requirements"
+            xmlns:test="http://jmscts.sourceforge.net/test"
+            xmlns:types="http://jmscts.sourceforge.net/types"
+            targetNamespace="http://jmscts.sourceforge.net/coverage">
+
+  <!-- $Id: coverage.xsd,v 1.5 2003/07/22 03:04:23 tanderson Exp $ -->
+
+  <xsd:import namespace="http://jmscts.sourceforge.net/test" 
+              schemaLocation="test.xsd"/>
+
+  <xsd:import namespace="http://jmscts.sourceforge.net/types" 
+              schemaLocation="types.xsd"/>
+
+  <xsd:annotation>
+    <xsd:documentation xml:lang="en">
+      This schema defines test case coverage of JMS requirements      
+      Author: Tim Anderson (tma@netspace.net.au)
+    </xsd:documentation>
+  </xsd:annotation>
+
+
+  <xsd:element name="requirementCoverage">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        The requirementCoverage element is the root element of all test case 
+        requirement coverage documents.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="provider" type="xsd:string"/>
+        <xsd:element ref="currentTest" minOccurs="0"/>
+        <xsd:element ref="coverage" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element ref="test:testRuns" minOccurs="0" maxOccurs="unbounded"/>
+
+        <!-- failures, not associated with any requirement -->
+        <xsd:element ref="test:failure" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+
+  <xsd:element name="currentTest">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        This element details the state of the current executing test
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="requirementId" type="xsd:string" minOccurs="0" 
+                     maxOccurs="unbounded"/>
+        <xsd:element name="test" type="xsd:string"/>
+        <xsd:element ref="test:testRun"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+
+  <xsd:element name="coverage">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        This element lists the tests which have covered a particular 
+        requirement, and a count of any failures that occurred.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="requirementId" type="xsd:string"/>
+        <xsd:element name="test" type="xsd:string" minOccurs="0" 
+                     maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="runs" type="xsd:integer" use="required"/>
+      <xsd:attribute name="failures" type="xsd:integer" use="required"/>
+      <xsd:attribute name="supported" type="xsd:boolean" use="optional" 
+                     value="true"/>
+    </xsd:complexType>
+  </xsd:element>
+
+</xsd:schema>

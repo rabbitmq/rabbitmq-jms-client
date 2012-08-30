@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<selectors>
+
+  <selector name="conversion expression 1" selects="none">
+    <requirementId>selector.property.conversion</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="orders" type="java.lang.String" 
+                         value="2" />
+    <expression>orders > 1</expression>
+  </selector>
+
+  <selector name="conversion expression 2" selects="none">
+    <requirementId>selector.property.conversion</requirementId>
+    <requirementId>selector.expression</requirementId>
+    <properties:property name="orders" type="java.lang.Integer" 
+                         value="2" />
+    <expression>orders = '2'</expression>
+  </selector>
+
+</selectors>

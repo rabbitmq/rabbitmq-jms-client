@@ -1,0 +1,78 @@
+<?xml version="1.0" ?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:types="http://jmscts.sourceforge.net/types"
+            targetNamespace="http://jmscts.sourceforge.net/filter">
+
+<!-- ====================================================================== -->
+<!-- This schema defines a filter that enables test cases to be excluded    -->
+<!-- from being tested, to avoid the need to modify code                    -->
+<!-- Author: Tim Anderson (tma@netspace.net.au)                             -->
+<!-- ====================================================================== -->
+
+  <xsd:import namespace="http://jmscts.sourceforge.net/types" 
+              schemaLocation="types.xsd"/>
+
+  <xsd:element name="filter">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        The filter element is the root element of all test case filter
+        documents.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="include" minOccurs="0" maxOccurs="unbounded" />
+        <xsd:element ref="exclude" minOccurs="0" maxOccurs="unbounded" />
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+
+  <xsd:complexType name="selector">
+    <xsd:sequence>
+      <xsd:element name="factory" type="types:factoryType" minOccurs="0" />
+      <xsd:element name="session" type="types:sessionType" minOccurs="0" />
+      <xsd:element name="destination" type="types:destinationType" 
+                   minOccurs="0" />
+      <xsd:element name="deliveryMode" type="types:deliveryModeType" 
+                   minOccurs="0" />
+      <xsd:element name="receiver" type="types:receiverType" minOccurs="0" />
+      <xsd:element name="message" type="types:messageType" minOccurs="0" />
+      <xsd:element name="test" type="xsd:string" minOccurs="0" />
+    </xsd:sequence>
+  </xsd:complexType>
+
+
+  <xsd:element name="include">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        This element specifies to include the specified test cases when running
+        the test suite
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:complexContent>
+        <xsd:extension base="selector">
+        </xsd:extension>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+
+
+  <xsd:element name="exclude">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        This element specifies to exclude the specified test cases when running
+        the test suite
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:complexContent>
+        <xsd:extension base="selector">
+        </xsd:extension>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+
+</xsd:schema>
+

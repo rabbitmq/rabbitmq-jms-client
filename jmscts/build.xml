@@ -1,0 +1,343 @@
+<!-- $Id: build.xml,v 1.5 2006/09/19 19:53:14 donh123 Exp $ -->
+<project name="jmscts" default="all">
+
+  <!-- ==================================================================== -->
+  <!-- Properties                                                           -->
+  <!-- ==================================================================== -->
+
+  <!-- property overrides -->
+  <property file="build.properties"/>
+
+  <!-- JAR versions -->
+  <property file="src/etc/JARS" />
+
+  <!-- version properties -->
+  <property name="copyright" 
+            value="The JMS CTS Group. (C) 2001-2004. All rights reserved."/>
+  <property name="version" value="0.5-b2"/>
+  <property name="vendor.name" value="The JMS CTS Group"/>
+  <property name="project" value="jmscts"/>
+  <property name="vendor.url" value="http://jmscts.sourceforge.net"/>
+
+  <!-- source directories -->
+  <property name="java.dir" value="src/java"/>
+  <property name="doc.dir" value="src/doc"/>
+  <property name="etc.dir" value="src/etc"/>     
+  <property name="config.dir" value="src/config"/>
+  <property name="resources.dir" value="src/resources"/>
+  <property name="bin.dir" value="src/bin"/>
+  <property name="schema.dir" value="src/schemas"/>
+  <property name="providers.dir" value="src/providers"/>
+  <property name="lib.dir" value="lib"/>
+  <property name="dist.dir" value="lib"/>
+
+  <!-- target directories -->
+  <property name="build.dir" value="build"/>
+  <property name="generated-src.dir" value="${build.dir}/generated-src"/>
+  <property name="classes.dir" value="${build.dir}/classes"/>
+  <property name="target.resources.dir" value="resources"/>
+  <property name="target.bin.dir" value="bin"/>
+  <property name="target.config.dir" value="config"/>
+
+  <property name="build.compiler" value="modern" />
+  <property name="debug" value="on"/>
+  <property name="deprecation" value="off"/>
+  <property name="optimize" value="off"/>
+
+  <property name="jmscts.jar" value="${project}-${version}.jar" />
+
+  <!-- ==================================================================== -->
+  <!-- The classpath used to build the project                              -->
+  <!-- ==================================================================== -->
+  <path id="project.class.path">
+    <pathelement path="${lib.dir}/${project.jar.castor}" />
+    <pathelement path="${lib.dir}/${project.jar.cli}" />
+    <pathelement path="${lib.dir}/${project.jar.concurrent}" />
+    <pathelement path="${lib.dir}/${project.jar.exolabcore}" />
+    <pathelement path="${lib.dir}/${project.jar.jms}" />
+    <pathelement path="${lib.dir}/${project.jar.jndi}" />
+    <pathelement path="${lib.dir}/${project.jar.junit}" />
+    <pathelement path="${lib.dir}/${project.jar.log4j}" />
+    <pathelement path="${lib.dir}/${project.jar.oro}" />
+    <pathelement path="${lib.dir}/${project.jar.xalan}" />
+    <pathelement path="${lib.dir}/${project.jar.xerces}" />
+    <pathelement path="${lib.dir}/${project.jar.xml-apis}" />
+
+    <!-- etc.dir required so castor can find castorbuilder.properties -->
+    <pathelement path="${etc.dir}" />
+  </path>
+
+  <!-- ==================================================================== -->
+  <!-- Taskdefs                                                             -->
+  <!-- ==================================================================== -->
+  <taskdef name="templatedoclet" 
+           classname="xdoclet.DocletTask">
+    <classpath>
+      <pathelement path="${lib.dir}/${project.jar.collections}"/>
+      <pathelement path="${lib.dir}/${project.jar.logging}" />
+      <pathelement path="${lib.dir}/${project.jar.xdoclet}"/>
+      <pathelement path="${lib.dir}/${project.jar.xdoclet-module}"/>
+      <pathelement path="${lib.dir}/${project.jar.xdoclet-xjavadoc}"/>
+    </classpath>
+  </taskdef>
+
+  <!-- ==================================================================== -->
+  <!-- JMS CTS classpath                                                    -->
+  <!-- ==================================================================== -->
+  <property name="jmscts.classpath" 
+            value="${project.jar.castor} ${project.jar.cli} ${project.jar.concurrent} ${project.jar.exolabcore} ${project.jar.jms} ${project.jar.jndi} ${project.jar.junit} ${project.jar.log4j} ${project.jar.logging} ${project.jar.oro} ${project.jar.xalan} ${project.jar.xerces} ${project.jar.xml-apis}"/>
+
+  <!-- ==================================================================== -->
+  <!-- Filter sets                                                          -->
+  <!-- ==================================================================== -->
+  <filterset id="jmscts.filterset">
+    <filter token="JMSCTS" value="${jmscts.jar}"/>
+    <filter token="VERSION" value="${version}"/>
+  </filterset>
+
+  <!-- ==================================================================== -->
+  <!-- Pattern sets                                                         -->
+  <!-- ==================================================================== -->
+  <patternset id="support.files">
+    <include name="**/*.xsd" />
+    <include name="**/*.xml" />
+    <include name="**/*.properties" />
+    <include name="**/*.dtd" />
+    <include name="**/*.gif" />
+    <include name="**/*.xsl" />
+    <include name="**/*.css" />
+    <include name="**/*.policy" />
+  </patternset>
+
+  <!-- ==================================================================== -->
+  <!--                    Prepare target directories                        -->
+  <!-- ==================================================================== -->
+  <target name="prepare">
+    <mkdir dir="${classes.dir}"/>
+    <mkdir dir="${generated-src.dir}"/>
+    <mkdir dir="${dist.dir}"/>
+    <mkdir dir="${target.resources.dir}"/>
+    <mkdir dir="${target.bin.dir}"/>
+    <tstamp/>
+  </target>
+
+  <!-- ==================================================================== -->
+  <!--            The executable files in jmscts.home and bin dir           -->
+  <!-- ==================================================================== -->
+  <patternset id="executable.files">
+    <include name="*.bat"/>
+    <include name="*.sh" />
+  </patternset>
+
+  <!-- ==================================================================== -->
+  <!--                 Clean the build and distribution package             -->
+  <!-- ==================================================================== -->
+  <target name="clean" 
+          description="Clean the build and distribution package">
+    <delete dir="${build.dir}"/>
+  </target>
+
+  <!-- ==================================================================== -->
+  <!--       Generate sources from schemas using castor                     -->
+  <!-- ==================================================================== -->
+  <target name="schemas" depends="prepare">
+    <antcall target="castor">
+       <param name="schema" value="properties.xsd"/>
+       <param name="package" value="org.exolab.jmscts.core"/>
+    </antcall>
+    <antcall target="castor">
+      <param name="schema" value="types.xsd"/>
+      <param name="package" value="org.exolab.jmscts.core"/>
+    </antcall>
+    <antcall target="castor">
+      <param name="schema" value="metadata.xsd"/>
+      <param name="package" value="org.exolab.jmscts.core.meta"/>
+    </antcall>
+    <antcall target="castor">
+      <param name="schema" value="filter.xsd"/>
+      <param name="package" value="org.exolab.jmscts.core.filter"/>
+    </antcall>
+    <antcall target="castor">
+      <param name="schema" value="requirements.xsd"/>
+      <param name="package" value="org.exolab.jmscts.requirements"/>
+    </antcall>
+    <antcall target="castor">
+      <param name="schema" value="test.xsd"/>
+      <param name="package" value="org.exolab.jmscts.report"/>
+    </antcall>
+    <antcall target="castor">
+      <param name="schema" value="coverage.xsd"/>
+      <param name="package" value="org.exolab.jmscts.report"/>
+    </antcall>
+    <antcall target="castor">
+      <param name="schema" value="statistics.xsd"/>
+      <param name="package" value="org.exolab.jmscts.report"/>
+    </antcall>
+  </target>
+
+  <target name="castor.uptodate" depends="prepare">
+    <uptodate property="${schema}.is.uptodate"
+              srcfile="${schema.dir}/${schema}"
+      	      targetfile="${build.dir}/${schema}.tstamp"/>    
+  </target>
+
+  <!-- ==================================================================== -->
+  <!--                    Runs the castor source generator                  -->
+  <!-- This requires parameters:                                            -->
+  <!-- . schema   - the schema file name                                    -->
+  <!-- . package  - the target package                                      -->
+  <!-- ==================================================================== -->
+  <target name="castor" depends="castor.uptodate" 
+                        unless="${schema}.is.uptodate">
+    <java className="org.exolab.castor.builder.SourceGenerator"
+          failonerror="true"
+          fork="true">
+      <arg value="-i"/>
+      <arg value="${schema.dir}/${schema}"/>
+      <arg value="-f"/>
+      <arg value="-package"/>
+      <arg value="${package}"/>
+      <arg value="-types"/>
+      <arg value="j2"/>
+      <arg value="-dest"/>
+      <arg value="${generated-src.dir}"/>
+      <classpath refid="project.class.path" />
+    </java>
+    <touch file="${build.dir}/${schema}.tstamp"/>
+  </target>
+
+  <!-- ==================================================================== -->
+  <!--                    Build the main packages                           -->
+  <!-- ==================================================================== -->
+  <target name="main" depends="schemas"
+          description="Build the main packages">
+
+    <!-- build the java files -->
+    <javac destdir="${classes.dir}" 
+           includes="**/*.java" 
+           excludes="**/package.html"
+	   debug="${debug}" 
+           deprecation="${deprecation}"
+           optimize="${optimization}"
+ 	   source="1.4">
+      <src path="${generated-src.dir}"/>
+      <src path="${java.dir}"/>
+      <classpath refid="project.class.path" />
+    </javac>
+
+    <!-- build the rmi stubs -->
+    <rmic base="${classes.dir}" stubVersion="1.2" 
+          includes="**/ExecutionMonitorServer.class **/LockManagerServer.class
+                   **/MessengerServer.class **/SnapshotServer.class 
+                   **/TestTerminatorServer.class" >
+      <classpath refid="project.class.path" />
+    </rmic>
+
+    <!-- copy the support files -->
+    <copy todir="${classes.dir}">
+      <fileset dir="${java.dir}">
+        <patternset refid="support.files"/>
+      </fileset>
+    </copy>
+
+  </target>
+
+  <!-- ==================================================================== -->
+  <!--               Generates class meta-data for each test case           -->
+  <!-- ==================================================================== -->
+  <target name="metadata.uptodate" depends="prepare">
+    <uptodate property="metadata.is.uptodate"
+      	      targetfile="${build.dir}/metadata.xml.tstamp">
+      <srcfiles dir="${java.dir}" includes="**/*Test.java"/>
+    </uptodate>
+  </target>
+
+  <target name="metadata" 
+          depends="metadata.uptodate"
+          unless="metadata.is.uptodate">
+    <templatedoclet destdir="${classes.dir}">
+      <fileset dir="${java.dir}">
+        <include name="**/*Test.java"/>
+      </fileset>
+      <template templateFile="${etc.dir}/metadata.xdt" 
+                destinationFile="metadata.xml"/>
+    </templatedoclet>
+    <touch file="${build.dir}/metadata.xml.tstamp"/>
+  </target>
+
+  <!-- ==================================================================== -->
+  <!-- Build the binary jar in the lib directory                            -->
+  <!-- ==================================================================== -->
+  <target name="jar" depends="main, metadata"
+          description="Builds the binary JAR in the lib directory">
+
+    <!-- create the JAR -->
+    <jar destfile="${lib.dir}/${jmscts.jar}" 
+         basedir="${classes.dir}">
+      <metainf dir="${basedir}">
+        <include name="LICENSE.txt"/>
+      </metainf>
+
+      <manifest>
+        <attribute name="Built-By" value="${user.name}"/>
+        <attribute name="Created-By" value="Apache Ant"/>
+        <attribute name="Class-Path" value="${jmscts.classpath}"/>
+        <attribute name="Implementation-Title" value="${project}"/>
+        <attribute name="Implementation-Version" value="${version}"/>
+        <attribute name="Implementation-Vendor" value="${vendor.name}"/>
+      </manifest>
+    </jar>
+  </target>
+
+  <!-- ================================================================== -->
+  <!-- Build provider jars                                                -->
+  <!-- ================================================================== -->
+  <target name="providers"
+          description="Build each provider adapter into an installable jar">
+    <ant antfile="src/providers/openjms/build.xml"/>
+  </target>
+
+  <!-- ==================================================================== -->
+  <!-- Installs stylesheets and support files                               -->
+  <!-- ==================================================================== -->
+  <target name="resources" depends="metadata"
+          description="Installs stylesheets and support files">
+
+    <copy todir="${target.resources.dir}">
+      <fileset dir="${resources.dir}">
+         <patternset refid="support.files"/>
+      </fileset>
+      <fileset dir="${java.dir}/org/exolab/jmscts/requirements" 
+               includes="*.xml" />
+      <fileset dir="${classes.dir}" includes="metadata.xml"/>
+    </copy>
+  </target>
+ 
+
+  <!-- ==================================================================== -->
+  <!-- Builds the scripts                                                   -->
+  <!-- ==================================================================== -->
+  <target name="scripts" depends="prepare"
+          description="Builds the scriptss">
+
+    <copy todir="${target.bin.dir}" overwrite="true">
+      <fileset dir="${bin.dir}">
+        <patternset refid="executable.files"/>
+        <patternset refid="support.files"/>
+      </fileset>
+      <filterset refid="jmscts.filterset"/>
+    </copy>
+
+    <copy todir="${target.config.dir}">
+      <fileset dir="${config.dir}"/>
+      <filterset refid="jmscts.filterset"/>
+    </copy>
+  </target>
+
+  <!-- ==================================================================== -->
+  <!--              Cleans and builds all the packages                      -->
+  <!-- ==================================================================== -->
+  <target name="all" depends="clean,jar,resources,scripts,providers"
+          description="Cleans and builds all the packages" />
+
+</project>

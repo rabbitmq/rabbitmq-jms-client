@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<!-- ====================================================================== -->
+<!-- Sample provider configuration file                                     -->
+<!--                                                                        -->
+<!-- This configures JMS CTS to test OpenJMS                                -->
+<!-- ====================================================================== -->
+
+<configuration>
+
+  <provider>
+    <name>RabbitJMS</name>
+    <class>com.rabbitmq.integration.jmscts.RabbitJmsCtsProvider</class>
+    <paths>
+      <path>c:/development/rabbit-jms/rabbit-jms-client/com.rabbitmq.jms/target/rabbitmq-jms-1.0-SNAPSHOT.jar</path>
+    </paths>
+    <config>
+      <path>C:/development/rabbit-jms/jmscts-0.5-b2/config/rabbit.xml</path>
+    </config>
+  </provider>
+
+</configuration>

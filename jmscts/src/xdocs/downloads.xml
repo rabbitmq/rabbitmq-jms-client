@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<document>
+
+  <properties>
+    <title>Downloads</title>
+    <author email="tma@netspace.net.au">Tim Anderson</author>
+  </properties>
+
+  <body>
+    <section name="Downloads">
+      <p>
+        JMS CTS releases are available in both install and source archives
+        from the 
+        <a href="http://sourceforge.net/project/showfiles.php?group_id=81568">SourceForge download page</a>.
+      </p>
+      <p>
+        For convenience, they are provided in zip and tar/gzip formats.
+      </p>
+      <subsection name="Install archives">
+        <p>
+          The following install archives are available for download:
+          <ul>
+            <li>
+              <a href="http://prdownloads.sourceforge.net/jmscts/jmscts-@RELEASE-VERSION@.zip">
+                jmscts-@RELEASE-VERSION@.zip
+              </a>
+            </li>
+            <li>
+              <a href="http://prdownloads.sourceforge.net/jmscts/jmscts-@RELEASE-VERSION@.tar.gz">
+                jmscts-@RELEASE-VERSION@.tar.gz
+              </a>
+            </li>
+          </ul>
+        </p>
+        <p>
+          These include:
+          <ul>
+            <li>The JMS CTS</li>
+            <li>3rd party JARS required by the JMS CTS</li>
+            <li>The complete set of documentation</li>
+            <li>Scripts to run the JMS CTS on Windows and UNIX</li>
+            <li>Sample configuration</li>
+          </ul>
+        </p>
+      </subsection>
+
+      <subsection name="Source archives">
+        <p>
+          The following source archives are available for download:
+          <ul>
+            <li>
+              <a href="http://prdownloads.sourceforge.net/jmscts/jmscts-@RELEASE-VERSION@-src.zip">
+                jmscts-@RELEASE-VERSION@-src.zip
+              </a>
+            </li>
+            <li>
+              <a href="http://prdownloads.sourceforge.net/jmscts/jmscts-@RELEASE-VERSION@-src.tar.gz">
+                jmscts-@RELEASE-VERSION@-src.tar.gz
+              </a>
+            </li>
+          </ul>
+        </p>
+        <p>
+          The source distributions are a clean CVS checkout of the 
+          JMS CTS sources at the time the version was released.<br/>
+          These can be used to build an install archive of JMS CTS. 
+        </p>
+      </subsection>
+    </section>
+  </body>
+
+</document>

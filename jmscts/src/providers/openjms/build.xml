@@ -1,0 +1,58 @@
+<project name="jmscts.openjms" default="jar" basedir="../../../">
+
+  <property environment="env"/>
+
+  <!-- property overrides -->
+  <property file="build.properties"/>
+
+  <!-- JAR versions -->
+  <property file="src/etc/JARS" />
+
+  <!-- ==================================================================== -->
+  <!--    The classpath used to build the OpenJMS proxy and run against     -->
+  <!--    the OpenJMS provider                                              -->
+  <!-- ==================================================================== -->
+  <path id="openjms.class.path"> 
+    <pathelement path="${lib.dir}/${project.jar.castor}" />
+    <pathelement path="${lib.dir}/${project.jar.cli}" />
+    <pathelement path="${lib.dir}/${project.jar.exolabcore}" />
+    <pathelement path="${lib.dir}/${project.jar.jms}" />
+    <pathelement path="${lib.dir}/${project.jar.junit}" />
+    <pathelement path="${lib.dir}/${project.jar.log4j}" />
+    <pathelement path="${lib.dir}/${project.jar.xerces}" />
+    <pathelement path="${env.OPENJMS_HOME}/lib/${openjms.jar.openjms}" />
+    <pathelement path="${basedir}/${dist.dir}/${jmscts.jar}" />
+  </path>
+
+  <!-- ==================================================================== -->
+  <!--                    Prepare target directories                        -->
+  <!-- ==================================================================== -->
+  <target name="prepare">
+    <mkdir dir="${build.dir}/providers/openjms"/>
+  </target>
+
+  <!-- ==================================================================== -->
+  <!--                     Builds the openjms proxy                         -->
+  <!-- ==================================================================== -->
+  <target name="openjmsenv" unless="env.OPENJMS_HOME">
+    <fail message="OPENJMS_HOME environment variable not set" />
+  </target>
+
+  <target name="main" depends="prepare, openjmsenv">
+    <javac srcdir="${providers.dir}/openjms"
+           destdir="${build.dir}/providers/openjms" 
+           includes="**/*.java" 
+           excludes="**/package.html"
+	   debug="${debug}"
+           deprecation="${deprecation}"
+           optimize="${optimization}">
+      <classpath refid="openjms.class.path" />
+    </javac>    
+  </target>
+
+  <target name="jar" depends="main">
+    <jar jarfile="${dist.dir}/openjms-provider-${version}.jar"
+         basedir="${build.dir}/providers/openjms" />
+  </target>
+
+</project>

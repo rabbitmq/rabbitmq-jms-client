@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<!-- ====================================================================== -->
+<!-- Sample provider configuration file                                     -->
+<!--                                                                        -->
+<!-- This configures JMS CTS to test OpenJMS                                -->
+<!-- ====================================================================== -->
+
+<configuration>
+
+  <provider>
+    <name>OpenJMS</name>
+    <class>org.exolab.jmscts.openjms.OpenJMSProvider</class>
+    <paths>
+      <path>${jmscts.home}/lib/openjms-provider-@VERSION@.jar</path>
+    </paths>
+    <config>
+      <path>${openjms.home}/config/openjms.xml</path>
+    </config>
+  </provider>
+
+</configuration>

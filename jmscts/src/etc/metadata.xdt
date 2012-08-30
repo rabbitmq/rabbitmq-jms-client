@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<meta-data>
+
+<XDtClass:forAllClasses type="junit.framework.TestCase" sort="true">
+  <class-meta>
+    <name><XDtClass:fullClassName/></name>
+    <description>
+      <XDtClass:classCommentText no-comment-signs="true"/>
+    </description>
+    <XDtClass:forAllClassTags tagName="jmscts.factory">
+    <attribute name="jmscts.factory" value="<XDtClass:classTagValue tagName="jmscts.factory"/>"/>
+    </XDtClass:forAllClassTags>
+    <XDtClass:forAllClassTags tagName="jmscts.session">
+    <attribute name="jmscts.session" value="<XDtClass:classTagValue tagName="jmscts.session"/>"/>
+    </XDtClass:forAllClassTags>
+    <XDtClass:forAllClassTags tagName="jmscts.message">
+    <attribute name="jmscts.message" value="<XDtClass:classTagValue tagName="jmscts.message"/>"/>
+    </XDtClass:forAllClassTags>
+    <XDtClass:forAllClassTags tagName="jmscts.delivery">
+    <attribute name="jmscts.delivery" value="<XDtClass:classTagValue tagName="jmscts.delivery"/>"/>
+    </XDtClass:forAllClassTags>
+    <XDtClass:forAllClassTags tagName="jmscts.durableonly">
+    <attribute name="jmscts.durableonly" value="<XDtClass:classTagValue tagName="jmscts.durableonly"/>"/>
+    </XDtClass:forAllClassTags>
+    <XDtMethod:forAllMethods superclasses="false" sort="true">
+    <method-meta>
+      <name><XDtMethod:methodName/></name>
+      <description>
+        <XDtMethod:methodComment no-comment-signs="true"/>
+      </description>
+      <XDtMethod:forAllMethodTags tagName="jmscts.requirement">
+      <attribute name="jmscts.requirement" value="<XDtMethod:methodTagValue tagName="jmscts.requirement"/>"/>
+      </XDtMethod:forAllMethodTags>
+      <XDtMethod:forAllMethodTags tagName="jmscts.factory">
+      <attribute name="jmscts.factory" value="<XDtMethod:methodTagValue tagName="jmscts.factory"/>"/>
+      </XDtMethod:forAllMethodTags>
+      <XDtMethod:forAllMethodTags tagName="jmscts.session">
+      <attribute name="jmscts.session" value="<XDtMethod:methodTagValue tagName="jmscts.session"/>"/>
+      </XDtMethod:forAllMethodTags>
+      <XDtMethod:forAllMethodTags tagName="jmscts.message">
+      <attribute name="jmscts.message" value="<XDtMethod:methodTagValue tagName="jmscts.message"/>"/>
+      </XDtMethod:forAllMethodTags>
+      <XDtMethod:forAllMethodTags tagName="jmscts.delivery">
+      <attribute name="jmscts.delivery" value="<XDtMethod:methodTagValue tagName="jmscts.delivery"/>"/>
+      </XDtMethod:forAllMethodTags>
+      <XDtMethod:forAllMethodTags tagName="jmscts.durableonly">
+      <attribute name="jmscts.durableonly" value="<XDtMethod:methodTagValue tagName="jmscts.durableonly"/>"/>
+      </XDtMethod:forAllMethodTags>
+    </method-meta>
+    </XDtMethod:forAllMethods>
+  </class-meta>
+</XDtClass:forAllClasses>
+
+</meta-data>

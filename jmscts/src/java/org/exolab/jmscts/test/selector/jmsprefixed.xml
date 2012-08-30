@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<selectors>
+
+  <selector name="true JMS prefix expression 1" selects="all">
+    <requirementId>selector.properties.JMSprefixed</requirementId>
+    <expression>JMSXGroupID is null</expression>
+  </selector>
+
+  <selector name="false JMS prefix expression 2" selects="none">
+    <requirementId>selector.properties.JMSprefixed</requirementId>
+    <expression>JMSXGroupSeq is not null</expression>
+  </selector>
+
+  <selector name="invalid JMS prefix expression 1" selects="none" 
+            valid="false">
+    <requirementId>selector.properties.JMSprefixed</requirementId>
+    <expression>JMSXInvalid = 0</expression>
+  </selector>
+     
+</selectors>

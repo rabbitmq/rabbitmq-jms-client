@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!DOCTYPE mapping PUBLIC "-//EXOLAB/Castor Object Mapping DTD Version 1.0//EN"
+                         "http://castor.exolab.org/mapping.dtd">
+<mapping>
+
+  <class name="org.exolab.jmscts.provider.Configuration">
+    <map-to xml="configuration" />
+    <field name="provider" type="org.exolab.jmscts.provider.ProviderLoader"
+           set-method="addProvider" collection="arraylist">
+      <bind-xml name="provider" node="element" />
+    </field>
+  </class>
+
+  <class name="org.exolab.jmscts.provider.ProviderLoader">
+    <map-to xml="provider" />
+    <field name="name" type="string" required="true">
+      <bind-xml name="name" node="element" />
+    </field>
+    <field name="className" type="string" required="true">
+      <bind-xml name="class" node="element" />
+    </field>
+    <field name="start" type="boolean" required="false">
+      <bind-xml name="start" node="element" />
+    </field>
+    <field name="stop" type="boolean" required="false">
+      <bind-xml name="stop" node="element" />
+    </field>
+    <field name="paths" type="org.exolab.jmscts.provider.Paths">
+      <bind-xml name="paths" node="element" />
+    </field>
+    <field name="config" create-method="createProvider" 
+           set-method="setProvider" required="true">
+      <bind-xml name="config" node="element" />
+    </field>
+  </class>
+
+  <class name="org.exolab.jmscts.provider.Paths">
+    <map-to xml="paths" />
+    <field name="path" type="string" set-method="addPath" 
+           collection="arraylist">
+      <bind-xml name="path" node="element" />
+    </field>
+  </class>
+
+</mapping>
