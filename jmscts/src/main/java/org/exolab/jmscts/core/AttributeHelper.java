@@ -45,6 +45,8 @@
 package org.exolab.jmscts.core;
 
 import java.lang.reflect.Method;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -312,9 +314,19 @@ public final class AttributeHelper {
 
         InputStream stream = AttributeHelper.class.getResourceAsStream(PATH);
         if (stream == null) {
-            String msg = "Failed to locate meta data: " + PATH;
-            log.error(msg);
-            throw new RuntimeException(msg);
+            try {
+                File f = new File(System.getProperty("jmscts.home)","resources"+PATH));
+                if (f.exists()) {
+                    stream = new FileInputStream(f);
+                }
+            } catch (Exception x) {
+                log.error("Unable to load metadata.xml from file system.",x);
+            }
+            if (stream==null) {
+                String msg = "Failed to locate meta data: " + PATH;
+                log.error(msg);
+                throw new RuntimeException(msg);
+            }
         }
         MetaData metaData;
         try {

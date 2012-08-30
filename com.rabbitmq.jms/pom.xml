@@ -1,219 +1,179 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.rabbitmq.jms</groupId>
+  <artifactId>rabbitmq-jms</artifactId>
+  <packaging>jar</packaging>
+  <name>rabbitmq-jms</name>
+  <version>1.0-SNAPSHOT</version>
+  <description>RabbitMQ JMS Client API</description>
+
+  <parent>
     <groupId>com.rabbitmq.jms</groupId>
-    <artifactId>rabbitmq-jms</artifactId>
-    <packaging>jar</packaging>
+    <artifactId>rabbitmq-jms-parent</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>rabbitmq-jms</name>
-    <description>RabbitMQ JMS Client API</description>
-
-    <properties>
-        <java-version>1.6</java-version>
-        <workspace-location>${basedir}/../../workspace</workspace-location>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
-    <dependencies>
-        <dependency>
-            <groupId>com.rabbitmq</groupId>
-            <artifactId>amqp-client</artifactId>
-            <version>2.8.4</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId> 
-            <artifactId>junit</artifactId>
-            <version>4.10</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-jms_1.1_spec</artifactId>
-            <version>1.1.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>1.9.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>jmscts</groupId>
-            <artifactId>jmscts</artifactId>
-            <version>0.5</version>
-            <scope>test</scope>
-        </dependency>
-
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-eclipse-plugin</artifactId>
-                <version>2.9</version>
-                <configuration>
-                    <workspace>${workspace-location}</workspace>
-                    <workspaceCodeStylesURL>file:../eclipse-config-stuff/formatter.xml</workspaceCodeStylesURL>
-                    <downloadJavadocs>true</downloadJavadocs>
-                    <downloadSources>true</downloadSources>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.5.1</version>
-                <configuration>
-                    <source>${java-version}</source>
-                    <target>${java-version}</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.12</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.maven.surefire</groupId>
-                        <artifactId>surefire-junit47</artifactId>
-                        <version>2.12</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <encoding>UTF-8</encoding>
-                    <includes>
-                        <include>**/*.class</include>
-                    </includes>
-                    <!-- all but @Category(IntegrationTest.class) test classes -->
-                    <excludedGroups>com.rabbitmq.integration.IntegrationTest</excludedGroups>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.12</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.maven.surefire</groupId>
-                        <artifactId>surefire-junit47</artifactId>
-                        <version>2.12</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <encoding>UTF-8</encoding>
-                    <!-- @Category(IntegrationTest.class) test classes -->
-                    <groups>com.rabbitmq.integration.IntegrationTest</groups>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                        </goals>
-                        <configuration>
-                            <includes>
-                                <include>**/*.class</include>
-                            </includes>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>1.7</version>
-                <executions>
-                    <execution>
-                        <id>test-unit-reports</id>
-                        <phase>test</phase>
-                        <configuration>
-                            <target>
-                                <junitreport todir="target/surefire-reports">
-                                    <fileset dir="target/surefire-reports">
-                                        <include name="**/*.xml" />
-                                    </fileset>
-                                    <report format="noframes"
-                                        todir="target/surefire-reports" />
-                                </junitreport>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>test-integration-reports</id>
-                        <phase>integration-test</phase>
-                        <configuration>
-                            <target>
-                                <junitreport todir="target/failsafe-reports">
-                                    <fileset dir="target/failsafe-reports">
-                                        <include name="**/*.xml" />
-                                    </fileset>
-                                    <report format="noframes"
-                                        todir="target/failsafe-reports" />
-                                </junitreport>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.ant</groupId>
-                        <artifactId>ant-junit</artifactId>
-                        <version>1.8.4</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.apache.ant</groupId>
-                        <artifactId>ant</artifactId>
-                        <version>1.8.4</version>
-                    </dependency>
-                </dependencies>
-
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+  </parent>
 
 
-        </plugins>
-    </build>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.10</version>
+    </dependency>
 
-    <pluginRepositories>
-        <pluginRepository>
-            <id>unto.net</id>
-            <url>http://repository.unto.net/maven/</url>
-            <releases>
-                <updatePolicy>daily</updatePolicy>
-                <checksumPolicy>warn</checksumPolicy>
-            </releases>
-            <snapshots>
-                <updatePolicy>daily</updatePolicy>
-                <checksumPolicy>warn</checksumPolicy>
-            </snapshots>
-        </pluginRepository>
-    </pluginRepositories>
-    <repositories>
-        <repository>
-            <id>spring-release</id>
-            <name>Spring Maven Release Repository</name>
-            <url>http://repo.springsource.org/libs-release</url>
-        </repository>
-        <repository>
-            <id>self</id>
-            <name>Local Project Maven Repository</name>
-            <url>file:${basedir}/repository/</url>
-        </repository>
-    </repositories>
+    <dependency>
+      <groupId>com.rabbitmq</groupId>
+      <artifactId>amqp-client</artifactId>
+      <version>2.8.4</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.12</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.maven.surefire</groupId>
+            <artifactId>surefire-junit47</artifactId>
+            <version>2.12</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <encoding>UTF-8</encoding>
+          <includes>
+            <include>**/*.class</include>
+          </includes>
+          <!-- all but @Category(IntegrationTest.class) test classes -->
+          <excludedGroups>com.rabbitmq.integration.IntegrationTest</excludedGroups>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>2.12</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.maven.surefire</groupId>
+            <artifactId>surefire-junit47</artifactId>
+            <version>2.12</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <encoding>UTF-8</encoding>
+          <!-- @Category(IntegrationTest.class) test classes -->
+          <groups>com.rabbitmq.integration.IntegrationTest</groups>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+            <configuration>
+              <includes>
+                <include>**/*.class</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.7</version>
+        <executions>
+          <execution>
+            <id>test-unit-reports</id>
+            <phase>test</phase>
+            <configuration>
+              <target>
+                <junitreport todir="target/surefire-reports">
+                  <fileset dir="target/surefire-reports">
+                    <include name="**/*.xml" />
+                  </fileset>
+                  <report format="noframes" todir="target/surefire-reports" />
+                </junitreport>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>test-integration-reports</id>
+            <phase>integration-test</phase>
+            <configuration>
+              <target>
+                <junitreport todir="target/failsafe-reports">
+                  <fileset dir="target/failsafe-reports">
+                    <include name="**/*.xml" />
+                  </fileset>
+                  <report format="noframes" todir="target/failsafe-reports" />
+                </junitreport>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant-junit</artifactId>
+            <version>1.8.4</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant</artifactId>
+            <version>1.8.4</version>
+          </dependency>
+        </dependencies>
+
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+
+    </plugins>
+  </build>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>unto.net</id>
+      <url>http://repository.unto.net/maven/</url>
+      <releases>
+        <updatePolicy>daily</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
+      <snapshots>
+        <updatePolicy>daily</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+  <repositories>
+    <repository>
+      <id>spring-release</id>
+      <name>Spring Maven Release Repository</name>
+      <url>http://repo.springsource.org/libs-release</url>
+    </repository>
+    <repository>
+      <id>self</id>
+      <name>Local Project Maven Repository</name>
+      <url>file:${basedir}/repository/</url>
+    </repository>
+  </repositories>
 
 </project>

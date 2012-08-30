@@ -1,40 +1,30 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>jmscts</groupId>
+  <groupId>com.rabbitmq.jms</groupId>
   <artifactId>jmscts</artifactId>
   <packaging>jar</packaging>
+  <name>rabbit-jmscts</name>
   <version>1.0-SNAPSHOT</version>
-  <name>jmscts</name>
   <description>RabbitMQ JMS Test Client</description>
 
-  <properties>
-    <java-version>1.6</java-version>
-    <workspace-location>${basedir}/../../workspace</workspace-location>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+  <parent>
+    <groupId>com.rabbitmq.jms</groupId>
+    <artifactId>rabbitmq-jms-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
 
   <dependencies>
     <dependency>
-      <groupId>com.rabbitmq</groupId>
-      <artifactId>amqp-client</artifactId>
-      <version>2.8.4</version>
-    </dependency>
-    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <version>3.8.2</version>
     </dependency>
+
     <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-jms_1.1_spec</artifactId>
-      <version>1.1.1</version>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>1.9.0</version>
-      <scope>test</scope>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>rabbitmq-jms</artifactId>
+      <version>1.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>commons-cli</groupId>
@@ -87,37 +77,45 @@
       <version>0.9.4.3</version>
     </dependency>
     <dependency>
-      <groupId>com.rabbitmq.jms</groupId>
-      <artifactId>rabbitmq-jms</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <groupId>xalan</groupId>
+      <artifactId>xalan</artifactId>
+      <version>2.5.1</version>
     </dependency>
     <dependency>
-      <groupId>com.rabbitmq.jms</groupId>
-      <artifactId>rabbitmq-jms</artifactId>
-      <version>1.0-SNAPSHOT</version>
-      <type>test-jar</type>
-      <scope>test</scope>
+      <groupId>org.bluestemsoftware.open.maven.tparty</groupId>
+      <artifactId>xerces-impl</artifactId>
+      <version>2.9.0</version>
     </dependency>
-<dependency>
-  <groupId>org.bluestemsoftware.open.maven.tparty</groupId>
-  <artifactId>xerces-impl</artifactId>
-  <version>2.9.0</version>
-</dependency>
-            
-  </dependencies>
 
+  </dependencies>
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.5.1</version>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>2.12</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.maven.surefire</groupId>
+            <artifactId>surefire-junit47</artifactId>
+            <version>2.12</version>
+          </dependency>
+        </dependencies>
         <configuration>
-          <source>${java-version}</source>
-          <target>${java-version}</target>
+          <encoding>UTF-8</encoding>
         </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+            <configuration>
+              <includes>
+                <include>**/*.class</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
-
     </plugins>
   </build>
 
