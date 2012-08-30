@@ -49,7 +49,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 
 /**
@@ -216,11 +215,11 @@ public class ProviderLoader {
      */
     public Provider createProvider() throws Exception {
         ArrayList<URL> urls = new ArrayList<URL>();
-        Iterator<?> iterator = _paths.getPaths().iterator();
-        while (iterator.hasNext()) {
-            String path = (String) iterator.next();
-            urls.add(getURL(path));
-        }
+        // Iterator<?> iterator = _paths.getPaths().iterator();
+        // while (iterator.hasNext()) {
+        // String path = (String) iterator.next();
+        // urls.add(getURL(path));
+        // }
         URL[] list = urls.toArray(new URL[0]);
         URLClassLoader loader = new URLClassLoader(list);
         Class<?> clazz = loader.loadClass(_className);
