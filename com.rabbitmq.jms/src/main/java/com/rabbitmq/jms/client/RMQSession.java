@@ -33,6 +33,7 @@ import javax.jms.TopicSubscriber;
 import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.GetResponse;
+import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQMapMessage;
@@ -268,6 +269,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             try {
                 this.channel.close();
             } catch (AlreadyClosedException x) {
+                //nothing to do
+            } catch (ShutdownSignalException x) {
                 //nothing to do
             } catch (IOException x) {
                 Util.util().handleException(x);
