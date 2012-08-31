@@ -487,13 +487,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             GetResponse response = new GetResponse(envelope, properties, body, 0);
             try {
                 Message message = processMessage(response, isAutoAck());
-                try {
-                    pauseLatch.await(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
-                }catch (InterruptedException x) {
-                    x.printStackTrace();
-                    //todo - we got to figure out what to do here
-                    //we should not proceed, but what do we do with the message we received?
-                }
+                //this should not happen if it is paused, we need to figure that out
+                //TODO
                 try {
                     listenerRunning.countUp();
                     this.listener.onMessage(message);
