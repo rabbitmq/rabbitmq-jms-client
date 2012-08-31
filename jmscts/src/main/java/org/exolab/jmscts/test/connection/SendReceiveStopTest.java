@@ -167,7 +167,7 @@ public class SendReceiveStopTest extends AbstractSendReceiveTestCase {
      * @throws Exception for any error
      */
     public void testStop() throws Exception {
-        System.out.println("Running testStop:"+(testStopRun++));
+        //System.out.println("Running testStop:"+(testStopRun++));
         final int count = 10; // the number of messages to send
         TestContext context = getContext();
         Connection connection = context.getConnection();

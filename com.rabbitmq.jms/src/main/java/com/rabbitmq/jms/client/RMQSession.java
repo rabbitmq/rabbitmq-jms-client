@@ -271,12 +271,17 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             
             //close the channel itself
             try {
-                this.channel.close();
+                if (channel.isOpen()) {
+                    this.channel.close();
+                }
             } catch (AlreadyClosedException x) {
                 //nothing to do
             } catch (ShutdownSignalException x) {
                 //nothing to do
             } catch (IOException x) {
+                if (x.getCause() instanceof ShutdownSignalException) {
+                    //nothing to do
+                }
                 Util.util().handleException(x);
             } finally {
                 //notify the connection that this session is closed

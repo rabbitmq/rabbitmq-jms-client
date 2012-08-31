@@ -131,10 +131,18 @@ public class SynchronousConsumer implements Consumer {
         boolean result = cancelled.compareAndSet(false, true);
         if (result) {
             try {
-                channel.basicCancel(consumerTag);
+                if (channel.isOpen()) {
+                    channel.basicCancel(consumerTag);
+                }
+            } catch (ShutdownSignalException x) {
+                //do nothing
             } catch (IOException x) {
-                x.printStackTrace();
-                //TODO logging implementation
+                if (x.getCause() instanceof ShutdownSignalException) {
+                    //TODO debug logging impl
+                } else {
+                    x.printStackTrace();
+                    //TODO logging implementation
+                }
             }
         }
         return result;

@@ -37,7 +37,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private volatile java.util.Queue<RMQMessage> receivedMessages = new ConcurrentLinkedQueue<RMQMessage>();
     private volatile java.util.Queue<RMQMessage> recoveredMessages = new ConcurrentLinkedQueue<RMQMessage>();
     private final CountUpAndDownLatch listenerRunning = new CountUpAndDownLatch(0);
-    private final AtomicReference<Thread> currentSynchronousReceiver = new AtomicReference<Thread>(null);
+    private final ConcurrentLinkedQueue<Thread> currentSynchronousReceiver = new ConcurrentLinkedQueue<Thread>();
     private volatile boolean closed = false;
 
     /**
@@ -83,7 +83,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * {@inheritDoc}
      */
     @Override
-    public synchronized void setMessageListener(MessageListener listener) throws JMSException {
+    public void setMessageListener(MessageListener listener) throws JMSException {
         try {
             userListener = listener;
             MessageListenerWrapper previous = this.listener.get();
@@ -122,7 +122,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * {@inheritDoc}
      */
     @Override
-    public synchronized Message receive(long timeout) throws JMSException {
+    public Message receive(long timeout) throws JMSException {
         Util.util().checkTrue(closed, "Consumer has already been closed.");
         if (timeout == 0) {
             timeout = Long.MAX_VALUE;
@@ -145,7 +145,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         String consumerTag = null;
         SynchronousConsumer sc = null;
         try {
-            this.currentSynchronousReceiver.set(Thread.currentThread());
+            this.currentSynchronousReceiver.offer(Thread.currentThread());
             sc = new SynchronousConsumer(this.session.getChannel(), timeout, session.getAcknowledgeMode());
             consumerTag = basicConsume(sc);
             GetResponse response = sc.receive();
@@ -153,7 +153,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         } catch (IOException x) {
             Util.util().handleException(x);
         } finally {
-            this.currentSynchronousReceiver.set(null);
+            this.currentSynchronousReceiver.remove(Thread.currentThread());
             if (consumerTag!=null && sc!=null) sc.cancel(consumerTag);
         }
         return null;
@@ -302,8 +302,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         pauseLatch.resume();
         setMessageListener(null);
         try {
-            Thread t = currentSynchronousReceiver.get();
-            if (t!=null) t.interrupt();
+            Thread t = null;
+            while ((t=currentSynchronousReceiver.poll())!=null) {
+                t.interrupt();
+            }
             long timeoutMillis = getSession().getConnection().getTerminationTimeout();
             listenerRunning.awaitZero(timeoutMillis, TimeUnit.SECONDS);
         }catch (InterruptedException x) {
@@ -407,7 +409,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * consumer has received but not acknowledged
      * @see {@link javax.jms.Session#recover()}
      */
-    public synchronized void recover() throws JMSException {
+    public void recover() throws JMSException {
         java.util.Queue<RMQMessage> tmp = receivedMessages;
         receivedMessages = new ConcurrentLinkedQueue<RMQMessage>();
         recoveredMessages.addAll(tmp);
