@@ -44,7 +44,13 @@
   <include>
     <test>org.exolab.jmscts.test.message.bytes.BytesMessageTest.*</test>
   </include>
+  <include>
+    <test>org.exolab.jmscts.test.message.clear.ClearTest.*</test>
+  </include>
    -->
+  <include>
+    <test>org.exolab.jmscts.test.message.clear.ClearTest.*</test>
+  </include>
   
   
   <exclude>

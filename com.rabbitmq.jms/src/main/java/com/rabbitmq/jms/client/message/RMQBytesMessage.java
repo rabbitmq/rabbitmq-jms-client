@@ -227,6 +227,8 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         try {
             this.bin.mark(Integer.MAX_VALUE);
             return this.in.readUTF();
+        } catch (EOFException x) {
+            throw new MessageEOFException(MSG_EOF);
         } catch (UTFDataFormatException x) {
             this.bin.reset();
             throw Util.util().handleMessageFormatException(x);
