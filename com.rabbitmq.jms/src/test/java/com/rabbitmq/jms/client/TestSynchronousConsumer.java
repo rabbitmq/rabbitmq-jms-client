@@ -54,6 +54,7 @@ public class TestSynchronousConsumer {
         st.join();
         
         verify(channel, atLeastOnce()).basicAck(anyLong(),anyBoolean());
+        verify(channel, atLeastOnce()).basicNack(anyLong(),anyBoolean(),anyBoolean());
         verify(channel, atLeastOnce()).basicCancel(anyString());
         assertTrue(rt.isSuccess());
         assertTrue(st.isSuccess());
@@ -164,12 +165,12 @@ public class TestSynchronousConsumer {
             }
             try {
                 latch.await();
+                //this will work fine, but it will be a nack
                 consumer.handleDelivery(fakeConsumerTag, response);
-                success = false;
             } catch (Exception x) {
                 //this is expected, it's a 2nd invocation
                 exception = x;
-                success = true;
+                success = false;
                 return;
             }
         }
