@@ -16,7 +16,7 @@
   <exclude>
     <factory>XATopicConnectionFactory</factory>
   </exclude>
-
+<!-- 
   <include>
     <test>org.exolab.jmscts.test.connection.AuthTest.*</test>
   </include>
@@ -38,7 +38,13 @@
   <include>
     <test>org.exolab.jmscts.test.connection.SendReceiveStopTest.*</test>
   </include>
-  
+  <include>
+    <test>org.exolab.jmscts.test.connection.StopStartTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.message.bytes.BytesMessageTest.*</test>
+  </include>
+   -->
   
   
   <exclude>

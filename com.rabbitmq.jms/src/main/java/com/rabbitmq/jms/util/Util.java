@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import javax.jms.JMSException;
 import javax.jms.JMSSecurityException;
+import javax.jms.MessageFormatException;
 
 public class Util {
     private static final Util util = new Util();
@@ -44,6 +45,12 @@ public class Util {
 
     public JMSSecurityException handleSecurityException(Exception x) throws JMSException {
         JMSSecurityException jx = new JMSSecurityException(x.getMessage());
+        jx.initCause(x);
+        throw jx;
+    }
+    
+    public JMSSecurityException handleMessageFormatException(Exception x) throws JMSException {
+        MessageFormatException jx = new MessageFormatException(x.getMessage());
         jx.initCause(x);
         throw jx;
     }

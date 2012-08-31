@@ -2,15 +2,18 @@ package com.rabbitmq.jms.client.message;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.UTFDataFormatException;
 
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
+import javax.jms.MessageEOFException;
+import javax.jms.MessageFormatException;
 import javax.jms.MessageNotReadableException;
 import javax.jms.MessageNotWriteableException;
 
@@ -23,12 +26,14 @@ import com.rabbitmq.jms.util.Util;
 public class RMQBytesMessage extends RMQMessage implements BytesMessage {
     private static final String NOT_READABLE = "Message not readable";
     private static final String NOT_WRITEABLE = "Message not writeable";
+    private static final String MSG_EOF = "Message EOF";
     private volatile boolean reading;
 
     private transient ObjectInputStream in;
     private transient ByteArrayInputStream bin;
     private transient ObjectOutputStream out;
     private transient ByteArrayOutputStream bout;
+    private volatile transient byte[] buf;
 
     public RMQBytesMessage() {
         this(false);
@@ -56,6 +61,8 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             throw new MessageNotReadableException(NOT_READABLE);
         try {
             return this.in.readBoolean();
+        } catch (EOFException x) {
+            throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
@@ -70,6 +77,8 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             throw new MessageNotReadableException(NOT_READABLE);
         try {
             return this.in.readByte();
+        } catch (EOFException x) {
+            throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
@@ -84,6 +93,8 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             throw new MessageNotReadableException(NOT_READABLE);
         try {
             return this.in.readByte() & 0xFF;
+        } catch (EOFException x) {
+            throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
@@ -98,6 +109,8 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             throw new MessageNotReadableException(NOT_READABLE);
         try {
             return this.in.readShort();
+        } catch (EOFException x) {
+            throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
@@ -113,6 +126,8 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         try {
             int val = this.in.readShort();
             return val & 0xFFFF;
+        } catch (EOFException x) {
+            throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
@@ -127,6 +142,8 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             throw new MessageNotReadableException(NOT_READABLE);
         try {
             return this.in.readChar();
+        } catch (EOFException x) {
+            throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
@@ -141,6 +158,8 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             throw new MessageNotReadableException(NOT_READABLE);
         try {
             return this.in.readInt();
+        } catch (EOFException x) {
+            throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
@@ -156,6 +175,8 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             throw new MessageNotReadableException(NOT_READABLE);
         try {
             return this.in.readLong();
+        } catch (EOFException x) {
+            throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
@@ -170,6 +191,8 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             throw new MessageNotReadableException(NOT_READABLE);
         try {
             return this.in.readFloat();
+        } catch (EOFException x) {
+            throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
@@ -184,6 +207,8 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             throw new MessageNotReadableException(NOT_READABLE);
         try {
             return this.in.readDouble();
+        } catch (EOFException x) {
+            throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
@@ -195,10 +220,15 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public String readUTF() throws JMSException {
+        
         if (!this.reading)
             throw new MessageNotReadableException(NOT_READABLE);
         try {
+            this.bin.mark(Integer.MAX_VALUE);
             return this.in.readUTF();
+        } catch (UTFDataFormatException x) {
+            this.bin.reset();
+            throw Util.util().handleMessageFormatException(x);
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
@@ -422,10 +452,20 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public void reset() throws JMSException {
-        if (this.reading)
-            return;
+        if (this.reading) {
+            //if we already are reading, all we want to do is reset to the 
+            //beginning of the stream
+            try {
+                this.bin = new ByteArrayInputStream(buf);
+                this.in = new ObjectInputStream(this.bin);
+                return;
+            } catch (IOException x) {
+                Util.util().handleException(x);
+            }
+        }
+            
         try {
-            byte[] buf = null;
+            buf = null;
             if (this.out != null) {
                 this.out.flush();
                 buf = this.bout.toByteArray();
@@ -447,7 +487,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public long getBodyLength() throws JMSException {
-        return this.reading ? this.bin.available() : this.bout.size();
+        return this.reading ? this.buf.length : this.bout.size();
     }
 
     /**
@@ -463,6 +503,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         }
         this.bin = null;
         this.in = null;
+        this.buf = null;
         this.reading = false;
     }
 
@@ -483,7 +524,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
     @Override
     public void readBody(ObjectInput in) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         int len = in.readInt();
-        byte[] buf = new byte[len];
+        buf = new byte[len];
         in.read(buf);
         this.reading = true;
         this.bin = new ByteArrayInputStream(buf);
@@ -495,9 +536,12 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      * @param s the object to write
      * @param out the stream to write it to
      * @throws IOException
+     * @throws NullPointerException if s is null
      */
-    public void writePrimitiveData(Object s, ObjectOutput out) throws IOException {
-        if (s instanceof Boolean) {
+    public void writePrimitiveData(Object s, ObjectOutput out) throws IOException, MessageFormatException {
+        if(s==null) {
+            throw new NullPointerException();
+        } else if (s instanceof Boolean) {
             out.writeBoolean(((Boolean) s).booleanValue());
         } else if (s instanceof Byte) {
             out.writeByte(((Byte) s).byteValue());
@@ -515,13 +559,16 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             out.writeUTF((String) s);
         } else if (s instanceof Character) {
             out.writeChar(((Character) s).charValue());
-        } else if (RMQBytesMessage.class.equals(this.getClass()))
-            // bytes message can not contain objects
-            throw new IOException(s + " is not a recognized primitive type.");
-        else if (s instanceof Serializable) {
-            out.writeObject(s);
+        } else if (s instanceof Character) {
+            out.writeChar(((Character) s).charValue());
+        } else if (s instanceof byte[]) {
+            out.write((byte[])s);
+             //bytes message can not contain objects
+//        } else if (s instanceof Serializable) {
+//            out.writeObject(s);
         } else
-            throw new IOException(s + " is not a serializable object.");
+            throw new MessageFormatException(s + " is not a recognized primitive type.");
+
     }
 
 }
