@@ -8,6 +8,7 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.io.UTFDataFormatException;
 
 import javax.jms.BytesMessage;
@@ -441,7 +442,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         if (this.reading)
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
-            this.writePrimitiveData(value, this.out);
+            this.writePrimitiveData(value, this.out, false);
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
@@ -538,7 +539,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      * @throws IOException
      * @throws NullPointerException if s is null
      */
-    public void writePrimitiveData(Object s, ObjectOutput out) throws IOException, MessageFormatException {
+    public void writePrimitiveData(Object s, ObjectOutput out, boolean allowSerializable) throws IOException, MessageFormatException {
         if(s==null) {
             throw new NullPointerException();
         } else if (s instanceof Boolean) {
@@ -563,9 +564,8 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             out.writeChar(((Character) s).charValue());
         } else if (s instanceof byte[]) {
             out.write((byte[])s);
-             //bytes message can not contain objects
-//        } else if (s instanceof Serializable) {
-//            out.writeObject(s);
+        } else if (allowSerializable && s instanceof Serializable) {
+            out.writeObject(s);
         } else
             throw new MessageFormatException(s + " is not a recognized primitive type.");
 

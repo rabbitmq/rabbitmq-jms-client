@@ -165,13 +165,6 @@ public class TestMessages {
         message.writeShort(Short.MAX_VALUE);
         message.writeShort((short) 0xFFFF);
         message.writeUTF("TEST");
-        try {
-            message.writeObject(new TestSerializable(6));
-            assertTrue(message instanceof StreamMessage);
-        } catch (Exception x) {
-            // this should only happen if it a bytes message and not stream
-            // message
-        }
     }
 
     public static void writeStreamMessage(StreamMessage message) throws JMSException {
@@ -186,7 +179,6 @@ public class TestMessages {
 
     public static void readStreamMessage(StreamMessage message) throws JMSException {
         readBytesMessage((BytesMessage) message);
-        assertEquals(new TestSerializable(6), message.readObject());
     }
 
     private static class TestSerializable implements Serializable {
