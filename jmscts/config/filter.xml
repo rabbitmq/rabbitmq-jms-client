@@ -35,9 +35,12 @@
   <include>
     <test>org.exolab.jmscts.test.connection.ReceiverTest.*</test>
   </include>
-  -->
   <include>
     <test>org.exolab.jmscts.test.connection.SendReceiveStopTest.*</test>
+  </include>
+  -->
+  <include>
+    <test>org.exolab.jmscts.test.connection.SendReceiveStopTest.testStop</test>
   </include>
   
   

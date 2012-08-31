@@ -315,7 +315,11 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
-        this.messageListener = new MessageListenerWrapper(listener);
+        if (listener==null) {
+            this.messageListener = null;
+        } else {
+            this.messageListener = new MessageListenerWrapper(listener);
+        }
     }
 
     /**

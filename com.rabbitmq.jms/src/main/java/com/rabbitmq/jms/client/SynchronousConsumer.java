@@ -30,6 +30,7 @@ public class SynchronousConsumer implements Consumer {
     private final int acknowledgeMode;
     private final AtomicBoolean useOnce = new AtomicBoolean(false);
     private final AtomicBoolean oneReceived = new AtomicBoolean(false);
+    private final AtomicBoolean cancelled = new AtomicBoolean(false);
 
     public SynchronousConsumer(Channel channel, long timeout, int messageAckMode) {
         super();
@@ -75,19 +76,20 @@ public class SynchronousConsumer implements Consumer {
     }
 
     protected void handleDelivery(String consumerTag, GetResponse response) throws IOException {
-        boolean success = false;
         IOException iox = null;
         try {
-            channel.basicCancel(consumerTag);
+            if (cancelled.compareAndSet(false, true)) {
+                channel.basicCancel(consumerTag);
+            }
         } catch (IOException x) {
-            iox = x;
+            x.printStackTrace();
+            //TODO logging implementation
         }
 
         // give the other thread enough time to arrive
         GetResponse waiter = null;
         try {
             if (oneReceived.compareAndSet(false, true)) {
-                success = true;
                 waiter = exchanger.exchange(response, Math.min(100, this.timeout), TimeUnit.MILLISECONDS);
             }
         } catch (InterruptedException x) {
@@ -105,14 +107,6 @@ public class SynchronousConsumer implements Consumer {
         } else {
             channel.basicNack(response.getEnvelope().getDeliveryTag(), false, true);
         }
-        // this shouldn't happen since handleDelivery is synchronized
-        // but if it does, we need to NACK the message
-        // and throw back an IOException to Rabbit
-        if (!success)
-            throw new IOException("multiple invocations of SynchronousConsumer.handleDelivery");
-
-        if (iox != null)
-            throw iox;
     }
 
     @Override
@@ -131,6 +125,20 @@ public class SynchronousConsumer implements Consumer {
 
     public Channel getChannel() {
         return channel;
+    }
+    
+    public boolean cancel(String consumerTag) {
+        boolean result = cancelled.compareAndSet(false, true);
+        if (result) {
+            try {
+                channel.basicCancel(consumerTag);
+            } catch (IOException x) {
+                x.printStackTrace();
+                //TODO logging implementation
+            }
+        }
+        return result;
+        
     }
 
 

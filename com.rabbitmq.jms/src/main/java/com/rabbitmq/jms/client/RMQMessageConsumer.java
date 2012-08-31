@@ -21,6 +21,7 @@ import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
+import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.util.CountUpAndDownLatch;
 import com.rabbitmq.jms.util.PauseLatch;
@@ -116,30 +117,37 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     @Override
     public synchronized Message receive(long timeout) throws JMSException {
         Util.util().checkTrue(closed, "Consumer has already been closed.");
-        long now = System.currentTimeMillis();
-
-        timeout -= (System.currentTimeMillis() - now);
-
-        Message msg = receiveNoWait();
-        if (msg != null) {
-            // attempt instant receive first
-            return msg;
-        }
         if (timeout == 0) {
             timeout = Long.MAX_VALUE;
         }
+        
+        long now = System.currentTimeMillis();
 
+        Message msg = receiveNoWait(timeout);
+        
+        timeout = Math.max(timeout - (System.currentTimeMillis() - now), 0);
+
+        
+        if (msg != null) {
+            // attempt instant receive first
+            return msg;
+        } else if (timeout==0) {
+            return null;
+        }
+        
+        String consumerTag = null;
+        SynchronousConsumer sc = null;
         try {
-            if (isPaused()) return null;
             this.currentSynchronousReceiver.set(Thread.currentThread());
-            SynchronousConsumer sc = new SynchronousConsumer(this.session.getChannel(), timeout, session.getAcknowledgeMode());
-            basicConsume(sc);
+            sc = new SynchronousConsumer(this.session.getChannel(), timeout, session.getAcknowledgeMode());
+            consumerTag = basicConsume(sc);
             GetResponse response = sc.receive();
             return processMessage(response, isAutoAck());
         } catch (IOException x) {
             Util.util().handleException(x);
         } finally {
             this.currentSynchronousReceiver.set(null);
+            if (consumerTag!=null && sc!=null) sc.cancel(consumerTag);
         }
         return null;
     }
@@ -479,6 +487,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             GetResponse response = new GetResponse(envelope, properties, body, 0);
             try {
                 Message message = processMessage(response, isAutoAck());
+                try {
+                    pauseLatch.await(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+                }catch (InterruptedException x) {
+                    x.printStackTrace();
+                    //todo - we got to figure out what to do here
+                    //we should not proceed, but what do we do with the message we received?
+                }
                 try {
                     listenerRunning.countUp();
                     this.listener.onMessage(message);
