@@ -158,6 +158,7 @@ public class SendReceiveStopTest extends AbstractSendReceiveTestCase {
         }
     }
 
+    static int testStopRun = 1;
     /**
      * Verifies that a connection doesn't receive any messages after starting a
      * connection, sending messages, and then stopping it.
@@ -166,6 +167,7 @@ public class SendReceiveStopTest extends AbstractSendReceiveTestCase {
      * @throws Exception for any error
      */
     public void testStop() throws Exception {
+        System.out.println("Running testStop:"+(testStopRun++));
         final int count = 10; // the number of messages to send
         TestContext context = getContext();
         Connection connection = context.getConnection();

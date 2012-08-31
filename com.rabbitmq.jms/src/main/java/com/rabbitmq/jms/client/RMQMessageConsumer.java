@@ -16,12 +16,12 @@ import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
+import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
-import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.util.CountUpAndDownLatch;
 import com.rabbitmq.jms.util.PauseLatch;
@@ -75,34 +75,35 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public MessageListener getMessageListener() throws JMSException {
-        MessageListenerWrapper wrapper = this.listener.get();
-        if (wrapper != null) {
-            return wrapper.getMessageListener();
-        }
-        return null;
+        return userListener;
 
     }
-
+    private volatile MessageListener userListener=null;
     /**
      * {@inheritDoc}
      */
     @Override
-    public void setMessageListener(MessageListener listener) throws JMSException {
+    public synchronized void setMessageListener(MessageListener listener) throws JMSException {
         try {
+            userListener = listener;
             MessageListenerWrapper previous = this.listener.get();
-            if (listener==null && previous==null) {
-                //do nothing - no previous
-            } else if (listener==null && previous!=null) {
-                //unsubscribe
-                this.basicCancel(previous.getConsumerTag());
-            } else if (previous!=null) {
-                //piggy back of the existing subscription, just swap the listener
-                previous.setMessageListener(listener);
+            if (listener == null && previous == null) {
+                // do nothing - no previous
+            } else if (listener == null && previous != null) {
+                // unsubscribe
+                if (this.listener.compareAndSet(previous, null)) {
+                    this.basicCancel(previous.getConsumerTag());
+                }
+            } else if (previous != null) {
+                // piggy back of the existing subscription, just swap the
+                // listener
             } else {
-                //new subscription
-                previous = this.wrap(listener);
-                String consumerTag = basicConsume(previous);
-                previous.setConsumerTag(consumerTag);
+                previous = this.wrap();
+                if (this.listener.compareAndSet(null, previous)) {
+                    // new subscription
+                    String consumerTag = basicConsume(previous);
+                    previous.setConsumerTag(consumerTag);
+                }
             }
         } catch (IOException x) {
             Util.util().handleException(x);
@@ -181,8 +182,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         } else {
             name = this.getUUIDTag();
         }
-
-        return getSession().getChannel().basicConsume(name, getSession().isAutoAck() , consumer);
+        //never ack async messages automatically, only when we can deliver them
+        return getSession().getChannel().basicConsume(name, false , consumer);
     }
 
     /**
@@ -192,7 +193,9 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @see {@link Channel#basicCancel(String)}
      */
     protected void basicCancel(String consumerTag) throws IOException {
-        getSession().getChannel().basicCancel(consumerTag);
+        if (consumerTag!=null) {
+            getSession().getChannel().basicCancel(consumerTag);
+        }
     }
 
     /**
@@ -362,8 +365,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @param listener the {@link MessageListener} object 
      * @return a wrapper object 
      */
-    protected MessageListenerWrapper wrap(MessageListener listener) {
-        return new MessageListenerWrapper(listener);
+    protected MessageListenerWrapper wrap() {
+        return new MessageListenerWrapper();
     }
 
 
@@ -443,12 +446,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     protected class MessageListenerWrapper implements Consumer {
 
-        private volatile MessageListener listener;
         private volatile String consumerTag;
 
 
-        public MessageListenerWrapper(MessageListener listener) {
-            this.listener = listener;
+        public MessageListenerWrapper() {
         }
 
         public String getConsumerTag() {
@@ -457,14 +458,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
         public void setConsumerTag(String consumerTag) {
             this.consumerTag = consumerTag;
-        }
-
-        public MessageListener getMessageListener() {
-            return listener;
-        }
-        
-        public void setMessageListener(MessageListener listener) {
-            this.listener = listener;
         }
 
         /**
@@ -492,16 +485,37 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
          * {@inheritDoc}
          */
         @Override
-        public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
+        public synchronized void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
             if (this.consumerTag==null) this.consumerTag = consumerTag;
             GetResponse response = new GetResponse(envelope, properties, body, 0);
             try {
-                Message message = processMessage(response, isAutoAck());
+                
                 //this should not happen if it is paused, we need to figure that out
                 //TODO
                 try {
                     listenerRunning.countUp();
-                    this.listener.onMessage(message);
+                    MessageListener listener = userListener;
+                    if (listener!=null) {
+                        boolean acked = isAutoAck();
+                        if (isAutoAck()) {
+                            try {
+                                getSession().getChannel().basicAck(envelope.getDeliveryTag(), false);
+                                acked = true;
+                            } catch (AlreadyClosedException x) {
+                                //TODO logging impl warn message
+                                //this is problematic, we have a client, but we can't ack the message to the server
+                            }
+                        }
+                        Message message = processMessage(response, acked);
+                        listener.onMessage(message);
+                    } else {
+                        try {
+                            getSession().getChannel().basicNack(envelope.getDeliveryTag(), false, true);
+                        } catch (AlreadyClosedException x) {
+                            //TODO logging impl debug message
+                            //this is fine. we didn't ack the message in the first place
+                        }
+                    }
                 } finally {
                     listenerRunning.countDown();
                 }

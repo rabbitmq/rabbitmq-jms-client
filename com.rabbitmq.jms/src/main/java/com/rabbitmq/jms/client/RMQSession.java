@@ -76,7 +76,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         try {
             this.channel = connection.getRabbitConnection().createChannel();
             if (transacted) {
-                this.channel.txSelect();
+                //this.channel.txSelect();
             }
         } catch (IOException x) {
             Util.util().handleException(x);
@@ -204,8 +204,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             return;
         try {
             //call commit on the channel
-            this.channel.txCommit();
             //this should ack all messages
+            //this.channel.txCommit();
+            if (lastReceivedTag!=null) {
+                this.channel.basicAck(lastReceivedTag, true);
+            }
+            
             lastReceivedTag = null;
         } catch (Exception x) {
             Util.util().handleException(x);
@@ -222,7 +226,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             return;
         try {
             //call rollback
-            this.channel.txRollback();
+            //this.channel.txRollback();
             //TODO if we have messages, do we need to NACK them?
             if (lastReceivedTag != null) {
                 channel.basicNack(lastReceivedTag, true, true);
@@ -354,7 +358,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public MessageConsumer createConsumer(Destination destination) throws JMSException {
-        return createConsumer(destination, true, null);
+        //TODO Verify that autoDelete should always be false?
+        return createConsumer(destination, false, null);
     }
     
     /**
