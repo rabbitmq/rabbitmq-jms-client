@@ -89,14 +89,18 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
         try {
-            MessageListenerWrapper wrapper = listener==null?null:this.wrap(listener);
-            MessageListenerWrapper previous = this.listener.getAndSet(wrapper);
-            if (previous != null) {
+            MessageListenerWrapper previous = this.listener.get();
+            if (listener==null && previous!=null) {
+                //unsubscribe
                 this.basicCancel(previous.getConsumerTag());
-            }
-            if (wrapper!=null) {
-                String consumerTag = basicConsume(wrapper);
-                wrapper.setConsumerTag(consumerTag);
+            } else if (previous!=null) {
+                //piggy back of the existing subscription, just swap the listener
+                previous.setMessageListener(listener);
+            } else {
+                //new subscription
+                previous = this.wrap(listener);
+                String consumerTag = basicConsume(previous);
+                previous.setConsumerTag(consumerTag);
             }
         } catch (IOException x) {
             Util.util().handleException(x);
@@ -437,7 +441,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     protected class MessageListenerWrapper implements Consumer {
 
-        private final MessageListener listener;
+        private volatile MessageListener listener;
         private volatile String consumerTag;
 
 
@@ -455,6 +459,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
         public MessageListener getMessageListener() {
             return listener;
+        }
+        
+        public void setMessageListener(MessageListener listener) {
+            this.listener = listener;
         }
 
         /**
