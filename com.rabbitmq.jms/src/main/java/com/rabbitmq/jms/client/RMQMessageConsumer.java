@@ -32,7 +32,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private final RMQSession session;
     private final String uuidTag;
     private final AtomicReference<MessageListenerWrapper> listener = new AtomicReference<MessageListenerWrapper>();
-    private final PauseLatch pauseLatch = new PauseLatch(false);
+    private final PauseLatch pauseLatch = new PauseLatch(true);
     private volatile java.util.Queue<RMQMessage> receivedMessages = new ConcurrentLinkedQueue<RMQMessage>();
     private volatile java.util.Queue<RMQMessage> recoveredMessages = new ConcurrentLinkedQueue<RMQMessage>();
     private final CountUpAndDownLatch listenerRunning = new CountUpAndDownLatch(0);
@@ -130,6 +130,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         }
 
         try {
+            if (isPaused()) return null;
             this.currentSynchronousReceiver.set(Thread.currentThread());
             SynchronousConsumer sc = new SynchronousConsumer(this.session.getChannel(), timeout, session.getAcknowledgeMode());
             basicConsume(sc);

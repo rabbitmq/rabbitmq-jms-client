@@ -71,7 +71,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         factory.setPort(getPort());
         com.rabbitmq.client.Connection rabbitConnection = null;
         //Initialize the executor
-        PausableExecutorService es = new PausableExecutorService(getThreadsPerConnection());
+        PausableExecutorService es = new PausableExecutorService(getThreadsPerConnection(), true);
         try {
             rabbitConnection = factory.newConnection(es);
         } catch (IOException x) {

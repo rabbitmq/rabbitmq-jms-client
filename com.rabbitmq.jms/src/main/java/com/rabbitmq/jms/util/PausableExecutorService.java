@@ -14,12 +14,13 @@ public class PausableExecutorService extends ThreadPoolExecutor implements Execu
     private final static long DEFAULT_PAUSE_TIMEOUT = Long.getLong("rabbit.jms.DEFAULT_PAUSE_TIMEOUT", 300000);
     private final static AtomicLong THREAD_COUNTER = new AtomicLong(0);
     
-    private final PauseLatch latch = new PauseLatch(false);
+    private final PauseLatch latch;
     private final CountUpAndDownLatch clatch = new CountUpAndDownLatch(0);
     private volatile String serviceId = "RabbitMQ JMS Thread #";
     
-    public PausableExecutorService(int maxThreads) {
+    public PausableExecutorService(int maxThreads, boolean paused) {
         super(0,maxThreads,60, TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>());
+        latch = new PauseLatch(paused);
         ThreadFactory f = new RMQThreadFactory();
         this.setThreadFactory(f);
     }
