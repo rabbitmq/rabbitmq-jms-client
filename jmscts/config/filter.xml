@@ -61,7 +61,7 @@
   </include>
    -->
   <include>
-    <test>org.exolab.jmscts.test.message.clear.SendReceiveClearTest.*</test>
+    <test>org.exolab.jmscts.test.message.close.CloseTest.testCloseConnection</test>
   </include>
   
   <exclude>

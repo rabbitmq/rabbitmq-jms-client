@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import javax.jms.IllegalStateException;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -451,6 +452,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @param message - the message to be acknowledged
      */
     public void acknowledge(RMQMessage message) throws JMSException{
+        Util.util().checkTrue(closed, new IllegalStateException("Consumer has already been closed."));
         try {
             receivedMessages.remove(message);
             if ((!getSession().isAutoAck()) && (!getSession().getTransacted())) {
