@@ -26,7 +26,6 @@ import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.util.CountUpAndDownLatch;
 import com.rabbitmq.jms.util.PauseLatch;
 import com.rabbitmq.jms.util.Util;
-import com.rits.cloning.Cloner;
 
 public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscriber {
 
@@ -256,10 +255,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());
             message.setRabbitConsumer(this);
             if (!acknowledged) {
-                Cloner cloner = new Cloner();
-                RMQMessage clone = (RMQMessage)cloner.deepClone(message);
+                RMQMessage clone = RMQMessage.fromMessage(response.getBody());
+                clone.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());
+                clone.setRabbitConsumer(this);
                 receivedMessages.add(clone);
-                
             }
             try {
                 MessageListener listener = getSession().getMessageListener();
