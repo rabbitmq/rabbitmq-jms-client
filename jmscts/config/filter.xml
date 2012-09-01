@@ -50,11 +50,13 @@
   <include>
     <test>org.exolab.jmscts.test.message.clear.RecoverClearTest.*</test>
   </include>
-   -->
   <include>
     <test>org.exolab.jmscts.test.message.clear.RollbackClearTest.*</test>
   </include>
-  
+   -->
+  <include>
+    <test>org.exolab.jmscts.test.message.clear.SendReceiveClearTest.testClearPropertiesOnReceipt</test>
+  </include>
   
   <exclude>
     <!--This tests Connection Consumers - we don't supprot that -->

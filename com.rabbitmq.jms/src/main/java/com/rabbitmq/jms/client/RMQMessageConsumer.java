@@ -453,7 +453,9 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     public void acknowledge(RMQMessage message) throws JMSException{
         try {
             receivedMessages.remove(message);
-            getSession().getChannel().basicAck(message.getRabbitDeliveryTag(), false);
+            if ((!getSession().isAutoAck()) && (!getSession().getTransacted())) {
+                getSession().getChannel().basicAck(message.getRabbitDeliveryTag(), false);
+            }
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -552,6 +554,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                             } catch (AlreadyClosedException x) {
                                 //TODO logging impl warn message
                                 //this is problematic, we have a client, but we can't ack the message to the server
+                                x.printStackTrace();
                             }
                         }
                         Message message = processMessage(response, acked);

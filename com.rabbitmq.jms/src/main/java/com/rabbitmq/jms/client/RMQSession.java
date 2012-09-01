@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
@@ -60,7 +61,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private final CountUpAndDownLatch runningListener = new CountUpAndDownLatch(0);
     
     private final ConcurrentHashMap<String, String> subscriptions = new ConcurrentHashMap<String, String>();
-
+    private static final AtomicInteger channelNr = new AtomicInteger(0);
     /**
      * Creates a session object associated with a connection
      * @param connection the connection that we will send data on
@@ -74,7 +75,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.transacted = transacted;
         this.acknowledgeMode = transacted ? Session.SESSION_TRANSACTED : mode;
         try {
-            this.channel = connection.getRabbitConnection().createChannel();
+            this.channel = connection.getRabbitConnection().createChannel(channelNr.incrementAndGet());
             if (transacted) {
                 this.channel.txSelect();
             }
@@ -465,7 +466,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                                                 // destination
                                       new HashMap<String, Object>()); // rabbit
                                                                       // properties
-        } catch (IOException x) {
+        } catch (Exception x) {
             Util.util().handleException(x);
         }
         dest.setDeclared(true);
