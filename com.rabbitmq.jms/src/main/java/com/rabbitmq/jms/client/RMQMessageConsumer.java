@@ -452,7 +452,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @param message - the message to be acknowledged
      */
     public void acknowledge(RMQMessage message) throws JMSException{
-        Util.util().checkTrue(closed, new IllegalStateException("Consumer has already been closed."));
+        Util.util().checkTrue(getSession().isClosed(), new IllegalStateException("Session has already been closed."));
         try {
             receivedMessages.remove(message);
             if ((!getSession().isAutoAck()) && (!getSession().getTransacted())) {

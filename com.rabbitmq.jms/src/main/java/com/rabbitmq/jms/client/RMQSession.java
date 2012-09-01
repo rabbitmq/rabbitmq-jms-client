@@ -241,6 +241,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     /**
+     * Returns true if {@link #close()} has been called and completed. 
+     * May return false if close is still in progress
+     * @return
+     */
+    public boolean isClosed() {
+        return this.closed;
+    }
+    /**
      * {@inheritDoc}
      */
     @Override
