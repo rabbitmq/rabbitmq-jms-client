@@ -49,7 +49,7 @@
   </include>
    -->
   <include>
-    <test>org.exolab.jmscts.test.message.clear.ClearTest.*</test>
+    <test>org.exolab.jmscts.test.message.clear.RecoverClearTest.*</test>
   </include>
   
   

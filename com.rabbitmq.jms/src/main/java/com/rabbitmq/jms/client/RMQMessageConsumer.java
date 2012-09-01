@@ -26,6 +26,7 @@ import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.util.CountUpAndDownLatch;
 import com.rabbitmq.jms.util.PauseLatch;
 import com.rabbitmq.jms.util.Util;
+import com.rits.cloning.Cloner;
 
 public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscriber {
 
@@ -46,10 +47,11 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @param destination - the destination for this consumer
      * @param uuidTag - when creating queues to a topic, we need a unique queue name for each consumer. This is the unique name
      */
-    public RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag) {
+    public RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag, boolean paused) {
         this.session = session;
         this.destination = destination;
         this.uuidTag = uuidTag;
+        if (!paused) pauseLatch.resume();
     }
 
     /**
@@ -254,7 +256,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());
             message.setRabbitConsumer(this);
             if (!acknowledged) {
-                receivedMessages.add(message);
+                Cloner cloner = new Cloner();
+                RMQMessage clone = (RMQMessage)cloner.deepClone(message);
+                receivedMessages.add(clone);
+                
             }
             try {
                 MessageListener listener = getSession().getMessageListener();
@@ -413,7 +418,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         java.util.Queue<RMQMessage> tmp = receivedMessages;
         receivedMessages = new ConcurrentLinkedQueue<RMQMessage>();
         recoveredMessages.addAll(tmp);
-
         for (RMQMessage msg : recoveredMessages) {
             msg.setJMSRedelivered(true);
         }

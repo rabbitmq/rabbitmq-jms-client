@@ -401,7 +401,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 Util.util().handleException(x);
             }
         }
-        RMQMessageConsumer consumer = new RMQMessageConsumer(this, (RMQDestination) destination, consumerTag);
+        RMQMessageConsumer consumer = new RMQMessageConsumer(this, (RMQDestination) destination, consumerTag, getConnection().isStopped());
         consumers.add(consumer);
         return consumer;
     }

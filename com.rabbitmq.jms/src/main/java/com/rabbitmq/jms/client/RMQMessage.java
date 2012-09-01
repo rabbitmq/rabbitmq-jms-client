@@ -44,6 +44,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     private final Map<String, Serializable> rmqProperties = new HashMap<String, Serializable>();
     private final Map<String, Serializable> jmsProperties = new HashMap<String, Serializable>();
     private final AtomicBoolean isAcked = new AtomicBoolean(false);
+    private volatile String internalMessageID=null;
 
     private long rabbitDeliveryTag = -1;
     public long getRabbitDeliveryTag() {
@@ -597,6 +598,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         ByteArrayOutputStream bout = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
         ObjectOutputStream out = new ObjectOutputStream(bout);
         out.writeUTF(msg.getClass().getName());
+        out.writeUTF(msg.internalMessageID);
         out.writeInt(msg.rmqProperties.size());
         for (Map.Entry<String, Serializable> entry : msg.rmqProperties.entrySet()) {
             out.writeUTF(entry.getKey());
@@ -632,6 +634,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(b));
         String clazz = in.readUTF();
         RMQMessage msg = (RMQMessage) Class.forName(clazz, true, Thread.currentThread().getContextClassLoader()).newInstance();
+        msg.internalMessageID = in.readUTF();
         int propsize = in.readInt();
         for (int i = 0; i < propsize; i++) {
             String name = in.readUTF();
@@ -648,6 +651,46 @@ public abstract class RMQMessage implements Message, Cloneable {
         return msg;
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((internalMessageID == null) ? 0 : internalMessageID.hashCode());
+        return result;
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        RMQMessage other = (RMQMessage) obj;
+        if (internalMessageID == null) {
+            if (other.internalMessageID != null)
+                return false;
+        } else if (!internalMessageID.equals(other.internalMessageID))
+            return false;
+        return true;
+    }
+    
+    /**
+     * Returns the unique ID for this message.
+     * This will return null unless the message has been sent on the wire
+     * @return
+     */
+    public String getInternalID() {
+        return internalMessageID;
+    }
+    
+    /**
+     * Called when a message is sent so that each message is unique
+     */
+    public void generateInternalID(){
+        internalMessageID = Util.util().generateUUIDTag();
+    }
+    
     /**
      * Utility method used to be able to write
      * primitives and objects to a data stream without keeping track of order and type
