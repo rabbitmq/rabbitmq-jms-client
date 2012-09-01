@@ -16,10 +16,10 @@
   <exclude>
     <factory>XATopicConnectionFactory</factory>
   </exclude>
-<!-- 
   <include>
     <test>org.exolab.jmscts.test.connection.AuthTest.*</test>
   </include>
+
   <include>
     <test>org.exolab.jmscts.test.connection.ClientIdentifierTest.*</test>
   </include>
@@ -59,11 +59,6 @@
   <include>
     <test>org.exolab.jmscts.test.message.close.CloseTest.*</test>
   </include>
-   -->
-  <include>
-    <test>org.exolab.jmscts.test.message.close.CloseTest.testCloseConnection</test>
-  </include>
-  
   <exclude>
     <!--This tests Connection Consumers - we don't support that -->
     <test>org.exolab.jmscts.test.asf.ConnectionConsumerTest.test</test>

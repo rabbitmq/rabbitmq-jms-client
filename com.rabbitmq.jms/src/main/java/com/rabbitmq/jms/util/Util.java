@@ -67,9 +67,8 @@ public class Util {
     }
 
     /**
-     * Throws an exception with the supplied message, or "Closed" if the msg parameter is null,
-     * if the bool parameter is true
-     * @param bool throws a JMSException if this parameter is set to true
+     * Throws the supplied exception if the bool parameter is true
+     * @param bool throws the supplied if this parameter is set to true
      * @param msg
      * @throws JMSException
      */

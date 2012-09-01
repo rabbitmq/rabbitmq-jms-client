@@ -116,7 +116,7 @@ public class ConnectionCloseTest extends AbstractConnectionTestCase {
         TestContext context = getContext();
         Connection connection = context.getConnection();
         MethodInvoker invoker = new MethodInvoker(
-            context.getConnectionType(), JMSException.class);
+            context.getConnectionType(), javax.jms.IllegalStateException.class);
 
         ExceptionListener dummyListener = new ExceptionListener() {
             @Override
