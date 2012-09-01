@@ -264,8 +264,6 @@ public class ClientIdentifierTest extends AbstractConnectionTestCase {
             fail("setClientID should throw IllegalStateException");
         } catch (IllegalStateException expected) {
             // the expected behaviour
-        } catch (JMSException expected) {
-         // the expected behaviour
         } catch (Exception exception) {
             fail("Expected setClientID to throw IllegalStateException, "
                  + "but got: " + exception);
