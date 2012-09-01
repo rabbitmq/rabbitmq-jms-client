@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -32,7 +33,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private final RMQDestination destination;
     private final RMQSession session;
     private final String uuidTag;
-    private final AtomicReference<MessageListenerWrapper> listener = new AtomicReference<MessageListenerWrapper>();
+    private final AtomicReference<MessageListenerConsumer> listener = new AtomicReference<MessageListenerConsumer>();
     private final PauseLatch pauseLatch = new PauseLatch(true);
     private volatile java.util.Queue<RMQMessage> receivedMessages = new ConcurrentLinkedQueue<RMQMessage>();
     private volatile java.util.Queue<RMQMessage> recoveredMessages = new ConcurrentLinkedQueue<RMQMessage>();
@@ -76,18 +77,19 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public MessageListener getMessageListener() throws JMSException {
-        return userListener;
-
+        MessageListenerWrapper wrapper = userListenerWrapper; 
+        return wrapper==null?null:wrapper.getMessageListener();
     }
-    private volatile MessageListener userListener=null;
+    private volatile MessageListenerWrapper userListenerWrapper =null;
+    
     /**
      * {@inheritDoc}
      */
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
         try {
-            userListener = listener;
-            MessageListenerWrapper previous = this.listener.get();
+            userListenerWrapper  = listener==null?null : new MessageListenerWrapper(listener);
+            MessageListenerConsumer previous = this.listener.get();
             if (listener == null && previous == null) {
                 // do nothing - no previous
             } else if (listener == null && previous != null) {
@@ -104,6 +106,18 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                     // new subscription
                     String consumerTag = basicConsume(previous);
                     previous.setConsumerTag(consumerTag);
+                }
+            }
+            MessageListenerWrapper wrapper = userListenerWrapper;
+            if (wrapper!=null && recoveredMessages.size()>0) {
+                wrapper.rwl.writeLock().lock();
+                try {
+                    RMQMessage msg;
+                    while ((msg=recoveredMessages.poll()) != null) {
+                        wrapper.onMessage(msg);
+                    }
+                } finally {
+                    wrapper.rwl.writeLock().unlock();
                 }
             }
         } catch (IOException x) {
@@ -371,8 +385,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @param listener the {@link MessageListener} object 
      * @return a wrapper object 
      */
-    protected MessageListenerWrapper wrap() {
-        return new MessageListenerWrapper();
+    protected MessageListenerConsumer wrap() {
+        return new MessageListenerConsumer();
     }
 
 
@@ -446,15 +460,44 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     /**
+     * Inner class that lets us lock the listener 
+     * while recovering messages
+     */
+    protected class MessageListenerWrapper implements MessageListener {
+
+        protected ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
+        private final MessageListener listener;
+        
+        public MessageListenerWrapper(MessageListener listener) {
+            this.listener = listener;
+        }
+        
+        public MessageListener getMessageListener() {
+            return listener;
+        }
+        
+        @Override
+        public void onMessage(Message message) {
+            rwl.readLock().lock();
+            try {
+                listener.onMessage(message);
+            } finally {
+                rwl.readLock().unlock();
+            }
+        }
+        
+    }
+    
+    /**
      * Inner class to wrap MessageListener in order to consume 
      * messages and propagate them to the calling client
      */
-    protected class MessageListenerWrapper implements Consumer {
+    protected class MessageListenerConsumer implements Consumer {
 
         private volatile String consumerTag;
 
 
-        public MessageListenerWrapper() {
+        public MessageListenerConsumer() {
         }
 
         public String getConsumerTag() {
@@ -499,7 +542,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 //TODO
                 try {
                     listenerRunning.countUp();
-                    MessageListener listener = userListener;
+                    MessageListener listener = userListenerWrapper ;
                     if (listener!=null) {
                         boolean acked = isAutoAck();
                         if (isAutoAck()) {
