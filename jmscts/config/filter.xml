@@ -57,5 +57,9 @@
     <!--This tests Connection Consumers - we don't supprot that -->
     <test>org.exolab.jmscts.test.asf.ConnectionConsumerTest.test</test>
   </exclude>
+  <exclude>
+    <!--This tests Connection Consumers - we don't supprot that -->
+    <receiver>browser</receiver>
+  </exclude>
   
 </filter>
