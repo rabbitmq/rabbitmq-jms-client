@@ -232,6 +232,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 channel.basicNack(lastReceivedTag, true, true);
                 lastReceivedTag = null;
             }
+            //commit the NACK/Rejects
+            this.channel.txCommit();
         } catch (IOException x) {
             Util.util().handleException(x);
         }
