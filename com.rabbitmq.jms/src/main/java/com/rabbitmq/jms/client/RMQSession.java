@@ -5,10 +5,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
+import javax.jms.IllegalStateException;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
@@ -62,6 +64,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     
     private final ConcurrentHashMap<String, String> subscriptions = new ConcurrentHashMap<String, String>();
     private static final AtomicInteger channelNr = new AtomicInteger(0);
+    
+    private volatile ConcurrentLinkedQueue<RMQMessage> receivedMessages = new ConcurrentLinkedQueue<RMQMessage>();
+    private volatile ConcurrentLinkedQueue<RMQMessage> recoveredMessages = new ConcurrentLinkedQueue<RMQMessage>();
+
     /**
      * Creates a session object associated with a connection
      * @param connection the connection that we will send data on
@@ -310,16 +316,37 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public void recover() throws JMSException {
         Util.util().checkTrue(this.closed, "Session has been closed");
+        
+        ConcurrentLinkedQueue<RMQMessage> tmp = receivedMessages;
+        receivedMessages = new ConcurrentLinkedQueue<RMQMessage>(); //TODO we must not reset received messages until commit/rollback
+        recoveredMessages.addAll(tmp);
+        for (RMQMessage msg : recoveredMessages) {
+            msg.setJMSRedelivered(true);
+        }
+
         //each consumer contains a list of messages received and 
         //not acknowledged
         for (RMQMessageConsumer consumer : consumers) {
             try {
-                consumer.recover();
+                consumer.recover(recoveredMessages);
             }catch (JMSException x) {
                 x.printStackTrace(); //TODO logging implementation
 
             }
         }
+    }
+    
+    public void sendRecoveredMessagesToConsumer(MessageListener listener) throws JMSException {
+        RMQMessage message;
+        MessageListener sessionListener = this.getMessageListener();
+        while ((message=recoveredMessages.poll())!=null) {
+            listener.onMessage(message);
+            if (sessionListener!=null) sessionListener.onMessage(message);
+        }
+    }
+    
+    public RMQMessage getFirstRecoveredMessage() {
+        return recoveredMessages.poll();
     }
 
     /**
@@ -703,6 +730,29 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
     }
     
+
+    public void unackedMessageReceived(RMQMessage message) {
+        receivedMessages.add(message);
+    }
+    
+    /**
+     * Acknowledges a message manually.
+     * Invoked when the method 
+     * {@link javax.jms.Message#acknowledge()}
+     * @param message - the message to be acknowledged
+     */
+    public void acknowledge(RMQMessage message) throws JMSException{
+        Util.util().checkTrue(isClosed(), new IllegalStateException("Session has already been closed."));
+        try {
+            receivedMessages.remove(message);
+            if ((!isAutoAck()) && (!getTransacted())) {
+                getChannel().basicAck(message.getRabbitDeliveryTag(), false);
+            }
+        } catch (IOException x) {
+            Util.util().handleException(x);
+        }
+    }
+    
     private final class MessageListenerWrapper implements MessageListener {
         private final MessageListener listener;
         public MessageListenerWrapper(MessageListener listener) {
@@ -719,7 +769,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             }
             
         }
-        
     }
 
 }

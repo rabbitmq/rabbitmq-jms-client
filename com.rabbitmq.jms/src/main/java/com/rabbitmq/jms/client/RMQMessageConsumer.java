@@ -36,8 +36,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private final String uuidTag;
     private final AtomicReference<MessageListenerConsumer> listener = new AtomicReference<MessageListenerConsumer>();
     private final PauseLatch pauseLatch = new PauseLatch(true);
-    private volatile java.util.Queue<RMQMessage> receivedMessages = new ConcurrentLinkedQueue<RMQMessage>();
-    private volatile java.util.Queue<RMQMessage> recoveredMessages = new ConcurrentLinkedQueue<RMQMessage>();
     private final CountUpAndDownLatch listenerRunning = new CountUpAndDownLatch(0);
     private final ConcurrentLinkedQueue<Thread> currentSynchronousReceiver = new ConcurrentLinkedQueue<Thread>();
     private volatile boolean closed = false;
@@ -110,17 +108,15 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 }
             }
             MessageListenerWrapper wrapper = userListenerWrapper;
-            if (wrapper!=null && recoveredMessages.size()>0) {
+            if (wrapper!=null) {
                 wrapper.rwl.writeLock().lock();
                 try {
-                    RMQMessage msg;
-                    while ((msg=recoveredMessages.poll()) != null) {
-                        wrapper.onMessage(msg);
-                    }
+                    getSession().sendRecoveredMessagesToConsumer(wrapper);
                 } finally {
                     wrapper.rwl.writeLock().unlock();
                 }
             }
+            
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -235,7 +231,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         }
 
         
-        RMQMessage message = recoveredMessages.poll();
+        RMQMessage message = getSession().getFirstRecoveredMessage();
         if (message!=null) {
             //we have recovered messages
             return message;
@@ -268,12 +264,12 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             this.session.messageReceived(response);
             RMQMessage message = RMQMessage.fromMessage(response.getBody());
             message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());
-            message.setRabbitConsumer(this);
+            message.setSession(getSession());
             if (!acknowledged) {
                 RMQMessage clone = RMQMessage.fromMessage(response.getBody());
                 clone.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());
-                clone.setRabbitConsumer(this);
-                receivedMessages.add(clone);
+                clone.setSession(getSession());
+                getSession().unackedMessageReceived(clone);
             }
             try {
                 MessageListener listener = getSession().getMessageListener();
@@ -428,40 +424,16 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * consumer has received but not acknowledged
      * @see {@link javax.jms.Session#recover()}
      */
-    public void recover() throws JMSException {
-        java.util.Queue<RMQMessage> tmp = receivedMessages;
-        receivedMessages = new ConcurrentLinkedQueue<RMQMessage>();
-        recoveredMessages.addAll(tmp);
-        for (RMQMessage msg : recoveredMessages) {
-            msg.setJMSRedelivered(true);
-        }
-
-        RMQMessage message = null;
-        MessageListener listener = getMessageListener(); 
-        if (listener!=null) {
+    public void recover(ConcurrentLinkedQueue<RMQMessage> recoveredMessages) throws JMSException {
+        MessageListener listener = getMessageListener();
+        if (listener != null) {
+            RMQMessage message;
             while ((message = recoveredMessages.poll()) != null) {
                 listener.onMessage(message);
             }
         }
     }
-
-    /**
-     * Acknowledges a message manually.
-     * Invoked when the method 
-     * {@link javax.jms.Message#acknowledge()}
-     * @param message - the message to be acknowledged
-     */
-    public void acknowledge(RMQMessage message) throws JMSException{
-        Util.util().checkTrue(getSession().isClosed(), new IllegalStateException("Session has already been closed."));
-        try {
-            receivedMessages.remove(message);
-            if ((!getSession().isAutoAck()) && (!getSession().getTransacted())) {
-                getSession().getChannel().basicAck(message.getRabbitDeliveryTag(), false);
-            }
-        } catch (IOException x) {
-            Util.util().handleException(x);
-        }
-    }
+    
 
     /**
      * Inner class that lets us lock the listener 

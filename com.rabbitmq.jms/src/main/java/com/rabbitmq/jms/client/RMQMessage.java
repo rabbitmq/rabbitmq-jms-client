@@ -54,12 +54,12 @@ public abstract class RMQMessage implements Message, Cloneable {
         this.rabbitDeliveryTag = rabbitDeliveryTag;
     }
 
-    private RMQMessageConsumer rabbitConsumer = null;
-    public RMQMessageConsumer getRabbitConsumer() {
-        return rabbitConsumer;
+    private volatile transient RMQSession session = null;
+    public RMQSession getSession() {
+        return session;
     }
-    public void setRabbitConsumer(RMQMessageConsumer rabbitConsumer) {
-        this.rabbitConsumer = rabbitConsumer;
+    public void setSession(RMQSession session) {
+        this.session = session;
     }
 
     public RMQMessage() {
@@ -545,7 +545,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     @Override
     public void acknowledge() throws JMSException {
         if (isAcked.compareAndSet(false, true)) {
-            getRabbitConsumer().acknowledge(this);
+            getSession().acknowledge(this);
         }
     }
 
