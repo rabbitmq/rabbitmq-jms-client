@@ -179,11 +179,14 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
     @Override
     public byte[] getBytes(String name) throws JMSException {
         Object o = this.data.get(name);
-        if (o == null)
+        if (o == null) {
             return null;
-        else if (o instanceof byte[])
-            return ((byte[]) o);
-        else
+        } else if (o instanceof byte[]) {
+            byte[] b1 = ((byte[]) o);
+            byte[] b2 = new byte[b1.length];
+            System.arraycopy(b1, 0, b2, 0, b1.length);
+            return b2;
+        } else
             throw new JMSException(String.format(UNABLE_TO_CAST, o, "byte[]"));
     }
 
@@ -192,7 +195,14 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
      */
     @Override
     public Object getObject(String name) throws JMSException {
-        return this.data.get(name);
+        Object o = this.data.get(name);
+        if (o == null) {
+            return null;
+        } else if (o instanceof byte[]) {
+            return getBytes(name);
+        } else {
+            return o;
+        }
     }
 
     /**
@@ -280,7 +290,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
      */
     @Override
     public void setBytes(String name, byte[] value) throws JMSException {
-        this.data.put(name, value);
+        setBytes(name, value, 0, value.length);
     }
 
     /**
@@ -292,13 +302,9 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             this.data.remove(name);
             return;
         }
-        if (offset == 0 && length == value.length) {
-            this.data.put(name, value);
-        } else {
-            byte[] buf = new byte[length];
-            System.arraycopy(value, offset, buf, 0, length);
-            this.data.put(name, buf);
-        }
+        byte[] buf = new byte[length];
+        System.arraycopy(value, offset, buf, 0, length);
+        this.data.put(name, buf);
     }
 
     /**
@@ -308,7 +314,13 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
     public void setObject(String name, Object value) throws JMSException {
         if (!(value instanceof Serializable))
             throw new JMSException(String.format(UNABLE_TO_CAST, value, Serializable.class.getName()));
-        this.data.put(name, (Serializable) value);
+        if (value==null) {
+            this.data.remove(name);
+        } else if (value instanceof byte[]) {
+            setBytes(name, (byte[])value);
+        } else {
+            this.data.put(name, (Serializable) value);
+        }
     }
 
     /**
