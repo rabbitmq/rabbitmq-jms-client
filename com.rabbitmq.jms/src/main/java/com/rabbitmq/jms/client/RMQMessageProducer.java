@@ -177,6 +177,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             msg.setJMSDeliveryMode(deliveryMode);
             msg.setJMSPriority(priority);
             msg.setJMSExpiration(timeToLive == 0 ? 0 : System.currentTimeMillis() + timeToLive);
+            msg.setJMSDestination(destination);
             msg.generateInternalID();
             bob.contentType("application/octet-stream");
             bob.deliveryMode(deliveryMode);

@@ -71,11 +71,21 @@
   <include>
     <test>org.exolab.jmscts.test.message.copy.ObjectMessageTest.*</test>
   </include>
-  -->
   <include>
     <test>org.exolab.jmscts.test.message.copy.StreamMessageTest.*</test>
   </include>
-  
+  <include>
+    <test>org.exolab.jmscts.test.message.header.JMSCorrelationIDTest.*</test>
+  </include>
+  -->
+  <include>
+    <test>org.exolab.jmscts.test.message.header.JMSDestinationTest.*</test>
+  </include>
+
+  <!--  we don't allow 'foreign' messages created outside of our implementation -->  
+  <exclude>
+    <test>org.exolab.jmscts.test.message.foreign.ForeignMessageTest.*</test>
+  </exclude>
   <exclude>
     <!--This tests Connection Consumers - we don't support that -->
     <test>org.exolab.jmscts.test.asf.ConnectionConsumerTest.test</test>
