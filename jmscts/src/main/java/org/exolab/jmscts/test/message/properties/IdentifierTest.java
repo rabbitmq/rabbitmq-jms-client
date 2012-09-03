@@ -263,12 +263,16 @@ public class IdentifierTest extends AbstractMessageTestCase
                  + identifier + ", value=" + value);
         } catch (JMSException expected) {
             // the expected behaviour
+        } catch (IllegalArgumentException expected) {
+            // the expected behaviour
         }
 
         try {
             message.setObjectProperty(identifier, value);
             fail("Expected setObjectProperty() to fail for invalid "
                  + "identifier=" + identifier + ", value=" + value);
+        } catch (IllegalArgumentException expected) {
+            // the expected behaviour
         } catch (JMSException expected) {
             // the expected behaviour
         }

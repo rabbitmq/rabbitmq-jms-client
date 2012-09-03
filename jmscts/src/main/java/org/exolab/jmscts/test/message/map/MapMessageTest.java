@@ -273,6 +273,7 @@ public class MapMessageTest extends AbstractMessageTestCase
         Class[] numerics = {Byte.class, Short.class, Integer.class, Long.class,
                             Float.class, Double.class};
         String[] invalidNos = {"a", "0x00", "NaN", "-Infinity", "+Infinity"};
+        
         int id = 0;
         for (int i = 0; i < invalidNos.length; ++i) {
             String value = invalidNos[i];
@@ -280,9 +281,13 @@ public class MapMessageTest extends AbstractMessageTestCase
             for (int j = 0; j < numerics.length; ++j) {
                 try {
                     get(message, numerics[j], prefix + id);
-                    fail("Expected NumberFormatException to be thrown when "
-                         + "getting value=" + value + " as type="
-                         + ClassHelper.getPrimitiveName(numerics[j]));
+                    if (Float.class.equals(numerics[j]) || Double.class.equals(numerics[j])) {
+                         
+                    } else {
+                        fail("Expected NumberFormatException to be thrown when "
+                                + "getting value=" + value + " as type="
+                                + ClassHelper.getPrimitiveName(numerics[j]));
+                    }
                 } catch (NumberFormatException expected) {
                     // the expected behaviour
                 } catch (Exception exception) {
@@ -336,11 +341,11 @@ public class MapMessageTest extends AbstractMessageTestCase
 
         getNull(message, Byte.class, key, NumberFormatException.class);
         getNull(message, Short.class, key, NumberFormatException.class);
-        getNull(message, Character.class, key, NullPointerException.class);
+        getNull(message, Character.class, key, NumberFormatException.class);
         getNull(message, Integer.class, key, NumberFormatException.class);
         getNull(message, Long.class, key, NumberFormatException.class);
-        getNull(message, Float.class, key, NullPointerException.class);
-        getNull(message, Double.class, key, NullPointerException.class);
+        getNull(message, Float.class, key, NumberFormatException.class);
+        getNull(message, Double.class, key, NumberFormatException.class);
     }
 
     /**
@@ -510,11 +515,11 @@ public class MapMessageTest extends AbstractMessageTestCase
 
         getNull(message, Byte.class, key, NumberFormatException.class);
         getNull(message, Short.class, key, NumberFormatException.class);
-        getNull(message, Character.class, key, NullPointerException.class);
+        getNull(message, Character.class, key, NumberFormatException.class);
         getNull(message, Integer.class, key, NumberFormatException.class);
         getNull(message, Long.class, key, NumberFormatException.class);
-        getNull(message, Float.class, key, NullPointerException.class);
-        getNull(message, Double.class, key, NullPointerException.class);
+        getNull(message, Float.class, key, NumberFormatException.class);
+        getNull(message, Double.class, key, NumberFormatException.class);
     }
 
     /**

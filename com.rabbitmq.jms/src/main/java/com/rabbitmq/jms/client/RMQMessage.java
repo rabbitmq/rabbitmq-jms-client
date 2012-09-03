@@ -25,6 +25,13 @@ import com.rabbitmq.jms.util.Util;
  *
  */
 public abstract class RMQMessage implements Message, Cloneable {
+    public static final String[] RESERVED_NAMES = {"NULL", "TRUE", "FALSE", "NOT", "AND", "OR", "BETWEEN", "LIKE", "IN",
+                                                   "IS", "ESCAPE"};
+
+    public static final char[] INVALID_STARTS_WITH = {'0','1','2','3','4','5','6','7','8','9','-','+', '\''};
+    
+    public static final char[] MAY_NOT_CONTAIN = {'.','\''};
+    
     protected static final int DEFAULT_MESSAGE_BODY_SIZE = Integer.getInteger("com.rabbitmq.jms.message.size", 512);
 
     private static final String PREFIX = "rmq.";
@@ -523,16 +530,44 @@ public abstract class RMQMessage implements Message, Cloneable {
         this.setObjectProperty(name, value);
     }
 
+    public void checkName(String name) throws JMSException {
+        if (name==null || name.trim().length()==0) {
+            throw new IllegalArgumentException("Invalid identifier:null");
+        } else {
+            //check start letters
+            char c = name.charAt(0);
+            for (int i=0; i<INVALID_STARTS_WITH.length; i++) {
+                if (c == INVALID_STARTS_WITH[i]) {
+                    throw new JMSException("Identifier may not start with:"+c);
+                }
+            }
+            for (int i=0; i<MAY_NOT_CONTAIN.length; i++) {
+                if (name.indexOf(MAY_NOT_CONTAIN[i])>=0) {
+                    throw new JMSException("Identifier may not contain:"+MAY_NOT_CONTAIN[i]);
+                }
+            }
+        }
+    }
+    
     /**
      * {@inheritDoc}
      */
     @Override
     public void setObjectProperty(String name, Object value) throws JMSException {
         try {
+            checkName(name);
             if (name.startsWith(PREFIX)) {
-                this.rmqProperties.put(name, (Serializable) value);
+                if (value==null) {
+                    this.rmqProperties.remove(name);
+                } else {
+                    this.rmqProperties.put(name, (Serializable) value);
+                }
             } else {
-                this.jmsProperties.put(name, (Serializable) value);
+                if (value==null) {
+                    this.jmsProperties.remove(name);
+                } else {
+                    this.jmsProperties.put(name, (Serializable) value);
+                }
             }
         } catch (ClassCastException x) {
             Util.util().handleException(x, "Property value not serializable.");
