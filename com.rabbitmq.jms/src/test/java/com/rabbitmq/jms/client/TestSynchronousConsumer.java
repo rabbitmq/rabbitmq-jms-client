@@ -64,7 +64,7 @@ public class TestSynchronousConsumer {
     public void testSynchronousConsumerSuccessShortTimeout() throws Exception {
         Channel channel = mock(Channel.class);
 
-        SynchronousConsumer consumer = new SynchronousConsumer(channel, 1, Session.AUTO_ACKNOWLEDGE);
+        SynchronousConsumer consumer = new SynchronousConsumer(channel, 10, Session.AUTO_ACKNOWLEDGE);
         CountDownLatch tx = new CountDownLatch(1);
         CountDownLatch rx = new CountDownLatch(1);
         SenderThread st = new SenderThread(TEST_RESPONSE, consumer, tx);

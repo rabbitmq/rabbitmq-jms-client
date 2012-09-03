@@ -3,6 +3,8 @@ package com.rabbitmq.jms.message;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 
@@ -20,6 +22,24 @@ import com.rabbitmq.jms.client.message.RMQObjectMessage;
 import com.rabbitmq.jms.client.message.RMQStreamMessage;
 
 public class TestMessages {
+
+    @Test
+    public void testBytesMessageDebug() throws Exception {
+        RMQBytesMessage message1 = new RMQBytesMessage();
+        message1.writeInt(1);
+        message1.writeBody(new ObjectOutputStream(new ByteArrayOutputStream()));
+        message1.writeInt(2);
+        message1.reset();
+        RMQBytesMessage message2 = new RMQBytesMessage();
+        message2.writeInt(1);
+        message2.writeInt(2);
+        message2.reset();
+        byte[] b1 = new byte[8];
+        byte[] b2 = new byte[8];
+        message1.readBytes(b1);
+        message2.readBytes(b2);
+        assertTrue(Arrays.equals(b1, b2));
+    }
 
     @Test
     public void testBytesMessage() throws Exception {

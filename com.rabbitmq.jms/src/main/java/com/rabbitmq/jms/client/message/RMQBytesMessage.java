@@ -242,13 +242,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public int readBytes(byte[] value) throws JMSException {
-        if (!this.reading)
-            throw new MessageNotReadableException(NOT_READABLE);
-        try {
-            return this.in.read(value);
-        } catch (IOException x) {
-            throw Util.util().handleException(x);
-        }
+        return readBytes(value,value.length);
     }
 
     /**
@@ -259,7 +253,18 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         if (!this.reading)
             throw new MessageNotReadableException(NOT_READABLE);
         try {
-            return this.in.read(value, 0, length);
+            /*
+             * We can't simply do this.in.readBytes(value,0,length)
+             * cause this would read block headers from 
+             * the ObjectInputStream
+             */
+            int count = 0;
+            for (int i=0; i<length; i++) {
+                int v = this.in.read();
+                if (v==-1) return (count==0?-1:count);
+                value[count++] = (byte)(v & 0xFF);
+            }
+            return count;
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }

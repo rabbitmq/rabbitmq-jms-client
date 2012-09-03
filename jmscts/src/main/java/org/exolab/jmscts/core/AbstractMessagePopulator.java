@@ -73,14 +73,14 @@ public abstract class AbstractMessagePopulator implements MessagePopulator {
      */
     @Override
     public void populate(Message message) throws Exception {
-        if (message instanceof BytesMessage) {
+        if (message instanceof StreamMessage) {
+            populateStreamMessage((StreamMessage) message);
+        } else if (message instanceof BytesMessage) {
             populateBytesMessage((BytesMessage) message);
         } else if (message instanceof MapMessage) {
             populateMapMessage((MapMessage) message);
         } else if (message instanceof ObjectMessage) {
             populateObjectMessage((ObjectMessage) message);
-        } else if (message instanceof StreamMessage) {
-            populateStreamMessage((StreamMessage) message);
         } else if (message instanceof TextMessage) {
             populateTextMessage((TextMessage) message);
         } else {
