@@ -687,8 +687,9 @@ public abstract class RMQMessage implements Message, Cloneable {
     /**
      * Called when a message is sent so that each message is unique
      */
-    public void generateInternalID(){
-        internalMessageID = "ID:"+Util.util().generateUUIDTag();
+    public void generateInternalID() throws JMSException {
+        internalMessageID = Util.util().generateUUIDTag();
+        this.setJMSMessageID("ID:"+this.internalMessageID);
     }
     
     /**
