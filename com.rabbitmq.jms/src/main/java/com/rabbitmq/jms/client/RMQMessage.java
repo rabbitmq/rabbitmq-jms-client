@@ -30,7 +30,7 @@ public abstract class RMQMessage implements Message, Cloneable {
 
     public static final char[] INVALID_STARTS_WITH = {'0','1','2','3','4','5','6','7','8','9','-','+', '\''};
     
-    public static final char[] MAY_NOT_CONTAIN = {'.','\''};
+    public static final char[] MAY_NOT_CONTAIN = {'.','\'','"'};
     
     protected static final int DEFAULT_MESSAGE_BODY_SIZE = Integer.getInteger("com.rabbitmq.jms.message.size", 512);
 
@@ -541,11 +541,20 @@ public abstract class RMQMessage implements Message, Cloneable {
                     throw new JMSException("Identifier may not start with:"+c);
                 }
             }
+            //check funky chars inside the string
             for (int i=0; i<MAY_NOT_CONTAIN.length; i++) {
                 if (name.indexOf(MAY_NOT_CONTAIN[i])>=0) {
                     throw new JMSException("Identifier may not contain:"+MAY_NOT_CONTAIN[i]);
                 }
             }
+            //check reserverd names
+            for (int i=0; i<RESERVED_NAMES.length; i++) {
+                if (name.equalsIgnoreCase(RESERVED_NAMES[i])) {
+                    throw new JMSException("Invalid identifier:"+RESERVED_NAMES[i]);
+                }
+            }
+            
+            
         }
     }
     

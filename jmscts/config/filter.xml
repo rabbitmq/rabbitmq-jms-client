@@ -95,7 +95,7 @@
 
   -->
   <include>
-    <test>org.exolab.jmscts.test.message.properties.IdentifierTest.testInvalidIdentifiers</test>
+    <test>org.exolab.jmscts.test.message.properties.IdentifierTest.*</test>
   </include>
 
   <!--  we don't allow 'foreign' messages created outside of our implementation -->  
