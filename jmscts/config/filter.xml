@@ -80,9 +80,12 @@
   <include>
     <test>org.exolab.jmscts.test.message.header.JMSDestinationTest.*</test>
   </include>
-  -->
   <include>
     <test>org.exolab.jmscts.test.message.header.JMSMessageIDTest.*</test>
+  </include>
+  -->
+  <include>
+    <test>org.exolab.jmscts.test.message.header.JMSReplyToTest.*</test>
   </include>
 
   <!--  we don't allow 'foreign' messages created outside of our implementation -->  
