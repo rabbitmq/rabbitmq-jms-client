@@ -1,25 +1,42 @@
 package com.rabbitmq.jms.client.message;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import javax.jms.JMSException;
 import javax.jms.ObjectMessage;
 
 import com.rabbitmq.jms.client.RMQMessage;
+import com.rabbitmq.jms.util.Util;
 
 public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
 
-    private Serializable data;
-
+    private volatile byte[] buf = null;
     /**
      * {@inheritDoc}
      */
     @Override
     public void setObject(Serializable object) throws JMSException {
-        this.data = object;
+        try {
+            if (object==null) {
+                buf = null;
+            } else {
+                ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                ObjectOutputStream out = new ObjectOutputStream(bout);
+                out.writeObject(object);
+                out.flush();
+                buf = bout.toByteArray();
+            }
+        }catch (IOException x) {
+            Util.util().handleException(x);
+        }
+        
     }
 
     /**
@@ -27,7 +44,19 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
      */
     @Override
     public Serializable getObject() throws JMSException {
-        return this.data;
+        if (buf==null) {
+            return null;
+        } else {
+            ByteArrayInputStream bin = new ByteArrayInputStream(buf);
+            try {
+                ObjectInputStream in = new ObjectInputStream(bin);
+                return (Serializable)in.readObject();
+            }catch (ClassNotFoundException x) {
+                throw Util.util().handleException(x);
+            }catch (IOException x) {
+                throw Util.util().handleException(x);
+            }
+        }
     }
 
     /**
@@ -35,7 +64,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
      */
     @Override
     public void clearBody() throws JMSException {
-        this.data = null;
+        this.buf = null;
     }
 
     /**
@@ -43,9 +72,10 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
      */
     @Override
     public void writeBody(ObjectOutput out) throws IOException {
-        out.writeBoolean(this.data == null);
-        if (this.data != null) {
-            out.writeObject(this.data);
+        out.writeBoolean(this.buf == null);
+        if (this.buf != null) {
+            out.writeInt(buf.length);
+            out.write(this.buf);
         }
     }
 
@@ -60,7 +90,9 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         // to deserialize the object
         boolean isnull = in.readBoolean();
         if (!isnull) {
-            this.data = (Serializable) in.readObject();
+            int len = in.readInt();
+            buf = new byte[len];
+            in.read(buf);
         }
     }
 
