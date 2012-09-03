@@ -68,9 +68,12 @@
   <include>
     <test>org.exolab.jmscts.test.message.copy.MessageCopyTest.*</test>
   </include>
-  -->
   <include>
     <test>org.exolab.jmscts.test.message.copy.ObjectMessageTest.*</test>
+  </include>
+  -->
+  <include>
+    <test>org.exolab.jmscts.test.message.copy.StreamMessageTest.*</test>
   </include>
   
   <exclude>

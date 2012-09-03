@@ -446,10 +446,14 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public void writeObject(Object value) throws JMSException {
+        writeObject(value,false);
+    }
+    
+    protected void writeObject(Object value, boolean allowSerializable) throws JMSException {
         if (this.reading)
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
-            this.writePrimitiveData(value, this.out, false);
+            this.writePrimitiveData(value, this.out, allowSerializable);
         } catch (IOException x) {
             throw Util.util().handleException(x);
         }
@@ -569,10 +573,10 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             out.writeChar(((Character) s).charValue());
         } else if (s instanceof Character) {
             out.writeChar(((Character) s).charValue());
-        } else if (s instanceof byte[]) {
-            out.write((byte[])s);
         } else if (allowSerializable && s instanceof Serializable) {
             out.writeObject(s);
+        } else if (s instanceof byte[]) {
+            out.write((byte[])s);
         } else
             throw new MessageFormatException(s + " is not a recognized primitive type.");
 

@@ -23,5 +23,14 @@ public class RMQStreamMessage extends RMQBytesMessage implements StreamMessage {
     public void writeString(String value) throws JMSException {
         super.writeUTF(value);
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void writeObject(Object value) throws JMSException {
+        writeObject(value,true);
+    }
+    
 
 }
