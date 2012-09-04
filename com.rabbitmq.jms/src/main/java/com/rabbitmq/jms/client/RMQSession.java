@@ -65,8 +65,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private final ConcurrentHashMap<String, String> subscriptions = new ConcurrentHashMap<String, String>();
     private static final AtomicInteger channelNr = new AtomicInteger(0);
     
-    private volatile ConcurrentLinkedQueue<RMQMessage> receivedMessages = new ConcurrentLinkedQueue<RMQMessage>();
-    private volatile ConcurrentLinkedQueue<RMQMessage> recoveredMessages = new ConcurrentLinkedQueue<RMQMessage>();
+    private volatile ConcurrentLinkedQueue<Long> receivedMessages = new ConcurrentLinkedQueue<Long>();
 
     /**
      * Creates a session object associated with a connection
@@ -316,48 +315,16 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public void recover() throws JMSException {
         Util.util().checkTrue(this.closed, "Session has been closed");
-        //TODO we must make a copy of the message at some point since
-        //Session.recover can be called multiple times
-        ConcurrentLinkedQueue<RMQMessage> tmp = receivedMessages;
-        receivedMessages = new ConcurrentLinkedQueue<RMQMessage>(); 
-        recoveredMessages.addAll(tmp);
-        for (RMQMessage msg : recoveredMessages) {
-            msg.setJMSRedelivered(true);
-        }
-
-        //each consumer contains a list of messages received and 
-        //not acknowledged
-        for (RMQMessageConsumer consumer : consumers) {
+        Long deliveryTag = null;
+        while ((deliveryTag = receivedMessages.poll()) != null) {
             try {
-                /* TODO - we should probably deliver the message
-                 * to a consumer with the right destination
-                 * right now all recovered messages go to the same consumer
-                 * and what do we do if the consumer is closed?
-                 * 1. Consumer.close
-                 * 2. Session.recover
-                 * What happens to the recovered messages? 
-                 */ 
-                consumer.recover(recoveredMessages);
-            }catch (JMSException x) {
-                x.printStackTrace(); //TODO logging implementation
-
+                this.channel.basicNack(deliveryTag, false, true);
+            } catch (IOException x) {
+                Util.util().handleException(x);
             }
         }
     }
     
-    public void sendRecoveredMessagesToConsumer(MessageListener listener) throws JMSException {
-        RMQMessage message;
-        MessageListener sessionListener = this.getMessageListener();
-        while ((message=recoveredMessages.poll())!=null) {
-            listener.onMessage(message);
-            if (sessionListener!=null) sessionListener.onMessage(message);
-        }
-    }
-    
-    public RMQMessage getFirstRecoveredMessage() {
-        return recoveredMessages.poll();
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -741,7 +708,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     
 
     public void unackedMessageReceived(RMQMessage message) {
-        receivedMessages.add(message);
+        if (!getTransactedNoException()) { 
+            receivedMessages.add(message.getRabbitDeliveryTag());
+        }
     }
     
     /**
@@ -753,9 +722,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public void acknowledge(RMQMessage message) throws JMSException{
         Util.util().checkTrue(isClosed(), new IllegalStateException("Session has already been closed."));
         try {
-            receivedMessages.remove(message);
             if ((!isAutoAck()) && (!getTransacted())) {
                 getChannel().basicAck(message.getRabbitDeliveryTag(), false);
+                receivedMessages.remove(message.getRabbitDeliveryTag());
             }
         } catch (IOException x) {
             Util.util().handleException(x);

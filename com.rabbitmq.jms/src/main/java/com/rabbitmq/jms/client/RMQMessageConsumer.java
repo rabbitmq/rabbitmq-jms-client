@@ -156,27 +156,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                     previous.setConsumerTag(consumerTag);
                 }
             }
-            /*
-             * There is a user case where the user calls
-             * 1. setMessageListener(null);
-             * 2. Session.recover();
-             * 3. setMessageListener(new listener)
-             * In this scenario, we need to deliver those messages
-             * to the listener sent in 3, and before we receive any new ones
-             * so we use the lock to prevent regular messages to arrive 
-             */
-            MessageListenerWrapper wrapper = userListenerWrapper;
-            if (wrapper!=null) {
-                //lock the write lock to prevent the read lock from being used
-                wrapper.rwl.writeLock().lock();
-                try {
-                    //deliver recovered messages
-                    getSession().sendRecoveredMessagesToConsumer(wrapper);
-                } finally {
-                    //unlock
-                    wrapper.rwl.writeLock().unlock();
-                }
-            }
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -343,16 +322,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             return null;
         }
 
-        /*
-         * Before we ask the RabbitMQ broker if it has any messages
-         * We must see if there are recovered messages waiting to be delivered
-         */
-        RMQMessage message = getSession().getFirstRecoveredMessage();
+        RMQMessage message = null;
         
-        if (message!=null) {
-            //we have recovered messages
-            return message;
-        }
         try {
             GetResponse response = null;
             if (this.destination.isQueue()) {
@@ -384,13 +355,9 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             message.setSession(getSession());
             message.setJMSDestination(getDestination());
             message.setReadonly(true);
+            message.setJMSRedelivered(response.getEnvelope().isRedeliver());
             if (!acknowledged) {
-                RMQMessage clone = RMQMessage.fromMessage(response.getBody());
-                clone.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());
-                clone.setSession(getSession());
-                clone.setJMSDestination(getDestination());
-                clone.setReadonly(true);
-                getSession().unackedMessageReceived(clone);
+                getSession().unackedMessageReceived(message);
             }
             try {
                 MessageListener listener = getSession().getMessageListener();
