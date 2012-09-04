@@ -101,10 +101,16 @@
   <include>
     <test>org.exolab.jmscts.test.message.properties.PropertyConversionTest.*</test>
   </include>
+  <include>
+    <test>org.exolab.jmscts.test.message.properties.PropertyTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.message.readwrite.ReadWriteTest.*</test>
+  </include>
 
   -->
   <include>
-    <test>org.exolab.jmscts.test.message.properties.PropertyTest.*</test>
+    <test>org.exolab.jmscts.test.message.readwrite.SendReceiveReadWriteTest.*</test>
   </include>
 
   <!--  we don't allow 'foreign' messages created outside of our implementation -->  

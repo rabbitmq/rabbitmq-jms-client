@@ -5,19 +5,22 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
 import javax.jms.JMSException;
+import javax.jms.MessageNotWriteableException;
 import javax.jms.TextMessage;
 
 import com.rabbitmq.jms.client.RMQMessage;
+import com.rabbitmq.jms.util.Util;
 
 public class RMQTextMessage extends RMQMessage implements TextMessage {
 
-    private String text;
+    private volatile String text;
 
     /**
      * {@inheritDoc}
      */
     @Override
     public void setText(String string) throws JMSException {
+        Util.util().checkTrue(isReadonly(), new MessageNotWriteableException("Message has been received and is read only."));
         this.text = string;
     }
 
@@ -42,8 +45,9 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
      */
     @Override
     public void writeBody(ObjectOutput out) throws IOException {
-        out.writeBoolean(this.text == null);
-        out.writeUTF(this.text);
+        String text = this.text;
+        out.writeBoolean(text == null);
+        if (text!=null) out.writeUTF(text);
     }
 
     /**

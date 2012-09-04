@@ -18,6 +18,7 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageFormatException;
+import javax.jms.MessageNotWriteableException;
 
 import com.rabbitmq.jms.util.IteratorEnum;
 import com.rabbitmq.jms.util.Util;
@@ -53,6 +54,15 @@ public abstract class RMQMessage implements Message, Cloneable {
     private final Map<String, Serializable> jmsProperties = new HashMap<String, Serializable>();
     private final AtomicBoolean isAcked = new AtomicBoolean(false);
     private volatile String internalMessageID=null;
+    private volatile boolean readonly=false;
+    
+
+    public boolean isReadonly() {
+        return readonly;
+    }
+    public void setReadonly(boolean readonly) {
+        this.readonly = readonly;
+    }
 
     private long rabbitDeliveryTag = -1;
     public long getRabbitDeliveryTag() {
@@ -562,6 +572,7 @@ public abstract class RMQMessage implements Message, Cloneable {
                     this.rmqProperties.put(name, (Serializable) value);
                 }
             } else {
+                Util.util().checkTrue(isReadonly(), new MessageNotWriteableException("Message has been received and is read only."));
                 checkName(name);
 
                 if (value==null) {

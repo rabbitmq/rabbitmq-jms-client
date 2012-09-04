@@ -266,11 +266,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());
             message.setSession(getSession());
             message.setJMSDestination(getDestination());
+            message.setReadonly(true);
             if (!acknowledged) {
                 RMQMessage clone = RMQMessage.fromMessage(response.getBody());
                 clone.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());
                 clone.setSession(getSession());
                 clone.setJMSDestination(getDestination());
+                clone.setReadonly(true);
                 getSession().unackedMessageReceived(clone);
             }
             try {
