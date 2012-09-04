@@ -284,7 +284,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             Boolean b = (Boolean) o;
             return b.booleanValue();
         } else
-            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
+            throw new MessageFormatException("Unable to convert from class:" + o.getClass().getName());
     }
 
     /**
@@ -294,18 +294,14 @@ public abstract class RMQMessage implements Message, Cloneable {
     public byte getByteProperty(String name) throws JMSException {
         Object o = this.getObjectProperty(name);
         if (o == null)
-            return 0;
+            throw new NumberFormatException("Null is not a valid byte");
         else if (o instanceof String) {
-            try {
-                return Byte.parseByte((String) o);
-            } catch (NumberFormatException x) {
-                throw Util.util().handleException(x);
-            }
+            return Byte.parseByte((String) o);
         } else if (o instanceof Byte) {
             Byte b = (Byte) o;
             return b.byteValue();
         } else
-            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
+            throw new MessageFormatException("Unable to convert from class:" + o.getClass().getName());
     }
 
     /**
@@ -315,13 +311,9 @@ public abstract class RMQMessage implements Message, Cloneable {
     public short getShortProperty(String name) throws JMSException {
         Object o = this.getObjectProperty(name);
         if (o == null)
-            return 0;
+            throw new NumberFormatException("Null is not a valid short");
         else if (o instanceof String) {
-            try {
-                return Short.parseShort((String) o);
-            } catch (NumberFormatException x) {
-                throw Util.util().handleException(x);
-            }
+            return Short.parseShort((String) o);
         } else if (o instanceof Byte) {
             Byte b = (Byte) o;
             return b.byteValue();
@@ -329,7 +321,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             Short b = (Short) o;
             return b.shortValue();
         } else
-            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
+            throw new MessageFormatException("Unable to convert from class:" + o.getClass().getName());
     }
 
     /**
@@ -339,13 +331,9 @@ public abstract class RMQMessage implements Message, Cloneable {
     public int getIntProperty(String name) throws JMSException {
         Object o = this.getObjectProperty(name);
         if (o == null)
-            return 0;
+            throw new NumberFormatException("Null is not a valid int");
         else if (o instanceof String) {
-            try {
-                return Short.parseShort((String) o);
-            } catch (NumberFormatException x) {
-                throw Util.util().handleException(x);
-            }
+            return Integer.parseInt((String) o);
         } else if (o instanceof Byte) {
             Byte b = (Byte) o;
             return b.byteValue();
@@ -356,7 +344,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             Integer b = (Integer) o;
             return b.intValue();
         } else
-            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
+            throw new MessageFormatException("Unable to convert from class:" + o.getClass().getName());
     }
 
     /**
@@ -366,13 +354,9 @@ public abstract class RMQMessage implements Message, Cloneable {
     public long getLongProperty(String name) throws JMSException {
         Object o = this.getObjectProperty(name);
         if (o == null)
-            return 0;
+            throw new NumberFormatException("Null is not a valid long");
         else if (o instanceof String) {
-            try {
-                return Short.parseShort((String) o);
-            } catch (NumberFormatException x) {
-                throw Util.util().handleException(x);
-            }
+            return Long.parseLong((String) o);
         } else if (o instanceof Byte) {
             Byte b = (Byte) o;
             return b.byteValue();
@@ -386,7 +370,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             Long b = (Long) o;
             return b.longValue();
         } else
-            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
+            throw new MessageFormatException("Unable to convert from class:" + o.getClass().getName());
     }
 
     /**
@@ -396,18 +380,14 @@ public abstract class RMQMessage implements Message, Cloneable {
     public float getFloatProperty(String name) throws JMSException {
         Object o = this.getObjectProperty(name);
         if (o == null)
-            return 0;
+            throw new NumberFormatException("Null is not a valid float");
         else if (o instanceof String) {
-            try {
-                return Float.parseFloat((String) o);
-            } catch (NumberFormatException x) {
-                throw Util.util().handleException(x);
-            }
+            return Float.parseFloat((String) o);
         } else if (o instanceof Float) {
             Float b = (Float) o;
             return b.floatValue();
         } else
-            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
+            throw new MessageFormatException("Unable to convert from class:" + o.getClass().getName());
     }
 
     /**
@@ -417,13 +397,9 @@ public abstract class RMQMessage implements Message, Cloneable {
     public double getDoubleProperty(String name) throws JMSException {
         Object o = this.getObjectProperty(name);
         if (o == null)
-            return 0;
+            throw new NumberFormatException("Null is not a valid double");
         else if (o instanceof String) {
-            try {
-                return Float.parseFloat((String) o);
-            } catch (NumberFormatException x) {
-                throw Util.util().handleException(x);
-            }
+            return Double.parseDouble((String) o);
         } else if (o instanceof Float) {
             Float b = (Float) o;
             return b.floatValue();
@@ -431,7 +407,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             Double b = (Double) o;
             return b.doubleValue();
         } else
-            throw new JMSException("Unable to convert from class:" + o.getClass().getName());
+            throw new MessageFormatException("Unable to convert from class:" + o.getClass().getName());
     }
 
     /**
