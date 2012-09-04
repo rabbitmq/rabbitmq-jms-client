@@ -554,7 +554,7 @@ public abstract class RMQMessage implements Message, Cloneable {
                     throw new MessageFormatException(RMQConnectionMetaData.JMSX_GROUP_ID_LABEL+" can only be of type String");
                 }
             }
-            checkName(name);
+            
             if (name.startsWith(PREFIX)) {
                 if (value==null) {
                     this.rmqProperties.remove(name);
@@ -562,6 +562,8 @@ public abstract class RMQMessage implements Message, Cloneable {
                     this.rmqProperties.put(name, (Serializable) value);
                 }
             } else {
+                checkName(name);
+
                 if (value==null) {
                     this.jmsProperties.remove(name);
                 } else {

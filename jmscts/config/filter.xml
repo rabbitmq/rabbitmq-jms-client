@@ -98,10 +98,13 @@
   <include>
     <test>org.exolab.jmscts.test.message.properties.JMSXGroupTest.*</test>
   </include>
+  <include>
+    <test>org.exolab.jmscts.test.message.properties.PropertyConversionTest.*</test>
+  </include>
 
   -->
   <include>
-    <test>org.exolab.jmscts.test.message.properties.PropertyConversionTest.*</test>
+    <test>org.exolab.jmscts.test.message.properties.PropertyTest.*</test>
   </include>
 
   <!--  we don't allow 'foreign' messages created outside of our implementation -->  
