@@ -59,7 +59,12 @@ import javax.naming.spi.ObjectFactory;
  * Properties for a topic or a queue are:
  * <ul>
  *  <li>destinationName</li>
- * </ul> 
+ * </ul>
+ * 
+ *  
+ *  
+ *  <br/><br/>
+ *  TODO Implement SSL and socket options
  */
 public class RMQObjectFactory implements ObjectFactory {
 

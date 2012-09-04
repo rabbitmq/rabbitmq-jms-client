@@ -27,17 +27,40 @@ import com.rabbitmq.jms.util.Util;
  *
  */
 public abstract class RMQMessage implements Message, Cloneable {
+    /**
+     * Error message used when throwing {@link javax.jms.MessageFormatException}
+     */
     public static final String UNABLE_TO_CAST = "Unable to cast the object, %s, into the specified type %s";
     
+    /**
+     * Properties inside of a JMS message can NOT be named any of these reserved words
+     */
     public static final String[] RESERVED_NAMES = {"NULL", "TRUE", "FALSE", "NOT", "AND", "OR", "BETWEEN", "LIKE", "IN",
                                                    "IS", "ESCAPE"};
 
-    public static final char[] INVALID_STARTS_WITH = {'0','1','2','3','4','5','6','7','8','9','-','+', '\''};
+    /**
+     * Properties inside of a JMS message can NOT start with any of the following characters in the name
+     */
+    public static final char[] INVALID_STARTS_WITH = {'0','1','2','3','4','5','6','7','8','9','-','+', '\'','"'};
     
+    /**
+     * Properties inside of a JMS may not contain these characters in the name
+     */
     public static final char[] MAY_NOT_CONTAIN = {'.','\'','"'};
     
+    /**
+     * When we create a message that has a byte[] as the underlying 
+     * structure, BytesMessage and StreamMessage, this is the default size
+     * Can be changed with a system property
+     */
     protected static final int DEFAULT_MESSAGE_BODY_SIZE = Integer.getInteger("com.rabbitmq.jms.message.size", 512);
 
+    /**
+     * We store all the JMS hard coded values, such as {@link #setJMSMessageID(String)}, as properties
+     * instead of hard coded fields. This way we can create a structure later on that
+     * the rabbit MQ broker can read by just changing the 
+     * {@link #toMessage(RMQMessage)} and {@link #fromMessage(byte[])}  
+     */
     private static final String PREFIX = "rmq.";
     private static final String JMS_MESSAGE_ID = PREFIX + "jms.message.id";
     private static final String JMS_MESSAGE_TIMESTAMP = PREFIX + "jms.message.timestamp";
@@ -50,38 +73,109 @@ public abstract class RMQMessage implements Message, Cloneable {
     private static final String JMS_MESSAGE_EXPIRATION = PREFIX + "jms.message.expiration";
     private static final String JMS_MESSAGE_PRIORITY = PREFIX + "jms.message.priority";
 
+    /**
+     * For turning Strings into byte[] and back we use this charset
+     * This is used for {@link RMQMessage#getJMSCorrelationIDAsBytes()}
+     */
     private static final Charset charset = Charset.forName("UTF-8");
 
+    /**
+     * Here we store the JMS_ properties that would have been fields 
+     */
     private final Map<String, Serializable> rmqProperties = new HashMap<String, Serializable>();
+    /**
+     * Here we store the users custom JMS properties
+     */
     private final Map<String, Serializable> jmsProperties = new HashMap<String, Serializable>();
+    /**
+     * Has this message been acked?
+     */
     private final AtomicBoolean isAcked = new AtomicBoolean(false);
+    /**
+     * We generate a unique message ID each time we send a message
+     * It is stored here. This is also used for 
+     * {@link #hashCode()} and {@link #equals(Object)}
+     */
     private volatile String internalMessageID=null;
+    /**
+     * A message is read only if it has been received.
+     * We set this flag when we receive a message in the following method
+     * {@link RMQMessageConsumer#processMessage(com.rabbitmq.client.GetResponse, boolean)}
+     */
     private volatile boolean readonly=false;
     
-
+    
+    /**
+     * Returns true if this message is read only
+     * This means that message has been received and can not 
+     * be modified
+     * @return true if the message is read only
+     */
     public boolean isReadonly() {
         return readonly;
     }
-    public void setReadonly(boolean readonly) {
+    
+    /**
+     * Sets the read only flag on this message
+     * @see {@link RMQMessageConsumer#processMessage(com.rabbitmq.client.GetResponse, boolean)}
+     * @param readonly
+     */
+    protected void setReadonly(boolean readonly) {
         this.readonly = readonly;
     }
 
+    /**
+     * When a message is received, it has a delivery tag
+     * We use this delivery tag when we ack 
+     * a single message
+     * @see {@link RMQSession#acknowledge(RMQMessage)}
+     * We set this value in 
+      * @see {@link RMQMessageConsumer#processMessage(com.rabbitmq.client.GetResponse, boolean)}
+     */
     private long rabbitDeliveryTag = -1;
+    /**
+     * returns the delivery tag for this message 
+     * @return 
+     */
     public long getRabbitDeliveryTag() {
         return rabbitDeliveryTag;
     }
-    public void setRabbitDeliveryTag(long rabbitDeliveryTag) {
+    /**
+     * Sets the delivery tag for this message, this field is 
+      * @see {@link RMQMessageConsumer#processMessage(com.rabbitmq.client.GetResponse, boolean)}
+
+     * @param rabbitDeliveryTag
+     */
+    protected void setRabbitDeliveryTag(long rabbitDeliveryTag) {
         this.rabbitDeliveryTag = rabbitDeliveryTag;
     }
 
+    /**
+     * The Message must hold a reference to the session itself
+     * So that it can ack itself. Ack belongs to the session
+     * @see {@link RMQSession#acknowledge(RMQMessage)}
+     */
     private volatile transient RMQSession session = null;
+    /**
+     * Returns the session this object belongs to
+     * @return
+     */
     public RMQSession getSession() {
         return session;
     }
-    public void setSession(RMQSession session) {
+    /**
+     * Sets the session this object was received by
+     * @see {@link RMQMessageConsumer#processMessage(com.rabbitmq.client.GetResponse, boolean)}
+     * @see {@link RMQSession#acknowledge(RMQMessage)}
+     * @param session
+     */
+    protected void setSession(RMQSession session) {
         this.session = session;
     }
 
+    /**
+     * Constructor for auto de-serialization
+     */
     public RMQMessage() {
     }
 
@@ -289,15 +383,17 @@ public abstract class RMQMessage implements Message, Cloneable {
     @Override
     public boolean getBooleanProperty(String name) throws JMSException {
         Object o = this.getObjectProperty(name);
-        if (o == null)
+        if (o == null) {
+            //default value for null is false
             return false;
-        else if (o instanceof String)
+        } else if (o instanceof String) {
             return Boolean.parseBoolean((String) o);
-        else if (o instanceof Boolean) {
+        } else if (o instanceof Boolean) {
             Boolean b = (Boolean) o;
             return b.booleanValue();
-        } else
+        } else {
             throw new MessageFormatException("Unable to convert from class:" + o.getClass().getName());
+        }
     }
 
     /**
@@ -520,7 +616,13 @@ public abstract class RMQMessage implements Message, Cloneable {
         this.setObjectProperty(name, value);
     }
 
-    public void checkName(String name) throws JMSException {
+    /**
+     * Validates that a JMS property name is correct
+     * @param name the name of the property
+     * @throws {@link JMSException} if the name contains invalid characters
+     * @throws {@link IllegalArgumentException} if the name parameter is null 
+     */
+    protected void checkName(String name) throws JMSException {
         if (name==null || name.trim().length()==0) {
             throw new IllegalArgumentException("Invalid identifier:null");
         } else {
@@ -555,7 +657,10 @@ public abstract class RMQMessage implements Message, Cloneable {
     public void setObjectProperty(String name, Object value) throws JMSException {
         try {
             if (RMQConnectionMetaData.JMSX_GROUP_SEQ_LABEL.equals(name)) {
-                //value can only be an int
+                /**
+                 * Special case property, this property must be 
+                 * an integer and it must be larger than 0
+                 */
                 if (!(value instanceof Integer)) {
                     throw new MessageFormatException(RMQConnectionMetaData.JMSX_GROUP_SEQ_LABEL+" can only be of type int");
                 } else {
@@ -563,7 +668,10 @@ public abstract class RMQMessage implements Message, Cloneable {
                     if (val<=0) throw new JMSException(RMQConnectionMetaData.JMSX_GROUP_SEQ_LABEL+" must be >0");
                 }
             } else if (RMQConnectionMetaData.JMSX_GROUP_ID_LABEL.equals(name)) {
-                if (!(value instanceof String)) {
+                /**
+                 * Special case property must be a string
+                 */
+                if (value!=null && (!(value instanceof String))) {
                     throw new MessageFormatException(RMQConnectionMetaData.JMSX_GROUP_ID_LABEL+" can only be of type String");
                 }
             }
@@ -591,6 +699,7 @@ public abstract class RMQMessage implements Message, Cloneable {
 
     /**
      * {@inheritDoc}
+     * @see {@link RMQSession#acknowledge(RMQMessage)}
      */
     @Override
     public void acknowledge() throws JMSException {
@@ -601,6 +710,7 @@ public abstract class RMQMessage implements Message, Cloneable {
 
     /**
      * {@inheritDoc}
+     * This is an abstract method, and is implementation specific
      */
     @Override
     public abstract void clearBody() throws JMSException;
@@ -632,9 +742,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @throws IllegalAccessException - if an IllegalAccessException occurs - this will prevent message delivery
      */
     public abstract void readBody(ObjectInput in) throws IOException,
-    ClassNotFoundException,
-    InstantiationException,
-    IllegalAccessException;
+        ClassNotFoundException, InstantiationException, IllegalAccessException;
 
     /**
      * Serializes a {@link RMQMessage} to a byte array. 
@@ -647,19 +755,25 @@ public abstract class RMQMessage implements Message, Cloneable {
     public static byte[] toMessage(RMQMessage msg) throws IOException, JMSException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
         ObjectOutputStream out = new ObjectOutputStream(bout);
+        //write the class of the message so we can instantiate on the other end
         out.writeUTF(msg.getClass().getName());
+        //write out message id
         out.writeUTF(msg.internalMessageID);
+        //write our JMS properties
         out.writeInt(msg.rmqProperties.size());
         for (Map.Entry<String, Serializable> entry : msg.rmqProperties.entrySet()) {
             out.writeUTF(entry.getKey());
             writePrimitive(entry.getValue(), out, true);
         }
+        //write custom properties
         out.writeInt(msg.jmsProperties.size());
         for (Map.Entry<String, Serializable> entry : msg.jmsProperties.entrySet()) {
             out.writeUTF(entry.getKey());
             writePrimitive(entry.getValue(), out, true);
         }
+        //invoke write body
         msg.writeBody(out);
+        //flush and return
         out.flush();
         return bout.toByteArray();
     }
@@ -682,21 +796,27 @@ public abstract class RMQMessage implements Message, Cloneable {
         // TODO If we don't recognize the message format then we need to
         // create a generic BytesMessage
         ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(b));
+        //read the classname from the stream
         String clazz = in.readUTF();
+        //instantiate the message object with the thread context classloader
         RMQMessage msg = (RMQMessage) Class.forName(clazz, true, Thread.currentThread().getContextClassLoader()).newInstance();
+        //read the message id
         msg.internalMessageID = in.readUTF();
+        //read JMS properties
         int propsize = in.readInt();
         for (int i = 0; i < propsize; i++) {
             String name = in.readUTF();
             Object value = readPrimitive(in);
             msg.rmqProperties.put(name, (Serializable) value);
         }
+        //read custom properties
         propsize = in.readInt();
         for (int i = 0; i < propsize; i++) {
             String name = in.readUTF();
             Object value = readPrimitive(in);
             msg.jmsProperties.put(name, (Serializable) value);
         }
+        //invoke read body on the 
         msg.readBody(in);
         return msg;
     }

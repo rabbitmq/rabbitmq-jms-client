@@ -257,7 +257,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @return
      * @throws JMSException
      */
-    private Message processMessage(GetResponse response, boolean acknowledged) throws JMSException {
+    protected Message processMessage(GetResponse response, boolean acknowledged) throws JMSException {
         try {
             if (response == null)
                 return null;
