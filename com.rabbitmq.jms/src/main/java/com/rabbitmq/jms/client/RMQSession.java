@@ -315,12 +315,16 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public void recover() throws JMSException {
         Util.util().checkTrue(this.closed, "Session has been closed");
-        Long deliveryTag = null;
-        while ((deliveryTag = receivedMessages.poll()) != null) {
-            try {
-                this.channel.basicNack(deliveryTag, false, true);
-            } catch (IOException x) {
-                Util.util().handleException(x);
+        if (getTransactedNoException()) {
+            throw new javax.jms.IllegalStateException("Session is transacted.");
+        } else {
+            Long deliveryTag = null;
+            while ((deliveryTag = receivedMessages.poll()) != null) {
+                try {
+                    this.channel.basicNack(deliveryTag, false, true);
+                } catch (IOException x) {
+                    Util.util().handleException(x);
+                }
             }
         }
     }

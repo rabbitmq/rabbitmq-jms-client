@@ -108,7 +108,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
                 throw new InvalidClientIDException("A connection with that client ID alreayd exists.["+clientID+"]");
             }
         } else {
-            throw new JMSException("Client ID already set.");
+            throw new IllegalStateException("Client ID already set.");
         }
         
     }
