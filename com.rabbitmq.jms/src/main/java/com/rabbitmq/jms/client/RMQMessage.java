@@ -565,7 +565,7 @@ public abstract class RMQMessage implements Message, Cloneable {
                 }
             }
             
-            if (name.startsWith(PREFIX)) {
+            if (name!=null && name.startsWith(PREFIX)) {
                 if (value==null) {
                     this.rmqProperties.remove(name);
                 } else {
