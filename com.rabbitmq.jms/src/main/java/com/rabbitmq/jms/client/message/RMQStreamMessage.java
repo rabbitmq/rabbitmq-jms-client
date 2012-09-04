@@ -1,19 +1,378 @@
 package com.rabbitmq.jms.client.message;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.UTFDataFormatException;
+
 import javax.jms.JMSException;
+import javax.jms.MessageEOFException;
+import javax.jms.MessageFormatException;
+import javax.jms.MessageNotReadableException;
+import javax.jms.MessageNotWriteableException;
 import javax.jms.StreamMessage;
+
+import com.rabbitmq.jms.client.RMQMessage;
+import com.rabbitmq.jms.util.Util;
 
 // TODO For now we don't handle direct TCP streaming
 // TODO this should write to disk, and when we send the message
 // TODO we have disassemble and reassemble multiple messages
-public class RMQStreamMessage extends RMQBytesMessage implements StreamMessage {
+public class RMQStreamMessage extends RMQMessage implements StreamMessage {
+
+    private static final String NOT_READABLE = "Message not readable";
+    private static final String NOT_WRITEABLE = "Message not writeable";
+    private static final String MSG_EOF = "Message EOF";
+    private static final byte[] EOF_ARRAY = new byte[0];
+    
+    private volatile boolean reading;
+
+    private transient ObjectInputStream in;
+    private transient ByteArrayInputStream bin;
+    private transient ObjectOutputStream out;
+    private transient ByteArrayOutputStream bout;
+    private volatile transient byte[] buf;
+    private volatile transient byte[] readbuf = null;
+
+    public RMQStreamMessage() {
+        this(false);
+    }
+
+    public RMQStreamMessage(boolean reading) {
+        this.reading = reading;
+        if (!reading) {
+            this.bout = new ByteArrayOutputStream(RMQMessage.DEFAULT_MESSAGE_BODY_SIZE);
+            try {
+                this.out = new ObjectOutputStream(this.bout);
+            } catch (IOException x) {
+                throw new RuntimeException(x);
+            }
+        }
+    }
+
+    protected void writePrimitive(Object value) throws JMSException {
+        if (this.reading || isReadonly())
+            throw new MessageNotWriteableException(NOT_WRITEABLE);
+        try {
+            RMQMessage.writePrimitive(value, this.out);
+        } catch (IOException x) {
+            throw Util.util().handleException(x);
+        }
+    }
+    
+    protected Object readPrimitiveType(Class<?> type) throws JMSException {
+        if (!this.reading)
+            throw new MessageNotReadableException(NOT_READABLE);
+        if (this.readbuf!=null) {
+            throw new JMSException("You must call 'int readBytes(byte[])' since the buffer is not empty");
+        }
+        boolean success = true;
+        try {
+            this.bin.mark(0);
+            Object o = RMQMessage.readPrimitive(in);
+            if (o instanceof byte[]) {
+                if (type==ByteArray.class) {
+                    return o;
+                } else {
+                    throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "byte[]"));
+                }
+            } else if (type==Boolean.class) {
+                if (o instanceof Boolean) {
+                    return o;
+                } else if (o instanceof String) {
+                    return Boolean.parseBoolean((String)o);
+                } else {
+                    throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "boolean"));
+                }
+            } else if (type==Byte.class) {
+                if (o instanceof Byte) {
+                    return o;
+                } else if (o instanceof String) {
+                    return Byte.parseByte((String)o);
+                } else {
+                    throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "byte"));
+                }
+            } else if (type==Short.class) {
+                if (o instanceof Byte) {
+                    return ((Byte)o).byteValue();
+                } else if (o instanceof Short) {
+                    return o;
+                } else if (o instanceof String) {
+                    return Byte.parseByte((String)o);
+                } else {
+                    throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "byte"));
+                }
+            } else if (type==Integer.class) {
+                if (o instanceof Byte) {
+                    return ((Byte)o).byteValue();
+                } else if (o instanceof Short) {
+                    return ((Short)o).shortValue();
+                } else if (o instanceof Integer){
+                    return o;
+                } else if (o instanceof String) {
+                    return Integer.parseInt((String)o);
+                } else {
+                    throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "int"));
+                }
+            } else if (type==Character.class) {
+                if (o instanceof Character) {
+                    return o;
+                } else {
+                    throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "char"));
+                }
+            } else if (type==Long.class) {
+                if (o instanceof Byte) {
+                    return ((Byte)o).byteValue();
+                } else if (o instanceof Short) {
+                    return ((Short)o).shortValue();
+                } else if (o instanceof Integer){
+                    return ((Integer)o).intValue();
+                } else if (o instanceof Long){
+                    return o;
+                } else if (o instanceof String) {
+                    return Long.parseLong((String)o);
+                } else {
+                    throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "long"));
+                }
+            } else if (type==Float.class) {
+                if (o instanceof Float) {
+                    return ((Float)o).floatValue();
+                } else if (o instanceof String) {
+                    return Float.parseFloat((String)o);
+                } else {
+                    throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "float"));
+                }
+            } else if (type==Double.class) {
+                if (o instanceof Float) {
+                    return ((Float)o).floatValue();
+                } else if (o instanceof Double) {
+                        return ((Double)o).doubleValue();
+                } else if (o instanceof String) {
+                    return Double.parseDouble((String)o);
+                } else {
+                    throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "double"));
+                }
+            } else if (type==String.class) {
+                if (o == null) {
+                    return null;
+                } else if (o instanceof byte[]) {
+                    throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "String"));
+                } else {
+                    return o.toString();
+                }
+            } else if (type==Object.class) {
+                return o;
+            } else {
+                throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, type.toString()));
+            }
+        } catch (ClassNotFoundException x) {
+            success = false;
+            throw Util.util().handleException(x);
+        } catch (EOFException x) {
+            success = false;
+            throw new MessageEOFException(MSG_EOF);
+        } catch (UTFDataFormatException x) {
+            success = false;
+            throw Util.util().handleMessageFormatException(x);
+        } catch (IOException x) {
+            success = false;
+            throw Util.util().handleException(x);
+        } catch (Exception x) {
+            success = false;
+            if (x instanceof JMSException) {
+                throw (JMSException)x;
+            } else {
+                throw Util.util().handleException(x);
+            }
+        } finally {
+            if (!success) {
+                this.bin.reset();
+            }
+        }
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean readBoolean() throws JMSException {
+        return (Boolean)this.readPrimitiveType(Boolean.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public byte readByte() throws JMSException {
+        return (Byte)this.readPrimitiveType(Byte.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public short readShort() throws JMSException {
+        return (Short)this.readPrimitiveType(Short.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public char readChar() throws JMSException {
+        return (Character)this.readPrimitiveType(Character.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int readInt() throws JMSException {
+        return (Integer)this.readPrimitiveType(Integer.class);
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long readLong() throws JMSException {
+        return (Long)this.readPrimitiveType(Long.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public float readFloat() throws JMSException {
+        return (Float)this.readPrimitiveType(Float.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double readDouble() throws JMSException {
+        return (Double)this.readPrimitiveType(Double.class);
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
     public String readString() throws JMSException {
-        return super.readUTF();
+        return (String)this.readPrimitiveType(String.class);
+    }
+
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int readBytes(byte[] value) throws JMSException {
+        if (readbuf==null) {
+            readbuf = (byte[])this.readPrimitiveType(ByteArray.class);
+        }
+        if (readbuf!=null) {
+            if (readbuf==EOF_ARRAY) {
+                readbuf = null;
+                return -1;
+            } else if (readbuf.length > value.length) {
+                int result = value.length;
+                int diff = readbuf.length - result;
+                System.arraycopy(readbuf, 0, value, 0, result);
+                byte[] tmp = new byte[diff];
+                System.arraycopy(readbuf, result, tmp, 0, diff);
+                readbuf = tmp;
+                return result;
+            } else {
+                int result = Math.min(readbuf.length, value.length);
+                System.arraycopy(readbuf, 0, value, 0, result);
+                readbuf = EOF_ARRAY;
+                return result;
+            }
+        } else {
+            throw new MessageFormatException(String.format(UNABLE_TO_CAST, null,"byte[]"));
+        }
+    }
+
+
+    /**
+     * reads an object from the stream that was used to serialize this message
+     * @return the object read
+     * @throws JMSException if a deserialization exception happens
+     */
+    public Object readObject() throws JMSException {
+        return this.readPrimitiveType(Object.class);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void writeBoolean(boolean value) throws JMSException {
+        writePrimitive(value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void writeByte(byte value) throws JMSException {
+        writePrimitive(value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void writeShort(short value) throws JMSException {
+        writePrimitive(value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void writeChar(char value) throws JMSException {
+        writePrimitive(value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void writeInt(int value) throws JMSException {
+        writePrimitive(value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void writeLong(long value) throws JMSException {
+        writePrimitive(value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void writeFloat(float value) throws JMSException {
+        writePrimitive(value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void writeDouble(double value) throws JMSException {
+        writePrimitive(value);
     }
 
     /**
@@ -21,15 +380,123 @@ public class RMQStreamMessage extends RMQBytesMessage implements StreamMessage {
      */
     @Override
     public void writeString(String value) throws JMSException {
-        super.writeUTF(value);
+        writePrimitive(value);
     }
-    
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void writeBytes(byte[] value) throws JMSException {
+        writePrimitive(value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void writeBytes(byte[] value, int offset, int length) throws JMSException {
+        byte[] buf = new byte[length];
+        System.arraycopy(value, offset, buf, 0, length);
+        writePrimitive(buf);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public void writeObject(Object value) throws JMSException {
-        writeObject(value,true);
+        writeObject(value,false);
+    }
+    
+    protected void writeObject(Object value, boolean allowSerializable) throws JMSException {
+        if (this.reading || isReadonly())
+            throw new MessageNotWriteableException(NOT_WRITEABLE);
+        try {
+            RMQMessage.writePrimitive(value, this.out, allowSerializable);
+        } catch (IOException x) {
+            throw Util.util().handleException(x);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void reset() throws JMSException {
+        if (this.reading || isReadonly()) {
+            //if we already are reading, all we want to do is reset to the 
+            //beginning of the stream
+            try {
+                this.bin = new ByteArrayInputStream(buf);
+                this.in = new ObjectInputStream(this.bin);
+                return;
+            } catch (IOException x) {
+                Util.util().handleException(x);
+            }
+        }
+            
+        try {
+            buf = null;
+            if (this.out != null) {
+                this.out.flush();
+                buf = this.bout.toByteArray();
+            } else {
+                buf = new byte[0];
+            }
+            this.bin = new ByteArrayInputStream(buf);
+            this.in = new ObjectInputStream(this.bin);
+        } catch (IOException x) {
+            Util.util().handleException(x);
+        }
+        this.reading = true;
+        this.out = null;
+        this.bout = null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void clearBody() throws JMSException {
+        this.bout = new ByteArrayOutputStream(RMQMessage.DEFAULT_MESSAGE_BODY_SIZE);
+        try {
+            this.out = new ObjectOutputStream(this.bout);
+        } catch (IOException x) {
+            Util.util().handleException(x);
+        }
+        this.bin = null;
+        this.in = null;
+        this.buf = null;
+        this.reading = false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void writeBody(ObjectOutput out) throws IOException {
+        this.out.flush();
+        byte[] buf = this.bout.toByteArray();
+        out.writeInt(buf.length);
+        out.write(buf);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void readBody(ObjectInput in) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+        int len = in.readInt();
+        buf = new byte[len];
+        in.read(buf);
+        this.reading = true;
+        this.bin = new ByteArrayInputStream(buf);
+        this.in = new ObjectInputStream(this.bin);
+    }
+    
+    private class ByteArray {
+        
     }
     
 

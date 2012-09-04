@@ -27,6 +27,8 @@ import com.rabbitmq.jms.util.Util;
  *
  */
 public abstract class RMQMessage implements Message, Cloneable {
+    public static final String UNABLE_TO_CAST = "Unable to cast the object, %s, into the specified type %s";
+    
     public static final String[] RESERVED_NAMES = {"NULL", "TRUE", "FALSE", "NOT", "AND", "OR", "BETWEEN", "LIKE", "IN",
                                                    "IS", "ESCAPE"};
 
@@ -642,7 +644,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @return the body in a byte array
      * @throws IOException if serialization fails
      */
-    public static byte[] toMessage(RMQMessage msg) throws IOException {
+    public static byte[] toMessage(RMQMessage msg) throws IOException, JMSException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
         ObjectOutputStream out = new ObjectOutputStream(bout);
         out.writeUTF(msg.getClass().getName());
@@ -750,7 +752,11 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @param out the stream to write the primitive to.
      * @throws IOException if an IOException occurs.
      */
-    public static void writePrimitive(Object s, ObjectOutput out) throws IOException {
+    public static void writePrimitive(Object s, ObjectOutput out) throws IOException, MessageFormatException {
+        writePrimitive(s, out,false);
+    }
+    
+    public static void writePrimitive(Object s, ObjectOutput out, boolean allowSerializable) throws IOException, MessageFormatException {
         if (s == null) {
             out.writeByte(-1);
         } else if (s instanceof Boolean) {
@@ -784,9 +790,11 @@ public abstract class RMQMessage implements Message, Cloneable {
             out.writeByte(10);
             out.writeInt(((byte[]) s).length);
             out.write(((byte[]) s));
-        } else {
+        } else if (allowSerializable && s instanceof Serializable){
             out.writeByte(Byte.MAX_VALUE);
             out.writeObject(s);
+        } else {
+            throw new MessageFormatException(s + " is not a recognized primitive type.");
         }
     }
 

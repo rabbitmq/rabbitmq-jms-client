@@ -111,7 +111,7 @@
   </include>
 -->
   <include>
-    <test>org.exolab.jmscts.test.message.properties.PropertyTest.testPropertyIntegrity</test>
+    <test>org.exolab.jmscts.test.message.stream.StreamMessageTest.*</test>
   </include>
 
   <!--  we don't allow 'foreign' messages created outside of our implementation -->  
