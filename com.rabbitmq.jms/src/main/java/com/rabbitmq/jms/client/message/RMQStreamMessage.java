@@ -435,35 +435,35 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
      */
     @Override
     public void reset() throws JMSException {
+        this.readbuf = null;
+
         if (this.reading || isReadonly()) {
             //if we already are reading, all we want to do is reset to the 
             //beginning of the stream
             try {
-                this.readbuf = null;
                 this.bin = new ByteArrayInputStream(buf);
                 this.in = new ObjectInputStream(this.bin);
-                return;
             } catch (IOException x) {
                 Util.util().handleException(x);
             }
-        }
-            
-        try {
-            buf = null;
-            if (this.out != null) {
-                this.out.flush();
-                buf = this.bout.toByteArray();
-            } else {
-                buf = new byte[0];
+        } else {
+            try {
+                buf = null;
+                if (this.out != null) {
+                    this.out.flush();
+                    buf = this.bout.toByteArray();
+                } else {
+                    buf = new byte[0];
+                }
+                this.bin = new ByteArrayInputStream(buf);
+                this.in = new ObjectInputStream(this.bin);
+            } catch (IOException x) {
+                Util.util().handleException(x);
             }
-            this.bin = new ByteArrayInputStream(buf);
-            this.in = new ObjectInputStream(this.bin);
-        } catch (IOException x) {
-            Util.util().handleException(x);
+            this.reading = true;
+            this.out = null;
+            this.bout = null;
         }
-        this.reading = true;
-        this.out = null;
-        this.bout = null;
     }
 
     /**

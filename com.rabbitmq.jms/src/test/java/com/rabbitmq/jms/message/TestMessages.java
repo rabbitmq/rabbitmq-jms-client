@@ -188,7 +188,20 @@ public class TestMessages {
     }
 
     public static void writeStreamMessage(StreamMessage message) throws JMSException {
-        writeBytesMessage((BytesMessage) message);
+        byte[] buf = { (byte) -2, (byte) -3 };
+        message.writeBoolean(true);
+        message.writeByte((byte) -1); // signed
+        message.writeByte((byte) (255 & 0xFF)); // unsigned
+        message.writeBytes(buf);
+        message.writeBytes(buf, 1, 1);
+        message.writeChar('X');
+        message.writeDouble(2.35d);
+        message.writeFloat(1.54f);
+        message.writeInt(Integer.MAX_VALUE);
+        message.writeLong(Long.MAX_VALUE);
+        message.writeShort(Short.MAX_VALUE);
+        message.writeShort((short) 0xFFFF);
+        message.writeString("TEST");
         try {
             message.writeObject(new TestNonSerializable());
             assertTrue(false);
@@ -198,7 +211,32 @@ public class TestMessages {
     }
 
     public static void readStreamMessage(StreamMessage message) throws JMSException {
-        readBytesMessage((BytesMessage) message);
+        byte[] buf = { (byte) -2, (byte) -3 };
+        assertTrue(message.readBoolean());
+        assertEquals(-1, message.readByte());
+        assertEquals(255, message.readByte() & 0xFF);
+        byte[] b1 = new byte[1];
+        byte[] b2 = new byte[2];
+        int count = message.readBytes(b2);
+        if (count==b2.length) {
+            assertEquals(-1, message.readBytes(new byte[1024]));
+        }
+        assertTrue(Arrays.equals(buf, b2));
+        
+        count = message.readBytes(b1);
+        if (count==b1.length) {
+            assertEquals(-1, message.readBytes(new byte[1024]));
+        }
+        assertEquals(buf[1], b1[0]);
+        assertEquals('X', message.readChar());
+        assertEquals(2.35d, message.readDouble());
+        assertEquals(1.54f, message.readFloat());
+        assertEquals(Integer.MAX_VALUE, message.readInt());
+        assertEquals(Long.MAX_VALUE, message.readLong());
+        assertEquals(Short.MAX_VALUE, message.readShort());
+        assertEquals((int) 0xFFFF, message.readShort() & 0xFFFF);
+        assertEquals("TEST", message.readString());
+        
     }
 
     private static class TestSerializable implements Serializable {
