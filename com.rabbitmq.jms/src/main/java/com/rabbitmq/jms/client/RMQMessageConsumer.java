@@ -31,15 +31,48 @@ import com.rabbitmq.jms.util.Util;
 
 public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscriber {
 
+    /**
+     * The destination that this consumer belongs to
+     */
     private final RMQDestination destination;
+    /**
+     * The session that this consumer was created under
+     */
     private final RMQSession session;
+    /**
+     * Unique tag, used when creating AMQP queues for a consumer that thinks it's a topic
+     */
     private final String uuidTag;
+    /**
+     * The async listener that we use to subscribe to Rabbit messages
+     */
     private final AtomicReference<MessageListenerConsumer> listener = new AtomicReference<MessageListenerConsumer>();
+    /**
+     * Pause latch, used by 
+     * {@link javax.jms.Connection#start()} and {@link javax.jms.Connection#stop()}
+     */
     private final PauseLatch pauseLatch = new PauseLatch(true);
+    /**
+     * We need to keep track of how many listeners are running.
+     * The reason for this latch is to be able to 
+     * not complete a {@link javax.jms.Connection#stop()} call
+     * until all listeners have completed. This is spec requirement
+     */
     private final CountUpAndDownLatch listenerRunning = new CountUpAndDownLatch(0);
+    /**
+     * We must track threads that are invoking {@link #receive()} and {@link #receive(long)}
+     * cause we must be able to interrupt those threads if close or stop is called
+     */
     private final ConcurrentLinkedQueue<Thread> currentSynchronousReceiver = new ConcurrentLinkedQueue<Thread>();
+    /**
+     * Is this consumer closed. this value should change to true, but never change back
+     */
     private volatile boolean closed = false;
-
+    /**
+     * A wrapper around the message listener the user sets
+     */
+    private volatile MessageListenerWrapper userListenerWrapper =null;
+    
     /**
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
      * @param session - the session object that created this consume 
@@ -77,9 +110,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     @Override
     public MessageListener getMessageListener() throws JMSException {
         MessageListenerWrapper wrapper = userListenerWrapper; 
+        //if we have a listener, return the actual listener
         return wrapper==null?null:wrapper.getMessageListener();
     }
-    private volatile MessageListenerWrapper userListenerWrapper =null;
+    
     
     /**
      * {@inheritDoc}
@@ -87,19 +121,34 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
         try {
+            //reset the correct listener
             userListenerWrapper  = listener==null?null : new MessageListenerWrapper(listener);
+            //see if we had already set a listener
             MessageListenerConsumer previous = this.listener.get();
             if (listener == null && previous == null) {
-                // do nothing - no previous
+                // do nothing - no previous listener
             } else if (listener == null && previous != null) {
-                // unsubscribe
+                /*
+                 * The user called setMessageListener(null) which means we have 
+                 * to unsubscribe the previous consumer
+                 */
                 if (this.listener.compareAndSet(previous, null)) {
                     this.basicCancel(previous.getConsumerTag());
                 }
             } else if (previous != null) {
-                // piggy back of the existing subscription, just swap the
-                // listener
+                /*
+                 * The user called setMessageListener(new listener)
+                 * to override the old one. We can keep our current subscription
+                 * and just replace the variable userListenerWrapper
+                 * like we did above 
+                 */
             } else {
+                /*
+                 *  The user called setMessageListener(new listener)
+                 *  and no previous listener was set, so we must 
+                 *  create a subscription to the RabbitMQ channel
+                 *  this is done using the basicConsume call
+                 */
                 previous = this.wrap();
                 if (this.listener.compareAndSet(null, previous)) {
                     // new subscription
@@ -107,16 +156,27 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                     previous.setConsumerTag(consumerTag);
                 }
             }
+            /*
+             * There is a user case where the user calls
+             * 1. setMessageListener(null);
+             * 2. Session.recover();
+             * 3. setMessageListener(new listener)
+             * In this scenario, we need to deliver those messages
+             * to the listener sent in 3, and before we receive any new ones
+             * so we use the lock to prevent regular messages to arrive 
+             */
             MessageListenerWrapper wrapper = userListenerWrapper;
             if (wrapper!=null) {
+                //lock the write lock to prevent the read lock from being used
                 wrapper.rwl.writeLock().lock();
                 try {
+                    //deliver recovered messages
                     getSession().sendRecoveredMessagesToConsumer(wrapper);
                 } finally {
+                    //unlock
                     wrapper.rwl.writeLock().unlock();
                 }
             }
-            
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -136,31 +196,74 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     @Override
     public Message receive(long timeout) throws JMSException {
         Util.util().checkTrue(closed, "Consumer has already been closed.");
+        /*
+         * The spec identifies 0 as infinite timeout
+         */
         if (timeout == 0) {
             timeout = Long.MAX_VALUE;
         }
-        
+        /*
+         * track when we started this call 
+         */
         long now = System.currentTimeMillis();
 
+        /*
+         * Try to receive a message without waiting
+         * This call can pause on the pauseLatch
+         * if the Connection.stop method has been called
+         */
         Message msg = receiveNoWait(timeout);
         
+        /*
+         * Calculate the new timeout
+         */
         timeout = Math.max(timeout - (System.currentTimeMillis() - now), 0);
 
         
         if (msg != null) {
-            // attempt instant receive first
+            /*
+             * We received a message - return it
+             */
             return msg;
         } else if (timeout==0) {
+            /*
+             * We timed out - calls to receive() and 
+             * receive(long) can timeout when the Connection.stop 
+             * is in effect. A timeout means we return null to the caller
+             */
             return null;
         }
         
+        /*
+         * Currently there is no equivalent of receive(timeout) in 
+         * RabbitMQ's Java API. So we emulate that behavior by creating a  
+         * onetime subscription to the Channel.
+         * We use the object SynchronousConsumer - this object supports 
+         * both timeout and interrupts
+         */
         String consumerTag = null;
         SynchronousConsumer sc = null;
         try {
+            /*
+             * Register the existing thread so we can interrupt it 
+             * if we need to
+             */
             this.currentSynchronousReceiver.offer(Thread.currentThread());
+            /*
+             * Create the consumer object - in here we specify the timeout too
+             */
             sc = new SynchronousConsumer(this.session.getChannel(), timeout, session.getAcknowledgeMode());
+            /*
+             * Subscribe the consumer object
+             */
             consumerTag = basicConsume(sc);
+            /*
+             * Wait for an message to arrive
+             */
             GetResponse response = sc.receive();
+            /*
+             * Process the result - even if it is null
+             */
             return processMessage(response, isAutoAck());
         } catch (IOException x) {
             Util.util().handleException(x);
@@ -172,7 +275,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     /**
-     * Returns true if messages are auto acknowledged
+     * Returns true if messages should be auto acknowledged upon arrival
      * @return
      */
     private boolean isAutoAck() throws JMSException {
@@ -190,11 +293,20 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     protected String basicConsume(Consumer consumer) throws IOException {
         String name = null;
         if (this.destination.isQueue()) {
+            /*
+             * javax.jms.Queue we share a AMQP queue among all consumers
+             */
             name = this.destination.getName();
         } else {
+            /*
+             * javax.jms.Topic we create a unique AMQP queue for each consumer
+             */
             name = this.getUUIDTag();
         }
         //never ack async messages automatically, only when we can deliver them
+        //to the actual consumer so we pass in false as the auto ack mode
+        //we must support setMessageListener(null) while messages are arriving
+        //and those message we NACK
         return getSession().getChannel().basicConsume(name, false , consumer);
     }
 
@@ -226,12 +338,17 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                              // for a message meaning we need to time out
             }
         } catch (InterruptedException x) {
-            // TODO logging implementation
+            // this is normal since the implementation can interrupt
+            // threads that are waiting
             return null;
         }
 
-        
+        /*
+         * Before we ask the RabbitMQ broker if it has any messages
+         * We must see if there are recovered messages waiting to be delivered
+         */
         RMQMessage message = getSession().getFirstRecoveredMessage();
+        
         if (message!=null) {
             //we have recovered messages
             return message;
@@ -429,11 +546,21 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @see {@link javax.jms.Session#recover()}
      */
     public void recover(ConcurrentLinkedQueue<RMQMessage> recoveredMessages) throws JMSException {
-        MessageListener listener = getMessageListener();
+        /*
+         * TODO we should only process messages that belong to us  
+         * we could have a selector here, and should not be seeing some of these messages
+         */
+        MessageListener listener = this.userListenerWrapper;
+        MessageListener sessionListener = this.getSession().getMessageListener();
         if (listener != null) {
             RMQMessage message;
             while ((message = recoveredMessages.poll()) != null) {
                 listener.onMessage(message);
+                try {
+                    if (sessionListener!=null) sessionListener.onMessage(message);
+                }catch (Exception x) {
+                    //TODO log this error - we must continue
+                }
             }
         }
     }
@@ -444,18 +571,37 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * while recovering messages
      */
     protected class MessageListenerWrapper implements MessageListener {
-
+        /**
+         * This lock is used as a read lock when invoked async 
+         * by the subscription we have with the RabbitMQ API.
+         * However, when we are recovering messages, the write lock
+         * is used to block incoming messages until recovery is complete
+         */
         protected ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
+        /**
+         * The actual listener we want to deliver the message to
+         */
         private final MessageListener listener;
         
+        /**
+         * Create a listener wrapper
+         * @param listener the listener to invoke onMessage on, may NOT be null
+         */
         public MessageListenerWrapper(MessageListener listener) {
             this.listener = listener;
         }
         
+        /**
+         * Returns the listener we are delivering messages to
+         * @return
+         */
         public MessageListener getMessageListener() {
             return listener;
         }
         
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void onMessage(Message message) {
             rwl.readLock().lock();
@@ -473,13 +619,22 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * messages and propagate them to the calling client
      */
     protected class MessageListenerConsumer implements Consumer {
-
+        /**
+         * The consumer tag for this RabbitMQ consumer
+         */
         private volatile String consumerTag;
 
 
+        /**
+         * Constructor
+         */
         public MessageListenerConsumer() {
         }
 
+        /**
+         * Returns the consumer tag used for this consumer
+         * @return the consunmer tag for this consumer
+         */
         public String getConsumerTag() {
             return consumerTag;
         }
@@ -514,31 +669,57 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
          */
         @Override
         public synchronized void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
+            /*
+             * Assign the consumer tag, we are not reusing consumer objects for different subscriptions
+             * this is a safe to do
+             */
             if (this.consumerTag==null) this.consumerTag = consumerTag;
+            /*
+             * Wrap the incoming message in a GetResponse 
+             */
             GetResponse response = new GetResponse(envelope, properties, body, 0);
             try {
-                
-                //this should not happen if it is paused, we need to figure that out
-                //TODO
                 try {
+                    /*
+                     * Count up our latch, incase Connection.stop is called
+                     * that call wont return until we are done processing the message
+                     */
                     listenerRunning.countUp();
                     MessageListener listener = userListenerWrapper ;
                     if (listener!=null) {
                         boolean acked = isAutoAck();
                         if (isAutoAck()) {
                             try {
+                                /*
+                                 * Subscriptions we never auto ack, so we have a listener
+                                 * and we know that we will deliver the message
+                                 * ack it now
+                                 */
                                 getSession().getChannel().basicAck(envelope.getDeliveryTag(), false);
+                                /*
+                                 * Mark message as acked
+                                 */
                                 acked = true;
                             } catch (AlreadyClosedException x) {
                                 //TODO logging impl warn message
                                 //this is problematic, we have a client, but we can't ack the message to the server
                                 x.printStackTrace();
+                                //TODO should we deliver the message at this time, knowing that we can't ack it?
                             }
                         }
+                        /*
+                         * Create a javax.jms.Message object
+                         */
                         Message message = processMessage(response, acked);
+                        /*
+                         * Deliver it to the client
+                         */
                         listener.onMessage(message);
                     } else {
                         try {
+                            /*
+                             * We are unable to deliver the message, nack it
+                             */
                             getSession().getChannel().basicNack(envelope.getDeliveryTag(), false, true);
                         } catch (AlreadyClosedException x) {
                             //TODO logging impl debug message
@@ -546,6 +727,9 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                         }
                     }
                 } finally {
+                    /*
+                     * make sure we update our latch
+                     */
                     listenerRunning.countDown();
                 }
             } catch (JMSException x) {

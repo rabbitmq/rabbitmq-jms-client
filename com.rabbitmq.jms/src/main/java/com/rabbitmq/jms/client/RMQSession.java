@@ -316,9 +316,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public void recover() throws JMSException {
         Util.util().checkTrue(this.closed, "Session has been closed");
-        
+        //TODO we must make a copy of the message at some point since
+        //Session.recover can be called multiple times
         ConcurrentLinkedQueue<RMQMessage> tmp = receivedMessages;
-        receivedMessages = new ConcurrentLinkedQueue<RMQMessage>(); //TODO we must not reset received messages until commit/rollback
+        receivedMessages = new ConcurrentLinkedQueue<RMQMessage>(); 
         recoveredMessages.addAll(tmp);
         for (RMQMessage msg : recoveredMessages) {
             msg.setJMSRedelivered(true);
@@ -328,6 +329,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         //not acknowledged
         for (RMQMessageConsumer consumer : consumers) {
             try {
+                /* TODO - we should probably deliver the message
+                 * to a consumer with the right destination
+                 * right now all recovered messages go to the same consumer
+                 * and what do we do if the consumer is closed?
+                 * 1. Consumer.close
+                 * 2. Session.recover
+                 * What happens to the recovered messages? 
+                 */ 
                 consumer.recover(recoveredMessages);
             }catch (JMSException x) {
                 x.printStackTrace(); //TODO logging implementation

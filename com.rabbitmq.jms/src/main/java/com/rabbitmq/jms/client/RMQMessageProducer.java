@@ -2,6 +2,7 @@ package com.rabbitmq.jms.client;
 
 import java.io.IOException;
 
+import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -20,13 +21,40 @@ import com.rabbitmq.jms.util.Util;
  */
 public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPublisher {
 
+    /**
+     * The destination that we send our message to
+     */
     private final RMQDestination destination;
+    /**
+     * The session this producer was created by
+     */
     private final RMQSession session;
+    /**
+     * Delivery mode
+     * @see {@link javax.jms.DeliveryMode}
+     */
     private int deliveryMode;
+    /**
+     * Should we use message IDs or not.
+     * In this implementation, this flag is ignored and we will
+     * always use message IDs
+     */
     private boolean disableMessageID;
+    /**
+     * Should we disable timestamps
+     * In this implementation, this flag is ignored and we will
+     * always use message timestamps
+     */
     private boolean disableMessageTimestamp;
-    private int priority;
-    private long ttl;
+    /**
+     * The default priority for a message
+     */
+    private int priority = Message.DEFAULT_PRIORITY;
+    /**
+     * RabbitMQ doesn't support TTL
+     * TODO
+     */
+    private long ttl = Message.DEFAULT_TIME_TO_LIVE;
 
     public RMQMessageProducer(RMQSession session, RMQDestination destination) {
         this.session = session;
@@ -169,21 +197,36 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         try {
             if (deliveryMode<1 || deliveryMode>2) {
+                /*
+                 * If delivery mode is invalid, set it to non persistnt
+                 */
                 deliveryMode = javax.jms.DeliveryMode.NON_PERSISTENT;
             }
+            /*
+             * Set known JMS message properties that need to be set during this call
+             */
             RMQMessage msg = (RMQMessage) ((RMQMessage) message);
-            RMQDestination dest = (RMQDestination) destination;
-            AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
             msg.setJMSDeliveryMode(deliveryMode);
             msg.setJMSPriority(priority);
             msg.setJMSExpiration(timeToLive == 0 ? 0 : System.currentTimeMillis() + timeToLive);
             msg.setJMSDestination(destination);
+            msg.setJMSTimestamp(System.currentTimeMillis());
             msg.generateInternalID();
+            
+            RMQDestination dest = (RMQDestination) destination;
+            
+            /*
+             * Configure the send settings
+             */
+            AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
             bob.contentType("application/octet-stream");
             bob.deliveryMode(deliveryMode);
             bob.priority(priority);
-            // bob.expiration(expiration) // TODO TTL implementation
+            // bob.expiration(expiration) // TODO TTL implementation - does nothing in RabbitMQ Java API
             byte[] data = RMQMessage.toMessage(msg);
+            /*
+             * Send the message
+             */
             this.session.getChannel().basicPublish(dest.getExchangeName(), dest.getRoutingKey(), bob.build(), data);
         } catch (IOException x) {
             Util.util().handleException(x);
