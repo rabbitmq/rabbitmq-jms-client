@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageFormatException;
 
 import com.rabbitmq.jms.util.IteratorEnum;
 import com.rabbitmq.jms.util.Util;
@@ -564,6 +565,19 @@ public abstract class RMQMessage implements Message, Cloneable {
     @Override
     public void setObjectProperty(String name, Object value) throws JMSException {
         try {
+            if (RMQConnectionMetaData.JMSX_GROUP_SEQ_LABEL.equals(name)) {
+                //value can only be an int
+                if (!(value instanceof Integer)) {
+                    throw new MessageFormatException(RMQConnectionMetaData.JMSX_GROUP_SEQ_LABEL+" can only be of type int");
+                } else {
+                    int val = ((Integer)value).intValue();
+                    if (val<=0) throw new JMSException(RMQConnectionMetaData.JMSX_GROUP_SEQ_LABEL+" must be >0");
+                }
+            } else if (RMQConnectionMetaData.JMSX_GROUP_ID_LABEL.equals(name)) {
+                if (!(value instanceof String)) {
+                    throw new MessageFormatException(RMQConnectionMetaData.JMSX_GROUP_ID_LABEL+" can only be of type String");
+                }
+            }
             checkName(name);
             if (name.startsWith(PREFIX)) {
                 if (value==null) {
