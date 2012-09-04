@@ -437,7 +437,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
     public void reset() throws JMSException {
         this.readbuf = null;
 
-        if (this.reading || isReadonly()) {
+        if (this.reading) {
             //if we already are reading, all we want to do is reset to the 
             //beginning of the stream
             try {

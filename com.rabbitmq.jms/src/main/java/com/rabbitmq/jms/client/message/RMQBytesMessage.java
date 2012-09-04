@@ -78,6 +78,10 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      * @param reading if this message is in a read state
      */
     public RMQBytesMessage(boolean reading) {
+        init(reading);
+    }
+    
+    protected void init(boolean reading) {
         this.reading = reading;
         if (!reading) {
             /*
@@ -504,7 +508,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public void reset() throws JMSException {
-        if (this.reading || isReadonly()) {
+        if (this.reading) {
             //if we already are reading, all we want to do is reset to the 
             //beginning of the stream
             try {
