@@ -297,6 +297,10 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         if (!this.reading)
             throw new MessageNotReadableException(NOT_READABLE);
         try {
+            if (length<0 || length>value.length) {
+                throw new IndexOutOfBoundsException();
+            }
+
             /*
              * We can't simply do this.in.readBytes(value,0,length)
              * cause this would read block headers from 
@@ -479,6 +483,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         if (this.reading || isReadonlyBody())
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
+            if (value == null ) {
+                throw new MessageFormatException("Null byte array");
+            } else if (offset>=value.length || length<0) {
+                throw new IndexOutOfBoundsException();
+            }
             this.out.write(value, offset, length);
         } catch (IOException x) {
             throw Util.util().handleException(x);
