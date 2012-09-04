@@ -652,12 +652,12 @@ public abstract class RMQMessage implements Message, Cloneable {
         out.writeInt(msg.rmqProperties.size());
         for (Map.Entry<String, Serializable> entry : msg.rmqProperties.entrySet()) {
             out.writeUTF(entry.getKey());
-            writePrimitive(entry.getValue(), out);
+            writePrimitive(entry.getValue(), out, true);
         }
         out.writeInt(msg.jmsProperties.size());
         for (Map.Entry<String, Serializable> entry : msg.jmsProperties.entrySet()) {
             out.writeUTF(entry.getKey());
-            writePrimitive(entry.getValue(), out);
+            writePrimitive(entry.getValue(), out, true);
         }
         msg.writeBody(out);
         out.flush();
