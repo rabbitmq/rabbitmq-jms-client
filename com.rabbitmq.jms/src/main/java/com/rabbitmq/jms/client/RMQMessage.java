@@ -102,17 +102,22 @@ public abstract class RMQMessage implements Message, Cloneable {
      * We set this flag when we receive a message in the following method
      * {@link RMQMessageConsumer#processMessage(com.rabbitmq.client.GetResponse, boolean)}
      */
-    private volatile boolean readonly=false;
+    private volatile boolean readonlyProperties=false;
+    private volatile boolean readonlyBody=false;
     
     
     /**
-     * Returns true if this message is read only
+     * Returns true if this message body is read only
      * This means that message has been received and can not 
      * be modified
      * @return true if the message is read only
      */
-    public boolean isReadonly() {
-        return readonly;
+    public boolean isReadonlyBody() {
+        return readonlyBody;
+    }
+    
+    public boolean isReadOnlyProperties() {
+        return this.readonlyProperties;
     }
     
     /**
@@ -121,7 +126,16 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @param readonly
      */
     protected void setReadonly(boolean readonly) {
-        this.readonly = readonly;
+        this.readonlyBody = readonly;
+        this.readonlyProperties = readonly;
+    }
+    
+    protected void setReadOnlyBody(boolean readonly) {
+        this.readonlyBody = readonly;
+    }
+    
+    protected void setReadOnlyProperties(boolean readonly) {
+        this.readonlyProperties = readonly;
     }
 
     /**
@@ -364,9 +378,9 @@ public abstract class RMQMessage implements Message, Cloneable {
      * {@inheritDoc}
      */
     @Override
-    public void clearProperties() throws JMSException {
+    public final void clearProperties() throws JMSException {
         this.jmsProperties.clear();
-        this.setReadonly(false);
+        this.setReadOnlyProperties(false);
     }
 
     /**
@@ -683,7 +697,7 @@ public abstract class RMQMessage implements Message, Cloneable {
                     this.rmqProperties.put(name, (Serializable) value);
                 }
             } else {
-                Util.util().checkTrue(isReadonly(), new MessageNotWriteableException("Message has been received and is read only."));
+                Util.util().checkTrue(isReadOnlyProperties(), new MessageNotWriteableException("Message has been received and is read only."));
                 checkName(name);
 
                 if (value==null) {
@@ -713,7 +727,12 @@ public abstract class RMQMessage implements Message, Cloneable {
      * This is an abstract method, and is implementation specific
      */
     @Override
-    public abstract void clearBody() throws JMSException;
+    public final void clearBody() throws JMSException {
+        setReadOnlyBody(false);
+        clearBodyInternal();
+    }
+    
+    protected abstract void clearBodyInternal() throws JMSException;
 
     /**
      *@return the charset used to convert a TextMessage to byte[]

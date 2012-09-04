@@ -336,7 +336,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public void writeBoolean(boolean value) throws JMSException {
-        if (this.reading || isReadonly())
+        if (this.reading || isReadonlyBody())
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
             this.out.writeBoolean(value);
@@ -350,7 +350,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public void writeByte(byte value) throws JMSException {
-        if (this.reading || isReadonly())
+        if (this.reading || isReadonlyBody())
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
             this.out.writeByte(value);
@@ -364,7 +364,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public void writeShort(short value) throws JMSException {
-        if (this.reading || isReadonly())
+        if (this.reading || isReadonlyBody())
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
             this.out.writeShort(value);
@@ -378,7 +378,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public void writeChar(char value) throws JMSException {
-        if (this.reading || isReadonly())
+        if (this.reading || isReadonlyBody())
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
             this.out.writeChar(value);
@@ -392,7 +392,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public void writeInt(int value) throws JMSException {
-        if (this.reading || isReadonly())
+        if (this.reading || isReadonlyBody())
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
             this.out.writeInt(value);
@@ -406,7 +406,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public void writeLong(long value) throws JMSException {
-        if (this.reading || isReadonly())
+        if (this.reading || isReadonlyBody())
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
             this.out.writeLong(value);
@@ -420,7 +420,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public void writeFloat(float value) throws JMSException {
-        if (this.reading || isReadonly())
+        if (this.reading || isReadonlyBody())
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
             this.out.writeFloat(value);
@@ -434,7 +434,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public void writeDouble(double value) throws JMSException {
-        if (this.reading || isReadonly())
+        if (this.reading || isReadonlyBody())
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
             this.out.writeDouble(value);
@@ -448,7 +448,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public void writeUTF(String value) throws JMSException {
-        if (this.reading || isReadonly())
+        if (this.reading || isReadonlyBody())
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
             this.out.writeUTF(value);
@@ -462,7 +462,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public void writeBytes(byte[] value) throws JMSException {
-        if (this.reading || isReadonly())
+        if (this.reading || isReadonlyBody())
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
             this.out.write(value);
@@ -476,7 +476,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public void writeBytes(byte[] value, int offset, int length) throws JMSException {
-        if (this.reading || isReadonly())
+        if (this.reading || isReadonlyBody())
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
             this.out.write(value, offset, length);
@@ -494,7 +494,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
     }
     
     protected void writeObject(Object value, boolean allowSerializable) throws JMSException {
-        if (this.reading || isReadonly())
+        if (this.reading || isReadonlyBody())
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
             this.writePrimitiveData(value, this.out, allowSerializable);
@@ -550,7 +550,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      * {@inheritDoc}
      */
     @Override
-    public void clearBody() throws JMSException {
+    public void clearBodyInternal() throws JMSException {
         this.bout = new ByteArrayOutputStream(RMQMessage.DEFAULT_MESSAGE_BODY_SIZE);
         try {
             this.out = new ObjectOutputStream(this.bout);

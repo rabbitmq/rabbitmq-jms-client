@@ -224,7 +224,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
      */
     @Override
     public void setBoolean(String name, boolean value) throws JMSException {
-        Util.util().checkTrue(isReadonly(), new MessageNotWriteableException("Message not writeable"));
+        Util.util().checkTrue(isReadonlyBody(), new MessageNotWriteableException("Message not writeable"));
         this.data.put(name, value);
     }
 
@@ -233,7 +233,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
      */
     @Override
     public void setByte(String name, byte value) throws JMSException {
-        Util.util().checkTrue(isReadonly(), new MessageNotWriteableException("Message not writeable"));
+        Util.util().checkTrue(isReadonlyBody(), new MessageNotWriteableException("Message not writeable"));
         this.data.put(name, value);
     }
 
@@ -242,7 +242,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
      */
     @Override
     public void setShort(String name, short value) throws JMSException {
-        Util.util().checkTrue(isReadonly(), new MessageNotWriteableException("Message not writeable"));
+        Util.util().checkTrue(isReadonlyBody(), new MessageNotWriteableException("Message not writeable"));
         this.data.put(name, value);
     }
 
@@ -251,7 +251,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
      */
     @Override
     public void setChar(String name, char value) throws JMSException {
-        Util.util().checkTrue(isReadonly(), new MessageNotWriteableException("Message not writeable"));
+        Util.util().checkTrue(isReadonlyBody(), new MessageNotWriteableException("Message not writeable"));
         this.data.put(name, value);
     }
 
@@ -260,7 +260,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
      */
     @Override
     public void setInt(String name, int value) throws JMSException {
-        Util.util().checkTrue(isReadonly(), new MessageNotWriteableException("Message not writeable"));
+        Util.util().checkTrue(isReadonlyBody(), new MessageNotWriteableException("Message not writeable"));
         this.data.put(name, value);
     }
 
@@ -269,7 +269,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
      */
     @Override
     public void setLong(String name, long value) throws JMSException {
-        Util.util().checkTrue(isReadonly(), new MessageNotWriteableException("Message not writeable"));
+        Util.util().checkTrue(isReadonlyBody(), new MessageNotWriteableException("Message not writeable"));
         this.data.put(name, value);
     }
 
@@ -278,7 +278,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
      */
     @Override
     public void setFloat(String name, float value) throws JMSException {
-        Util.util().checkTrue(isReadonly(), new MessageNotWriteableException("Message not writeable"));
+        Util.util().checkTrue(isReadonlyBody(), new MessageNotWriteableException("Message not writeable"));
         this.data.put(name, value);
     }
 
@@ -287,7 +287,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
      */
     @Override
     public void setDouble(String name, double value) throws JMSException {
-        Util.util().checkTrue(isReadonly(), new MessageNotWriteableException("Message not writeable"));
+        Util.util().checkTrue(isReadonlyBody(), new MessageNotWriteableException("Message not writeable"));
         this.data.put(name, value);
     }
 
@@ -296,7 +296,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
      */
     @Override
     public void setString(String name, String value) throws JMSException {
-        Util.util().checkTrue(isReadonly(), new MessageNotWriteableException("Message not writeable"));
+        Util.util().checkTrue(isReadonlyBody(), new MessageNotWriteableException("Message not writeable"));
         this.data.put(name, value);
     }
 
@@ -305,7 +305,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
      */
     @Override
     public void setBytes(String name, byte[] value) throws JMSException {
-        Util.util().checkTrue(isReadonly(), new MessageNotWriteableException("Message not writeable"));
+        Util.util().checkTrue(isReadonlyBody(), new MessageNotWriteableException("Message not writeable"));
         setBytes(name, value, 0, value.length);
     }
 
@@ -314,7 +314,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
      */
     @Override
     public void setBytes(String name, byte[] value, int offset, int length) throws JMSException {
-        Util.util().checkTrue(isReadonly(), new MessageNotWriteableException("Message not writeable"));
+        Util.util().checkTrue(isReadonlyBody(), new MessageNotWriteableException("Message not writeable"));
         if (value == null) {
             this.data.remove(name);
             return;
@@ -329,7 +329,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
      */
     @Override
     public void setObject(String name, Object value) throws JMSException {
-        Util.util().checkTrue(isReadonly(), new MessageNotWriteableException("Message not writeable"));
+        Util.util().checkTrue(isReadonlyBody(), new MessageNotWriteableException("Message not writeable"));
         if (name==null && value==null) {
         } else if (value==null) {
             this.data.remove(name);
@@ -362,7 +362,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
      * {@inheritDoc}
      */
     @Override
-    public void clearBody() throws JMSException {
+    public void clearBodyInternal() throws JMSException {
         this.data.clear();
     }
 

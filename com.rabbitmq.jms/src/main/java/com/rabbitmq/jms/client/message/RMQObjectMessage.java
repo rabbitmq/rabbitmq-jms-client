@@ -24,7 +24,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
      */
     @Override
     public void setObject(Serializable object) throws JMSException {
-        Util.util().checkTrue(isReadonly(), new MessageNotWriteableException("Message not writeable"));
+        Util.util().checkTrue(isReadonlyBody(), new MessageNotWriteableException("Message not writeable"));
         try {
             if (object==null) {
                 buf = null;
@@ -65,7 +65,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
      * {@inheritDoc}
      */
     @Override
-    public void clearBody() throws JMSException {
+    public void clearBodyInternal() throws JMSException {
         this.buf = null;
     }
 
