@@ -12,10 +12,10 @@
   <exclude>
     <factory>XAQueueConnectionFactory</factory>
   </exclude>
-
   <exclude>
     <factory>XATopicConnectionFactory</factory>
   </exclude>
+<!--  
   <include>
     <test>org.exolab.jmscts.test.connection.AuthTest.*</test>
   </include>
@@ -109,7 +109,10 @@
   <include>
     <test>org.exolab.jmscts.test.message.readwrite.SendReceiveReadWriteTest.*</test>
   </include>
-
+-->
+  <include>
+    <test>org.exolab.jmscts.test.message.properties.PropertyTest.testPropertyIntegrity</test>
+  </include>
 
   <!--  we don't allow 'foreign' messages created outside of our implementation -->  
   <exclude>

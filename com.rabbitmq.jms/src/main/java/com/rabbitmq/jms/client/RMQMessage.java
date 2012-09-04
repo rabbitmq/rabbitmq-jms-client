@@ -270,6 +270,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     @Override
     public void clearProperties() throws JMSException {
         this.jmsProperties.clear();
+        this.setReadonly(false);
     }
 
     /**
@@ -736,7 +737,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     public void generateInternalID() throws JMSException {
         internalMessageID = Util.util().generateUUIDTag();
-        this.setJMSMessageID("ID:"+this.internalMessageID);
+        this.rmqProperties.put(JMS_MESSAGE_ID,"ID:"+this.internalMessageID);
     }
     
     /**
