@@ -60,6 +60,12 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private volatile long terminationTimeout = 15000;
     
     private static ConcurrentHashMap<String, String> CLIENT_IDS = new ConcurrentHashMap<String, String>(); 
+    
+    /**
+     * List of all our durable subscriptions so we can track them on a per connection basis
+     */
+    private static final ConcurrentHashMap<String, String> subscriptions = new ConcurrentHashMap<String, String>();
+
 
     /** This is used for JMSCTS test cases, as ClientID should only be configurable right after the connection has been created */
     private volatile boolean canSetClientID = true;
@@ -80,7 +86,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
         canSetClientID = false;
         Util.util().checkTrue(closed, new javax.jms.IllegalStateException("Connection is closed."));
-        RMQSession session = new RMQSession(this, transacted, acknowledgeMode);
+        RMQSession session = new RMQSession(this, transacted, acknowledgeMode, subscriptions);
         this.sessions.add(session);
         return session;
     }

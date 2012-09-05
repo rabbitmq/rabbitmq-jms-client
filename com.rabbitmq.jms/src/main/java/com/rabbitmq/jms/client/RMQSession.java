@@ -102,10 +102,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private final CountUpAndDownLatch runningListener = new CountUpAndDownLatch(0);
     /**
-     * List of all our durable subscriptions so we can track them
-     */
-    private final ConcurrentHashMap<String, String> subscriptions = new ConcurrentHashMap<String, String>();
-    /**
      * We are manually numbering our channels, this serves no purpose right now
      */
     private static final AtomicInteger channelNr = new AtomicInteger(0);
@@ -118,16 +114,22 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private volatile TreeSet<Long> receivedMessages = new TreeSet<Long>();
 
     /**
+     * List of all our durable subscriptions so we can track them
+     */
+    private final ConcurrentHashMap<String, String> subscriptions;
+
+    /**
      * Creates a session object associated with a connection
      * @param connection the connection that we will send data on
      * @param transacted whether this session is transacted or not
      * @param mode the default ack mode
      * @throws JMSException if we fail to create a {@link Channel} object on the connection
      */
-    public RMQSession(RMQConnection connection, boolean transacted, int mode) throws JMSException {
+    public RMQSession(RMQConnection connection, boolean transacted, int mode, ConcurrentHashMap<String, String> subscriptions) throws JMSException {
         assert (mode >= 0 && mode <= 3);
         this.connection = connection;
         this.transacted = transacted;
+        this.subscriptions = subscriptions;
         this.acknowledgeMode = transacted ? Session.SESSION_TRANSACTED : mode;
         try {
             /*
