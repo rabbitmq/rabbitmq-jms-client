@@ -15,7 +15,7 @@
   <exclude>
     <factory>XATopicConnectionFactory</factory>
   </exclude>
-
+<!-- 
   <include>
     <test>org.exolab.jmscts.test.connection.AuthTest.*</test>
   </include>
@@ -112,9 +112,82 @@
   <include>
     <test>org.exolab.jmscts.test.message.stream.StreamMessageTest.*</test>
   </include>
- 
-  <!--  we don't allow 'foreign' messages created outside of our implementation -->  
+  <include>
+    <test>org.exolab.jmscts.test.session.AutoAckTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.session.clientack.ClientAcknowledgeTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.session.clientack.CloseTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.session.clientack.RepublishTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.session.DupsAckTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.session.ListenerCloseTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.session.MessageListenerTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.session.NonTransactedTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.session.ReceiverCloseTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.session.transacted.CloseTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.session.transacted.CommitTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.session.transacted.RecoverTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.session.transacted.RollbackTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.topic.DuplicateDurableSubscriberTest.*</test>
+  </include>
+  
+  -->
+
+  <include>
+    <test>org.exolab.jmscts.test.topic.DurableSubscriberTest.*</test>
+  </include>
+
+  
+  <!-- Below are tests we yet have to test
+  <include>
+    <test>org.exolab.jmscts.test.topic.NoLocalTest.*</test>
+  </include>
+  
+   -->
+  
+  <!--  and here are tests we know are failing -->
   <exclude>
+    <!--test here fail as the temporary topics don't work as they should, they could be auto deleted before the test runs complete
+        we may have to implement a delete on Connection close -->
+    <test>org.exolab.jmscts.test.session.clientack.SubscriberRedeliveredTest.*</test>
+  </exclude>
+  
+  <exclude>
+    <!--  this method uses incorrect reflection to pull back methods in the session -->
+    <test>org.exolab.jmscts.test.session.CloseTest.*</test>
+  </exclude>
+
+  <exclude>
+    <!-- The spec is pretty clear, ack one message in a session, and you ack them all
+         partial ack is no longer part of it -->
+    <test>org.exolab.jmscts.test.session.clientack.ClientAcknowledgeTest.testPartialClientAcknowledge</test>
+  </exclude>
+  <exclude>
+     <!--  we don't allow 'foreign' messages created outside of our implementation -->  
     <test>org.exolab.jmscts.test.message.foreign.ForeignMessageTest.*</test>
   </exclude>
   <exclude>

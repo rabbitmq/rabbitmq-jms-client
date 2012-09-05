@@ -58,6 +58,8 @@ import javax.jms.TopicPublisher;
 import javax.jms.XAQueueSession;
 import javax.jms.XATopicSession;
 
+import com.rabbitmq.jms.admin.RMQDestination;
+
 
 /**
  * Helper class for performing session operations
@@ -143,7 +145,7 @@ public final class SessionHelper {
             session = ((XATopicSession) session).getTopicSession();
         }
 
-        if (session instanceof QueueSession) {
+        if (((RMQDestination)destination).isQueue()) {
             Queue queue = (Queue) destination;
             result = ((QueueSession) session).createReceiver(queue, selector);
         } else {

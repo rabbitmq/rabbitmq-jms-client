@@ -163,18 +163,18 @@ public class SubscriberRedeliveredTest extends AbstractSendReceiveTestCase {
             send(context, DESTINATION, count);
 
             // receive messages via the CLIENT_ACKNOWLEDGE session
-            List<?> messages = receive(clientAckContext, subscriber2, count);
-            checkJMSRedelivered(messages, false);
+            List<?> messages2 = receive(clientAckContext, subscriber2, count);
+            checkJMSRedelivered(messages2, false);
             clientAckSession.recover();
-            messages = receive(clientAckContext, subscriber2, count);
-            checkJMSRedelivered(messages, true);
-            acknowledge(messages);
+            messages2 = receive(clientAckContext, subscriber2, count);
+            checkJMSRedelivered(messages2, true);
+            acknowledge(messages2);
 
             // messages received by subscriber1 shouldn't have their
             // JMSRedelivered set
-            messages = receive(context, subscriber1, count);
-            checkJMSRedelivered(messages, false);
-            acknowledge(messages);
+            List<?> messages1 = receive(context, subscriber1, count);
+            checkJMSRedelivered(messages1, false);
+            acknowledge(messages1);
         } finally {
             close(subscriber1);
             close(subscriber2);

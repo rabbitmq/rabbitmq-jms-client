@@ -625,6 +625,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             //this creates a durable subscription by setting autoDelete==false on the queue it binds 
             //to the fanout exchange
             RMQMessageConsumer result = (RMQMessageConsumer)createConsumer(topic, false, name);
+            result.setDurable(true);
             return result;
         } else {
             throw new JMSException("Subscription already exists["+name+"]");
@@ -809,6 +810,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     public void consumerClose(RMQMessageConsumer consumer) {
         this.consumers.remove(consumer);
+        if (consumer.isDurable()) {
+            try {
+                unsubscribe(consumer.getUUIDTag());
+            }catch (JMSException x) {
+                x.printStackTrace();
+                //TODO log warn message
+            }
+        }
     }
 
     public void producerClose(RMQMessageProducer producer) {

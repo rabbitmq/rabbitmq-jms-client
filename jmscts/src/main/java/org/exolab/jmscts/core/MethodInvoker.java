@@ -192,7 +192,7 @@ public class MethodInvoker {
      */
     public Object invoke(Object object, String method, Object[] arguments)
         throws Exception, NoSuchMethodException {
-
+        
         Class<?> clazz = (_clazz != null) ? _clazz : object.getClass();
         Method invoker = ClassHelper.getMethod(clazz, method, arguments);
         return invoke(object, invoker, arguments);

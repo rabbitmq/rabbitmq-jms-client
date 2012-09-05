@@ -74,6 +74,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private volatile MessageListenerWrapper userListenerWrapper =null;
     
     /**
+     * Flag to check if we are a durable subscription
+     */
+    private volatile boolean durable = false;
+    /**
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
      * @param session - the session object that created this consume 
      * @param destination - the destination for this consumer
@@ -532,6 +536,26 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         }
     }
     
+    
+    
+    /**
+     * Return true if durable
+     * @return
+     */
+    public boolean isDurable() {
+        return durable;
+    }
+
+    /**
+     * Set durable status
+     * @param durable
+     */
+    protected void setDurable(boolean durable) {
+        this.durable = durable;
+    }
+
+
+
 
     /**
      * Inner class that lets us lock the listener 
