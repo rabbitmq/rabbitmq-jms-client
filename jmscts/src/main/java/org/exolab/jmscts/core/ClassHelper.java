@@ -158,6 +158,12 @@ public final class ClassHelper {
         return result.toArray(new Property[]{});
     }
 
+    public static Method getMethod(Class<?> type, String name, Object[] args, Class[] types)
+            throws NoSuchMethodException {
+        return type.getMethod(name, types);
+    }
+
+    
     /**
      * Helper to return a method given its name and a list of arguments
      *

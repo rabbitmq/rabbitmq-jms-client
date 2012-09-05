@@ -762,6 +762,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public void unsubscribe(String name) throws JMSException {
+        Util.util().checkTrue(this.closed, new IllegalStateException("Session has been closed"));
         try {
             if (name!=null && subscriptions.remove(name)!=null) {
                 //remove the queue from the fanout exchange

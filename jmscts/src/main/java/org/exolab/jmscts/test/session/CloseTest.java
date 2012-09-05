@@ -45,9 +45,11 @@
 package org.exolab.jmscts.test.session;
 
 import javax.jms.Destination;
+import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.IllegalStateException;
 import javax.jms.QueueSession;
+import javax.jms.Topic;
 
 import org.apache.log4j.Category;
 
@@ -185,26 +187,27 @@ public class CloseTest extends AbstractSessionTestCase {
         // @todo - need to add support for get/setMessageListener, run
         // and XA
 
-        if (session instanceof QueueSession) {
-            invoker.invoke(session, "createBrowser", destination);
+        if (context.getSessionType().equals(QueueSession.class)) {
+            invoker.invoke(session, "createBrowser", destination, Queue.class);
             invoker.invoke(session, "createBrowser",
-                           new Object[]{destination, "1=1"});
+                           new Object[]{destination, "1=1"}, new Class[] {Queue.class, String.class});
             invoker.invoke(session, "createQueue", "dummy");
-            invoker.invoke(session, "createReceiver", destination);
+            invoker.invoke(session, "createReceiver", destination, Queue.class);
             invoker.invoke(session, "createReceiver",
-                           new Object[]{destination, "1=1"});
-            invoker.invoke(session, "createSender", destination);
+                           new Object[]{destination, "1=1"}, new Class[] {Queue.class, String.class});
+            invoker.invoke(session, "createSender", destination, Queue.class);
             invoker.invoke(session, "createTemporaryQueue");
         } else {
             invoker.invoke(session, "createDurableSubscriber",
-                           new Object[]{destination, "ABC"});
+                           new Object[]{destination, "ABC"}, new Class[] {Topic.class, String.class});
             invoker.invoke(session, "createDurableSubscriber",
-                           new Object[]{destination, "CDE", "1=1",
-                                        Boolean.TRUE});
-            invoker.invoke(session, "createPublisher", destination);
-            invoker.invoke(session, "createSubscriber", destination);
+                           new Object[]{destination, "CDE", "1=1", Boolean.TRUE}, 
+                           new Class[] {Topic.class, String.class, String.class, Boolean.TYPE });
+            invoker.invoke(session, "createPublisher", destination, Topic.class);
+            invoker.invoke(session, "createSubscriber", destination, Topic.class);
             invoker.invoke(session, "createSubscriber",
-                           new Object[]{destination, "1=1", Boolean.FALSE});
+                           new Object[]{destination, "1=1", Boolean.FALSE}, 
+                           new Class[] {Topic.class, String.class, Boolean.TYPE});
             invoker.invoke(session, "createTemporaryTopic");
             invoker.invoke(session, "createTopic", "dummy");
             invoker.invoke(session, "unsubscribe", "ABC");
