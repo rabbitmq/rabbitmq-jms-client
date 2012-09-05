@@ -64,7 +64,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     /**
      * List of all our durable subscriptions so we can track them on a per connection basis
      */
-    private static final ConcurrentHashMap<String, String> subscriptions = new ConcurrentHashMap<String, String>();
+    private static final ConcurrentHashMap<String, RMQMessageConsumer> subscriptions = new ConcurrentHashMap<String, RMQMessageConsumer>();
 
 
     /** This is used for JMSCTS test cases, as ClientID should only be configurable right after the connection has been created */

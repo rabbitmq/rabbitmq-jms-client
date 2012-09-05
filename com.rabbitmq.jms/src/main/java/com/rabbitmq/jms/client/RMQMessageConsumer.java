@@ -30,7 +30,6 @@ import com.rabbitmq.jms.util.PauseLatch;
 import com.rabbitmq.jms.util.Util;
 
 public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscriber {
-
     /**
      * The destination that this consumer belongs to
      */
@@ -77,6 +76,15 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * Flag to check if we are a durable subscription
      */
     private volatile boolean durable = false;
+    
+    /**
+     * Only used internally
+     */
+    private RMQMessageConsumer() {
+        this.session = null;
+        this.destination = null;
+        this.uuidTag = null;
+    }
     /**
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
      * @param session - the session object that created this consume 
@@ -84,6 +92,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @param uuidTag - when creating queues to a topic, we need a unique queue name for each consumer. This is the unique name
      */
     public RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag, boolean paused) {
+        
         this.session = session;
         this.destination = destination;
         this.uuidTag = uuidTag;
@@ -398,6 +407,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         } finally {
             getSession().consumerClose(this);
         }
+    }
+    
+    public boolean isClosed() {
+        return this.closed;
     }
 
     /**

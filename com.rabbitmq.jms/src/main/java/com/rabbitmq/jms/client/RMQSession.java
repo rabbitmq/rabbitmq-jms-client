@@ -116,7 +116,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     /**
      * List of all our durable subscriptions so we can track them
      */
-    private final ConcurrentHashMap<String, String> subscriptions;
+    private final ConcurrentHashMap<String, RMQMessageConsumer> subscriptions;
 
     /**
      * Creates a session object associated with a connection
@@ -125,7 +125,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @param mode the default ack mode
      * @throws JMSException if we fail to create a {@link Channel} object on the connection
      */
-    public RMQSession(RMQConnection connection, boolean transacted, int mode, ConcurrentHashMap<String, String> subscriptions) throws JMSException {
+    public RMQSession(RMQConnection connection, boolean transacted, int mode, ConcurrentHashMap<String, RMQMessageConsumer> subscriptions) throws JMSException {
         assert (mode >= 0 && mode <= 3);
         this.connection = connection;
         this.transacted = transacted;
@@ -621,15 +621,34 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name) throws JMSException {
         Util.util().checkTrue(this.closed, new IllegalStateException("Session has been closed"));
-        if (subscriptions.putIfAbsent(name, name)==null) {
-            //this creates a durable subscription by setting autoDelete==false on the queue it binds 
-            //to the fanout exchange
-            RMQMessageConsumer result = (RMQMessageConsumer)createConsumer(topic, false, name);
-            result.setDurable(true);
-            return result;
-        } else {
-            throw new JMSException("Subscription already exists["+name+"]");
+        RMQMessageConsumer previous = subscriptions.get(name);
+        if (previous!=null) {
+            /*
+             * we are changing subscription, or not, if called with the same topic
+             */
+            
+            if (previous.getDestination().equals(topic)) {
+                if (previous.isClosed()) {
+                    /*
+                     * They called TopicSubscriber.close but didn't unsubscribe
+                     * and they are simply resubscribing with a new one
+                     */
+                } else {
+                    throw new JMSException("Subscription with name["+name+"] and topic["+topic+"] already exists");
+                }
+            } else {
+                //change in subscription
+                unsubscribe(name);
+            }
         }
+        
+        /*
+         * Create the new subscription
+         */
+        RMQMessageConsumer result = (RMQMessageConsumer)createConsumer(topic, false, name);
+        result.setDurable(true);
+        subscriptions.put(name, result);
+        return result;
     }
 
     /**
@@ -690,7 +709,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public void unsubscribe(String name) throws JMSException {
         try {
-            if (name!=null && name.equals(subscriptions.remove(name))) {
+            if (name!=null && subscriptions.remove(name)!=null) {
                 //remove the queue from the fanout exchange
                 this.channel.queueDelete(name);
             }
@@ -811,12 +830,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public void consumerClose(RMQMessageConsumer consumer) {
         this.consumers.remove(consumer);
         if (consumer.isDurable()) {
-            try {
-                unsubscribe(consumer.getUUIDTag());
-            }catch (JMSException x) {
-                x.printStackTrace();
-                //TODO log warn message
-            }
+            /*
+             * We are closing but haven't unsubscribed, so we can't cancel the subscription
+             */
+            
         }
     }
 
