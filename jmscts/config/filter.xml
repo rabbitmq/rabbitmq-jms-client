@@ -15,7 +15,10 @@
   <exclude>
     <factory>XATopicConnectionFactory</factory>
   </exclude>
-  <!-- The tests below are known to pass -->
+  <!-- The tests below are known to pass 
+    =======================================================================================================
+  -->
+   
   <include>
     <test>org.exolab.jmscts.test.connection.AuthTest.*</test>
   </include>
@@ -158,16 +161,31 @@
   <include>
     <test>org.exolab.jmscts.test.topic.DurableSubscriberTest.*</test>
   </include>
+  -->
+  
+  
+  
+  
+  
 
-  <exclude>
+  <!-- Below are tests we yet have to test 
+    =======================================================================================================
+  -->
+<exclude>
     <!--test here fail as the temporary topics don't work as they should, they could be auto deleted before the test runs complete we may have to implement a delete on Connection close -->
     <test>org.exolab.jmscts.test.session.clientack.SubscriberRedeliveredTest.*</test>
   </exclude>
+  <!-- 
+  <exclude>
+    <destination>administered</destination>
+  </exclude>
+   -->
 
 
-  <!-- Below are tests we yet have to test -->
 
-  <!-- and here are tests we know are failing -->
+  <!-- and here are tests we know are failing -
+  =======================================================================================================
+  ->
   <exclude>
     <!-- we only implement the no local logic for async receivers -->
     <test>org.exolab.jmscts.test.topic.NoLocalTest.*</test>

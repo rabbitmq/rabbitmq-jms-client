@@ -117,6 +117,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * List of all our durable subscriptions so we can track them
      */
     private final ConcurrentHashMap<String, RMQMessageConsumer> subscriptions;
+    
+    private ConcurrentLinkedQueue<String> topics = new ConcurrentLinkedQueue<String>();
 
     /**
      * Creates a session object associated with a connection
@@ -355,6 +357,18 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 this.rollback();
             }
             
+            String topicQueue = null;
+            while ((topicQueue=topics.poll())!=null) {
+                try {
+                    this.channel.queueDelete(topicQueue);
+                } catch (AlreadyClosedException x) {
+                    topics.clear();//nothing we can do but break out
+                } catch (IOException iox) {
+                    //TODO log warn about not being able to delete a queue
+                    //created only for a topic
+                }
+            }
+            
             //close the channel itself
             try {
                 if (channel.isOpen()) {
@@ -370,11 +384,11 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 }
                 Util.util().handleException(x);
             } finally {
-                //notify the connection that this session is closed
-                //so that it can be removed from the list of sessions
-                this.getConnection().sessionClose(this);
             }
         } finally {
+            //notify the connection that this session is closed
+            //so that it can be removed from the list of sessions
+            this.getConnection().sessionClose(this);
             this.closed = true;
         }
     }
@@ -455,7 +469,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         RMQDestination dest = (RMQDestination) destination;
         if (!dest.isDeclared()) {
             if (dest.isQueue()) {
-                declareQueue(dest,dest.isTemporary(),true);
+                declareQueue(dest, null, false);
             } else {
                 declareTopic(dest);
             }
@@ -472,24 +486,25 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public MessageConsumer createConsumer(Destination destination) throws JMSException {
         Util.util().checkTrue(this.closed, new IllegalStateException("Session has been closed"));
         //TODO Verify that autoDelete should always be false?
-        return createConsumer(destination, false, null);
+        return createConsumerInternal(destination, null, false);
     }
     
     /**
      * Creates a consumer for a destination. If this is a topic, we can specify the autoDelete flag
      * @param destination
-     * @param autoDelete true if the queue created should be autoDelete==true. This flag is ignored if the destination is a queue
+     * @param uuidTag only used for topics, if null, one is generated as the queue name for this topic
+     * @param durableSubscriber true if this is a durable topic subscription
      * @return {@link #createConsumer(Destination)}
      * @throws JMSException if destination is null or we fail to create the destination on the broker
      * @see {@link #createConsumer(Destination)}
      */
-    public MessageConsumer createConsumer(Destination destination, boolean autoDelete, String uuidTag) throws JMSException {
+    public MessageConsumer createConsumerInternal(Destination destination, String uuidTag, boolean durableSubscriber) throws JMSException {
         RMQDestination dest = (RMQDestination) destination;
-        String consumerTag = uuidTag != null ? uuidTag : Util.util().generateUUIDTag();
+        String consumerTag = uuidTag != null ? uuidTag : "jms-topic-"+Util.util().generateUUIDTag();
 
         if (!dest.isDeclared()) {
             if (dest.isQueue()) {
-                declareQueue(dest,dest.isTemporary(),true);
+                declareQueue(dest,null, false);
             } else {
                 declareTopic(dest);
             }
@@ -502,7 +517,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             try {
                 //we can set auto delete for a topic queue, since if the consumer disappears he is no longer 
                 //participating in the topic.  
-                this.channel.queueDeclare(queueName, true, dest.isTemporary(), autoDelete, new HashMap<String, Object>());
+                this.declareQueue(dest, queueName, durableSubscriber);
+                 
+                if (!durableSubscriber) {
+                    //store the name of the queue we created for this consumer 
+                    //so that we can delete it when we close this session
+                    topics.add(queueName);
+                }
                 //bind the queue to the exchange and routing key
                 this.channel.queueBind(queueName, dest.getExchangeName(), dest.getRoutingKey());
             } catch (IOException x) {
@@ -553,8 +574,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public Queue createQueue(String queueName) throws JMSException {
         Util.util().checkTrue(this.closed, new IllegalStateException("Session has been closed"));
         RMQDestination dest = new RMQDestination(queueName, true, false);
-        boolean durable = true;
-        declareQueue(dest, dest.isTemporary(), durable);
+        declareQueue(dest, null, false);
         return dest;
     }
 
@@ -563,27 +583,43 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * this method invokes {@link RMQDestination#setDeclared(boolean)} with a true value
      * @param dest - the Queue object
      * @param temporary true if the queue is temporary
-     * @param durable true if the queue should be durable
      * @throws JMSException if an IOException occurs in the {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)} call
      */
-    protected void declareQueue(RMQDestination dest, boolean temporary, boolean durable) throws JMSException {
+    protected void declareQueue(RMQDestination dest, String queueNameOverride, boolean durableSubscriber) throws JMSException {
         try {
-
-            this.channel.queueDeclare(dest.getQueueName(), // the name of the
-                                                           // queue inside
-                                                           // rabbit
-                                      !temporary, // rabbit durable means
-                                                  // survive server restart, all
-                                                  // JMS destinations, except
-                                                  // temp destination survive
-                                                  // restarts
-                                      temporary, // temporary destinations are
-                                                 // rabbit exclusive
-                                      !durable, // JMS durable means that we
-                                                // don't want to auto delete the
-                                                // destination
+            String queueName = queueNameOverride!=null?queueNameOverride:dest.getQueueName();
+            
+            /*
+             * We only want destinations to survive server restarts if
+             * 1. They are durable topic subscriptions
+             * 2. They are permanent queues
+             */
+            boolean durable = durableSubscriber || (dest.isQueue() & (!dest.isTemporary()));
+            
+            this.channel.queueDeclare(/* the name of the queue */
+                                      queueName, 
+                                      /* temporary destinations are not durable 
+                                       * will not survive a server restart
+                                       * all JMS queues except temp survive restarts
+                                       * only durable topic queues
+                                       */
+                                      durable, 
+                                      /*
+                                       * Temporary destinations 
+                                       * are marked exclusive
+                                       */
+                                      dest.isTemporary(),
+                                      /*
+                                       * We don't set auto delete to true ever
+                                       * that is cause exclusive(rabbit)==temporary(jms) automatically
+                                       * get deleted when a Connection is closed
+                                       */
+                                      false,    
                                       new HashMap<String, Object>()); // rabbit
                                                                       // properties
+            if (dest.isTemporary()) {
+                topics.add(dest.getQueueName());
+            }
         } catch (Exception x) {
             Util.util().handleException(x);
         }
@@ -647,7 +683,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         /*
          * Create the new subscription
          */
-        RMQMessageConsumer result = (RMQMessageConsumer)createConsumer(topic, false, name);
+        RMQMessageConsumer result = (RMQMessageConsumer)createConsumerInternal(topic, name, true);
         result.setDurable(true);
         subscriptions.put(name, result);
         return result;
@@ -695,7 +731,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public TemporaryQueue createTemporaryQueue() throws JMSException {
         Util.util().checkTrue(this.closed, new IllegalStateException("Session has been closed"));
-        return new RMQDestination(Util.util().generateUUIDTag(), true, true);
+        return new RMQDestination("jms-temp-queue-"+Util.util().generateUUIDTag(), true, true);
     }
 
     /**
@@ -704,7 +740,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public TemporaryTopic createTemporaryTopic() throws JMSException {
         Util.util().checkTrue(this.closed, new IllegalStateException("Session has been closed"));
-        return new RMQDestination(Util.util().generateUUIDTag(), false, true);
+        return new RMQDestination("jms-temp-topic-"+Util.util().generateUUIDTag(), false, true);
     }
 
     /**

@@ -306,7 +306,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         //and those message we NACK
         return getSession().getChannel().basicConsume(name, //the name of the subscriber
                                                       false,//noack
-                                                      Util.util().generateUUIDTag(), //the consumer tag
+                                                      "jms-consumer-"+Util.util().generateUUIDTag(), //the consumer tag
                                                       this.getNoLocalNoException(), //no local flag
                                                       false, //exclusive flag
                                                       new HashMap<String,Object>(), //arguments

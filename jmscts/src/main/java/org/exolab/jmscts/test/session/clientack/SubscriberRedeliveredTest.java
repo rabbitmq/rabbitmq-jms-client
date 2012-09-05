@@ -178,6 +178,7 @@ public class SubscriberRedeliveredTest extends AbstractSendReceiveTestCase {
         } finally {
             close(subscriber1);
             close(subscriber2);
+            clientAckSession.close();
         }
     }
 
