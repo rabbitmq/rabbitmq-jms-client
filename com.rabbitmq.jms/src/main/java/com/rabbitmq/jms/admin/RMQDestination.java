@@ -80,6 +80,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
         this.routingKey = routingKey;
         this.queue = queue;
         this.declared = declared;
+        this.temporary = temporary;
     }
 
     /**
@@ -236,8 +237,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     @Override
     public void delete() throws JMSException {
-        // TODO Auto-generated method stub
-        
+        //delete is deferred until Session.close happens        
     }
 
     
