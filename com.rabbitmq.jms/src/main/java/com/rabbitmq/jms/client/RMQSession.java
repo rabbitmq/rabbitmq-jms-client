@@ -430,8 +430,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector) throws JMSException {
-        // we are not implementing this method yet
-        throw new UnsupportedOperationException();
+        if (messageSelector==null || messageSelector.trim().length()==0) {
+            return createConsumer(destination);
+        } else {
+            // we are not implementing this method yet
+            throw new UnsupportedOperationException();
+        }
     }
 
     /**
@@ -440,8 +444,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean NoLocal) throws JMSException {
-        // we are not implementing this method yet
-        throw new UnsupportedOperationException();
+        if (messageSelector==null || messageSelector.trim().length()==0) {
+            return createConsumer(destination);
+        } else {
+            // we are not implementing this method yet
+            throw new UnsupportedOperationException();
+        }
     }
 
     /**
@@ -534,7 +542,11 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
-        throw new UnsupportedOperationException();
+        if (messageSelector==null || messageSelector.trim().length()==0) {
+            return createDurableSubscriber(topic, name);
+        } else {
+            throw new UnsupportedOperationException();
+        }
     }
 
     /**
@@ -623,7 +635,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public TopicSubscriber createSubscriber(Topic topic, String messageSelector, boolean noLocal) throws JMSException {
-        throw new UnsupportedOperationException();
+        if (messageSelector==null || messageSelector.trim().length()==0) {
+            return createSubscriber(topic);
+        } else {
+            throw new UnsupportedOperationException();
+        }
+
     }
 
     /**

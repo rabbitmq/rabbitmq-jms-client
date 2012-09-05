@@ -96,12 +96,11 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
     /**
      * {@inheritDoc}
-     * @throws UnsupportedOperationException
+     * Note: This implementation always returns null
      */
     @Override
     public String getMessageSelector() throws JMSException {
-        //TODO implement getMessageSelector
-        throw new UnsupportedOperationException();
+        return null;
     }
 
     /**
@@ -458,6 +457,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
     /**
      * {@inheritDoc}
+     * Note: This implementation always returns false.
      */
     @Override
     public boolean getNoLocal() throws JMSException {
