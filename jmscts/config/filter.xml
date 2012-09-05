@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <!-- ====================================================================== -->
-<!-- RabbitMQ JMS test case filter 2012-SEP-05-->
+<!-- RabbitMQ JMS test case filter 2012-SEP-05 -->
 <!-- -->
 <!-- This excludes tests using XAQueueConnectionFactory and -->
 <!-- XATopicConnectionFactory which are not supported by RabbitMQ JMS -->
@@ -15,13 +15,12 @@
   <exclude>
     <factory>XATopicConnectionFactory</factory>
   </exclude>
-
+  <!-- The tests below are known to pass -->
   <include>
     <test>org.exolab.jmscts.test.connection.AuthTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.connection.ClientIdentifierTest.*
-    </test>
+    <test>org.exolab.jmscts.test.connection.ClientIdentifierTest.*</test>
   </include>
   <include>
     <test>org.exolab.jmscts.test.connection.ConnectionCloseTest.*</test>
@@ -51,12 +50,10 @@
     <test>org.exolab.jmscts.test.message.clear.RecoverClearTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.message.clear.RollbackClearTest.*
-    </test>
+    <test>org.exolab.jmscts.test.message.clear.RollbackClearTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.message.clear.SendReceiveClearTest.*
-    </test>
+    <test>org.exolab.jmscts.test.message.clear.SendReceiveClearTest.*</test>
   </include>
   <include>
     <test>org.exolab.jmscts.test.message.close.CloseTest.*</test>
@@ -77,16 +74,13 @@
     <test>org.exolab.jmscts.test.message.copy.StreamMessageTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.message.header.JMSCorrelationIDTest.*
-    </test>
+    <test>org.exolab.jmscts.test.message.header.JMSCorrelationIDTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.message.header.JMSDestinationTest.*
-    </test>
+    <test>org.exolab.jmscts.test.message.header.JMSDestinationTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.message.header.JMSMessageIDTest.*
-    </test>
+    <test>org.exolab.jmscts.test.message.header.JMSMessageIDTest.*</test>
   </include>
   <include>
     <test>org.exolab.jmscts.test.message.header.JMSReplyToTest.*</test>
@@ -95,36 +89,28 @@
     <test>org.exolab.jmscts.test.message.map.MapMessageTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.message.object.ObjectMessageTest.*
-    </test>
+    <test>org.exolab.jmscts.test.message.object.ObjectMessageTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.message.properties.IdentifierTest.*
-    </test>
+    <test>org.exolab.jmscts.test.message.properties.IdentifierTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.message.properties.JMSXGroupTest.*
-    </test>
+    <test>org.exolab.jmscts.test.message.properties.JMSXGroupTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.message.properties.PropertyConversionTest.*
-    </test>
+    <test>org.exolab.jmscts.test.message.properties.PropertyConversionTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.message.properties.PropertyTest.*
-    </test>
+    <test>org.exolab.jmscts.test.message.properties.PropertyTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.message.readwrite.ReadWriteTest.*
-    </test>
+    <test>org.exolab.jmscts.test.message.readwrite.ReadWriteTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.message.readwrite.SendReceiveReadWriteTest.*
-    </test>
+    <test>org.exolab.jmscts.test.message.readwrite.SendReceiveReadWriteTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.message.stream.StreamMessageTest.*
-    </test>
+    <test>org.exolab.jmscts.test.message.stream.StreamMessageTest.*</test>
   </include>
   <include>
     <test>org.exolab.jmscts.test.session.AutoAckTest.*</test>
@@ -137,8 +123,7 @@
     <test>org.exolab.jmscts.test.session.clientack.CloseTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.session.clientack.RepublishTest.*
-    </test>
+    <test>org.exolab.jmscts.test.session.clientack.RepublishTest.*</test>
   </include>
   <include>
     <test>org.exolab.jmscts.test.session.DupsAckTest.*</test>
@@ -165,19 +150,19 @@
     <test>org.exolab.jmscts.test.session.transacted.RecoverTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.session.transacted.RollbackTest.*
-    </test>
+    <test>org.exolab.jmscts.test.session.transacted.RollbackTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.topic.DuplicateDurableSubscriberTest.*
-    </test>
+    <test>org.exolab.jmscts.test.topic.DuplicateDurableSubscriberTest.*</test>
   </include>
   <include>
     <test>org.exolab.jmscts.test.topic.DurableSubscriberTest.*</test>
   </include>
 
-
-
+  <exclude>
+    <!--test here fail as the temporary topics don't work as they should, they could be auto deleted before the test runs complete we may have to implement a delete on Connection close -->
+    <test>org.exolab.jmscts.test.session.clientack.SubscriberRedeliveredTest.*</test>
+  </exclude>
 
 
   <!-- Below are tests we yet have to test -->
@@ -190,29 +175,17 @@
 
 
   <exclude>
-    <!--test here fail as the temporary topics don't work as they should, 
-      they could be auto deleted before the test runs complete we may have to implement 
-      a delete on Connection close -->
-    <test>org.exolab.jmscts.test.session.clientack.SubscriberRedeliveredTest.*
-    </test>
-  </exclude>
-
-  <exclude>
-    <!-- this method uses incorrect reflection to pull back methods in the 
-      session -->
+    <!-- this method uses incorrect reflection to pull back methods in the session -->
     <test>org.exolab.jmscts.test.session.CloseTest.*</test>
   </exclude>
 
   <exclude>
-    <!-- The spec is pretty clear, ack one message in a session, and you 
-      ack them all partial ack is no longer part of it -->
-    <test>org.exolab.jmscts.test.session.clientack.ClientAcknowledgeTest.testPartialClientAcknowledge
-    </test>
+    <!-- The spec is pretty clear, ack one message in a session, and you ack them all partial ack is no longer part of it -->
+    <test>org.exolab.jmscts.test.session.clientack.ClientAcknowledgeTest.testPartialClientAcknowledge</test>
   </exclude>
   <exclude>
     <!-- we don't allow 'foreign' messages created outside of our implementation -->
-    <test>org.exolab.jmscts.test.message.foreign.ForeignMessageTest.*
-    </test>
+    <test>org.exolab.jmscts.test.message.foreign.ForeignMessageTest.*</test>
   </exclude>
   <exclude>
     <!--This tests Connection Consumers - we don't support that -->
