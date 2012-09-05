@@ -161,7 +161,7 @@
   <include>
     <test>org.exolab.jmscts.test.topic.DurableSubscriberTest.*</test>
   </include>
-  -->
+  
   
   
   
@@ -185,7 +185,7 @@
 
   <!-- and here are tests we know are failing -
   =======================================================================================================
-  ->
+  -->
   <exclude>
     <!-- we only implement the no local logic for async receivers -->
     <test>org.exolab.jmscts.test.topic.NoLocalTest.*</test>

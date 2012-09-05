@@ -135,7 +135,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.acknowledgeMode = transacted ? Session.SESSION_TRANSACTED : mode;
         try {
             /*
-             * Create the channel that we will use 
+             * Create the channel that we will use, give it a known ID 
              */
             this.channel = connection.getRabbitConnection().createChannel(channelNr.incrementAndGet());
             if (transacted) {
@@ -148,7 +148,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         } catch (IOException x) {
             Util.util().handleException(x);
         }
-        assert this.channel != null;
     }
 
     /**
@@ -297,12 +296,18 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         try {
             //call rollback
             this.channel.txRollback();
-            
+            /* Check to see if we have received a delivery tag */
             if (lastReceivedTag.get()!=Long.MIN_VALUE) {
                 /*
                  * We only nack with the very last/largest delivery tag we got
+                 * this will automatically nack and requeue all previous messages too
                  */
-                channel.basicNack(lastReceivedTag.get(), true, true);
+                channel.basicNack(/* the largest/last received tag*/
+                                  lastReceivedTag.get(), 
+                                  /* true==nack multiple messages, all with tag<last */
+                                  true, 
+                                  /* true==requeue messages that have been nacked */
+                                  true);
                 /*
                  * Reset the delivery tag 
                  */
@@ -310,6 +315,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             }
             /*
              * commit the NACK/Rejects
+             * this I picked up from Spring-AMQP project, that's what they do
              */
             this.channel.txCommit();
         } catch (IOException x) {
@@ -395,6 +401,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     
     /**
      * {@inheritDoc}
+     * TODO we can use basic.recover method call instead of basic.nack(requeue=true)
      */
     @Override
     public void recover() throws JMSException {
@@ -618,7 +625,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                                       exclusive,
                                       /*
                                        * We don't set auto delete to true ever
-                                       * that is cause exclusive(rabbit)==temporary(jms) automatically
+                                       * that is cause exclusive(rabbit)==true automatically
                                        * get deleted when a Connection is closed
                                        */
                                       false,    
@@ -956,7 +963,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 synchronized (receivedMessages) {
                     /*
                      * Make sure that the message is in our unack list
-                     * or we can't proceed
+                     * or we can't proceed 
+                     * if it is not in the list, then the message is either 
+                     * auto acked or been manually acked previously
                      */
                     if (receivedMessages.contains(message.getRabbitDeliveryTag())) {
                         long deliveryTag = receivedMessages.last();
