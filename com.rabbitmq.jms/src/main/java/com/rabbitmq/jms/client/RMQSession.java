@@ -54,20 +54,67 @@ import com.rabbitmq.jms.util.Util;
  */
 public class RMQSession implements Session, QueueSession, TopicSession {
 
+    /**
+     * The connection that created this session
+     */
     private final RMQConnection connection;
+    /**
+     * Set to true if this session is transacted. 
+     * the value will enver change
+     */
     private final boolean transacted;
+    /**
+     * The ack mode used when receiving message
+     */
     private final int acknowledgeMode;
+    /**
+     * The RabbitMQ AMQP channel we use under the hood
+     */
     private volatile Channel channel;
+    /**
+     * Set to true if close() has been called and completed
+     */
     private volatile boolean closed = false;
+    /**
+     * We're tracking all our delivery tags for this session
+     * and we are only storing the largest one.
+     * this is used for nack during rollback of 
+     * a transacted session
+     */
     private volatile AtomicLong lastReceivedTag = new AtomicLong(Long.MIN_VALUE);
+    /**
+     * The message listener for this session. 
+     */
     private volatile MessageListener messageListener;
+    /**
+     * A list of all the producers created by this session
+     * When a producer is closed, it will be removed from this list
+     */
     private final ArrayList<RMQMessageProducer> producers = new ArrayList<RMQMessageProducer>();
+    /**
+     * A list of all the consumer created by this session
+     * When a consumer is closed, it will be removed from this list
+     */
     private final ArrayList<RMQMessageConsumer> consumers = new ArrayList<RMQMessageConsumer>();
+    /**
+     * A latch that we use when listeners are running, that way we can 
+     * pause and wait for listeners to complete during close and Connection.stop
+     */
     private final CountUpAndDownLatch runningListener = new CountUpAndDownLatch(0);
-    
+    /**
+     * List of all our durable subscriptions so we can track them
+     */
     private final ConcurrentHashMap<String, String> subscriptions = new ConcurrentHashMap<String, String>();
+    /**
+     * We are manually numbering our channels, this serves no purpose right now
+     */
     private static final AtomicInteger channelNr = new AtomicInteger(0);
-    
+    /**
+     * We are listing all messages we have received. This tree set is used to meet the 
+     * requirement of Message.acknowledge, to be able to acknowledge all the messages
+     * for this session. we do this using a single ack, and we always use the 
+     * largest delivery tag to do so
+     */
     private volatile TreeSet<Long> receivedMessages = new TreeSet<Long>();
 
     /**
@@ -83,8 +130,15 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.transacted = transacted;
         this.acknowledgeMode = transacted ? Session.SESSION_TRANSACTED : mode;
         try {
+            /*
+             * Create the channel that we will use 
+             */
             this.channel = connection.getRabbitConnection().createChannel(channelNr.incrementAndGet());
             if (transacted) {
+                /*
+                 * txSelect is only called once, then the channel stays in transactional mode
+                 * until closed
+                 */
                 this.channel.txSelect();
             }
         } catch (IOException x) {
@@ -220,10 +274,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             //call commit on the channel
             //this should ack all messages
             this.channel.txCommit();
-//            if (lastReceivedTag!=null) {
-//                this.channel.basicAck(lastReceivedTag, true);
-//            }
-            
+            /*
+             * Reset our NACK tag
+             */
             lastReceivedTag.set(Long.MIN_VALUE);
         } catch (Exception x) {
             Util.util().handleException(x);
@@ -240,12 +293,20 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         try {
             //call rollback
             this.channel.txRollback();
-            //TODO if we have messages, do we need to NACK them?
+            
             if (lastReceivedTag.get()!=Long.MIN_VALUE) {
+                /*
+                 * We only nack with the very last/largest delivery tag we got
+                 */
                 channel.basicNack(lastReceivedTag.get(), true, true);
+                /*
+                 * Reset the delivery tag 
+                 */
                 lastReceivedTag.set(Long.MIN_VALUE);
             }
-            //commit the NACK/Rejects
+            /*
+             * commit the NACK/Rejects
+             */
             this.channel.txCommit();
         } catch (IOException x) {
             Util.util().handleException(x);
@@ -326,13 +387,26 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             throw new javax.jms.IllegalStateException("Session is transacted.");
         } else {
             synchronized (receivedMessages) {
+                /*
+                 * First make sure that we have messages to recover
+                 */
                 if (receivedMessages.size()>0) {
+                    /*
+                     * get the largest tag
+                     */
                     long deliveryTag = receivedMessages.last();
                     try {
+                        /*
+                         * nack the largest tag, this will
+                         * nack and requeue the other messages too
+                         */
                         this.channel.basicNack(deliveryTag, true, true);
                     }catch (IOException x) {
                         Util.util().handleException(x);
                     }
+                    /*
+                     * we must clear our received messages
+                     */
                     receivedMessages.clear();
                 }
             }
