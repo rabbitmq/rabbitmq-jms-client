@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Message;
@@ -24,6 +25,7 @@ import org.junit.experimental.categories.Category;
 
 import com.rabbitmq.integration.IntegrationTest;
 import com.rabbitmq.jms.TestConnectionFactory;
+import com.rabbitmq.jms.util.CountUpAndDownLatch;
 
 @Category(IntegrationTest.class)
 public class TestRecoverMessages {
@@ -38,6 +40,7 @@ public class TestRecoverMessages {
             QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
+            queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
             Queue queue = queueSession.createQueue(QUEUE_NAME);
             QueueSender queueSender = queueSession.createSender(queue);
@@ -67,6 +70,7 @@ public class TestRecoverMessages {
             QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
+            queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
             Queue queue = queueSession.createQueue(QUEUE_NAME);
             QueueSender queueSender = queueSession.createSender(queue);
@@ -74,10 +78,11 @@ public class TestRecoverMessages {
             TextMessage message = queueSession.createTextMessage(MESSAGE);
             queueSender.send(message);
             QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-            
+            final CountUpAndDownLatch latch = new CountUpAndDownLatch(2);
             queueReceiver.setMessageListener(new MessageListener() {
                 @Override
                 public void onMessage(Message message) {
+                    latch.countDown();
                     messages.add(message);
                 }
             });
@@ -87,8 +92,8 @@ public class TestRecoverMessages {
             assertEquals(1, messages.size());
             TextMessage tmsg1 = (TextMessage)messages.get(0);
             assertFalse(tmsg1.getJMSRedelivered());
-            
             queueSession.recover();
+            latch.awaitZero(1000, TimeUnit.MILLISECONDS);
             //we should have received two messages
             assertEquals(2, messages.size());
             TextMessage tmsg2 = (TextMessage)messages.get(1);

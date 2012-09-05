@@ -29,6 +29,7 @@ public class TestSimpleTopicMessage {
             TopicConnectionFactory connFactory = (TopicConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             topicConn = connFactory.createTopicConnection();
+            topicConn.start();
             TopicSession topicSession = topicConn.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             Topic topic = topicSession.createTopic(TOPIC_NAME);
             TopicPublisher sender = topicSession.createPublisher(topic);
