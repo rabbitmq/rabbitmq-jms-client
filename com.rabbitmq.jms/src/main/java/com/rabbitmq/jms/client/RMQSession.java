@@ -591,10 +591,20 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             
             /*
              * We only want destinations to survive server restarts if
-             * 1. They are durable topic subscriptions
+             * 1. They are durable topic subscriptions OR
              * 2. They are permanent queues
              */
             boolean durable = durableSubscriber || (dest.isQueue() & (!dest.isTemporary()));
+            
+            /*
+             * A queue is exclusive, meaning it can only be accessed by the current connection
+             * and will be deleted when the connection is closed if
+             * 1. It's a temporary destination OR
+             * 2. It's a non durable topic
+             */
+            boolean exclusive = dest.isTemporary() || ((!dest.isQueue()) && (!durableSubscriber));
+            
+            HashMap<String,Object> options = new HashMap<String,Object>();
             
             this.channel.queueDeclare(/* the name of the queue */
                                       queueName, 
@@ -604,19 +614,16 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                                        * only durable topic queues
                                        */
                                       durable, 
-                                      /*
-                                       * Temporary destinations 
-                                       * are marked exclusive
-                                       */
-                                      dest.isTemporary(),
+                                      /* exclusive flag */
+                                      exclusive,
                                       /*
                                        * We don't set auto delete to true ever
                                        * that is cause exclusive(rabbit)==temporary(jms) automatically
                                        * get deleted when a Connection is closed
                                        */
                                       false,    
-                                      new HashMap<String, Object>()); // rabbit
-                                                                      // properties
+                                      /* Queue properties */
+                                      options); 
             if (dest.isTemporary()) {
                 topics.add(dest.getQueueName());
             }
