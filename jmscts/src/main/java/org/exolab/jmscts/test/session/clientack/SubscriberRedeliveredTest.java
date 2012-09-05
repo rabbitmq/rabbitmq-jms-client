@@ -145,7 +145,7 @@ public class SubscriberRedeliveredTest extends AbstractSendReceiveTestCase {
         final int count = 10; // send count messages
 
         TestContext context = getContext();
-        context.getSession();
+        Session session = context.getSession();
 
         // set up a client ack session
         TestContext clientAckContext = TestContextHelper.createSessionContext(
@@ -161,6 +161,9 @@ public class SubscriberRedeliveredTest extends AbstractSendReceiveTestCase {
             subscriber2 = createReceiver(clientAckContext, DESTINATION);
 
             send(context, DESTINATION, count);
+            if (session.getTransacted()) {
+                session.commit();
+            }
 
             // receive messages via the CLIENT_ACKNOWLEDGE session
             List<?> messages2 = receive(clientAckContext, subscriber2, count);

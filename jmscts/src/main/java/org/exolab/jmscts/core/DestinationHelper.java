@@ -96,7 +96,7 @@ public final class DestinationHelper {
         if (behaviour == null || behaviour.getAdministered()) {
             result = create(name, isQueue, context.getAdministrator());
         } else {
-            result = create(context.getSession());
+            result = create(context.getSession(), isQueue);
         }
         return result;
     }
@@ -127,7 +127,7 @@ public final class DestinationHelper {
      * @return the new destination
      * @throws JMSException if the destination cannot be created
      */
-    public static Destination create(Session session) throws JMSException {
+    public static Destination create(Session session, boolean isQueue) throws JMSException {
         Destination result = null;
         if (session instanceof XAQueueSession) {
             session = ((XAQueueSession) session).getQueueSession();
@@ -135,7 +135,7 @@ public final class DestinationHelper {
             session = ((XATopicSession) session).getTopicSession();
         }
 
-        if (session instanceof QueueSession) {
+        if (isQueue) {
             result = ((QueueSession) session).createTemporaryQueue();
         } else {
             result = ((TopicSession) session).createTemporaryTopic();
