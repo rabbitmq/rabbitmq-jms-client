@@ -534,10 +534,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @throws UnsupportedOperationException - method not implemented until we support selectors
      */
     @Override
-    public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean NoLocal) throws JMSException {
+    public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean noLocal) throws JMSException {
         Util.util().checkTrue(this.closed, new IllegalStateException("Session has been closed"));
         if (messageSelector==null || messageSelector.trim().length()==0) {
-            return createConsumer(destination);
+            RMQMessageConsumer consumer = (RMQMessageConsumer)createConsumer(destination);
+            consumer.setNoLocal(noLocal);
+            return consumer;
         } else {
             // we are not implementing this method yet
             throw new UnsupportedOperationException();
@@ -659,7 +661,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
         Util.util().checkTrue(this.closed, new IllegalStateException("Session has been closed"));
         if (messageSelector==null || messageSelector.trim().length()==0) {
-            return createDurableSubscriber(topic, name);
+            RMQMessageConsumer consumer = (RMQMessageConsumer) createDurableSubscriber(topic, name);
+            consumer.setNoLocal(noLocal);
+            return consumer;
         } else {
             throw new UnsupportedOperationException();
         }

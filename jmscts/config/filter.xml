@@ -154,22 +154,25 @@
   <include>
     <test>org.exolab.jmscts.test.topic.DuplicateDurableSubscriberTest.*</test>
   </include>
-  
-  -->
-
   <include>
     <test>org.exolab.jmscts.test.topic.DurableSubscriberTest.*</test>
   </include>
+  
+  -->
+
 
   
   <!-- Below are tests we yet have to test
-  <include>
-    <test>org.exolab.jmscts.test.topic.NoLocalTest.*</test>
-  </include>
   
    -->
   
   <!--  and here are tests we know are failing -->
+  <exclude>
+    <!--  we only implement the no local logic for async receivers  -->
+    <test>org.exolab.jmscts.test.topic.NoLocalTest.*</test>
+  </exclude>
+
+
   <exclude>
     <!--test here fail as the temporary topics don't work as they should, they could be auto deleted before the test runs complete
         we may have to implement a delete on Connection close -->

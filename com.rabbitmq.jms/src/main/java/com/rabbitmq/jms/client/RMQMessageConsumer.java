@@ -1,6 +1,7 @@
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -76,6 +77,11 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * Flag to check if we are a durable subscription
      */
     private volatile boolean durable = false;
+    
+    /**
+     * Flag to check if we have noLocal set
+     */
+    private volatile boolean noLocal = false;
     
     /**
      * Only used internally
@@ -298,7 +304,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         //to the actual consumer so we pass in false as the auto ack mode
         //we must support setMessageListener(null) while messages are arriving
         //and those message we NACK
-        return getSession().getChannel().basicConsume(name, false , consumer);
+        return getSession().getChannel().basicConsume(name, //the name of the subscriber
+                                                      false,//noack
+                                                      Util.util().generateUUIDTag(), //the consumer tag
+                                                      this.getNoLocalNoException(), //no local flag
+                                                      false, //exclusive flag
+                                                      new HashMap<String,Object>(), //arguments
+                                                      consumer); //callback object
     }
 
     /**
@@ -478,7 +490,11 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public boolean getNoLocal() throws JMSException {
-        return false;
+        return getNoLocalNoException();
+    }
+    
+    public boolean getNoLocalNoException() {
+        return noLocal;
     }
 
     /**
@@ -565,6 +581,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     protected void setDurable(boolean durable) {
         this.durable = durable;
+    }
+
+
+
+
+    public void setNoLocal(boolean noLocal) {
+        this.noLocal = noLocal;
     }
 
 
