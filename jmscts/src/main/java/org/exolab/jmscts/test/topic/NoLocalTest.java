@@ -53,6 +53,7 @@ import org.exolab.jmscts.core.AbstractSendReceiveTestCase;
 import org.exolab.jmscts.core.ConnectionHelper;
 import org.exolab.jmscts.core.MessageReceiver;
 import org.exolab.jmscts.core.MessagingHelper;
+import org.exolab.jmscts.core.ReceiptType;
 import org.exolab.jmscts.core.SessionHelper;
 import org.exolab.jmscts.core.TestCreator;
 import org.exolab.jmscts.core.TestContext;
@@ -123,6 +124,13 @@ public class NoLocalTest extends AbstractSendReceiveTestCase {
         Session session = null;
 
         try {
+            
+            //FILIP HANIK -TODO - we are excluding SYNC RECEIVERS
+//            if (!ReceiptType.ASYNCHRONOUS.equals(context.getMessagingBehaviour().getReceiptType())) {
+//                return;
+//            }
+            
+            
             // create a receiver that doesn't receive messages sent on the
             // current connection
             noLocal = SessionHelper.createReceiver(

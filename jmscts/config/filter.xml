@@ -18,7 +18,7 @@
   <!-- The tests below are known to pass 
     =======================================================================================================
   -->
-   
+  <!--  -->
   <include>
     <test>org.exolab.jmscts.test.connection.AuthTest.*</test>
   </include>
@@ -161,42 +161,36 @@
   <include>
     <test>org.exolab.jmscts.test.topic.DurableSubscriberTest.*</test>
   </include>
+  <include>
+    <test>org.exolab.jmscts.test.session.clientack.SubscriberRedeliveredTest.*</test>
+  </include>
+  <include>
+    <test>org.exolab.jmscts.test.session.CloseTest.*</test>
+  </include>
   
   
+   <!--  -->
   
   
-  
-  
+
 
   <!-- Below are tests we yet have to test 
     =======================================================================================================
   -->
-<exclude>
-    <!--test here fail as the temporary topics don't work as they should, they could be auto deleted before the test runs complete we may have to implement a delete on Connection close -->
-    <test>org.exolab.jmscts.test.session.clientack.SubscriberRedeliveredTest.*</test>
-  </exclude>
-  <!-- 
-  <exclude>
-    <destination>administered</destination>
-  </exclude>
-   -->
+  
 
 
 
   <!-- and here are tests we know are failing -
   =======================================================================================================
   -->
+  
+
+
   <exclude>
-    <!-- we only implement the no local logic for async receivers -->
+    <!-- rabbitMQ doesn't seem to be supporting noLocal properly -->
     <test>org.exolab.jmscts.test.topic.NoLocalTest.*</test>
   </exclude>
-
-
-  <exclude>
-    <!-- this method uses incorrect reflection to pull back methods in the session -->
-    <test>org.exolab.jmscts.test.session.CloseTest.*</test>
-  </exclude>
-
   <exclude>
     <!-- The spec is pretty clear, ack one message in a session, and you ack them all partial ack is no longer part of it -->
     <test>org.exolab.jmscts.test.session.clientack.ClientAcknowledgeTest.testPartialClientAcknowledge</test>
