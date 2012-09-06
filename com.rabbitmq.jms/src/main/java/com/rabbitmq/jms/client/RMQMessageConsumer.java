@@ -69,6 +69,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     private volatile boolean closed = false;
     /**
+     * If this consumer is in the process of closing
+     */
+    private volatile boolean closing = false;
+    /**
      * A wrapper around the message listener the user sets
      */
     private volatile MessageListenerWrapper userListenerWrapper =null;
@@ -197,6 +201,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     @Override
     public Message receive(long timeout) throws JMSException {
         Util.util().checkTrue(closed, "Consumer has already been closed.");
+        Util.util().checkTrue(closing, "Consumer is in the process of closing.");
+        this.listenerRunning.countUp();
         /*
          * The spec identifies 0 as infinite timeout
          */
@@ -270,8 +276,29 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         } catch (IOException x) {
             Util.util().handleException(x);
         } finally {
+            /* we are not in an interrupt state anymore */
             this.currentSynchronousReceiver.remove(Thread.currentThread());
-            if (consumerTag!=null && sc!=null) sc.cancel(consumerTag);
+            if (consumerTag!=null && sc!=null) {
+                try {
+                    /*
+                     * Cancel the subscription.
+                     * This may have already be done in 
+                     * that case this method returns immediately
+                     */
+                    sc.cancel(consumerTag);
+                }finally {
+                    /*
+                     * Now the thread pool can shutdown
+                     */
+                    listenerRunning.countDown();
+                }
+            } else {
+                /*
+                 * Now the thread pool can shutdown
+                 */
+                listenerRunning.countDown();
+            }
+            
         }
         return null;
     }
@@ -363,10 +390,12 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public Message receiveNoWait() throws JMSException {
+        Util.util().checkTrue(closing, new IllegalStateException("Consumer in the process of closing"));
+        Util.util().checkTrue(closed, new IllegalStateException("Consumer in the process of closing"));
         return receiveNoWait(0);
     }
     
-    public Message receiveNoWait(long timeout) throws JMSException {
+    protected Message receiveNoWait(long timeout) throws JMSException {
         try {
             /*
              * If the connection is stopped, by Connection.stop
@@ -537,6 +566,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * when system is shutting down
      */
     protected void internalClose() throws JMSException {
+        /*
+         * let the system know we are in the process of closing 
+         */
+        closing = true;
         /* 
          * if we are in a pause state, we must break that 
          * this will release all threads waiting on the pause latch
@@ -572,6 +605,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             //TODO log debug level message
         } finally {
             closed = true;
+            closing = false;
         }
         
 
