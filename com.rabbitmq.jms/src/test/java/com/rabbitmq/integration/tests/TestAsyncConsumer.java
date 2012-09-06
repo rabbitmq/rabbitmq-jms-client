@@ -67,6 +67,52 @@ public class TestAsyncConsumer {
         }
 
     }
+    
+    @Test
+    public void testSendAndReceiveTextMessageNoLocal() throws Exception {
+        System.out.println("This test will fail");
+        QueueConnection queueConn = null;
+        try {
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+                                                                                               .getConnectionFactory();
+            queueConn = connFactory.createQueueConnection();
+            queueConn.start();
+            QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+            Queue queue = queueSession.createQueue(QUEUE_NAME);
+            QueueSender queueSender = queueSession.createSender(queue);
+            queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+            TextMessage message = queueSession.createTextMessage(MESSAGE);
+            queueSender.send(message);
+            /*
+             * NoLocal set to true - we should not receive a message
+             */
+            QueueReceiver queueReceiver = (QueueReceiver)queueSession.createConsumer(queue, null, true);
+            CountDownLatch latch = new CountDownLatch(1);
+            MessageListener listener = new MessageListener(latch);
+            queueReceiver.setMessageListener(listener);
+            latch.await(1000, TimeUnit.MILLISECONDS);
+            message = (TextMessage) listener.getLastMessage();
+            assertNull(message);
+            assertFalse(listener.isSuccess());
+            
+            /*
+             * NoLocal set to false - we should receive a message
+             */
+            queueReceiver = (QueueReceiver)queueSession.createConsumer(queue, null, false);
+            latch = new CountDownLatch(1);
+            listener = new MessageListener(latch);
+            queueReceiver.setMessageListener(listener);
+            latch.await(1000, TimeUnit.MILLISECONDS);
+            message = (TextMessage) listener.getLastMessage();
+            assertEquals(MESSAGE, message.getText());
+            assertEquals(1, listener.getMessageCount());
+            assertTrue(listener.isSuccess());
+
+        
+        } finally {
+            queueConn.close();
+        }
+    }
 
     private static class MessageListener implements javax.jms.MessageListener {
 
