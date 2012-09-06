@@ -5,7 +5,7 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
 /**
  * Similar implementation like the count down latch, except this latch can be counted up 
- * and counted down. Once it has reached zero, it will allow for a release, but can then be counted up again.
+ * and counted down. Once it has reached zero, it will allow for a release, but can then be counted up or down again.
  * @see {link java.util.concurrent.CountDownLatch}
  */
 
@@ -14,18 +14,34 @@ public class CountUpAndDownLatch {
     private static final class CountSync extends AbstractQueuedSynchronizer {
         private static final long serialVersionUID = -1;
 
+        /**
+         * Constructor with the initial value.
+         * Anything but a 0 will make threads lock on the {@link  CountUpAndDownLatch#awaitZero(long, TimeUnit)}
+         * method
+         * @param count the initial value of the latch
+         */
         CountSync(int count) {
             setState(count);
         }
 
+        /**
+         * Returns the current value
+         * @return
+         */
         int getCount() {
             return getState();
         }
 
+        /**
+         * {@inheritDoc}
+         */
         public int tryAcquireShared(int acquires) {
             return getState() == 0? 1 : -1;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         public boolean tryReleaseShared(int releases) {
             for (;;) {
                 int c = getState();
@@ -36,6 +52,9 @@ public class CountUpAndDownLatch {
         }
     }
 
+    /**
+     * synchronization object for threads to wait on
+     */
     private final CountSync countSync;
 
     /**
