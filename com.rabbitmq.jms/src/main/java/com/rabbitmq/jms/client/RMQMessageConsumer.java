@@ -202,7 +202,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     public Message receive(long timeout) throws JMSException {
         Util.util().checkTrue(closed, "Consumer has already been closed.");
         Util.util().checkTrue(closing, "Consumer is in the process of closing.");
-        this.listenerRunning.countUp();
         /*
          * The spec identifies 0 as infinite timeout
          */
@@ -250,6 +249,11 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
          */
         String consumerTag = null;
         SynchronousConsumer sc = null;
+        /*
+         * If we reached here, we will be entering an async state and must notify our 
+         * listener counter
+         */
+        this.listenerRunning.countUp();
         try {
             /*
              * Register the existing thread so we can interrupt it 
@@ -276,9 +280,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         } catch (IOException x) {
             Util.util().handleException(x);
         } finally {
-            /* we are not in an interrupt state anymore */
-            this.currentSynchronousReceiver.remove(Thread.currentThread());
-            if (consumerTag!=null && sc!=null) {
+            /*
+             * Don't attempt to cancel if we are either closing or closed
+             */
+            if (consumerTag!=null && sc!=null && closing==false && closed==false) {
                 try {
                     /*
                      * Cancel the subscription.
@@ -298,7 +303,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                  */
                 listenerRunning.countDown();
             }
-            
+            /* we are not in an interrupt state anymore */
+            this.currentSynchronousReceiver.remove(Thread.currentThread());
         }
         return null;
     }
@@ -599,7 +605,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
              * we must wait until those messages are complete
              * we can of course timeout, if a thread is stuck
              */
-            listenerRunning.awaitZero(timeoutMillis, TimeUnit.SECONDS);
+            listenerRunning.awaitZero(timeoutMillis, TimeUnit.MILLISECONDS);
         }catch (InterruptedException x) {
             //do nothing
             //TODO log debug level message
