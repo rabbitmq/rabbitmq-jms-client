@@ -337,6 +337,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new MessageFormatException(String.format(UNABLE_TO_CAST, value, Serializable.class.getName()));
         } else {
             try {
+                /* Make sure we can write this type of object */
                 writePrimitiveData(value, new DiscardingObjectOutput(), false);
             } catch (IOException x) {
                 Util.util().handleException(x);
