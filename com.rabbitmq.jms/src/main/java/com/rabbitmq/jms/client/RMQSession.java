@@ -825,7 +825,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public TopicSubscriber createSubscriber(Topic topic, String messageSelector, boolean noLocal) throws JMSException {
         Util.util().checkTrue(this.closed, new IllegalStateException("Session has been closed"));
         if (messageSelector==null || messageSelector.trim().length()==0) {
-            return createSubscriber(topic);
+            RMQMessageConsumer consumer = (RMQMessageConsumer)createSubscriber(topic);
+            consumer.setNoLocal(noLocal);
+            return consumer;
         } else {
             throw new UnsupportedOperationException();
         }
