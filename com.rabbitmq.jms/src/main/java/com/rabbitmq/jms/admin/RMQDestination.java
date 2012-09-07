@@ -236,7 +236,9 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     @Override
     public void delete() throws JMSException {
-        //delete is deferred until Session.close happens        
+        //delete is deferred until Session.close happens 
+        //TODO implement Channel.queueDelete
+        //See RMQSession.close how we call Channel.queueDelete
     }
 
     

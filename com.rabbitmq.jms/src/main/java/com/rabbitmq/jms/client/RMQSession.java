@@ -367,6 +367,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             while ((topicQueue=topics.poll())!=null) {
                 try {
                     this.channel.queueDelete(topicQueue);
+                    //TODO delete exchanges created for temporary topics
+                    //this.channel.exchangeDelete(, true)
                 } catch (AlreadyClosedException x) {
                     topics.clear();//nothing we can do but break out
                 } catch (IOException iox) {
@@ -665,8 +667,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                                          "fanout",
                                          /* durable for all except temporary topics */
                                          !dest.isTemporary(),
-                                         /* auto delete is true if temporary  */
-                                         dest.isTemporary(),
+                                         /* auto delete is true if temporary - TODO how do we delete exchanges used for temporary topics
+                                          * this could be autoDelete=dest.isTemporary() 
+                                          */
+                                         false,
                                          /* internal is false JMS will always publish to the exchange*/
                                          false,
                                          /* object parameters */
@@ -966,6 +970,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public void acknowledge(RMQMessage message) throws JMSException{
         Util.util().checkTrue(isClosed(), new IllegalStateException("Session has already been closed."));
         try {
+            //TODO future functionality, allow group ack up until the current tag
+            boolean groupAck = false;
+            //TODO future functionality, allow ack of single message
+            boolean individualAck = false;
             if ((!isAutoAck()) && (!getTransacted())) {
                 /*
                  * Per JMS specification Message.acknowledge(), if we ack 
@@ -982,12 +990,42 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                      * if it is not in the list, then the message is either 
                      * auto acked or been manually acked previously
                      */
-                    if (receivedMessages.contains(message.getRabbitDeliveryTag())) {
+                    if (!receivedMessages.contains(message.getRabbitDeliveryTag())) {
+                        //if we acked a non existent tag, it may close the channel
+                        return;
+                    } else if (individualAck) {
+                        /* ACK a single message */
+                        getChannel().basicAck(/* we ack the highest tag */
+                                              message.getRabbitDeliveryTag(), 
+                                              /* and we ack everything up to that tag */
+                                              false);
+                        /* remove the message just acked from our list of un-acked messages */
+                        receivedMessages.remove(message.getRabbitDeliveryTag());
+                    }else if (groupAck) {
+                        /* ack multiple message up until the existing tag */
+                        getChannel().basicAck(/* we ack the highest tag */
+                                              message.getRabbitDeliveryTag(), 
+                                              /* and we ack everything up to that tag */
+                                              true);
+                        /* now delete all the messages that we tagged */
+                        long first = receivedMessages.first();
+                        while (first<=message.getRabbitDeliveryTag()) {
+                            receivedMessages.remove(first);
+                            if (receivedMessages.size()>0) {
+                                first = receivedMessages.first();
+                            } else {
+                                break;
+                            }
+                        }
+                    } else if (receivedMessages.contains(message.getRabbitDeliveryTag())) {
                         long deliveryTag = receivedMessages.last();
                         /*
                          * Ack all the messages up to this message 
                          */
-                        getChannel().basicAck(deliveryTag, true);
+                        getChannel().basicAck(/* we ack the highest tag */
+                                              deliveryTag, 
+                                              /* and we ack everything up to that tag */
+                                              true);
                         receivedMessages.clear();
                     }
                         
