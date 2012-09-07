@@ -178,10 +178,10 @@ public class RMQObjectFactory implements ObjectFactory {
                                      boolean mayBeNull, 
                                      String defaultValue) throws NamingException {
         RefAddr ra = ref.get(propertyName);
-        if (!mayBeNull && ra == null) {
+        if (!mayBeNull && (ra == null || ra.getContent()==null)) {
             throw new NamingException("Property [" + propertyName + "] may not be null.");
         }
-        String content = ra.getContent().toString();
+        String content = ra == null ? null : ra.getContent() == null ? null : ra.getContent().toString();
         if (!mayBeNull && (content == null)) {
             throw new NamingException("Property [" + propertyName + "] is present but is lacking a value.");
         }
@@ -210,7 +210,7 @@ public class RMQObjectFactory implements ObjectFactory {
         if (!mayBeNull && ra == null) {
             throw new NamingException("Property [" + propertyName + "] may not be null.");
         }
-        String content = ra.getContent().toString();
+        String content = ra == null ? null : ra.getContent() == null ? null : ra.getContent().toString();
         if (content == null && !mayBeNull) {
             throw new NamingException("Property [" + propertyName + "] is present but is lacking a value.");
         }
