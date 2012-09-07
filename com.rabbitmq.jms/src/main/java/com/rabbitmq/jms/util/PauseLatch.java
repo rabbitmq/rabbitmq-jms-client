@@ -43,7 +43,7 @@ public class PauseLatch {
                         //not paused - resume called
                         return true;
                     } else if (c == releases && c == 1 ) {
-                        //paused - pause called
+                        //already paused - pause called
                         return false;
                     } else {
                         //we've changed state
