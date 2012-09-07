@@ -660,7 +660,18 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     protected void declareTopic(RMQDestination dest) throws JMSException {
         try {
-            this.channel.exchangeDeclare(dest.getExchangeName(), "fanout");
+            this.channel.exchangeDeclare(/* the name of the exchange */
+                                         dest.getExchangeName(), 
+                                         /* the type is always fanout - this will change when selectors come in play*/
+                                         "fanout",
+                                         /* durable for all except temporary topics */
+                                         !dest.isTemporary(),
+                                         /* auto delete is true if temporary  */
+                                         dest.isTemporary(),
+                                         /* internal is false JMS will always publish to the exchange*/
+                                         false,
+                                         /* object parameters */
+                                         new HashMap<String,Object>());
         } catch (IOException x) {
             Util.util().handleException(x);
         }
@@ -745,7 +756,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public TemporaryQueue createTemporaryQueue() throws JMSException {
         Util.util().checkTrue(this.closed, new IllegalStateException("Session has been closed"));
-        return new RMQDestination("jms-temp-queue-"+Util.util().generateUUIDTag(), true, true);
+        RMQDestination result = new RMQDestination("jms-temp-queue-"+Util.util().generateUUIDTag(), true, true);
+        return result;
     }
 
     /**
@@ -754,7 +766,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public TemporaryTopic createTemporaryTopic() throws JMSException {
         Util.util().checkTrue(this.closed, new IllegalStateException("Session has been closed"));
-        return new RMQDestination("jms-temp-topic-"+Util.util().generateUUIDTag(), false, true);
+        RMQDestination result = new RMQDestination("jms-temp-topic-"+Util.util().generateUUIDTag(), false, true);
+        return result;
     }
 
     /**
@@ -772,7 +785,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             Util.util().handleException(x);
         }
     }
-
+    
     /**
      * Simply here to satisfy a test
      * @param dest
