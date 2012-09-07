@@ -218,7 +218,19 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
          * This call can pause on the pauseLatch
          * if the Connection.stop method has been called
          */
-        Message msg = receiveNoWait(timeout);
+        Message msg = null;
+        /*this is a state that can be interrupted */
+        this.currentSynchronousReceiver.offer(Thread.currentThread());
+        try {
+            msg = receiveNoWait(timeout);
+        } finally {
+            this.currentSynchronousReceiver.remove(Thread.currentThread());
+        }
+        
+        if (Thread.currentThread().isInterrupted()) {
+            /* if the thread has been interrupted waiting for the pause */
+            return null;
+        }
         
         /*
          * Calculate the new timeout
