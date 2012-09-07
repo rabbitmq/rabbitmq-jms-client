@@ -24,7 +24,6 @@ import com.rabbitmq.jms.util.Util;
  */
 public class RMQConnectionFactory implements ConnectionFactory, Referenceable, Serializable, QueueConnectionFactory, TopicConnectionFactory {
 
-    /** TODO - Serial ID?*/
     private static final long serialVersionUID = -4953157213762979615L;
 
     /** Default username to RabbitMQ broker */

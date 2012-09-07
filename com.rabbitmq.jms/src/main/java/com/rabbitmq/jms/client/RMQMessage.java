@@ -812,8 +812,9 @@ public abstract class RMQMessage implements Message, Cloneable {
     IOException,
     IllegalAccessException,
     InstantiationException {
-        // TODO If we don't recognize the message format then we need to
-        // create a generic BytesMessage
+        /* TODO If we don't recognize the message format then we need to
+         * create a generic BytesMessage
+         */
         ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(b));
         //read the classname from the stream
         String clazz = in.readUTF();

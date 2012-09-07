@@ -864,6 +864,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                                 //this is problematic, we have a client, but we can't ack the message to the server
                                 x.printStackTrace();
                                 //TODO should we deliver the message at this time, knowing that we can't ack it?
+                                //My recommendation is that we bail out here and not proceed
                             }
                         }
                         /*

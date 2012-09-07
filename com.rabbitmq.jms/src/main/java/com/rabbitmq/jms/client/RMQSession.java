@@ -492,7 +492,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public MessageConsumer createConsumer(Destination destination) throws JMSException {
         Util.util().checkTrue(this.closed, new IllegalStateException("Session has been closed"));
-        //TODO Verify that autoDelete should always be false?
         return createConsumerInternal(destination, null, false);
     }
     
@@ -732,11 +731,11 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * {@inheritDoc}
+     * TODO Implement browser support when RabbitMQ broker supports it
      */
     @Override
     public QueueBrowser createBrowser(Queue queue) throws JMSException {
         Util.util().checkTrue(this.closed, new IllegalStateException("Session has been closed"));
-        // TODO Auto-generated method stub
         return null;
     }
 

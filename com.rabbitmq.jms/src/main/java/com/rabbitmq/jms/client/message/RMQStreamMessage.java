@@ -20,9 +20,11 @@ import javax.jms.StreamMessage;
 import com.rabbitmq.jms.client.RMQMessage;
 import com.rabbitmq.jms.util.Util;
 
-// TODO For now we don't handle direct TCP streaming
-// TODO this should write to disk, and when we send the message
-// TODO we have disassemble and reassemble multiple messages
+/* TODO For now we don't handle direct TCP streaming
+ * this should write to disk, and when we send the message
+ * we have disassemble into multiple messages and reassemble multiple messages
+ * on the other side
+ */ 
 public class RMQStreamMessage extends RMQMessage implements StreamMessage {
 
     private static final String NOT_READABLE = "Message not readable";

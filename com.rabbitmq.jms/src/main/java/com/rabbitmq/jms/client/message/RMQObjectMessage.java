@@ -86,8 +86,8 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
      */
     @Override
     public void readBody(ObjectInput in) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-        // TODO it may be a good idea to delay
-        // this call until getObject() is called so that
+        // the body here is just a byte[] and we delay creating the object
+        // until getObject() is called so that
         // we have access to the Thread Context Classloader
         // to deserialize the object
         boolean isnull = in.readBoolean();

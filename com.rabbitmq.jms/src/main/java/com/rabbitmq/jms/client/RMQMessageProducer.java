@@ -51,8 +51,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     private int priority = Message.DEFAULT_PRIORITY;
     /**
-     * RabbitMQ doesn't support TTL
-     * TODO
+     * RabbitMQ doesn't support TTL but when it does
+     * we can use this
      */
     private long ttl = Message.DEFAULT_TIME_TO_LIVE;
 
