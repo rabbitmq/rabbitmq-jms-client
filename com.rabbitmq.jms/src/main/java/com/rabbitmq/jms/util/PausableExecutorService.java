@@ -64,6 +64,11 @@ public class PausableExecutorService extends ThreadPoolExecutor implements Execu
         this.setThreadFactory(f);
     }
     
+    /**
+     * Creates a {@link PausableExecutorService} with the provided queue
+     * @param maxThreads - number of threads at peek 
+     * @param paused - initial state true means it starts paused
+     */
     public PausableExecutorService(int maxThreads, boolean paused, BlockingQueue<Runnable> queue) {
         super(0,maxThreads,60, TimeUnit.SECONDS,queue);
         latch = new PauseLatch(paused);
@@ -89,20 +94,34 @@ public class PausableExecutorService extends ThreadPoolExecutor implements Execu
     }
 
 
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void beforeExecute(Thread t, Runnable r) {
-        clatch.countUp();
         super.beforeExecute(t, r);
         try {
+            /*
+             * If we are paused, let's wait here until we resume 
+             */
             latch.await(DEFAULT_PAUSE_TIMEOUT, TimeUnit.MILLISECONDS);
         } catch (InterruptedException x) {
             throw new RejectedExecutionException("Thread was interrupted before executing.");
         }
+        /*
+         * Notify that a thread is running
+         */
+        clatch.countUp();
     }
     
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void afterExecute(Runnable r, Throwable t) {
+        /*
+         * Notify that the task has completed
+         */
         clatch.countDown();
         super.afterExecute(r, t);
     }
@@ -137,11 +156,18 @@ public class PausableExecutorService extends ThreadPoolExecutor implements Execu
         //then we make sure the threads do complete
         clatch.awaitZero(timeout, TimeUnit.MILLISECONDS);
     }
-
+    
+    /**
+     * Signals that the executor service can unpause.
+     * If the executor is not paused, this call returns without effect
+     */
     public void resume()  {
         latch.resume();
     }
     
+    /**
+     * Private thread factory so that we can name and make threads daemon status
+     */
     private final class RMQThreadFactory implements ThreadFactory {
 
         @Override
