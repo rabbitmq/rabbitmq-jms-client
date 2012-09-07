@@ -119,8 +119,7 @@
     <test>org.exolab.jmscts.test.session.AutoAckTest.*</test>
   </include>
   <include>
-    <test>org.exolab.jmscts.test.session.clientack.ClientAcknowledgeTest.*
-    </test>
+    <test>org.exolab.jmscts.test.session.clientack.ClientAcknowledgeTest.*</test>
   </include>
   <include>
     <test>org.exolab.jmscts.test.session.clientack.CloseTest.*</test>
