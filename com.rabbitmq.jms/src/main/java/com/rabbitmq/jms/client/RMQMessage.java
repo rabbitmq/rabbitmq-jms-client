@@ -697,7 +697,7 @@ public abstract class RMQMessage implements Message, Cloneable {
                     this.rmqProperties.put(name, (Serializable) value);
                 }
             } else {
-                Util.util().checkTrue(isReadOnlyProperties(), new MessageNotWriteableException("Message has been received and is read only."));
+                Util.util().checkTrue(isReadOnlyProperties(), "Message has been received and is read only.", MessageNotWriteableException.class);
                 checkName(name);
 
                 if (value==null) {

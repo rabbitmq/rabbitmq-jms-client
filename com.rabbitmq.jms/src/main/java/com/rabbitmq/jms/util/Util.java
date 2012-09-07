@@ -5,9 +5,15 @@ import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.UUID;
 
+import javax.jms.IllegalStateException;
+import javax.jms.InvalidClientIDException;
+import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
 import javax.jms.JMSSecurityException;
+import javax.jms.MessageEOFException;
 import javax.jms.MessageFormatException;
+import javax.jms.MessageNotReadableException;
+import javax.jms.MessageNotWriteableException;
 
 public class Util {
     private static final Util util = new Util();
@@ -57,29 +63,44 @@ public class Util {
         jx.initCause(x);
         throw jx;
     }
-    /**
-     * Throws an exception with the supplied message, or "Closed" if the msg parameter is null,
-     * if the bool parameter is true
-     * @param bool throws a JMSException if this parameter is set to true
-     * @param msg
-     * @throws JMSException
-     */
-    public void checkTrue(boolean bool, String msg) throws JMSException {
-        if (bool)
-            throw new JMSException(msg != null ? msg : "Closed");
-    }
 
     /**
      * Throws the supplied exception if the bool parameter is true
      * @param bool throws the supplied if this parameter is set to true
      * @param msg
+     * @param clazz the type of exception that should be thrown
      * @throws JMSException
      */
-    public void checkTrue(boolean bool, JMSException x) throws JMSException {
-        if (bool) 
-            throw x;
+    public JMSException checkTrue(boolean bool, String msg, Class<? extends JMSException> clazz) throws JMSException {
+        if (bool) {
+            if (IllegalStateException.class.equals(clazz)) {
+                throw new IllegalStateException(msg);
+            } else if (InvalidClientIDException.class.equals(clazz)) {
+                throw new InvalidClientIDException(msg);
+            } else if (IllegalStateException.class.equals(clazz)) {
+                throw new IllegalStateException(msg);
+            } else if (InvalidDestinationException.class.equals(clazz)) {
+                throw new InvalidDestinationException(msg);
+            } else if (JMSException.class.equals(clazz)) {
+                throw new JMSException(msg);
+            } else if (JMSSecurityException.class.equals(clazz)) {
+                throw new JMSSecurityException(msg);
+            } else if (MessageEOFException.class.equals(clazz)) {
+                throw new MessageEOFException(msg);
+            } else if (MessageFormatException.class.equals(clazz)) {
+                throw new MessageFormatException(msg);
+            } else if (MessageNotReadableException.class.equals(clazz)) {
+                throw new MessageNotReadableException(msg);
+            } else if (MessageNotWriteableException.class.equals(clazz)) {
+                throw new MessageNotWriteableException(msg);
+            } else {
+                throw new JMSException(msg);
+            }
+        } else {
+            return null;
+        }
+            
     }
-
     
     /**
      * Generates a random UUID string

@@ -200,8 +200,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public Message receive(long timeout) throws JMSException {
-        Util.util().checkTrue(closed, "Consumer has already been closed.");
-        Util.util().checkTrue(closing, "Consumer is in the process of closing.");
+        Util.util().checkTrue(closed, "Consumer has already been closed.", IllegalStateException.class);
+        Util.util().checkTrue(closing, "Consumer is in the process of closing.", IllegalStateException.class);
         /*
          * The spec identifies 0 as infinite timeout
          */
@@ -448,8 +448,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public Message receiveNoWait() throws JMSException {
-        Util.util().checkTrue(closing, new IllegalStateException("Consumer in the process of closing"));
-        Util.util().checkTrue(closed, new IllegalStateException("Consumer in the process of closing"));
+        Util.util().checkTrue(closing, "Consumer in the process of closing",IllegalStateException.class);
+        Util.util().checkTrue(closed, "Consumer in the process of closing",IllegalStateException.class);
         return receiveNoWait(0);
     }
     
