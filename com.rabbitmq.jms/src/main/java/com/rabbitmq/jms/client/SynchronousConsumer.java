@@ -27,16 +27,14 @@ public class SynchronousConsumer implements Consumer {
     private final Exchanger<GetResponse> exchanger = new Exchanger<GetResponse>();
     private final long timeout;
     private final Channel channel;
-    private final int acknowledgeMode;
     private final AtomicBoolean useOnce = new AtomicBoolean(false);
     private final AtomicBoolean oneReceived = new AtomicBoolean(false);
     private final AtomicBoolean cancelled = new AtomicBoolean(false);
 
-    public SynchronousConsumer(Channel channel, long timeout, int messageAckMode) {
+    public SynchronousConsumer(Channel channel, long timeout) {
         super();
         this.timeout = timeout;
         this.channel = channel;
-        this.acknowledgeMode = messageAckMode;
     }
 
     public GetResponse receive() throws JMSException {
@@ -100,10 +98,11 @@ public class SynchronousConsumer implements Consumer {
 
         }
         if (waiter == ACCEPT_MSG) {
-            // we only ack if we need to
-            if (acknowledgeMode == Session.DUPS_OK_ACKNOWLEDGE || acknowledgeMode == Session.AUTO_ACKNOWLEDGE) {
-                channel.basicAck(response.getEnvelope().getDeliveryTag(), false);
-            }
+            /* we never ack any message, that is 
+             * the responsibility of the 
+             * calling thread
+             */
+            
         } else {
             channel.basicNack(response.getEnvelope().getDeliveryTag(), false, true);
         }

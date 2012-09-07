@@ -263,7 +263,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             /*
              * Create the consumer object - in here we specify the timeout too
              */
-            sc = new SynchronousConsumer(this.session.getChannel(), timeout, session.getAcknowledgeMode());
+            sc = new SynchronousConsumer(this.session.getChannel(), timeout);
             /*
              * Subscribe the consumer object
              */
@@ -276,7 +276,46 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             /*
              * Process the result - even if it is null
              */
-            return processMessage(response, isAutoAck());
+            RMQMessage message = (RMQMessage) processMessage(response, isAutoAck());
+            /*
+             * Now we must handle the case where Connection.stop has been called
+             * while we were waiting for the message to arrive
+             */
+            if (message!=null) {
+                /*
+                 * If we reached here, means that the Connection.stop
+                 * method was called before a message arrived
+                 * But we are not allowed to return this message
+                 * cause we are in a stop/pause state
+                 * {@link Connection#stop}
+                 * 
+                 */
+                timeout = Math.max(timeout - (System.currentTimeMillis() - now), 0);
+                
+                boolean isTimedout = true;
+                try {
+                    /*
+                     * We need to wait for the Connection.start method to be called
+                     * and we need to respect the timeout and return null if isTimedout==true
+                     */
+                    isTimedout = ! pauseLatch.await(timeout, TimeUnit.MILLISECONDS);
+                }catch (InterruptedException x) {
+                    /*
+                     * Do nothing , keep the thread interrupt status intact
+                     */
+                }
+                if (isTimedout) {
+                    /*
+                     * NACK message, cause the client timed out while the receiver was 
+                     * paused
+                     */
+                    getSession().getChannel().basicNack(message.getRabbitDeliveryTag(), false, true);
+                    return null;
+                } else if (isAutoAck()) {
+                    getSession().getChannel().basicAck(message.getRabbitDeliveryTag(), false);
+                }
+            }
+            return message;
         } catch (IOException x) {
             Util.util().handleException(x);
         } finally {
@@ -579,8 +618,9 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         /* 
          * if we are in a pause state, we must break that 
          * this will release all threads waiting on the pause latch
+         * and effectively disable the use of the latch 
          */
-        pauseLatch.resume();
+        pauseLatch.finalResume();
         /*
          * cancel any subscriptions that we have
          * active at this time. there is no way to notify the 

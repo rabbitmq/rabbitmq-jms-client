@@ -39,7 +39,7 @@ public class TestSynchronousConsumer {
     public void testSynchronousConsumerSuccess() throws Exception {
         Channel channel = mock(Channel.class);
 
-        SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT,Session.AUTO_ACKNOWLEDGE);
+        SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT);
         CountDownLatch tx = new CountDownLatch(1);
         CountDownLatch rx = new CountDownLatch(1);
         SenderThread st = new SenderThread(TEST_RESPONSE, consumer, tx);
@@ -53,7 +53,6 @@ public class TestSynchronousConsumer {
         rt.join();
         st.join();
         
-        verify(channel, atLeastOnce()).basicAck(anyLong(),anyBoolean());
         verify(channel, atLeastOnce()).basicNack(anyLong(),anyBoolean(),anyBoolean());
         verify(channel, atLeastOnce()).basicCancel(anyString());
         assertTrue(rt.isSuccess());
@@ -64,7 +63,7 @@ public class TestSynchronousConsumer {
     public void testSynchronousConsumerSuccessShortTimeout() throws Exception {
         Channel channel = mock(Channel.class);
 
-        SynchronousConsumer consumer = new SynchronousConsumer(channel, 10, Session.AUTO_ACKNOWLEDGE);
+        SynchronousConsumer consumer = new SynchronousConsumer(channel, 10);
         CountDownLatch tx = new CountDownLatch(1);
         CountDownLatch rx = new CountDownLatch(1);
         SenderThread st = new SenderThread(TEST_RESPONSE, consumer, tx);
@@ -78,7 +77,6 @@ public class TestSynchronousConsumer {
         rt.join();
         st.join();
         
-        verify(channel, atLeastOnce()).basicAck(anyLong(),anyBoolean());
         verify(channel, atLeastOnce()).basicCancel(anyString());
         assertTrue(rt.isSuccess());
         assertTrue(st.isSuccess());
@@ -93,7 +91,7 @@ public class TestSynchronousConsumer {
     public void testSynchronousConsumerReceiverTimeout() throws Exception {
         Channel channel = mock(Channel.class);
 
-        SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT,Session.AUTO_ACKNOWLEDGE);
+        SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT);
         CountDownLatch tx = new CountDownLatch(1);
         CountDownLatch rx = new CountDownLatch(1);
         SenderThread st = new SenderThread(TEST_RESPONSE, consumer, tx);
@@ -124,7 +122,7 @@ public class TestSynchronousConsumer {
     public void testSynchronousConsumerReceiverTimeoutNoSender() throws Exception {
         Channel channel = mock(Channel.class);
 
-        SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT,Session.AUTO_ACKNOWLEDGE);
+        SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT);
         CountDownLatch rx = new CountDownLatch(1);
         ReceiverThread rt = new ReceiverThread(TEST_RESPONSE, consumer, rx);
         rt.start();

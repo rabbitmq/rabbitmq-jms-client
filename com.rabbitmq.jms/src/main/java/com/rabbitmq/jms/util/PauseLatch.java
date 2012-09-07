@@ -1,10 +1,12 @@
 package com.rabbitmq.jms.util;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
 public class PauseLatch {
 
+    private volatile boolean finalResume = false;
     private static class PauseSync extends AbstractQueuedSynchronizer {
         private static final long serialVersionUID = 1715200786237741115L;
 
@@ -77,7 +79,11 @@ public class PauseLatch {
      * @return true if the latch is in a paused state after this call
      */
     public boolean pause() {
-        return !sync.releaseShared(1);
+        if (finalResume) {
+            return false;
+        } else {
+            return !sync.releaseShared(1);
+        }
     }
     
     /**
@@ -85,6 +91,16 @@ public class PauseLatch {
      * @return true if the latch is not in paused state after this call
      */
     public boolean resume() {
+        return sync.releaseShared(0);
+    }
+    
+    /**
+     * wakes up all waiting threads
+     * after this call, all subsequent calls to pause will be ignored
+     * @return true if the latch is not in paused state after this call
+     */
+    public boolean finalResume() {
+        finalResume = true;
         return sync.releaseShared(0);
     }
     
