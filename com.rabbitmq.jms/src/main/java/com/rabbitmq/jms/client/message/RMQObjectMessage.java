@@ -29,6 +29,10 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
             if (object==null) {
                 buf = null;
             } else {
+                /*
+                 * We have to take a copy of the object at this point in time
+                 * according to the spec
+                 */
                 ByteArrayOutputStream bout = new ByteArrayOutputStream();
                 ObjectOutputStream out = new ObjectOutputStream(bout);
                 out.writeObject(object);
