@@ -229,6 +229,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         
         if (Thread.currentThread().isInterrupted()) {
             /* if the thread has been interrupted waiting for the pause */
+            //TODO logging implementation - add in a debug message here
             return null;
         }
         
