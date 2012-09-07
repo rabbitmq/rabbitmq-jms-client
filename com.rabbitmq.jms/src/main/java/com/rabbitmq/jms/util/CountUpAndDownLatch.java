@@ -46,8 +46,13 @@ public class CountUpAndDownLatch {
             for (;;) {
                 int c = getState();
                 int nextc = c + releases;
-                if (compareAndSetState(c, nextc))
+                if (compareAndSetState(c, nextc)) {
+                    /*
+                     * If the new value is 0, send result==true
+                     * so that all waiting threads can be released
+                     */
                     return nextc == 0;
+                }
             }
         }
     }
