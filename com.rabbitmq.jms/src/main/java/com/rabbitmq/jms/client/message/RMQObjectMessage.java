@@ -42,13 +42,9 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         }catch (IOException x) {
             Util.util().handleException(x);
         }
-        
+
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Serializable getObject() throws JMSException {
         if (buf==null) {
             return null;
@@ -65,18 +61,10 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void clearBodyInternal() throws JMSException {
         this.buf = null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void writeBody(ObjectOutput out) throws IOException {
         out.writeBoolean(this.buf == null);
         if (this.buf != null) {
@@ -85,10 +73,6 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void readBody(ObjectInput in) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         // the body here is just a byte[] and we delay creating the object
         // until getObject() is called so that
