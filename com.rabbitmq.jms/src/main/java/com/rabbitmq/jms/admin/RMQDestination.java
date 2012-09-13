@@ -67,7 +67,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @param declared - true if we have called
      *            {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)}
      *            or
-     *            {@link Channel#exchangeDeclare(String, String, boolean, boolean, boolean, java.util.Map)
+     *            {@link Channel#exchangeDeclare(String, String, boolean, boolean, boolean, java.util.Map)}
      *            to represent this queue/topic in the RabbitMQ broker. If
      *            creating a topic/queue to bind in JNDI, this value must be set
      *            to FALSE
@@ -204,7 +204,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @return true if we have called
      *         {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)}
      *         or
-     *         {@link Channel#exchangeDeclare(String, String, boolean, boolean, boolean, java.util.Map)
+     *         {@link Channel#exchangeDeclare(String, String, boolean, boolean, boolean, java.util.Map)}
      *         to represent this queue/topic in the RabbitMQ broker. If creating
      *         a topic/queue to bind in JNDI, this value will be set to false
      *         until the queue/topic has been setup in the RabbitMQ broker

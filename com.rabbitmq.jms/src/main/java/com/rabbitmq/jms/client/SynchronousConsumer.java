@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
-import javax.jms.Session;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
@@ -18,8 +17,8 @@ import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
 
 /**
- * Implementation of a one time Consumer used to handle the JMS semantics described in 
- * {@link MessageConsumer#receive()} and {@link MessageConsumer#receive(long))} 
+ * Implementation of a one time Consumer used to handle the JMS semantics described in
+ * {@link MessageConsumer#receive()} and {@link MessageConsumer#receive(long)}
  */
 public class SynchronousConsumer implements Consumer {
     private static final GetResponse ACCEPT_MSG = new GetResponse(null, null, null, 0);
@@ -98,11 +97,11 @@ public class SynchronousConsumer implements Consumer {
 
         }
         if (waiter == ACCEPT_MSG) {
-            /* we never ack any message, that is 
-             * the responsibility of the 
+            /* we never ack any message, that is
+             * the responsibility of the
              * calling thread
              */
-            
+
         } else {
             channel.basicNack(response.getEnvelope().getDeliveryTag(), false, true);
         }
@@ -125,7 +124,7 @@ public class SynchronousConsumer implements Consumer {
     public Channel getChannel() {
         return channel;
     }
-    
+
     public boolean cancel(String consumerTag) {
         boolean result = cancelled.compareAndSet(false, true);
         if (result) {
@@ -145,7 +144,7 @@ public class SynchronousConsumer implements Consumer {
             }
         }
         return result;
-        
+
     }
 
 
