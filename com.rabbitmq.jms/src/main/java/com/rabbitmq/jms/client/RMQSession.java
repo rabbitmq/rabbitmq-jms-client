@@ -3,7 +3,6 @@ package com.rabbitmq.jms.client;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,7 +58,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private final RMQConnection connection;
     /**
-     * Set to true if this session is transacted. 
+     * Set to true if this session is transacted.
      * the value will enver change
      */
     private final boolean transacted;
@@ -78,12 +77,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     /**
      * We're tracking all our delivery tags for this session
      * and we are only storing the largest one.
-     * this is used for nack during rollback of 
+     * this is used for nack during rollback of
      * a transacted session
      */
     private volatile AtomicLong lastReceivedTag = new AtomicLong(Long.MIN_VALUE);
     /**
-     * The message listener for this session. 
+     * The message listener for this session.
      */
     private volatile MessageListener messageListener;
     /**
@@ -97,7 +96,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private final ArrayList<RMQMessageConsumer> consumers = new ArrayList<RMQMessageConsumer>();
     /**
-     * A latch that we use when listeners are running, that way we can 
+     * A latch that we use when listeners are running, that way we can
      * pause and wait for listeners to complete during close and Connection.stop
      */
     private final CountUpAndDownLatch runningListener = new CountUpAndDownLatch(0);
@@ -106,9 +105,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private static final AtomicInteger channelNr = new AtomicInteger(0);
     /**
-     * We are listing all messages we have received. This tree set is used to meet the 
+     * We are listing all messages we have received. This tree set is used to meet the
      * requirement of Message.acknowledge, to be able to acknowledge all the messages
-     * for this session. we do this using a single ack, and we always use the 
+     * for this session. we do this using a single ack, and we always use the
      * largest delivery tag to do so
      */
     private volatile TreeSet<Long> receivedMessages = new TreeSet<Long>();
@@ -117,7 +116,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * List of all our durable subscriptions so we can track them
      */
     private final ConcurrentHashMap<String, RMQMessageConsumer> subscriptions;
-    
+
     private ConcurrentLinkedQueue<String> topics = new ConcurrentLinkedQueue<String>();
 
     /**
@@ -135,7 +134,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.acknowledgeMode = transacted ? Session.SESSION_TRANSACTED : mode;
         try {
             /*
-             * Create the channel that we will use, give it a known ID 
+             * Create the channel that we will use, give it a known ID
              */
             this.channel = connection.getRabbitConnection().createChannel(channelNr.incrementAndGet());
             if (transacted) {
@@ -239,7 +238,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * Same as {@link #getTransacted()}
      * but does not declare a JMSException in the throw clause
      * @return true if this session is transacted
-     * @see {@link #getTransacted()}
+     * @see  #getTransacted()
      */
     public boolean getTransactedNoException() {
         return this.transacted;
@@ -255,10 +254,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     /**
-     * Same as {@link RMQSession#getAcknowledgeMode()} but without 
+     * Same as {@link RMQSession#getAcknowledgeMode()} but without
      * a declared exception in the throw clause
      * @return the acknowledge mode, one of {@link Session#AUTO_ACKNOWLEDGE},
-     * {@link Session#CLIENT_ACKNOWLEDGE}, {@link Session#DUPS_OK_ACKNOWLEDGE} or 
+     * {@link Session#CLIENT_ACKNOWLEDGE}, {@link Session#DUPS_OK_ACKNOWLEDGE} or
      * {@link Session#SESSION_TRANSACTED}
      */
     public int getAcknowledgeModeNoException() {
@@ -272,7 +271,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public void commit() throws JMSException {
         Util.util().checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
         Util.util().checkTrue(!this.transacted, "Session is not transacted", IllegalStateException.class);
-            
+
         try {
             //call commit on the channel
             //this should ack all messages
@@ -303,13 +302,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                  * this will automatically nack and requeue all previous messages too
                  */
                 channel.basicNack(/* the largest/last received tag*/
-                                  lastReceivedTag.get(), 
+                                  lastReceivedTag.get(),
                                   /* true==nack multiple messages, all with tag<last */
-                                  true, 
+                                  true,
                                   /* true==requeue messages that have been nacked */
                                   true);
                 /*
-                 * Reset the delivery tag 
+                 * Reset the delivery tag
                  */
                 lastReceivedTag.set(Long.MIN_VALUE);
             }
@@ -324,7 +323,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     /**
-     * Returns true if {@link #close()} has been called and completed. 
+     * Returns true if {@link #close()} has been called and completed.
      * May return false if close is still in progress
      * @return
      */
@@ -338,7 +337,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public synchronized void close() throws JMSException {
         if (this.closed)
             return;
-        
+
         try {
             //close all producers created by this session
             for (RMQMessageProducer producer : producers) {
@@ -362,7 +361,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             if (this.getTransacted()) {
                 this.rollback();
             }
-            
+
             String topicQueue = null;
             while ((topicQueue=topics.poll())!=null) {
                 try {
@@ -376,7 +375,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                     //created only for a topic
                 }
             }
-            
+
             //close the channel itself
             try {
                 if (channel.isOpen()) {
@@ -400,7 +399,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             this.closed = true;
         }
     }
-    
+
     /**
      * {@inheritDoc}
      * TODO we can use basic.recover method call instead of basic.nack(requeue=true)
@@ -437,7 +436,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             }
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -496,7 +495,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         Util.util().checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
         return createConsumerInternal(destination, null, false);
     }
-    
+
     /**
      * Creates a consumer for a destination. If this is a topic, we can specify the autoDelete flag
      * @param destination
@@ -504,7 +503,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @param durableSubscriber true if this is a durable topic subscription
      * @return {@link #createConsumer(Destination)}
      * @throws JMSException if destination is null or we fail to create the destination on the broker
-     * @see {@link #createConsumer(Destination)}
+     * @see #createConsumer(Destination)
      */
     public MessageConsumer createConsumerInternal(Destination destination, String uuidTag, boolean durableSubscriber) throws JMSException {
         RMQDestination dest = (RMQDestination) destination;
@@ -521,14 +520,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (!dest.isQueue()) {
             String queueName = consumerTag;
             // this is a topic, we need to define a queue, and bind to it
-            // the queue name is a unique ID for each consumer 
+            // the queue name is a unique ID for each consumer
             try {
-                //we can set auto delete for a topic queue, since if the consumer disappears he is no longer 
-                //participating in the topic.  
+                //we can set auto delete for a topic queue, since if the consumer disappears he is no longer
+                //participating in the topic.
                 this.declareQueue(dest, queueName, durableSubscriber);
-                 
+
                 if (!durableSubscriber) {
-                    //store the name of the queue we created for this consumer 
+                    //store the name of the queue we created for this consumer
                     //so that we can delete it when we close this session
                     topics.add(queueName);
                 }
@@ -596,14 +595,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     protected void declareQueue(RMQDestination dest, String queueNameOverride, boolean durableSubscriber) throws JMSException {
         try {
             String queueName = queueNameOverride!=null?queueNameOverride:dest.getQueueName();
-            
+
             /*
              * We only want destinations to survive server restarts if
              * 1. They are durable topic subscriptions OR
              * 2. They are permanent queues
              */
             boolean durable = durableSubscriber || (dest.isQueue() & (!dest.isTemporary()));
-            
+
             /*
              * A queue is exclusive, meaning it can only be accessed by the current connection
              * and will be deleted when the connection is closed if
@@ -611,17 +610,17 @@ public class RMQSession implements Session, QueueSession, TopicSession {
              * 2. It's a non durable topic
              */
             boolean exclusive = dest.isTemporary() || ((!dest.isQueue()) && (!durableSubscriber));
-            
+
             HashMap<String,Object> options = new HashMap<String,Object>();
-            
+
             this.channel.queueDeclare(/* the name of the queue */
-                                      queueName, 
-                                      /* temporary destinations are not durable 
+                                      queueName,
+                                      /* temporary destinations are not durable
                                        * will not survive a server restart
                                        * all JMS queues except temp survive restarts
                                        * only durable topic queues
                                        */
-                                      durable, 
+                                      durable,
                                       /* exclusive flag */
                                       exclusive,
                                       /*
@@ -629,9 +628,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                                        * that is cause exclusive(rabbit)==true automatically
                                        * get deleted when a Connection is closed
                                        */
-                                      false,    
+                                      false,
                                       /* Queue properties */
-                                      options); 
+                                      options);
             if (dest.isTemporary()) {
                 topics.add(dest.getQueueName());
             }
@@ -662,13 +661,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     protected void declareTopic(RMQDestination dest) throws JMSException {
         try {
             this.channel.exchangeDeclare(/* the name of the exchange */
-                                         dest.getExchangeName(), 
+                                         dest.getExchangeName(),
                                          /* the type is always fanout - this will change when selectors come in play*/
                                          "fanout",
                                          /* durable for all except temporary topics */
                                          !dest.isTemporary(),
                                          /* auto delete is true if temporary - TODO how do we delete exchanges used for temporary topics
-                                          * this could be autoDelete=dest.isTemporary() 
+                                          * this could be autoDelete=dest.isTemporary()
                                           */
                                          false,
                                          /* internal is false JMS will always publish to the exchange*/
@@ -692,7 +691,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             /*
              * we are changing subscription, or not, if called with the same topic
              */
-            
+
             if (previous.getDestination().equals(topic)) {
                 if (previous.isClosed()) {
                     /*
@@ -707,7 +706,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 unsubscribe(name);
             }
         }
-        
+
         /*
          * Create the new subscription
          */
@@ -788,7 +787,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             Util.util().handleException(x);
         }
     }
-    
+
     /**
      * Simply here to satisfy a test
      * @param dest
@@ -797,7 +796,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public QueueReceiver createReceiver(RMQDestination dest) throws JMSException {
         return (QueueReceiver)createReceiver((Queue)dest);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -879,10 +878,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * Invoked when the {@link RMQMessageConsumer} has received a message
      * so that we can track the last delivery tag
      * This is used to NACK messages when a transaction is rolled back
-     * 
+     *
      * @param response
-     * @see {@link Channel#basicNack(long, boolean, boolean)}
-     * @see {@link Session#rollback()}
+     * @see Channel#basicNack(long, boolean, boolean)
+     * @see Session#rollback()
      */
     public void messageReceived(GetResponse response) {
         if (!transacted) return; //auto ack
@@ -896,7 +895,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             } else {
                 break;
             }
-                     
+
         }
     }
 
@@ -906,7 +905,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             /*
              * We are closing but haven't unsubscribed, so we can't cancel the subscription
              */
-            
+
         }
     }
 
@@ -923,8 +922,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * session indirectly after {@link javax.jms.Connection#stop()} has been
      * invoked. In this implementation, any async consumers will be cancelled,
      * only to be re-subscribed when
-     * 
-     * @throws {@link javax.jms.JMSException} if the thread is interrupted
+     *
+     * @throws javax.jms.JMSException if the thread is interrupted
      */
     public void pause() throws JMSException {
         for (RMQMessageConsumer consumer : this.consumers) {
@@ -938,9 +937,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * Resubscribes all async listeners and continues to receive messages
-     * 
-     * @see {@link javax.jms.Connection#stop()}
-     * @throws {@link javax.jms.JMSException} if the thread is interrupted
+     *
+     * @see javax.jms.Connection#stop()
+     * @throws javax.jms.JMSException if the thread is interrupted
      */
     public void resume() throws JMSException {
         for (RMQMessageConsumer consumer : this.consumers) {
@@ -951,19 +950,19 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             }
         }
     }
-    
+
 
     public void unackedMessageReceived(RMQMessage message) {
-        if (!getTransactedNoException()) { 
+        if (!getTransactedNoException()) {
             synchronized (receivedMessages) {
                 receivedMessages.add(message.getRabbitDeliveryTag());
             }
         }
     }
-    
+
     /**
      * Acknowledges a message manually.
-     * Invoked when the method 
+     * Invoked when the method
      * {@link javax.jms.Message#acknowledge()}
      * @param message - the message to be acknowledged
      */
@@ -976,9 +975,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             boolean individualAck = false;
             if ((!isAutoAck()) && (!getTransacted())) {
                 /*
-                 * Per JMS specification Message.acknowledge(), if we ack 
+                 * Per JMS specification Message.acknowledge(), if we ack
                  * the last message in a group, we will ack all the ones prior received
-                 * Spec 11.2.21 says 
+                 * Spec 11.2.21 says
                  * "Note that the acknowledge method of Message acknowledges all messages
                  * received on that message’s session."
                  * However, the JavaDoc states
@@ -986,8 +985,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 synchronized (receivedMessages) {
                     /*
                      * Make sure that the message is in our unack list
-                     * or we can't proceed 
-                     * if it is not in the list, then the message is either 
+                     * or we can't proceed
+                     * if it is not in the list, then the message is either
                      * auto acked or been manually acked previously
                      */
                     if (!receivedMessages.contains(message.getRabbitDeliveryTag())) {
@@ -996,7 +995,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                     } else if (individualAck) {
                         /* ACK a single message */
                         getChannel().basicAck(/* we ack the highest tag */
-                                              message.getRabbitDeliveryTag(), 
+                                              message.getRabbitDeliveryTag(),
                                               /* and we ack everything up to that tag */
                                               false);
                         /* remove the message just acked from our list of un-acked messages */
@@ -1004,7 +1003,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                     }else if (groupAck) {
                         /* ack multiple message up until the existing tag */
                         getChannel().basicAck(/* we ack the highest tag */
-                                              message.getRabbitDeliveryTag(), 
+                                              message.getRabbitDeliveryTag(),
                                               /* and we ack everything up to that tag */
                                               true);
                         /* now delete all the messages that we tagged */
@@ -1020,28 +1019,28 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                     } else if (receivedMessages.contains(message.getRabbitDeliveryTag())) {
                         long deliveryTag = receivedMessages.last();
                         /*
-                         * Ack all the messages up to this message 
+                         * Ack all the messages up to this message
                          */
                         getChannel().basicAck(/* we ack the highest tag */
-                                              deliveryTag, 
+                                              deliveryTag,
                                               /* and we ack everything up to that tag */
                                               true);
                         receivedMessages.clear();
                     }
-                        
+
                 }
             }
         } catch (IOException x) {
             Util.util().handleException(x);
         }
     }
-    
+
     private final class MessageListenerWrapper implements MessageListener {
         private final MessageListener listener;
         public MessageListenerWrapper(MessageListener listener) {
             this.listener = listener;
         }
-        
+
         @Override
         public void onMessage(Message message) {
             runningListener.countUp();
@@ -1050,7 +1049,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             } finally {
                 runningListener.countDown();
             }
-            
+
         }
     }
 

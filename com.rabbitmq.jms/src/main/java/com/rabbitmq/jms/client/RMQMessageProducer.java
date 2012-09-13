@@ -2,7 +2,6 @@ package com.rabbitmq.jms.client;
 
 import java.io.IOException;
 
-import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -31,7 +30,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     private final RMQSession session;
     /**
      * Delivery mode
-     * @see {@link javax.jms.DeliveryMode}
+     * @see javax.jms.DeliveryMode
      */
     private int deliveryMode;
     /**
@@ -157,13 +156,13 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         this.session.producerClose(this);
         internalClose();
     }
-    
+
     /**
      * Method called internally or by the Session
      * when system is shutting down
      */
     protected void internalClose() {
-        
+
     }
 
     /**
@@ -212,9 +211,9 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             msg.setJMSDestination(destination);
             msg.setJMSTimestamp(System.currentTimeMillis());
             msg.generateInternalID();
-            
+
             RMQDestination dest = (RMQDestination) destination;
-            
+
             /*
              * Configure the send settings
              */

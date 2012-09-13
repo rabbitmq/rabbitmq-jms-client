@@ -43,7 +43,7 @@ public class Util {
     }
 
     /**
-     * @see {@link #handleException(Exception, String)}
+     * @see #handleException(Exception, String)
      * @param x
      * @return
      * @throws JMSException
@@ -57,7 +57,7 @@ public class Util {
         jx.initCause(x);
         throw jx;
     }
-    
+
     public JMSSecurityException handleMessageFormatException(Exception x) throws JMSException {
         MessageFormatException jx = new MessageFormatException(x.getMessage());
         jx.initCause(x);
@@ -99,9 +99,9 @@ public class Util {
         } else {
             return null;
         }
-            
+
     }
-    
+
     /**
      * Generates a random UUID string
      * @return a random UUID string
@@ -109,7 +109,7 @@ public class Util {
     public String generateUUIDTag() {
         return UUID.randomUUID().toString();
     }
-    
+
     /**
      * Utility method to write an object as a primitive or as an object
      * @param s the object to write
@@ -147,7 +147,7 @@ public class Util {
             out.write((byte[])s);
         } else
             throw new MessageFormatException(s + " is not a recognized primitive type.");
-        
+
 
     }
 }

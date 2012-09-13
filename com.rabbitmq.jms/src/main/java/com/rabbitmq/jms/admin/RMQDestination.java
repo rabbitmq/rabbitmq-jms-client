@@ -55,7 +55,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * Creates a destination, either a queue or a topic, this method initializes
      * all the values appropriately
      * Unless used appropriately, this is an internal method.
-     * 
+     *
      * @param name - the name of the topic or the queue
      * @param exchangeName - the exchange we will publish to and bind queues to.
      *            If this is a queue, then set this value to an empty string
@@ -84,7 +84,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     /**
      * Returns the name of the queue/topic
-     * 
+     *
      * @return the name of the queue/topic
      */
     public String getName() {
@@ -94,7 +94,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     /**
      * Returns the name of the RabbitMQ Exchange used to publish/send messages
      * to
-     * 
+     *
      * @return the name of the RabbitMQ Exchange used to publish/send messages
      *         to
      */
@@ -104,7 +104,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     /**
      * Returns the routingKey used to publish/send messages with
-     * 
+     *
      * @return the routingKey used to publish/send messages with
      */
     public String getRoutingKey() {
@@ -113,7 +113,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     /**
      * Returns true if this is a queue, false if it is a topic
-     * 
+     *
      * @return true if this is a queue, false if it is a topic
      */
     public boolean isQueue() {
@@ -123,7 +123,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     /**
      * Sets the name of the queue/topic - should only be used when binding into
      * JNDI
-     * 
+     *
      * @param name
      * @throws IllegalStateException if the queue has already been declared
      *             {@link RMQDestination#isDeclared()} return true
@@ -137,7 +137,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     /**
      * Sets the name of the exchange in the RabbitMQ broker - should only be
      * used when binding into JNDI
-     * 
+     *
      * @param exchangeName
      * @throws IllegalStateException if the queue has already been declared
      *             {@link RMQDestination#isDeclared()} return true
@@ -151,7 +151,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     /**
      * Sets the routing key when sending/receiving messages for this queue/topic
      * - should only be used when binding into JNDI
-     * 
+     *
      * @param routingKey
      * @throws IllegalStateException if the queue has already been declared
      *             {@link RMQDestination#isDeclared()} return true
@@ -165,7 +165,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     /**
      * Set to true if this is a queue, false if this is a topic - should only be
      * used when binding into JNDI
-     * 
+     *
      * @param queue
      * @throws IllegalStateException if the queue has already been declared
      *             {@link RMQDestination#isDeclared()} return true
@@ -215,12 +215,12 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     /**
      * Should only be used internally by {@link RMQSession}
-     * 
+     *
      * @param declared - set to true if the queue/topic has been defined in the
      *            RabbitMQ broker
      * @throws IllegalStateException if the queue has already been declared
      *             {@link RMQDestination#isDeclared()} return true
-     * @see {@link #isDeclared()}
+     * @see #isDeclared()
      */
     public void setDeclared(boolean declared) {
         this.declared = declared;
@@ -236,12 +236,12 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     @Override
     public void delete() throws JMSException {
-        //delete is deferred until Session.close happens 
+        //delete is deferred until Session.close happens
         //TODO implement Channel.queueDelete
         //See RMQSession.close how we call Channel.queueDelete
     }
 
-    
-    
+
+
 
 }
