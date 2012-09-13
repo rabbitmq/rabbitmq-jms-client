@@ -30,7 +30,6 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
-import com.rabbitmq.integration.IntegrationTest;
 
 /**
  * Test to validate that RabbitMQ server is running and working

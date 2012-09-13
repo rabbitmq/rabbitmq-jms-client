@@ -15,7 +15,6 @@ import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.rabbitmq.integration.IntegrationTest;
 import com.rabbitmq.jms.TestConnectionFactory;
 
 @Category(IntegrationTest.class)

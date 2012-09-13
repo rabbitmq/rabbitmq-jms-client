@@ -14,8 +14,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.CountDownLatch;
 
-import javax.jms.Session;
-
 import org.junit.Test;
 
 import com.rabbitmq.client.Channel;
@@ -24,7 +22,7 @@ import com.rabbitmq.client.GetResponse;
 
 public class TestSynchronousConsumer {
 
-    private static final long TIMEOUT = 100;
+    private static final long TIMEOUT = 100; // ms
     private static final Envelope envelope = mock(Envelope.class);
     static {
         when(envelope.getDeliveryTag()).thenReturn(1l);
@@ -49,16 +47,16 @@ public class TestSynchronousConsumer {
 
         rx.countDown();
         tx.countDown();
-        
+
         rt.join();
         st.join();
-        
+
         verify(channel, atLeastOnce()).basicNack(anyLong(),anyBoolean(),anyBoolean());
         verify(channel, atLeastOnce()).basicCancel(anyString());
         assertTrue(rt.isSuccess());
         assertTrue(st.isSuccess());
     }
-    
+
     @Test
     public void testSynchronousConsumerSuccessShortTimeout() throws Exception {
         Channel channel = mock(Channel.class);
@@ -73,15 +71,15 @@ public class TestSynchronousConsumer {
 
         rx.countDown();
         tx.countDown();
-        
+
         rt.join();
         st.join();
-        
+
         verify(channel, atLeastOnce()).basicCancel(anyString());
         assertTrue(rt.isSuccess());
         assertTrue(st.isSuccess());
     }
-    
+
     /**
      * In this test the receiver should timeout, since there
      * is a delay in sending, and the sender must NACK the message
@@ -102,17 +100,17 @@ public class TestSynchronousConsumer {
         rx.countDown();
         Thread.sleep(2*TIMEOUT);
         tx.countDown();
-        
+
         rt.join();
         st.join();
-        
-        
+
+
         verify(channel, atLeastOnce()).basicNack(anyLong(),anyBoolean(), anyBoolean());
         verify(channel, atLeastOnce()).basicCancel(anyString());
         assertFalse(rt.isSuccess());
         assertTrue(st.isSuccess());
     }
-    
+
     /**
      * In this test the receiver should timeout, since there
      * is a no sending at all
@@ -128,12 +126,12 @@ public class TestSynchronousConsumer {
         rt.start();
 
         rx.countDown();
-        
+
         rt.join();
-        
+
         assertFalse(rt.isSuccess());
     }
-    
+
 
     private static class SenderThread extends Thread {
         final GetResponse response;
