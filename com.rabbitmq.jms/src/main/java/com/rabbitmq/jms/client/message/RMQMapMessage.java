@@ -18,15 +18,13 @@ import com.rabbitmq.jms.util.DiscardingObjectOutput;
 import com.rabbitmq.jms.util.IteratorEnum;
 import com.rabbitmq.jms.util.Util;
 
+/**
+ * Rabbit implementation of {@link MapMessage} interface.
+ */
 public class RMQMapMessage extends RMQMessage implements MapMessage {
 
-    
     private Map<String, Serializable> data = new HashMap<String, Serializable>();
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public boolean getBoolean(String name) throws JMSException {
         Object o = this.data.get(name);
         if (o == null)
@@ -39,10 +37,6 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "boolean"));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public byte getByte(String name) throws JMSException {
         Object o = this.data.get(name);
         if (o == null)
@@ -55,10 +49,6 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "byte"));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public short getShort(String name) throws JMSException {
         Object o = this.data.get(name);
         if (o == null)
@@ -73,10 +63,6 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "short"));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public char getChar(String name) throws JMSException {
         Object o = this.data.get(name);
         if (o == null)
@@ -87,10 +73,6 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "char"));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public int getInt(String name) throws JMSException {
         Object o = this.data.get(name);
         if (o == null)
@@ -107,10 +89,6 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "int"));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public long getLong(String name) throws JMSException {
         Object o = this.data.get(name);
         if (o == null)
@@ -129,10 +107,6 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "long"));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public float getFloat(String name) throws JMSException {
         Object o = this.data.get(name);
         if (o == null)
@@ -145,10 +119,6 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "float"));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public double getDouble(String name) throws JMSException {
         Object o = this.data.get(name);
         if (o == null)
@@ -163,10 +133,6 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "double"));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getString(String name) throws JMSException {
         Object o = this.data.get(name);
         if (o == null)
@@ -179,10 +145,6 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             return o.toString();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public byte[] getBytes(String name) throws JMSException {
         Object o = this.data.get(name);
         if (o == null) {
@@ -196,10 +158,6 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "byte[]"));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Object getObject(String name) throws JMSException {
         Object o = this.data.get(name);
         if (o == null) {
@@ -211,108 +169,60 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Enumeration<String> getMapNames() throws JMSException {
         return new IteratorEnum<String>(this.data.keySet().iterator());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void setBoolean(String name, boolean value) throws JMSException {
         Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void setByte(String name, byte value) throws JMSException {
         Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void setShort(String name, short value) throws JMSException {
         Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void setChar(String name, char value) throws JMSException {
         Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void setInt(String name, int value) throws JMSException {
         Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void setLong(String name, long value) throws JMSException {
         Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void setFloat(String name, float value) throws JMSException {
         Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void setDouble(String name, double value) throws JMSException {
         Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void setString(String name, String value) throws JMSException {
         Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void setBytes(String name, byte[] value) throws JMSException {
         Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         setBytes(name, value, 0, value.length);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void setBytes(String name, byte[] value, int offset, int length) throws JMSException {
         Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         if (value == null) {
@@ -324,10 +234,6 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         this.data.put(name, buf);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void setObject(String name, Object value) throws JMSException {
         Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         if (name==null && value==null) {
@@ -343,7 +249,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
                 Util.util().handleException(x);
             }
         }
-        
+
         if (value instanceof byte[]) {
             setBytes(name, (byte[])value);
         } else {
@@ -351,26 +257,14 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public boolean itemExists(String name) throws JMSException {
         return this.data.containsKey(name);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void clearBodyInternal() throws JMSException {
         this.data.clear();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void writeBody(ObjectOutput out) throws IOException {
         int size = this.data.size();
         out.writeInt(size);
@@ -382,13 +276,8 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
                 throw new IOException(x);
             }
         }
-
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void readBody(ObjectInput in) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         int size = in.readInt();
         for (int i = 0; i < size; i++) {
@@ -397,7 +286,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             this.data.put(name, (Serializable) value);
         }
     }
-    
+
     /**
      * Utility method to write an object as a primitive or as an object
      * @param s the object to write
@@ -406,7 +295,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
      * @throws IOException
      * @throws NullPointerException if s is null
      */
-    public void writePrimitiveData(Object s, ObjectOutput out, boolean allowSerializable) throws IOException, MessageFormatException {
+    private void writePrimitiveData(Object s, ObjectOutput out, boolean allowSerializable) throws IOException, MessageFormatException {
         if(s==null) {
             throw new NullPointerException();
         } else if (s instanceof Boolean) {
@@ -436,6 +325,5 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         } else
             throw new MessageFormatException(s + " is not a recognized primitive type.");
     }
-
 
 }
