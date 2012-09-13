@@ -979,7 +979,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                  * the last message in a group, we will ack all the ones prior received
                  * Spec 11.2.21 says
                  * "Note that the acknowledge method of Message acknowledges all messages
-                 * received on that message’s session."
+                 * received on that message's session."
                  * However, the JavaDoc states
                  */
                 synchronized (receivedMessages) {
