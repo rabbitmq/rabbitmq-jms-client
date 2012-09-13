@@ -1,6 +1,5 @@
 package com.rabbitmq.integration.tests;
 
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import javax.jms.DeliveryMode;
@@ -13,18 +12,20 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import org.junit.Test;
-
-import com.rabbitmq.jms.TestConnectionFactory;
-
 import junit.framework.Assert;
 
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import com.rabbitmq.integration.IntegrationTest;
+import com.rabbitmq.jms.TestConnectionFactory;
+
+@Category(IntegrationTest.class)
 public class TestRabbitMQRedeliverOnNack {
     static final String QUEUE_NAME = "test.queue."+TestRabbitMQRedeliverOnNack.class.getCanonicalName();
     static final String MESSAGE = "Hello " + TestRabbitMQRedeliverOnNack.class.getName();
-    
-    
+
+
     @Test
     public void test() throws Exception {
         QueueConnection queueConn = null;
