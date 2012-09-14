@@ -141,7 +141,6 @@ public class TestSynchronousConsumer {
         volatile Exception exception;
 
         public SenderThread(GetResponse response, SynchronousConsumer consumer, CountDownLatch latch) {
-            super();
             this.response = response;
             this.consumer = consumer;
             this.latch = latch;
@@ -150,34 +149,34 @@ public class TestSynchronousConsumer {
         public void run() {
             final String fakeConsumerTag = "";
             try {
-                latch.await();
-                consumer.handleDelivery(fakeConsumerTag, response);
-                success = true;
+                this.latch.await();
+                this.consumer.handleDelivery(fakeConsumerTag, this.response);
+                this.success = true;
             } catch (Exception x) {
                 x.printStackTrace(); //TODO logging implementation
-                exception = x;
-                success = false;
+                this.exception = x;
+                this.success = false;
                 return;
             }
             try {
-                latch.await();
+                this.latch.await();
                 //this will work fine, but it will be a nack
-                consumer.handleDelivery(fakeConsumerTag, response);
+                this.consumer.handleDelivery(fakeConsumerTag, this.response);
             } catch (Exception x) {
                 //this is expected, it's a 2nd invocation
-                exception = x;
-                success = false;
+                this.exception = x;
+                this.success = false;
                 return;
             }
         }
 
         public boolean isSuccess() {
-            return success;
+            return this.success;
         }
 
         @SuppressWarnings("unused")
         public Exception getException() {
-            return exception;
+            return this.exception;
         }
     }
 
@@ -196,22 +195,22 @@ public class TestSynchronousConsumer {
 
         public void run() {
             try {
-                latch.await();
-                success = (consumer.receive() == response);
+                this.latch.await();
+                this.success = (this.consumer.receive() == this.response);
             } catch (Exception x) {
-                exception = x;
-                success = false;
+                this.exception = x;
+                this.success = false;
                 return;
             }
         }
 
         public boolean isSuccess() {
-            return success;
+            return this.success;
         }
 
         @SuppressWarnings("unused")
         public Exception getException() {
-            return exception;
+            return this.exception;
         }
     }
 

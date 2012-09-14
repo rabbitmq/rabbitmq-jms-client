@@ -20,7 +20,7 @@ import com.rabbitmq.client.ShutdownSignalException;
  * Implementation of a one time Consumer used to handle the JMS semantics described in
  * {@link MessageConsumer#receive()} and {@link MessageConsumer#receive(long)}
  */
-public class SynchronousConsumer implements Consumer {
+class SynchronousConsumer implements Consumer {
     private static final GetResponse ACCEPT_MSG = new GetResponse(null, null, null, 0);
 
     private final Exchanger<GetResponse> exchanger = new Exchanger<GetResponse>();
@@ -30,13 +30,12 @@ public class SynchronousConsumer implements Consumer {
     private final AtomicBoolean oneReceived = new AtomicBoolean(false);
     private final AtomicBoolean cancelled = new AtomicBoolean(false);
 
-    public SynchronousConsumer(Channel channel, long timeout) {
-        super();
+    SynchronousConsumer(Channel channel, long timeout) {
         this.timeout = timeout;
         this.channel = channel;
     }
 
-    public GetResponse receive() throws JMSException {
+    GetResponse receive() throws JMSException {
         if (!useOnce.compareAndSet(false, true)) {
             throw new JMSException("SynchronousConsumer.receive can only be used once.");
         }
