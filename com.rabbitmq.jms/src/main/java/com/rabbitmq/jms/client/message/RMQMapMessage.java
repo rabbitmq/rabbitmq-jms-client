@@ -246,7 +246,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
                 /* Make sure we can write this type of object */
                 writePrimitiveData(value, new DiscardingObjectOutput(), false);
             } catch (IOException x) {
-                Util.util().handleException(x);
+                Util.util().handleMessageFormatException(x);
             }
         }
 
