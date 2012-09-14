@@ -113,7 +113,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @return true if the message is read only
      */
     public boolean isReadonlyBody() {
-        return readonlyBody;
+        return this.readonlyBody;
     }
 
     public boolean isReadOnlyProperties() {
@@ -151,7 +151,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @return
      */
     public long getRabbitDeliveryTag() {
-        return rabbitDeliveryTag;
+        return this.rabbitDeliveryTag;
     }
     /**
      * Sets the delivery tag for this message, this field is
@@ -174,7 +174,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @return
      */
     public RMQSession getSession() {
-        return session;
+        return this.session;
     }
     /**
      * Sets the session this object was received by
@@ -716,7 +716,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public void acknowledge() throws JMSException {
-        if (isAcked.compareAndSet(false, true)) {
+        if (this.isAcked.compareAndSet(false, true)) {
             getSession().acknowledge(this);
         }
     }
@@ -844,7 +844,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((internalMessageID == null) ? 0 : internalMessageID.hashCode());
+        result = prime * result + ((this.internalMessageID == null) ? 0 : this.internalMessageID.hashCode());
         return result;
     }
     @Override
@@ -856,10 +856,10 @@ public abstract class RMQMessage implements Message, Cloneable {
         if (getClass() != obj.getClass())
             return false;
         RMQMessage other = (RMQMessage) obj;
-        if (internalMessageID == null) {
+        if (this.internalMessageID == null) {
             if (other.internalMessageID != null)
                 return false;
-        } else if (!internalMessageID.equals(other.internalMessageID))
+        } else if (!this.internalMessageID.equals(other.internalMessageID))
             return false;
         return true;
     }
@@ -870,15 +870,15 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @return
      */
     public String getInternalID() {
-        return internalMessageID;
+        return this.internalMessageID;
     }
 
     /**
      * Called when a message is sent so that each message is unique
      */
     public void generateInternalID() throws JMSException {
-        internalMessageID = Util.util().generateUUIDTag();
-        this.rmqProperties.put(JMS_MESSAGE_ID,"ID:"+this.internalMessageID);
+        this.internalMessageID = Util.util().generateUUIDTag();
+        this.rmqProperties.put(JMS_MESSAGE_ID, "ID:" + this.internalMessageID);
     }
 
     /**

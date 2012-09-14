@@ -505,7 +505,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @throws JMSException if destination is null or we fail to create the destination on the broker
      * @see #createConsumer(Destination)
      */
-    public MessageConsumer createConsumerInternal(Destination destination, String uuidTag, boolean durableSubscriber) throws JMSException {
+    private MessageConsumer createConsumerInternal(Destination destination, String uuidTag, boolean durableSubscriber) throws JMSException {
         RMQDestination dest = (RMQDestination) destination;
         String consumerTag = uuidTag != null ? uuidTag : "jms-topic-"+Util.util().generateUUIDTag();
 
