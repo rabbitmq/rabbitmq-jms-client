@@ -30,8 +30,8 @@ public class Util {
      * Wraps an exception and re throws a {@link JMSException}
      * This method will always throw a {@link JMSException}
      * and is used to encapsulate Rabbit API exceptions (all declared as
-     * {@link IOException}
-     * @param x the exceptio to wrap
+     * {@link IOException})
+     * @param x the exception to wrap
      * @param message the message for the {@link JMSException#JMSException(String)} constructor. If null {@link Exception#getMessage()} will be used
      * @return does not return anything, always throws a {@link JMSException}
      * @throws JMSException always on every invocation
