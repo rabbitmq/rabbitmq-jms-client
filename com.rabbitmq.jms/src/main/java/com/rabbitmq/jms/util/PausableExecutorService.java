@@ -10,75 +10,68 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Implements a {@link ExecutorService} but allows the service to be paused
- * This has the method {@link #pause()} - this method, when invoked, will 
- * allow existing threads to finish, but it will not let new tasks to commence until
- * the {@link #resume()} method has been called.
- * <br/>
- * The {@link PausableExecutorService} will continue to accept runnable
- * tasks while paused.
- * 
- * This {@link PausableExecutorService} has an unbounded runnable queue, this is important to consider when 
- * pausing tasks as the 
+ * Implements a {@link ExecutorService} but allows the service to be paused.
+ * <p>
+ * This has the method {@link #pause()} - this method, when invoked, will allow existing threads to finish, but it will
+ * not let new tasks commence until the {@link #resume()} method has been called.
+ * </p>
+ * <p>
+ * The {@link PausableExecutorService} will continue to accept runnable tasks while paused.
+ * </p>
+ * <p>
+ * This {@link PausableExecutorService} has an unbounded runnable queue, this is important to consider when pausing as
+ * the queue can build up indefinitely.
+ * </p>
  */
 
 public class PausableExecutorService extends ThreadPoolExecutor implements ExecutorService {
-    
-    /**
-     * Default timeout used when calling pause() the default value is 
-     * 300000 milli seconds.
-     */
-    public final static long DEFAULT_PAUSE_TIMEOUT = Long.getLong("rabbit.jms.DEFAULT_PAUSE_TIMEOUT", 300000);
-    /**
-     * We simply use this object to name threads with a number
-     * this is the suffix of the thread
-     */
+
+    /** Timeout used when calling pause(). Default is 300000 ms == 300 s == 5 mins */
+    private final static long DEFAULT_PAUSE_TIMEOUT = Long.getLong("rabbit.jms.DEFAULT_PAUSE_TIMEOUT", 300000);
+
+    /** We suffix thread names with a number. */
     private final static AtomicLong THREAD_COUNTER = new AtomicLong(0);
-    
-    /**
-     * The latch that we use to pause, resume, and wait on resume
-     */
+
+    /** The latch that we use to pause, resume, and wait on resume */
     private final PauseLatch latch;
-    
+
     /**
-     * This latch keeps track of how many threads are currently executing 
-     * tasks so that we can hold the {@link #pause()} call until 
-     * they are finished
+     * This latch keeps track of how many threads are currently executing
+     * tasks so that we can hold the {@link #pause()} call until
+     * they are finished.
      */
     private final CountUpAndDownLatch clatch = new CountUpAndDownLatch(0);
-    
-    /**
-     * The thread name prefix
-     */
+
+    /** The thread name prefix. */
     private volatile String serviceId = "RabbitMQ JMS Thread #";
-    
+
     /**
      * Creates a {@link PausableExecutorService} with an unbounded queue
-     * @param maxThreads - number of threads at peek 
+     * @param maxThreads - number of threads at peek
      * @param paused - initial state true means it starts paused
      */
     public PausableExecutorService(int maxThreads, boolean paused) {
-        super(0,maxThreads,60, TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>());
+        super(0, maxThreads, 60, TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>());
         latch = new PauseLatch(paused);
         ThreadFactory f = new RMQThreadFactory();
         this.setThreadFactory(f);
     }
-    
+
     /**
      * Creates a {@link PausableExecutorService} with the provided queue
-     * @param maxThreads - number of threads at peek 
+     * @param maxThreads - number of threads at peek
      * @param paused - initial state true means it starts paused
+     * @param queue -
      */
     public PausableExecutorService(int maxThreads, boolean paused, BlockingQueue<Runnable> queue) {
-        super(0,maxThreads,60, TimeUnit.SECONDS,queue);
+        super(0, maxThreads, 60, TimeUnit.SECONDS, queue);
         latch = new PauseLatch(paused);
         ThreadFactory f = new RMQThreadFactory();
         this.setThreadFactory(f);
     }
-    
+
     /**
-     * Returns the service ID 
-     * @return
+     * @return the service ID
      */
     public String getServiceId() {
         return serviceId;
@@ -102,7 +95,7 @@ public class PausableExecutorService extends ThreadPoolExecutor implements Execu
         super.beforeExecute(t, r);
         try {
             /*
-             * If we are paused, let's wait here until we resume 
+             * If we are paused, let's wait here until we resume
              */
             latch.await(DEFAULT_PAUSE_TIMEOUT, TimeUnit.MILLISECONDS);
         } catch (InterruptedException x) {
@@ -113,7 +106,7 @@ public class PausableExecutorService extends ThreadPoolExecutor implements Execu
          */
         clatch.countUp();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -125,46 +118,44 @@ public class PausableExecutorService extends ThreadPoolExecutor implements Execu
         clatch.countDown();
         super.afterExecute(r, t);
     }
-    
+
     /**
-     * returns true if this executor is paused
+     * @return true if this executor is paused
      */
     public boolean isPaused() {
         return latch.isPaused();
     }
 
     /**
-     * pauses the executor, this method will not return until
-     * all existing threads have finished running or the default timeout of
-     * {@link #DEFAULT_PAUSE_TIMEOUT} in milliseconds has passed
-     * @throws InterruptedException
+     * Pauses the executor. This method will not return until
+     * all existing threads have finished running or the default timeout has passed.
+     * @throws InterruptedException if interrupted during timed wait.
      */
     public void pause() throws InterruptedException {
         pause(DEFAULT_PAUSE_TIMEOUT);
     }
-    
+
     /**
-     * pauses the executor, this method will not return until
-     * all existing threads have finished running or the provided timeout of
-     * {@link #DEFAULT_PAUSE_TIMEOUT} has passed
-     * @param timeout time in milliseconds to wait for threads to finish
-     * @throws InterruptedException
+     * Pauses the executor. This method will not return until
+     * all existing threads have finished running or the provided timeout has passed.
+     * @param timeout time (in ms) to wait for threads to finish
+     * @throws InterruptedException if interrupted during timed wait.
      */
     public void pause(long timeout) throws InterruptedException {
-        //first we pause the pause latch 
+        //first we pause the pause latch
         latch.pause();
         //then we make sure the threads do complete
         clatch.awaitZero(timeout, TimeUnit.MILLISECONDS);
     }
-    
+
     /**
-     * Signals that the executor service can unpause.
-     * If the executor is not paused, this call returns without effect
+     * Signals that the executor service can resume.
+     * If the executor is not paused, this call returns without effect.
      */
     public void resume()  {
         latch.resume();
     }
-    
+
     /**
      * Private thread factory so that we can name and make threads daemon status
      */
@@ -177,8 +168,5 @@ public class PausableExecutorService extends ThreadPoolExecutor implements Execu
             t.setName(getServiceId() + THREAD_COUNTER.incrementAndGet());
             return t;
         }
-        
     }
-    
-    
 }

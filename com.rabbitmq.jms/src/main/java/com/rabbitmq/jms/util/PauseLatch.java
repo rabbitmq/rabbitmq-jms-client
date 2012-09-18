@@ -1,9 +1,11 @@
 package com.rabbitmq.jms.util;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
+/**
+ * Latch which can pause and resume.
+ */
 public class PauseLatch {
 
     private volatile boolean finalResume = false;
@@ -24,7 +26,7 @@ public class PauseLatch {
          * @return
          */
         boolean isPaused() {
-            return getState() == 1; 
+            return getState() == 1;
         }
 
         /**
@@ -54,28 +56,30 @@ public class PauseLatch {
                         return releases == 0;
                     }
                 }
-                    
+
             }
         }
     }
-    
+
     private final PauseSync sync;
+
+    /**
+     * Create a <code>PauseLatch</code>, with initial paused state.
+     * @param paused initially paused if <code>true</code>, not paused if <code>false</code>.
+     */
     public PauseLatch(boolean paused) {
         sync = new PauseSync(paused);
     }
-    
+
     /**
-     * Returns true if this latch is in a 
-     * paused state, and that means that calls to 
-     * {@link #await(long, TimeUnit)} will block
-     * @return true if we are paused and calls to {@link #await(long, TimeUnit)} will block 
+     * @return true if latch is paused and calls to <code>await(long, TimeUnit)</code> will block
      */
     public boolean isPaused() {
         return sync.isPaused();
     }
-    
+
     /**
-     * Set the latch in pause state
+     * Set the latch in pause state.
      * @return true if the latch is in a paused state after this call
      */
     public boolean pause() {
@@ -85,15 +89,15 @@ public class PauseLatch {
             return !sync.releaseShared(1);
         }
     }
-    
+
     /**
-     * wakes up all waiting threads
+     * Wakes up all waiting threads.
      * @return true if the latch is not in paused state after this call
      */
     public boolean resume() {
         return sync.releaseShared(0);
     }
-    
+
     /**
      * wakes up all waiting threads
      * after this call, all subsequent calls to pause will be ignored
@@ -103,14 +107,14 @@ public class PauseLatch {
         finalResume = true;
         return sync.releaseShared(0);
     }
-    
+
     /**
      * Causes the thread to wait if the latch is in a pause state.
      * Otherwise this call returns immediately with value of true
      * @param timeout the time to wait
      * @param unit the time unit of the timeout argument
      * @return false if timeout was reached
-     * @throws InterruptedException if the calling thread was interrupted while waiting 
+     * @throws InterruptedException if the calling thread was interrupted while waiting
      */
     public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
         return sync.tryAcquireSharedNanos(1, unit.toNanos(timeout));
