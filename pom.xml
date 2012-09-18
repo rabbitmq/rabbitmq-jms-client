@@ -15,6 +15,7 @@
     <module>com.rabbitmq.jms</module>
     <module>jmscts</module>
   </modules>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>

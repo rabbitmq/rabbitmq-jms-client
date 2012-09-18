@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 
 <!-- ====================================================================== -->
-<!-- Sample provider configuration file                                     -->
+<!-- Provider configuration file                                            -->
 <!--                                                                        -->
-<!-- This configures JMS CTS to test OpenJMS                                -->
+<!-- This configures JMS CTS to test RabbitMQ's JMS                         -->
 <!-- ====================================================================== -->
 
 <configuration>
