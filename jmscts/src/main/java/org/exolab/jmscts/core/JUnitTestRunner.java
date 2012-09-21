@@ -46,16 +46,14 @@ package org.exolab.jmscts.core;
 
 import java.util.Enumeration;
 
-import org.apache.log4j.Category;
-
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestFailure;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
 import junit.runner.BaseTestRunner;
-import junit.runner.StandardTestSuiteLoader;
-import junit.runner.TestSuiteLoader;
+
+import org.apache.log4j.Category;
 
 
 /**
@@ -90,17 +88,6 @@ public class JUnitTestRunner extends BaseTestRunner {
      * Constructs a <code>JUnitTestRunner</code>
      */
     public JUnitTestRunner() {
-    }
-
-    /**
-     * Always use the StandardTestSuiteLoader. Overridden from
-     * BaseTestRunner.
-     *
-     * @return a new <code>StandardTestSuiteLoader</code>
-     */
-    @Override
-    public TestSuiteLoader getLoader() {
-        return new StandardTestSuiteLoader();
     }
 
     /**
