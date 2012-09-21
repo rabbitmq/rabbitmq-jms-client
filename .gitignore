@@ -1,0 +1,7 @@
+target
+report
+jmscts*.log
+.classpath
+.project
+.settings
+erl_crash.dump
