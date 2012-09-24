@@ -45,6 +45,7 @@
   </dependencyManagement>
 
   <build>
+
       <plugins>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -55,19 +56,6 @@
             <target>${java-compile-version}</target>
           </configuration>
         </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-eclipse-plugin</artifactId>
-          <version>2.9</version>
-          <configuration>
-            <workspace>${workspace-location}</workspace>
-            <workspaceCodeStylesURL>file:${basedir}/eclipse-config-stuff/formatter.xml</workspaceCodeStylesURL>
-            <downloadJavadocs>true</downloadJavadocs>
-            <downloadSources>true</downloadSources>
-          </configuration>
-        </plugin>
-
       </plugins>
 
   </build>
