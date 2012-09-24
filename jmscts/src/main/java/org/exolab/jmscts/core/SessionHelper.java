@@ -53,12 +53,10 @@ import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.Topic;
-import javax.jms.TopicSession;
 import javax.jms.TopicPublisher;
+import javax.jms.TopicSession;
 import javax.jms.XAQueueSession;
 import javax.jms.XATopicSession;
-
-import com.rabbitmq.jms.admin.RMQDestination;
 
 
 /**
@@ -139,16 +137,13 @@ public final class SessionHelper {
         String selector, boolean noLocal) throws JMSException {
 
         MessageConsumer result = null;
+
         if (session instanceof XAQueueSession) {
             session = ((XAQueueSession) session).getQueueSession();
-        } else if (session instanceof XATopicSession) {
-            session = ((XATopicSession) session).getTopicSession();
-        }
-
-        if (((RMQDestination)destination).isQueue()) {
             Queue queue = (Queue) destination;
             result = ((QueueSession) session).createReceiver(queue, selector);
         } else {
+            session = ((XATopicSession) session).getTopicSession();
             Topic topic = (Topic) destination;
             if (name != null) {
                 result = ((TopicSession) session).createDurableSubscriber(

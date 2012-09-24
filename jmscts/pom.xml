@@ -5,7 +5,7 @@
   <artifactId>jmscts</artifactId>
   <packaging>jar</packaging>
   <name>rabbit-jmscts</name>
-  <description>RabbitMQ JMS Test Client</description>
+  <description>Compliance Test Suite for RabbitMQ JMS</description>
 
   <parent>
     <groupId>com.rabbitmq.jms</groupId>
@@ -14,12 +14,6 @@
   </parent>
 
   <dependencies>
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>rabbitmq-jms</artifactId>
-      <version>${project.version}</version>
-    </dependency>
 
     <dependency>
       <groupId>junit</groupId>

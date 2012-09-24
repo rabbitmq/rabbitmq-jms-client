@@ -1,10 +1,7 @@
 <?xml version="1.0"?>
 
 <!-- ====================================================================== -->
-<!-- RabbitMQ JMS test case filter 2012-SEP-05 -->
-<!-- -->
-<!-- This excludes tests using XAQueueConnectionFactory and -->
-<!-- XATopicConnectionFactory which are not supported by RabbitMQ JMS -->
+<!-- RabbitMQ JMS test case filter 2012-SEP-24                              -->
 <!-- ====================================================================== -->
 
 <filter>
@@ -15,10 +12,9 @@
   <exclude>
     <factory>XATopicConnectionFactory</factory>
   </exclude>
-  <!-- The tests below are known to pass 
-    =======================================================================================================
-  -->
-  <!--  -->
+  <!-- ====================================================================== -->
+  <!-- The tests below are known to pass                                      -->
+  <!-- ====================================================================== -->
   <include>
     <test>org.exolab.jmscts.test.connection.AuthTest.*</test>
   </include>
@@ -166,26 +162,15 @@
   <include>
     <test>org.exolab.jmscts.test.session.CloseTest.*</test>
   </include>
+
+  <!-- ====================================================================== -->
+  <!-- Below are tests we yet have to test                                    -->
+  <!-- ====================================================================== -->
+
+  <!-- ====================================================================== -->
+  <!-- and here are tests we know are failing                                 -->
+  <!-- ====================================================================== -->
   
-  
-   <!--  -->
-  
-  
-
-
-  <!-- Below are tests we yet have to test 
-    =======================================================================================================
-  -->
-  
-
-
-
-  <!-- and here are tests we know are failing -
-  =======================================================================================================
-  -->
-  
-
-
   <exclude>
     <!-- rabbitMQ doesn't seem to be supporting noLocal properly -->
     <test>org.exolab.jmscts.test.topic.NoLocalTest.*</test>
@@ -202,7 +187,6 @@
     <!--This tests Connection Consumers - we don't support that -->
     <test>org.exolab.jmscts.test.asf.ConnectionConsumerTest.test</test>
   </exclude>
-
   <exclude>
     <!-- RabbitMQ doesn't support expiration -->
     <test>org.exolab.jmscts.test.producer.ttl.ExpirationTest</test>
@@ -251,7 +235,6 @@
     <!-- RabbitMQ doesn't support selectors -->
     <test>org.exolab.jmscts.test.selector.StringTest</test>
   </exclude>
-
   <exclude>
     <!--QueueBrowsers - we don't support that, exclude that from all tests -->
     <receiver>browser</receiver>

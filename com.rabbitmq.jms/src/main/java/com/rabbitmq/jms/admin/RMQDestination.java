@@ -53,7 +53,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     /**
-     * Creates a destination, either a queue or a topic, initializing
+     * Creates a destination, either a queue or a topic, initialising
      * all the values appropriately.
      *
      * @param name - the name of the topic or the queue
