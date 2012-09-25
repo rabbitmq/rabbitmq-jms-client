@@ -44,8 +44,8 @@
  */
 package org.exolab.jmscts.core;
 
-import java.io.FileReader;
 import java.io.File;
+import java.io.FileReader;
 import java.util.Enumeration;
 import java.util.Iterator;
 
@@ -60,11 +60,9 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Options;
 import org.apache.log4j.Category;
 import org.apache.log4j.xml.DOMConfigurator;
-
 import org.exolab.core.service.ServiceException;
 import org.exolab.core.service.ServiceGroup;
 import org.exolab.core.util.RmiRegistryService;
-
 import org.exolab.jmscts.core.filter.Filter;
 import org.exolab.jmscts.core.service.SnapshotService;
 import org.exolab.jmscts.core.service.TestTerminatorService;
@@ -345,7 +343,13 @@ public abstract class AbstractTestRunner extends TestSetup {
             OUTPUT, getHome() + "/report");
         File dir = new File(_output);
         if (!dir.isDirectory()) {
-            throw new Exception("Invalid output directory: " + _output);
+            if (!dir.exists()) {
+                if (!dir.mkdir()) {
+                    throw new Exception("Invalid output directory: " + _output);
+                }
+            } else {
+                throw new Exception("Invalid output directory: " + _output);
+            }
         }
         if (!dir.canWrite()) {
             throw new Exception("Cannot write to output directory: "
