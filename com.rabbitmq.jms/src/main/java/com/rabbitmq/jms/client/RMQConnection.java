@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
@@ -27,7 +26,6 @@ import javax.jms.TopicSession;
 
 import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.ShutdownSignalException;
-import com.rabbitmq.jms.util.PausableExecutorService;
 import com.rabbitmq.jms.util.Util;
 
 /**
@@ -54,8 +52,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private volatile boolean closed = false;
     /** atomic flag to pause and unpause the connection by calling the {@link #start()} and {@link #stop()} methods */
     private final AtomicBoolean stopped = new AtomicBoolean(true);
-    /** The thread pool that receives incoming messages */
-    private final PausableExecutorService threadPool;
 
     private volatile long terminationTimeout = 15000;
 
@@ -71,12 +67,10 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private volatile boolean canSetClientID = true;
     /**
      * Creates an RMQConnection object
-     * @param threadPool the thread pool that was used to create the rabbit connection {@link com.rabbitmq.client.Connection} object
      * @param rabbitConnection the TCP connection wrapper to the RabbitMQ broker
      */
-    public RMQConnection(PausableExecutorService threadPool, com.rabbitmq.client.Connection rabbitConnection) {
+    public RMQConnection(com.rabbitmq.client.Connection rabbitConnection) {
         this.rabbitConnection = rabbitConnection;
-        this.threadPool = threadPool;
     }
 
     /**
@@ -157,7 +151,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         canSetClientID = false;
         Util.checkTrue(closed, "Connection is closed.", IllegalStateException.class);
         if (stopped.compareAndSet(true, false)) {
-            this.threadPool.resume();
             for (RMQSession session : this.sessions) {
                 session.resume();
             }
@@ -172,12 +165,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         canSetClientID = false;
         Util.checkTrue(closed, "Connection is closed.", IllegalStateException.class);
         if (stopped.compareAndSet(false, true)) {
-            try {
-                this.threadPool.pause();
-            } catch (InterruptedException x) {
-                stopped.set(false);
-                throw Util.handleException(x);
-            }
             for (RMQSession session : this.sessions) {
                 session.pause();
             }
@@ -203,16 +190,10 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         String clientID = getClientID();
         closed = true;
         if (clientID!=null) CLIENT_IDS.remove(clientID);
-        try {
             while (this.sessions.size()>0) {
                 RMQSession session = sessions.get(0);
                 session.close();
             }
-            this.threadPool.shutdown();
-            this.threadPool.awaitTermination(getTerminationTimeout(), TimeUnit.MILLISECONDS);
-        } catch(InterruptedException x) {
-            //do nothing - proceed
-        }
 
         try {
             this.rabbitConnection.close();

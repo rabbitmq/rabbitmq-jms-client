@@ -15,7 +15,6 @@ import javax.naming.Reference;
 import javax.naming.Referenceable;
 
 import com.rabbitmq.jms.client.RMQConnection;
-import com.rabbitmq.jms.util.PausableExecutorService;
 import com.rabbitmq.jms.util.Util;
 
 /**
@@ -69,10 +68,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         factory.setHost(getHost());
         factory.setPort(getPort());
         com.rabbitmq.client.Connection rabbitConnection = null;
-        //Initialize the executor
-        PausableExecutorService es = new PausableExecutorService(getThreadsPerConnection(), true);
         try {
-            rabbitConnection = factory.newConnection(es);
+            rabbitConnection = factory.newConnection();
         } catch (IOException x) {
             if (x.getMessage()!=null && x.getMessage().indexOf("authentication failure")>=0) {
                 throw Util.handleSecurityException(x);
@@ -80,13 +77,13 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
                 throw Util.handleException(x);
             }
         }
-        //make sure the threads have a identifiable name
-        if (getThreadPrefix()!=null) {
-            es.setServiceId(getThreadPrefix());
-        } else {
-            es.setServiceId("Rabbit JMS Connection["+rabbitConnection.getAddress()+"]-");
-        }
-        RMQConnection conn = new RMQConnection(es, rabbitConnection);
+        //TODO: make sure the threads have a identifiable name
+//        if (getThreadPrefix()!=null) {
+//            es.setServiceId(getThreadPrefix());
+//        } else {
+//            es.setServiceId("Rabbit JMS Connection["+rabbitConnection.getAddress()+"]-");
+//        }
+        RMQConnection conn = new RMQConnection(rabbitConnection);
         conn.setTerminationTimeout(getTerminationTimeout());
         return conn;
     }
