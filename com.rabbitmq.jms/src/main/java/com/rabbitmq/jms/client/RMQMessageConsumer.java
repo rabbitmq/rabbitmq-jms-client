@@ -183,7 +183,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 }
             }
         } catch (IOException x) {
-            throw Util.util().handleException(x);
+            throw Util.handleException(x);
         }
     }
 
@@ -200,8 +200,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public Message receive(long timeout) throws JMSException {
-        Util.util().checkTrue(closed, "Consumer has already been closed.", IllegalStateException.class);
-        Util.util().checkTrue(closing, "Consumer is in the process of closing.", IllegalStateException.class);
+        Util.checkTrue(closed, "Consumer has already been closed.", IllegalStateException.class);
+        Util.checkTrue(closing, "Consumer is in the process of closing.", IllegalStateException.class);
         /*
          * The spec identifies 0 as infinite timeout
          */
@@ -330,7 +330,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             }
             return message;
         } catch (IOException x) {
-            throw Util.util().handleException(x);
+            throw Util.handleException(x);
         } finally {
             /*
              * Don't attempt to cancel if we are either closing or closed
@@ -409,7 +409,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                                                       /*
                                                        * the consumer tag, random plus an identifier
                                                        */
-                                                      "jms-consumer-"+Util.util().generateUUIDTag(), //the consumer tag
+                                                      "jms-consumer-"+Util.generateUUIDTag(), //the consumer tag
                                                       /*
                                                        * we do support the noLocal for subscriptions
                                                        */
@@ -447,8 +447,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public Message receiveNoWait() throws JMSException {
-        Util.util().checkTrue(closing, "Consumer in the process of closing",IllegalStateException.class);
-        Util.util().checkTrue(closed, "Consumer in the process of closing",IllegalStateException.class);
+        Util.checkTrue(closing, "Consumer in the process of closing",IllegalStateException.class);
+        Util.checkTrue(closed, "Consumer in the process of closing",IllegalStateException.class);
         return receiveNoWait(0);
     }
 
@@ -495,7 +495,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
              */
             return processMessage(response, isAutoAck());
         } catch (IOException x) {
-            throw Util.util().handleException(x);
+            throw Util.handleException(x);
         }
     }
 
@@ -586,13 +586,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             }
             return message;
         } catch (IOException x) {
-            throw Util.util().handleException(x);
+            throw Util.handleException(x);
         } catch (ClassNotFoundException x) {
-            throw Util.util().handleException(x);
+            throw Util.handleException(x);
         } catch (IllegalAccessException x) {
-            throw Util.util().handleException(x);
+            throw Util.handleException(x);
         } catch (InstantiationException x) {
-            throw Util.util().handleException(x);
+            throw Util.handleException(x);
         }
     }
 

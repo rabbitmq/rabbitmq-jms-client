@@ -24,7 +24,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
      */
     @Override
     public void setObject(Serializable object) throws JMSException {
-        Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
+        Util.checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         try {
             if (object==null) {
                 buf = null;
@@ -40,7 +40,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
                 buf = bout.toByteArray();
             }
         }catch (IOException x) {
-            throw Util.util().handleException(x);
+            throw Util.handleException(x);
         }
 
     }
@@ -54,9 +54,9 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
                 ObjectInputStream in = new ObjectInputStream(bin);
                 return (Serializable)in.readObject();
             }catch (ClassNotFoundException x) {
-                throw Util.util().handleException(x);
+                throw Util.handleException(x);
             }catch (IOException x) {
-                throw Util.util().handleException(x);
+                throw Util.handleException(x);
             }
         }
     }

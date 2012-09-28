@@ -696,7 +696,7 @@ public abstract class RMQMessage implements Message, Cloneable {
                     this.rmqProperties.put(name, (Serializable) value);
                 }
             } else {
-                Util.util().checkTrue(isReadOnlyProperties(), "Message has been received and is read only.", MessageNotWriteableException.class);
+                Util.checkTrue(isReadOnlyProperties(), "Message has been received and is read only.", MessageNotWriteableException.class);
                 checkName(name);
 
                 if (value==null) {
@@ -706,7 +706,7 @@ public abstract class RMQMessage implements Message, Cloneable {
                 }
             }
         } catch (ClassCastException x) {
-            throw Util.util().handleException(x, "Property value not serializable.");
+            throw Util.handleException(x, "Property value not serializable.");
         }
     }
 
@@ -877,7 +877,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * Called when a message is sent so that each message is unique
      */
     public void generateInternalID() throws JMSException {
-        this.internalMessageID = Util.util().generateUUIDTag();
+        this.internalMessageID = Util.generateUUIDTag();
         this.rmqProperties.put(JMS_MESSAGE_ID, "ID:" + this.internalMessageID);
     }
 

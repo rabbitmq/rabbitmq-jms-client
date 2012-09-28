@@ -20,7 +20,7 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
      */
     @Override
     public void setText(String string) throws JMSException {
-        Util.util().checkTrue(isReadonlyBody(), "Message has been received and is read only.", MessageNotWriteableException.class);
+        Util.checkTrue(isReadonlyBody(), "Message has been received and is read only.", MessageNotWriteableException.class);
         this.text = string;
     }
 

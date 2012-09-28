@@ -174,57 +174,57 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
     }
 
     public void setBoolean(String name, boolean value) throws JMSException {
-        Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
+        Util.checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
     public void setByte(String name, byte value) throws JMSException {
-        Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
+        Util.checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
     public void setShort(String name, short value) throws JMSException {
-        Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
+        Util.checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
     public void setChar(String name, char value) throws JMSException {
-        Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
+        Util.checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
     public void setInt(String name, int value) throws JMSException {
-        Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
+        Util.checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
     public void setLong(String name, long value) throws JMSException {
-        Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
+        Util.checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
     public void setFloat(String name, float value) throws JMSException {
-        Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
+        Util.checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
     public void setDouble(String name, double value) throws JMSException {
-        Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
+        Util.checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
     public void setString(String name, String value) throws JMSException {
-        Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
+        Util.checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         this.data.put(name, value);
     }
 
     public void setBytes(String name, byte[] value) throws JMSException {
-        Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
+        Util.checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         setBytes(name, value, 0, value.length);
     }
 
     public void setBytes(String name, byte[] value, int offset, int length) throws JMSException {
-        Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
+        Util.checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         if (value == null) {
             this.data.remove(name);
             return;
@@ -235,7 +235,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
     }
 
     public void setObject(String name, Object value) throws JMSException {
-        Util.util().checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
+        Util.checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
         if (name==null && value==null) {
         } else if (value==null) {
             this.data.remove(name);
@@ -246,7 +246,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
                 /* Make sure we can write this type of object */
                 writePrimitiveData(value, new DiscardingObjectOutput(), false);
             } catch (IOException x) {
-                throw Util.util().handleMessageFormatException(x);
+                throw Util.handleMessageFormatException(x);
             }
         }
 

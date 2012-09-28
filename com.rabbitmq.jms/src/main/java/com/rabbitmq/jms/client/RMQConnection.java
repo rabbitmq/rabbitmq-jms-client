@@ -85,7 +85,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
         canSetClientID = false;
-        Util.util().checkTrue(closed, "Connection is closed.", IllegalStateException.class);
+        Util.checkTrue(closed, "Connection is closed.", IllegalStateException.class);
         RMQSession session = new RMQSession(this, transacted, acknowledgeMode, subscriptions);
         this.sessions.add(session);
         return session;
@@ -96,7 +96,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public String getClientID() throws JMSException {
-        Util.util().checkTrue(closed, "Connection is closed.", IllegalStateException.class);
+        Util.checkTrue(closed, "Connection is closed.", IllegalStateException.class);
         return this.clientID;
     }
 
@@ -105,8 +105,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void setClientID(String clientID) throws JMSException {
-        Util.util().checkTrue(!canSetClientID, "Client ID can only be set right after connection creation", IllegalStateException.class);
-        Util.util().checkTrue(closed, "Connection is closed.", IllegalStateException.class);
+        Util.checkTrue(!canSetClientID, "Client ID can only be set right after connection creation", IllegalStateException.class);
+        Util.checkTrue(closed, "Connection is closed.", IllegalStateException.class);
         if (this.clientID==null) {
             if (CLIENT_IDS.putIfAbsent(clientID, clientID)==null) {
                 this.clientID = clientID;
@@ -125,7 +125,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public ConnectionMetaData getMetaData() throws JMSException {
         canSetClientID = false;
-        Util.util().checkTrue(closed, "Connection is closed.", IllegalStateException.class);
+        Util.checkTrue(closed, "Connection is closed.", IllegalStateException.class);
         return connectionMetaData;
     }
 
@@ -135,7 +135,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public ExceptionListener getExceptionListener() throws JMSException {
         canSetClientID = false;
-        Util.util().checkTrue(closed, "Connection is closed.", IllegalStateException.class);
+        Util.checkTrue(closed, "Connection is closed.", IllegalStateException.class);
         return this.exceptionListener;
     }
 
@@ -145,7 +145,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public void setExceptionListener(ExceptionListener listener) throws JMSException {
         canSetClientID = false;
-        Util.util().checkTrue(closed, "Connection is closed.", IllegalStateException.class);
+        Util.checkTrue(closed, "Connection is closed.", IllegalStateException.class);
         this.exceptionListener = listener;
     }
 
@@ -155,7 +155,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public void start() throws JMSException {
         canSetClientID = false;
-        Util.util().checkTrue(closed, "Connection is closed.", IllegalStateException.class);
+        Util.checkTrue(closed, "Connection is closed.", IllegalStateException.class);
         if (stopped.compareAndSet(true, false)) {
             this.threadPool.resume();
             for (RMQSession session : this.sessions) {
@@ -170,13 +170,13 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public void stop() throws JMSException {
         canSetClientID = false;
-        Util.util().checkTrue(closed, "Connection is closed.", IllegalStateException.class);
+        Util.checkTrue(closed, "Connection is closed.", IllegalStateException.class);
         if (stopped.compareAndSet(false, true)) {
             try {
                 this.threadPool.pause();
             } catch (InterruptedException x) {
                 stopped.set(false);
-                throw Util.util().handleException(x);
+                throw Util.handleException(x);
             }
             for (RMQSession session : this.sessions) {
                 session.pause();
@@ -221,7 +221,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         } catch (ShutdownSignalException x) {
             //nothing to do
         } catch (IOException x) {
-            throw Util.util().handleException(x);
+            throw Util.handleException(x);
         }
     }
 
@@ -234,7 +234,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public TopicSession createTopicSession(boolean transacted, int acknowledgeMode) throws JMSException {
-        Util.util().checkTrue(closed, "Connection is closed.", IllegalStateException.class);
+        Util.checkTrue(closed, "Connection is closed.", IllegalStateException.class);
         return (TopicSession) this.createSession(transacted, acknowledgeMode);
     }
 
@@ -252,7 +252,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public QueueSession createQueueSession(boolean transacted, int acknowledgeMode) throws JMSException {
-        Util.util().checkTrue(closed, "Connection is closed.", IllegalStateException.class);
+        Util.checkTrue(closed, "Connection is closed.", IllegalStateException.class);
         return (QueueSession) this.createSession(transacted, acknowledgeMode);
     }
 

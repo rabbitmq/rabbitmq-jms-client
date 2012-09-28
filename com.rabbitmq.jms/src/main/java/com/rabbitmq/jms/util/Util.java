@@ -19,16 +19,7 @@ import javax.jms.MessageNotWriteableException;
  * Utility class which variously wraps exceptions, writes primitive/serializable types, checks state
  * information. and generates unique ids.
  */
-public class Util {
-    private static final Util util = new Util();
-
-    /**
-     * @return the singleton of this class
-     */
-    public static Util util() {
-        return util;
-    }
-
+public final class Util {
     /**
      * Wraps an exception as a {@link JMSException}
      * This method will return a {@link JMSException}
@@ -37,7 +28,7 @@ public class Util {
      * @param message the message for the {@link JMSException#JMSException(String)} constructor.
      * @return wrapped exception for caller to throw
      */
-    public JMSException handleException(Exception x, String message) {
+    public final static JMSException handleException(Exception x, String message) {
         JMSException jx = new JMSException(message);
         jx.initCause(x);
         return jx;
@@ -48,8 +39,8 @@ public class Util {
      * @param x exception to wrap
      * @return wrapped exception
      */
-    public JMSException handleException(Exception x) {
-        return this.handleException(x, x.getMessage());
+    public final static JMSException handleException(Exception x) {
+        return handleException(x, x.getMessage());
     }
 
     /**
@@ -58,7 +49,7 @@ public class Util {
      * @param x exception to wrap
      * @return wrapped exception
      */
-    public JMSException handleSecurityException(Exception x) {
+    public final static JMSException handleSecurityException(Exception x) {
         JMSSecurityException jx = new JMSSecurityException(x.getMessage());
         jx.initCause(x);
         return jx;
@@ -70,7 +61,7 @@ public class Util {
      * @param x exception to wrap
      * @return wrapped exception
      */
-    public JMSException handleMessageFormatException(Exception x) {
+    public final static JMSException handleMessageFormatException(Exception x) {
         MessageFormatException jx = new MessageFormatException(x.getMessage());
         jx.initCause(x);
         return jx;
@@ -83,7 +74,7 @@ public class Util {
      * @param clazz the type of exception to be thrown
      * @throws JMSException sub-type if <code>bool</code> is <code>true</code>
      */
-    public void checkTrue(boolean bool, String msg, Class<? extends JMSException> clazz) throws JMSException {
+    public final static void checkTrue(boolean bool, String msg, Class<? extends JMSException> clazz) throws JMSException {
         if (bool) {
             if (IllegalStateException.class.equals(clazz)) {
                 throw new IllegalStateException(msg);
@@ -115,7 +106,7 @@ public class Util {
      * Generates a random UUID string
      * @return a random UUID string
      */
-    public String generateUUIDTag() {
+    public final static String generateUUIDTag() {
         return UUID.randomUUID().toString();
     }
 
@@ -128,7 +119,7 @@ public class Util {
      * @throws MessageFormatException if s is not a recognised type for writing
      * @throws NullPointerException if s is null
      */
-    public void writePrimitiveData(Object s, ObjectOutput out, boolean allowSerializable) throws IOException, MessageFormatException {
+    public final static void writePrimitiveData(Object s, ObjectOutput out, boolean allowSerializable) throws IOException, MessageFormatException {
         if(s==null) {
             throw new NullPointerException();
         } else if (s instanceof Boolean) {
@@ -157,7 +148,5 @@ public class Util {
             out.write((byte[])s);
         } else
             throw new MessageFormatException(s + " is not a recognized writable type.");
-
-
     }
 }
