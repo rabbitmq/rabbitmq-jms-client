@@ -15,63 +15,75 @@ import javax.jms.MessageFormatException;
 import javax.jms.MessageNotReadableException;
 import javax.jms.MessageNotWriteableException;
 
+/**
+ * Utility class which variously wraps exceptions, writes primitive/serializable types, checks state
+ * information. and generates unique ids.
+ */
 public class Util {
     private static final Util util = new Util();
 
     /**
-     * Returns the singleton of this class
-     * @return
+     * @return the singleton of this class
      */
     public static Util util() {
         return util;
     }
 
     /**
-     * Wraps an exception and re throws a {@link JMSException}
-     * This method will always throw a {@link JMSException}
-     * and is used to encapsulate Rabbit API exceptions (all declared as
-     * {@link IOException})
+     * Wraps an exception as a {@link JMSException}
+     * This method will return a {@link JMSException}
+     * and is used to encapsulate Rabbit API exceptions (all declared as {@link IOException}).
      * @param x the exception to wrap
-     * @param message the message for the {@link JMSException#JMSException(String)} constructor. If null {@link Exception#getMessage()} will be used
-     * @return does not return anything, always throws a {@link JMSException}
-     * @throws JMSException always on every invocation
+     * @param message the message for the {@link JMSException#JMSException(String)} constructor.
+     * @return wrapped exception for caller to throw
      */
-    public JMSException handleException(Exception x, String message) throws JMSException {
-        JMSException jx = new JMSException(message == null ? x.getMessage() : message);
+    public JMSException handleException(Exception x, String message) {
+        JMSException jx = new JMSException(message);
         jx.initCause(x);
-        throw jx;
+        return jx;
     }
 
     /**
      * @see #handleException(Exception, String)
-     * @param x
-     * @return
-     * @throws JMSException
+     * @param x exception to wrap
+     * @return wrapped exception
      */
-    public JMSException handleException(Exception x) throws JMSException {
+    public JMSException handleException(Exception x) {
         return this.handleException(x, x.getMessage());
     }
 
-    public JMSSecurityException handleSecurityException(Exception x) throws JMSException {
+    /**
+     * Wraps exception as a {@link JMSSecurityException}.
+     * @see #handleException(Exception, String)
+     * @param x exception to wrap
+     * @return wrapped exception
+     */
+    public JMSException handleSecurityException(Exception x) {
         JMSSecurityException jx = new JMSSecurityException(x.getMessage());
         jx.initCause(x);
-        throw jx;
-    }
-
-    public JMSSecurityException handleMessageFormatException(Exception x) throws JMSException {
-        MessageFormatException jx = new MessageFormatException(x.getMessage());
-        jx.initCause(x);
-        throw jx;
+        return jx;
     }
 
     /**
-     * Throws the supplied exception if the bool parameter is true
-     * @param bool throws the supplied if this parameter is set to true
-     * @param msg
-     * @param clazz the type of exception that should be thrown
-     * @throws JMSException
+     * Wraps exception as a {@link MessageFormatException}.
+     * @see #handleException(Exception, String)
+     * @param x exception to wrap
+     * @return wrapped exception
      */
-    public JMSException checkTrue(boolean bool, String msg, Class<? extends JMSException> clazz) throws JMSException {
+    public JMSException handleMessageFormatException(Exception x) {
+        MessageFormatException jx = new MessageFormatException(x.getMessage());
+        jx.initCause(x);
+        return jx;
+    }
+
+    /**
+     * Throws an exception of the supplied type if the first parameter is <b>true</b>.
+     * @param bool whether to construct and throw an exception
+     * @param msg the message string to pass the exception constructor
+     * @param clazz the type of exception to be thrown
+     * @throws JMSException sub-type if <code>bool</code> is <code>true</code>
+     */
+    public void checkTrue(boolean bool, String msg, Class<? extends JMSException> clazz) throws JMSException {
         if (bool) {
             if (IllegalStateException.class.equals(clazz)) {
                 throw new IllegalStateException(msg);
@@ -96,10 +108,7 @@ public class Util {
             } else {
                 throw new JMSException(msg);
             }
-        } else {
-            return null;
         }
-
     }
 
     /**
@@ -113,9 +122,10 @@ public class Util {
     /**
      * Utility method to write an object as a primitive or as an object
      * @param s the object to write
-     * @param out the stream to write it to
-     * @param allowSerializable true if we allow objects other than serializable
-     * @throws IOException
+     * @param out the output (normally a stream) to write it to
+     * @param allowSerializable true if we allow {@link Serializable} objects
+     * @throws IOException from write primitives
+     * @throws MessageFormatException if s is not a recognised type for writing
      * @throws NullPointerException if s is null
      */
     public void writePrimitiveData(Object s, ObjectOutput out, boolean allowSerializable) throws IOException, MessageFormatException {
@@ -146,7 +156,7 @@ public class Util {
         } else if (s instanceof byte[]) {
             out.write((byte[])s);
         } else
-            throw new MessageFormatException(s + " is not a recognized primitive type.");
+            throw new MessageFormatException(s + " is not a recognized writable type.");
 
 
     }

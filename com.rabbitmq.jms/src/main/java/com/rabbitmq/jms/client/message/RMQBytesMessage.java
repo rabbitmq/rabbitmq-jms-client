@@ -8,7 +8,6 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.io.UTFDataFormatException;
 
 import javax.jms.BytesMessage;
@@ -48,23 +47,23 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     private transient ObjectInputStream in;
     /**
-     * The object input is wrapping a 
+     * The object input is wrapping a
      * {@link ByteArrayInputStream}
      */
     private transient ByteArrayInputStream bin;
     /**
-     * The byte array input stream is reading 
+     * The byte array input stream is reading
      * from our body buffer
      */
     private volatile transient byte[] buf;
-    
+
     /**
-     * The {@link ObjectOutput} we use 
+     * The {@link ObjectOutput} we use
      * to write data
      */
     private transient ObjectOutputStream out;
     /**
-     * The object output is wrapping a 
+     * The object output is wrapping a
      * {@link ByteArrayOutputStream}
      */
     private transient ByteArrayOutputStream bout;
@@ -80,12 +79,12 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
     public RMQBytesMessage(boolean reading) {
         init(reading);
     }
-    
+
     protected void init(boolean reading) {
         this.reading = reading;
         if (!reading) {
             /*
-             * If we are in Write state, then create the 
+             * If we are in Write state, then create the
              * objects to support that state
              */
             this.bout = new ByteArrayOutputStream(RMQMessage.DEFAULT_MESSAGE_BODY_SIZE);
@@ -265,7 +264,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     public String readUTF() throws JMSException {
-        
+
         if (!this.reading)
             throw new MessageNotReadableException(NOT_READABLE);
         try {
@@ -303,7 +302,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
 
             /*
              * We can't simply do this.in.readBytes(value,0,length)
-             * cause this would read block headers from 
+             * cause this would read block headers from
              * the ObjectOutputStream note: the ObjectOutput adds characters to the byte array
              */
             int count = 0;
@@ -501,7 +500,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
     public void writeObject(Object value) throws JMSException {
         writeObject(value,false);
     }
-    
+
     protected void writeObject(Object value, boolean allowSerializable) throws JMSException {
         if (this.reading || isReadonlyBody())
             throw new MessageNotWriteableException(NOT_WRITEABLE);
@@ -518,17 +517,17 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
     @Override
     public void reset() throws JMSException {
         if (this.reading) {
-            //if we already are reading, all we want to do is reset to the 
+            //if we already are reading, all we want to do is reset to the
             //beginning of the stream
             try {
                 this.bin = new ByteArrayInputStream(buf);
                 this.in = new ObjectInputStream(this.bin);
                 return;
             } catch (IOException x) {
-                Util.util().handleException(x);
+                throw Util.util().handleException(x);
             }
         }
-            
+
         try {
             buf = null;
             if (this.out != null) {
@@ -540,7 +539,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             this.bin = new ByteArrayInputStream(buf);
             this.in = new ObjectInputStream(this.bin);
         } catch (IOException x) {
-            Util.util().handleException(x);
+            throw Util.util().handleException(x);
         }
         this.reading = true;
         this.out = null;
@@ -564,7 +563,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         try {
             this.out = new ObjectOutputStream(this.bout);
         } catch (IOException x) {
-            Util.util().handleException(x);
+            throw Util.util().handleException(x);
         }
         this.bin = null;
         this.in = null;

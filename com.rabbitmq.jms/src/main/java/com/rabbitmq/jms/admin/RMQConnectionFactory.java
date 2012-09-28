@@ -36,13 +36,13 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private String host = "localhost";
     /** Default port to RabbitMQ broker */
     private int port = 5672;
-    /** Nr of threads each connection executor will have */
+    /** Number of threads each connection executor will have */
     private int threadsPerConnection = 2;
     /** The time to wait for threads/messages to terminate during {@link Connection#close()} */
     private volatile long terminationTimeout = Long.getLong("rabbit.jms.terminationTimeout",15000);
-    /** 
-     * The thread prefix for threads created by the executor 
-     * If this is null, the value 
+    /**
+     * The thread prefix for threads created by the executor
+     * If this is null, the value
      * <code>&quot;Rabbit JMS Connection[&quot;+rabbitConnection.getAddress()+&quot;]-&quot;</code>
      * will be used
      */
@@ -75,9 +75,9 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             rabbitConnection = factory.newConnection(es);
         } catch (IOException x) {
             if (x.getMessage()!=null && x.getMessage().indexOf("authentication failure")>=0) {
-                Util.util().handleSecurityException(x);
+                throw Util.util().handleSecurityException(x);
             } else {
-                Util.util().handleException(x);
+                throw Util.util().handleException(x);
             }
         }
         //make sure the threads have a identifiable name
@@ -135,7 +135,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * Returns the configured username used when creating a connection If
      * {@link RMQConnectionFactory#setUsername(String)} has not been called the
      * default value of 'guest' is returned.
-     * 
+     *
      * @return a string representing the username for a Rabbit connection
      */
     public String getUsername() {
@@ -145,7 +145,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     /**
      * Sets the username to be used when creating a connection to the RabbitMQ
      * broker
-     * 
+     *
      * @param username - username to be used when creating a connection to the
      *            RabbitMQ broker
      */
@@ -157,7 +157,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * Returns the configured password used when creating a connection If
      * {@link RMQConnectionFactory#setPassword(String)} has not been called the
      * default value of 'guest' is returned.
-     * 
+     *
      * @return a string representing the password for a Rabbit connection
      */
     public String getPassword() {
@@ -167,7 +167,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     /**
      * Sets the password to be used when creating a connection to the RabbitMQ
      * broker
-     * 
+     *
      * @param password - password to be used when creating a connection to the
      *            RabbitMQ broker
      */
@@ -179,7 +179,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * Returns the configured virtual host used when creating a connection If
      * {@link RMQConnectionFactory#setVirtualHost(String)} has not been called the
      * default value of '/' is returned.
-     * 
+     *
      * @return a string representing the virtual host for a Rabbit connection
      */
     public String getVirtualHost() {
@@ -189,7 +189,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     /**
      * Sets the virtual host to be used when creating a connection to the RabbitMQ
      * broker
-     * 
+     *
      * @param virtualHost - virtual host to be used when creating a connection to the
      *            RabbitMQ broker
      */
@@ -243,7 +243,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     /**
      * Configures how many threads should be used to receive messages for each TCP
-     * connection that is established. 
+     * connection that is established.
      * @param threadsPerConnection the number of threads for each executor service to handle a TCP connection
      */
     public void setThreadsPerConnection(int threadsPerConnection) {
@@ -270,7 +270,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     /**
      * The time to wait in milliseconds when {@link Connection#close()} has
      * been called for listeners and threads to complete.
-     * @return the time in milliseconds the {@link Connection#close()} before continusing shutdown sequence
+     * @return the time in milliseconds the {@link Connection#close()} waits before continuing shutdown sequence
      */
     public long getTerminationTimeout() {
         return terminationTimeout;
@@ -278,12 +278,10 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     /**
      * Sets the time in milliseconds a {@link Connection#close()} should wait for threads/tasks/listeners to complete
-     * @param terminationTimeout time in milliseonds
+     * @param terminationTimeout time in milliseconds
      */
     public void setTerminationTimeout(long terminationTimeout) {
         this.terminationTimeout = terminationTimeout;
     }
-    
-    
 
 }

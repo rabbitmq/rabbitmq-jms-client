@@ -183,7 +183,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 }
             }
         } catch (IOException x) {
-            Util.util().handleException(x);
+            throw Util.util().handleException(x);
         }
     }
 
@@ -330,7 +330,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             }
             return message;
         } catch (IOException x) {
-            Util.util().handleException(x);
+            throw Util.util().handleException(x);
         } finally {
             /*
              * Don't attempt to cancel if we are either closing or closed
@@ -358,7 +358,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             /* we are not in an interrupt state anymore */
             this.currentSynchronousReceiver.remove(Thread.currentThread());
         }
-        return null;
     }
 
     /**
@@ -496,9 +495,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
              */
             return processMessage(response, isAutoAck());
         } catch (IOException x) {
-            Util.util().handleException(x);
+            throw Util.util().handleException(x);
         }
-        return null;
     }
 
     /**
@@ -588,15 +586,14 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             }
             return message;
         } catch (IOException x) {
-            Util.util().handleException(x);
+            throw Util.util().handleException(x);
         } catch (ClassNotFoundException x) {
-            Util.util().handleException(x);
+            throw Util.util().handleException(x);
         } catch (IllegalAccessException x) {
-            Util.util().handleException(x);
+            throw Util.util().handleException(x);
         } catch (InstantiationException x) {
-            Util.util().handleException(x);
+            throw Util.util().handleException(x);
         }
-        return null;
     }
 
     /**

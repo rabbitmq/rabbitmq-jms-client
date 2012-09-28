@@ -24,14 +24,14 @@ import com.rabbitmq.jms.util.Util;
  * this should write to disk, and when we send the message
  * we have disassemble into multiple messages and reassemble multiple messages
  * on the other side
- */ 
+ */
 public class RMQStreamMessage extends RMQMessage implements StreamMessage {
 
     private static final String NOT_READABLE = "Message not readable";
     private static final String NOT_WRITEABLE = "Message not writeable";
     private static final String MSG_EOF = "Message EOF";
     private static final byte[] EOF_ARRAY = new byte[0];
-    
+
     private volatile boolean reading;
 
     private transient ObjectInputStream in;
@@ -66,7 +66,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
             throw Util.util().handleException(x);
         }
     }
-    
+
     protected Object readPrimitiveType(Class<?> type) throws JMSException {
         if (!this.reading)
             throw new MessageNotReadableException(NOT_READABLE);
@@ -207,7 +207,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
             }
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -281,7 +281,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         return (String)this.readPrimitiveType(String.class);
     }
 
-    
+
     /**
      * {@inheritDoc}
      */
@@ -323,7 +323,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
     public Object readObject() throws JMSException {
         return this.readPrimitiveType(Object.class);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -421,7 +421,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
     public void writeObject(Object value) throws JMSException {
         writeObject(value,false);
     }
-    
+
     protected void writeObject(Object value, boolean allowSerializable) throws JMSException {
         if (this.reading || isReadonlyBody())
             throw new MessageNotWriteableException(NOT_WRITEABLE);
@@ -440,13 +440,13 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         this.readbuf = null;
 
         if (this.reading) {
-            //if we already are reading, all we want to do is reset to the 
+            //if we already are reading, all we want to do is reset to the
             //beginning of the stream
             try {
                 this.bin = new ByteArrayInputStream(buf);
                 this.in = new ObjectInputStream(this.bin);
             } catch (IOException x) {
-                Util.util().handleException(x);
+                throw Util.util().handleException(x);
             }
         } else {
             try {
@@ -460,7 +460,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
                 this.bin = new ByteArrayInputStream(buf);
                 this.in = new ObjectInputStream(this.bin);
             } catch (IOException x) {
-                Util.util().handleException(x);
+                throw Util.util().handleException(x);
             }
             this.reading = true;
             this.out = null;
@@ -477,7 +477,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         try {
             this.out = new ObjectOutputStream(this.bout);
         } catch (IOException x) {
-            Util.util().handleException(x);
+            throw Util.util().handleException(x);
         }
         this.bin = null;
         this.in = null;
@@ -509,10 +509,10 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         this.bin = new ByteArrayInputStream(buf);
         this.in = new ObjectInputStream(this.bin);
     }
-    
+
     private class ByteArray {
-        
+
     }
-    
+
 
 }

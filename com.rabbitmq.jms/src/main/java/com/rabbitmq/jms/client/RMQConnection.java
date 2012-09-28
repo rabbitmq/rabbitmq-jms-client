@@ -34,9 +34,9 @@ import com.rabbitmq.jms.util.Util;
  * Implementation of the {@link Connection}, {@link QueueConnection} and {@link TopicConnection} interfaces.
  * A {@link RMQConnection} object holds a list of {@link RMQSession} objects as well as the actual
  * {link com.rabbitmq.client.Connection} object that represents the TCP connection to the RabbitMQ broker. <br/>
- * This implementation also holds a reference to the executor service that is used by the connection so that we 
+ * This implementation also holds a reference to the executor service that is used by the connection so that we
  * can pause incoming messages.
- * 
+ *
  */
 public class RMQConnection implements Connection, QueueConnection, TopicConnection {
 
@@ -56,11 +56,11 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private final AtomicBoolean stopped = new AtomicBoolean(true);
     /** The thread pool that receives incoming messages */
     private final PausableExecutorService threadPool;
-    
+
     private volatile long terminationTimeout = 15000;
-    
-    private static ConcurrentHashMap<String, String> CLIENT_IDS = new ConcurrentHashMap<String, String>(); 
-    
+
+    private static ConcurrentHashMap<String, String> CLIENT_IDS = new ConcurrentHashMap<String, String>();
+
     /**
      * List of all our durable subscriptions so we can track them on a per connection basis
      */
@@ -71,7 +71,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private volatile boolean canSetClientID = true;
     /**
      * Creates an RMQConnection object
-     * @param threadPool the thread pool that was used to create the rabbit connection {@link com.rabbitmq.client.Connection} object 
+     * @param threadPool the thread pool that was used to create the rabbit connection {@link com.rabbitmq.client.Connection} object
      * @param rabbitConnection the TCP connection wrapper to the RabbitMQ broker
      */
     public RMQConnection(PausableExecutorService threadPool, com.rabbitmq.client.Connection rabbitConnection) {
@@ -116,7 +116,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         } else {
             throw new IllegalStateException("Client ID already set.");
         }
-        
+
     }
 
     /**
@@ -176,7 +176,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
                 this.threadPool.pause();
             } catch (InterruptedException x) {
                 stopped.set(false);
-                Util.util().handleException(x);
+                throw Util.util().handleException(x);
             }
             for (RMQSession session : this.sessions) {
                 session.pause();
@@ -186,7 +186,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
     /**
      * Returns true if this connection is in a stopped state
-     * 
+     *
      * @return
      */
     public boolean isStopped() {
@@ -221,7 +221,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         } catch (ShutdownSignalException x) {
             //nothing to do
         } catch (IOException x) {
-            Util.util().handleException(x);
+            throw Util.util().handleException(x);
         }
     }
 
@@ -293,7 +293,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      * but when we call {@link RMQSession#close()} we must unregister this
      * session with the connection This method is called by
      * {@link RMQSession#close()} and should not be called from anywhere else
-     * 
+     *
      * @param session - the session that is being closed
      */
     protected void sessionClose(RMQSession session) {
@@ -307,7 +307,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     public void setTerminationTimeout(long terminationTimeout) {
         this.terminationTimeout = terminationTimeout;
     }
-    
-    
+
+
 
 }

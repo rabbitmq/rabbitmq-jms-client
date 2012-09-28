@@ -40,7 +40,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
                 buf = bout.toByteArray();
             }
         }catch (IOException x) {
-            Util.util().handleException(x);
+            throw Util.util().handleException(x);
         }
 
     }

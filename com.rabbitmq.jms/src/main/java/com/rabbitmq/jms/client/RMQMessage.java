@@ -706,7 +706,7 @@ public abstract class RMQMessage implements Message, Cloneable {
                 }
             }
         } catch (ClassCastException x) {
-            Util.util().handleException(x, "Property value not serializable.");
+            throw Util.util().handleException(x, "Property value not serializable.");
         }
     }
 
