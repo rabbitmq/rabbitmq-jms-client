@@ -13,8 +13,9 @@
     <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>2.12</maven-surefire-plugin.version>
     <surefire-junit47.version>2.12</surefire-junit47.version>
-    <maven-failsafe-plugin.version>2.12</maven-failsafe-plugin.version>
+    <maven-failsafe-plugin.version>2.12.4</maven-failsafe-plugin.version>
     <maven-antrun-plugin.version>1.7</maven-antrun-plugin.version>
+    <maven-jar-plugin.version>2.4</maven-jar-plugin.version>
   </properties>
 
   <modules>
@@ -79,9 +80,6 @@
 
           <configuration>
             <encoding>UTF-8</encoding>
-            <includes>
-              <include>**/*.class</include>
-            </includes>
           </configuration>
         </plugin>
 
@@ -100,22 +98,10 @@
           <configuration>
             <encoding>UTF-8</encoding>
           </configuration>
-
-          <executions>
-            <execution>
-              <goals>
-                <goal>integration-test</goal>
-              </goals>
-              <configuration>
-                <includes>
-                  <include>**/*.class</include>
-                </includes>
-              </configuration>
-            </execution>
-          </executions>
         </plugin>
 
         <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-antrun-plugin</artifactId>
           <version>${maven-antrun-plugin.version}</version>
           <executions>
@@ -166,6 +152,19 @@
               <version>1.8.4</version>
             </dependency>
           </dependencies>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>${maven-jar-plugin.version}</version>
+          <executions>
+            <execution>
+              <goals>
+                <goal>test-jar</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
 
       </plugins>
