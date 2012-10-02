@@ -10,8 +10,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.concurrent.CountDownLatch;
 
 import org.junit.Test;
@@ -20,6 +18,9 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 
+/**
+ * Explicit receive() tests
+ */
 public class TestSynchronousConsumer {
 
     private static final long TIMEOUT = 100; // ms
@@ -30,106 +31,110 @@ public class TestSynchronousConsumer {
     private static final GetResponse TEST_RESPONSE = new GetResponse(envelope, null, null, 0);
 
     /**
-     * This test the message is exchanged successfully
-     * @throws Exception
+     * An explicit message is exchanged successfully
+     * @throws Exception if test error
      */
     @Test
     public void testSynchronousConsumerSuccess() throws Exception {
         Channel channel = mock(Channel.class);
 
         SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT);
-        CountDownLatch tx = new CountDownLatch(1);
-        CountDownLatch rx = new CountDownLatch(1);
-        SenderThread st = new SenderThread(TEST_RESPONSE, consumer, tx);
-        ReceiverThread rt = new ReceiverThread(TEST_RESPONSE, consumer, rx);
-        st.start();
-        rt.start();
+        CountDownLatch senderLatch = new CountDownLatch(1);
+        CountDownLatch receiverLatch = new CountDownLatch(1);
+        SenderThread senderThread = new SenderThread(TEST_RESPONSE, consumer, senderLatch);
+        ReceiverThread receiverThread = new ReceiverThread(TEST_RESPONSE, consumer, receiverLatch);
+        senderThread.start();
+        receiverThread.start();
 
-        rx.countDown();
-        tx.countDown();
+        receiverLatch.countDown();
+        senderLatch.countDown();
 
-        rt.join();
-        st.join();
+        receiverThread.join();
+        senderThread.join();
 
         verify(channel, atLeastOnce()).basicNack(anyLong(),anyBoolean(),anyBoolean());
         verify(channel, atLeastOnce()).basicCancel(anyString());
-        assertTrue(rt.isSuccess());
-        assertTrue(st.isSuccess());
+        assertTrue(receiverThread.isSuccess());
+        assertTrue(senderThread.isSuccess());
     }
 
+    /**
+     * Success even if it has to wait
+     * @throws Exception if test error
+     */
     @Test
     public void testSynchronousConsumerSuccessShortTimeout() throws Exception {
         Channel channel = mock(Channel.class);
 
         SynchronousConsumer consumer = new SynchronousConsumer(channel, 10);
-        CountDownLatch tx = new CountDownLatch(1);
-        CountDownLatch rx = new CountDownLatch(1);
-        SenderThread st = new SenderThread(TEST_RESPONSE, consumer, tx);
-        ReceiverThread rt = new ReceiverThread(TEST_RESPONSE, consumer, rx);
-        st.start();
-        rt.start();
+        CountDownLatch senderLatch = new CountDownLatch(1);
+        CountDownLatch receiverLatch = new CountDownLatch(1);
+        SenderThread senderThread = new SenderThread(TEST_RESPONSE, consumer, senderLatch);
+        ReceiverThread receiverThread = new ReceiverThread(TEST_RESPONSE, consumer, receiverLatch);
+        senderThread.start();
+        receiverThread.start();
 
-        rx.countDown();
-        tx.countDown();
+        receiverLatch.countDown();
+        senderLatch.countDown();
 
-        rt.join();
-        st.join();
+        receiverThread.join();
+        senderThread.join();
 
         verify(channel, atLeastOnce()).basicCancel(anyString());
-        assertTrue(rt.isSuccess());
-        assertTrue(st.isSuccess());
+        assertTrue(receiverThread.isSuccess());
+        assertTrue(senderThread.isSuccess());
     }
 
     /**
      * In this test the receiver should timeout, since there
      * is a delay in sending, and the sender must NACK the message
-     * @throws Exception
+     * @throws Exception if test error
      */
     @Test
     public void testSynchronousConsumerReceiverTimeout() throws Exception {
         Channel channel = mock(Channel.class);
 
         SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT);
-        CountDownLatch tx = new CountDownLatch(1);
-        CountDownLatch rx = new CountDownLatch(1);
-        SenderThread st = new SenderThread(TEST_RESPONSE, consumer, tx);
-        ReceiverThread rt = new ReceiverThread(TEST_RESPONSE, consumer, rx);
-        st.start();
-        rt.start();
+        CountDownLatch senderLatch = new CountDownLatch(1);
+        CountDownLatch receiverLatch = new CountDownLatch(1);
+        SenderThread senderThread = new SenderThread(TEST_RESPONSE, consumer, senderLatch);
+        ReceiverThread receiverThread = new ReceiverThread(TEST_RESPONSE, consumer, receiverLatch);
+        senderThread.start();
+        receiverThread.start();
 
-        rx.countDown();
+        receiverLatch.countDown();
         Thread.sleep(2*TIMEOUT);
-        tx.countDown();
+        senderLatch.countDown();
 
-        rt.join();
-        st.join();
+        receiverThread.join();
+        senderThread.join();
 
 
         verify(channel, atLeastOnce()).basicNack(anyLong(),anyBoolean(), anyBoolean());
         verify(channel, atLeastOnce()).basicCancel(anyString());
-        assertFalse(rt.isSuccess());
-        assertTrue(st.isSuccess());
+        assertFalse(receiverThread.isSuccess());
+        assertTrue(senderThread.isSuccess());
     }
 
     /**
      * In this test the receiver should timeout, since there
      * is a no sending at all
-     * @throws Exception
+     * @throws Exception if test error
      */
     @Test
     public void testSynchronousConsumerReceiverTimeoutNoSender() throws Exception {
         Channel channel = mock(Channel.class);
 
         SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT);
-        CountDownLatch rx = new CountDownLatch(1);
-        ReceiverThread rt = new ReceiverThread(TEST_RESPONSE, consumer, rx);
-        rt.start();
+        CountDownLatch receiverLatch = new CountDownLatch(1);
+        ReceiverThread receiverThread = new ReceiverThread(TEST_RESPONSE, consumer, receiverLatch);
+        receiverThread.start();
 
-        rx.countDown();
+        receiverLatch.countDown();
 
-        rt.join();
+        receiverThread.join();
 
-        assertFalse(rt.isSuccess());
+        assertFalse(receiverThread.isSuccess());
     }
 
 
@@ -213,22 +218,4 @@ public class TestSynchronousConsumer {
             return this.exception;
         }
     }
-
-    public static void printContentsOfStackTrace(final StackTraceElement[] stackTrace, final OutputStream out) {
-        int index = 0;
-        String newLine = "\n";
-        for (StackTraceElement element : stackTrace) {
-            try {
-                out.write(newLine.getBytes());
-                out.write(("Index: " + index++ + newLine).getBytes());
-                out.write(("ClassName: " + element.getClassName() + newLine).getBytes());
-                out.write(("MethodName: " + element.getMethodName() + newLine).getBytes());
-                out.write(("FileName: " + element.getFileName() + newLine).getBytes());
-                out.write(("LineNumber: " + element.getLineNumber() + newLine).getBytes());
-            } catch (IOException ioEx) {
-                System.err.println("IOException trying to write out contents of StackTraceElement[]:\n" + ioEx.getMessage());
-            }
-        }
-    }
-
 }
