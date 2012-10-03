@@ -15,7 +15,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.rabbitmq.jms.TestConnectionFactory;
+import com.rabbitmq.jms.AbstractTestConnectionFactory;
 
 @Category(IntegrationTest.class)
 public class TestSimpleSendReceiveTransaction {
@@ -27,7 +27,7 @@ public class TestSimpleSendReceiveTransaction {
 
         QueueConnection queueConn = null;
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
@@ -42,7 +42,7 @@ public class TestSimpleSendReceiveTransaction {
             queueConn.close();
         }
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
@@ -60,7 +60,7 @@ public class TestSimpleSendReceiveTransaction {
     public void testSendAndCommitAndReceiveMessage() throws Exception {
         QueueConnection queueConn = null;
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
@@ -75,7 +75,7 @@ public class TestSimpleSendReceiveTransaction {
             queueConn.close();
         }
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();

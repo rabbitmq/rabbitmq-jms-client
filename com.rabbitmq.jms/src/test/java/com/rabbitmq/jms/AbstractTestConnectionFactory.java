@@ -2,10 +2,10 @@ package com.rabbitmq.jms;
 
 import com.rabbitmq.jms.rabbitapi.RabbitAPIConnectionFactory;
 
-public abstract class TestConnectionFactory {
+public abstract class AbstractTestConnectionFactory {
     public abstract javax.jms.ConnectionFactory getConnectionFactory();
 
-    public static TestConnectionFactory getTestConnectionFactory() throws Exception {
+    public static AbstractTestConnectionFactory getTestConnectionFactory() throws Exception {
         return new RabbitAPIConnectionFactory();
     }
 }

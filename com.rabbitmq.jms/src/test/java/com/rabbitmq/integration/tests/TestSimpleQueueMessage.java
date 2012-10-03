@@ -19,7 +19,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.rabbitmq.jms.TestConnectionFactory;
+import com.rabbitmq.jms.AbstractTestConnectionFactory;
 import com.rabbitmq.jms.message.TestMessages;
 
 @Category(IntegrationTest.class)
@@ -34,7 +34,7 @@ public class TestSimpleQueueMessage {
         
         QueueConnection queueConn = null;
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
@@ -48,7 +48,7 @@ public class TestSimpleQueueMessage {
             queueConn.close();
         }
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
@@ -67,7 +67,7 @@ public class TestSimpleQueueMessage {
     public void testSendAndReceiveBytesMessage() throws Exception {
         QueueConnection queueConn = null;
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
@@ -83,7 +83,7 @@ public class TestSimpleQueueMessage {
             queueConn.close();
         }
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
@@ -102,7 +102,7 @@ public class TestSimpleQueueMessage {
     public void testSendAndReceiveMapMessage() throws Exception {
         QueueConnection queueConn = null;
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
@@ -118,7 +118,7 @@ public class TestSimpleQueueMessage {
             queueConn.close();
         }
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
@@ -137,7 +137,7 @@ public class TestSimpleQueueMessage {
     public void testSendAndReceiveStreamMessage() throws Exception {
         QueueConnection queueConn = null;
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
@@ -152,7 +152,7 @@ public class TestSimpleQueueMessage {
             queueConn.close();
         }
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
@@ -171,7 +171,7 @@ public class TestSimpleQueueMessage {
     public void testSendAndReceiveObjectMessage() throws Exception {
         QueueConnection queueConn = null;
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
@@ -186,7 +186,7 @@ public class TestSimpleQueueMessage {
             queueConn.close();
         }
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();

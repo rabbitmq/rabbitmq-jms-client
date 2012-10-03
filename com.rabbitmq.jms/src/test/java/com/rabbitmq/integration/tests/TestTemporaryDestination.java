@@ -22,7 +22,7 @@ import javax.jms.TopicSubscriber;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.rabbitmq.jms.TestConnectionFactory;
+import com.rabbitmq.jms.AbstractTestConnectionFactory;
 
 @Category(IntegrationTest.class)
 public class TestTemporaryDestination {
@@ -33,7 +33,7 @@ public class TestTemporaryDestination {
     public void testQueueSendAndReceiveSingleSession() throws Exception {
         QueueConnection queueConn = null;
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
@@ -57,7 +57,7 @@ public class TestTemporaryDestination {
     public void testQueueSendAndReceiveTwoSessions() throws Exception {
         QueueConnection queueConn = null;
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
@@ -82,7 +82,7 @@ public class TestTemporaryDestination {
     public void testTopicSendAndReceiveSingleSession() throws Exception {
         TopicConnection topicConn = null;
         try {
-            TopicConnectionFactory connFactory = (TopicConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            TopicConnectionFactory connFactory = (TopicConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             topicConn = connFactory.createTopicConnection();
             topicConn.start();
@@ -113,7 +113,7 @@ public class TestTemporaryDestination {
     public void testTopicSendAndReceiveTwoSessions() throws Exception {
         TopicConnection topicConn = null;
         try {
-            TopicConnectionFactory connFactory = (TopicConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            TopicConnectionFactory connFactory = (TopicConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             topicConn = connFactory.createTopicConnection();
             topicConn.start();

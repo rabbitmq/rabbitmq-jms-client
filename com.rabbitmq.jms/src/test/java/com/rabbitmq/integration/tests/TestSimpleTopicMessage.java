@@ -15,7 +15,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.rabbitmq.jms.TestConnectionFactory;
+import com.rabbitmq.jms.AbstractTestConnectionFactory;
 
 @Category(IntegrationTest.class)
 public class TestSimpleTopicMessage {
@@ -25,7 +25,7 @@ public class TestSimpleTopicMessage {
         final String MESSAGE2 = "Hello " + TestSimpleTopicMessage.class.getName();
         TopicConnection topicConn = null;
         try {
-            TopicConnectionFactory connFactory = (TopicConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            TopicConnectionFactory connFactory = (TopicConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             topicConn = connFactory.createTopicConnection();
             topicConn.start();

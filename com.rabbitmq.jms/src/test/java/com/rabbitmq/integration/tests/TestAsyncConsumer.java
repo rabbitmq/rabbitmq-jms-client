@@ -20,7 +20,7 @@ import static junit.framework.Assert.*;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.rabbitmq.jms.TestConnectionFactory;
+import com.rabbitmq.jms.AbstractTestConnectionFactory;
 
 @Category(IntegrationTest.class)
 public class TestAsyncConsumer {
@@ -32,7 +32,7 @@ public class TestAsyncConsumer {
 
         QueueConnection queueConn = null;
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
@@ -46,7 +46,7 @@ public class TestAsyncConsumer {
             queueConn.close();
         }
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
@@ -72,7 +72,7 @@ public class TestAsyncConsumer {
         System.out.println("This test will fail");
         QueueConnection queueConn = null;
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();

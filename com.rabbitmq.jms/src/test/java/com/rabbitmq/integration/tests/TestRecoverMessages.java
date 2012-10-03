@@ -23,7 +23,7 @@ import javax.jms.TextMessage;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.rabbitmq.jms.TestConnectionFactory;
+import com.rabbitmq.jms.AbstractTestConnectionFactory;
 import com.rabbitmq.jms.util.CountUpAndDownLatch;
 
 @Category(IntegrationTest.class)
@@ -36,7 +36,7 @@ public class TestRecoverMessages {
     public void testRecoverTextMessageSync() throws Exception {
         QueueConnection queueConn = null;
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
@@ -66,7 +66,7 @@ public class TestRecoverMessages {
         QueueConnection queueConn = null;
         final ArrayList<Message> messages = new ArrayList<Message>();
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) TestConnectionFactory.getTestConnectionFactory()
+            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                                                .getConnectionFactory();
             queueConn = connFactory.createQueueConnection();
             queueConn.start();
