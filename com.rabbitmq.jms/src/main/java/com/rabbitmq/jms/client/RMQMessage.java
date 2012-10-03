@@ -24,7 +24,7 @@ import com.rabbitmq.jms.util.IteratorEnum;
 import com.rabbitmq.jms.util.Util;
 
 /**
- *
+ * Base class for RMQ*Message classes. This is abstract and cannot be instantiated independently.
  */
 public abstract class RMQMessage implements Message, Cloneable {
     /**
