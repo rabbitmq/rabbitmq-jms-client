@@ -220,7 +220,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     }
 
     /**
-     * @throws UnsupportedOperationException - method not implemented
+     * @throws UnsupportedOperationException - optional method not implemented
      */
     @Override
     public ConnectionConsumer
@@ -238,16 +238,18 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     }
 
     /**
-     * @throws UnsupportedOperationException - method not implemented
+     * @throws UnsupportedOperationException - optional method not implemented
      */
     @Override
-    public ConnectionConsumer
-            createConnectionConsumer(Queue queue, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
+    public ConnectionConsumer createConnectionConsumer(Queue queue,
+                                                       String messageSelector,
+                                                       ServerSessionPool sessionPool,
+                                                       int maxMessages) throws JMSException {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * @throws UnsupportedOperationException - method not implemented
+     * @throws UnsupportedOperationException - optional method not implemented
      */
     @Override
     public ConnectionConsumer createConnectionConsumer(Destination destination,
@@ -258,7 +260,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     }
 
     /**
-     * @throws UnsupportedOperationException - method not implemented
+     * @throws UnsupportedOperationException - optional method not implemented
      */
     @Override
     public ConnectionConsumer createDurableConnectionConsumer(Topic topic,
@@ -269,11 +271,12 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         throw new UnsupportedOperationException();
     }
 
-    /**
-     * Internal methods. A connection must track all sessions that are created,
+    /* Internal methods. */
+
+    /** A connection must track all sessions that are created,
      * but when we call {@link RMQSession#close()} we must unregister this
-     * session with the connection This method is called by
-     * {@link RMQSession#close()} and should not be called from anywhere else
+     * session with the connection.
+     * This method is called by {@link RMQSession#close()} and should not be called from anywhere else.
      *
      * @param session - the session that is being closed
      */
@@ -288,7 +291,4 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     public void setTerminationTimeout(long terminationTimeout) {
         this.terminationTimeout = terminationTimeout;
     }
-
-
-
 }

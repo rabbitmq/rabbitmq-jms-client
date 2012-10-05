@@ -17,7 +17,7 @@ import com.rabbitmq.jms.client.RMQSession;
 
 /**
  * Implementation of a {@link Topic} and {@link Queue}. This implementation is
- * serializable as it can be stored in a JNDI tree.
+ * serializable as it can be stored in any JNDI naming context.
  */
 public class RMQDestination implements Queue, Topic, Destination, Referenceable, Serializable, TemporaryQueue, TemporaryTopic {
 
