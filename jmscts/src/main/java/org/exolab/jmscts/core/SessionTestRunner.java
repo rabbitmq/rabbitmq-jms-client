@@ -51,7 +51,7 @@ import junit.framework.Protectable;
 import junit.framework.Test;
 import junit.framework.TestResult;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 
 /**
@@ -72,8 +72,8 @@ public class SessionTestRunner extends TestRunner
     /**
      * The logger
      */
-    private static final Category _log =
-        Category.getInstance(SessionTestRunner.class);
+    private static final Logger _log =
+        Logger.getLogger(SessionTestRunner.class);
 
 
     /**

@@ -50,7 +50,7 @@ import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.Session;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import junit.framework.Test;
 
@@ -79,8 +79,8 @@ public class SessionSendReceiveTestCase extends AbstractSendReceiveTestCase {
     /**
      * The logger
      */
-    private static final Category _log = 
-        Category.getInstance(SessionSendReceiveTestCase.class.getName());
+    private static final Logger _log = 
+        Logger.getLogger(SessionSendReceiveTestCase.class.getName());
 
 
     /**

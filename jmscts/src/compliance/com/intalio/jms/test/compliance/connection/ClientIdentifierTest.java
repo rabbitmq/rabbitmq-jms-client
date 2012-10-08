@@ -51,7 +51,7 @@ import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
 import javax.jms.Session;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import junit.framework.Test;
 
@@ -113,8 +113,8 @@ public class ClientIdentifierTest extends AbstractConnectionTestCase {
     /**
      * The logger
      */
-    private static final Category _log = 
-        Category.getInstance(ClientIdentifierTest.class.getName());
+    private static final Logger _log = 
+        Logger.getLogger(ClientIdentifierTest.class.getName());
 
 
     /**

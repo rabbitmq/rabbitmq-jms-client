@@ -47,7 +47,7 @@ package org.exolab.jmscts.core.service;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 
 /**
@@ -70,8 +70,8 @@ public class TestTerminatorServer extends UnicastRemoteObject
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(TestTerminatorService.class);
+    private static final Logger log =
+        Logger.getLogger(TestTerminatorService.class);
 
 
     /**

@@ -53,7 +53,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import org.exolab.jmscts.core.meta.Attribute;
 import org.exolab.jmscts.core.meta.ClassMeta;
@@ -78,7 +78,7 @@ public final class AttributeHelper {
     /**
      * The logger
      */
-    private static final Category log = Category.getInstance(
+    private static final Logger log = Logger.getLogger(
         AttributeHelper.class.getName());
 
     /**

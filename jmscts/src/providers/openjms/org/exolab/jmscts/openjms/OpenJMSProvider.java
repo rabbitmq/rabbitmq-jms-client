@@ -46,7 +46,7 @@ package org.exolab.jmscts.openjms;
 
 import javax.jms.JMSException;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import org.exolab.jms.config.AdminConfiguration;
 import org.exolab.jms.config.Configuration;
@@ -88,8 +88,8 @@ public class OpenJMSProvider implements Provider {
     /**
      * The logger 
      */
-    private static final Category _category = 
-        Category.getInstance(OpenJMSProvider.class);
+    private static final Logger _category = 
+        Logger.getLogger(OpenJMSProvider.class);
 
     /**
      * Construct an instance of the interface to the OpenJMS provider

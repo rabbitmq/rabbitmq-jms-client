@@ -49,7 +49,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Session;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import junit.framework.Test;
 
@@ -79,8 +79,8 @@ public class MessageListenerTest extends AbstractSendReceiveTestCase {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(MessageListenerTest.class);
+    private static final Logger log =
+        Logger.getLogger(MessageListenerTest.class);
 
 
     /**

@@ -47,7 +47,7 @@ package org.exolab.jmscts.test.connection;
 import javax.jms.Connection;
 import javax.jms.MessageConsumer;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import junit.framework.Test;
 
@@ -98,8 +98,8 @@ public class ListenerTest extends AbstractSendReceiveTestCase {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(ListenerTest.class);
+    private static final Logger log =
+        Logger.getLogger(ListenerTest.class);
 
 
     /**

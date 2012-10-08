@@ -44,7 +44,7 @@
  */
 package org.exolab.jmscts.core;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import org.exolab.jmscts.core.types.PropertyTypeType;
 
@@ -60,8 +60,8 @@ public final class PropertyHelper {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(PropertyHelper.class);
+    private static final Logger log =
+        Logger.getLogger(PropertyHelper.class);
 
 
     /**

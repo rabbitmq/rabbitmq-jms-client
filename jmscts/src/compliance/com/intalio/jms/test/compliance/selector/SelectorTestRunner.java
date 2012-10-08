@@ -51,7 +51,7 @@ import java.util.HashMap;
 import junit.framework.Test;
 import junit.framework.TestResult;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import org.exolab.jmscts.core.AckTypes;
 import org.exolab.jmscts.core.JMSTest;
@@ -90,8 +90,8 @@ public class SelectorTestRunner extends SendReceiveTestRunner {
     /**
      * The logger
      */
-    private static final Category _log = 
-        Category.getInstance(SelectorTestRunner.class.getName());
+    private static final Logger _log = 
+        Logger.getLogger(SelectorTestRunner.class.getName());
 
 
     /**

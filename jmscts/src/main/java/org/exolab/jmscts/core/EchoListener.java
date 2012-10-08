@@ -48,7 +48,7 @@ import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.Session;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 
 /**
@@ -83,8 +83,8 @@ public class EchoListener implements MessageListener {
     /**
      * The logging category
      */
-    private static final Category log =
-        Category.getInstance(EchoListener.class.getName());
+    private static final Logger log =
+        Logger.getLogger(EchoListener.class.getName());
 
 
     /**

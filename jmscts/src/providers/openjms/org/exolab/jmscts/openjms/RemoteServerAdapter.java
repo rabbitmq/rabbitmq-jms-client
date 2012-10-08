@@ -46,7 +46,7 @@ package org.exolab.jmscts.openjms;
 
 import javax.jms.JMSException;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import org.exolab.jms.administration.JmsAdminServerIfc;
 import org.exolab.jms.config.AdminConfiguration;
@@ -73,8 +73,8 @@ public class RemoteServerAdapter extends ServerAdapter {
     /**
      * The logger 
      */
-    private static final Category _category = 
-        Category.getInstance(RemoteServerAdapter.class.getName());
+    private static final Logger _category = 
+        Logger.getLogger(RemoteServerAdapter.class.getName());
 
     /**
      * Construct an instance of the adapter, with the configuration file path

@@ -54,7 +54,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Options;
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import org.exolab.castor.xml.MarshalException;
 import org.exolab.castor.xml.ValidationException;
@@ -91,8 +91,8 @@ public class CoverageReport {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(CoverageReport.class);
+    private static final Logger log =
+        Logger.getLogger(CoverageReport.class);
 
     /**
      * The file name of the raw report

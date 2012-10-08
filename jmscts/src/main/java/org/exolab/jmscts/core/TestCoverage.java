@@ -51,7 +51,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import junit.framework.Test;
 
@@ -110,8 +110,8 @@ public class TestCoverage {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(TestCoverage.class);
+    private static final Logger log =
+        Logger.getLogger(TestCoverage.class);
 
 
     /**

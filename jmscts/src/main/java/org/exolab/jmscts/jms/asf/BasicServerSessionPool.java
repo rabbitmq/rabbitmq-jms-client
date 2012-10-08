@@ -60,7 +60,7 @@ import javax.jms.XAQueueSession;
 import javax.jms.XATopicConnection;
 import javax.jms.XATopicSession;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 
 /**
@@ -109,8 +109,8 @@ public class BasicServerSessionPool implements ServerSessionPool {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(BasicServerSessionPool.class);
+    private static final Logger log =
+        Logger.getLogger(BasicServerSessionPool.class);
 
 
     /**

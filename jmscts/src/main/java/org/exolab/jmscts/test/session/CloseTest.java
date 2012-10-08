@@ -51,7 +51,7 @@ import javax.jms.IllegalStateException;
 import javax.jms.QueueSession;
 import javax.jms.Topic;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import junit.framework.Test;
 
@@ -75,7 +75,7 @@ public class CloseTest extends AbstractSessionTestCase {
     /**
      * The logger
      */
-    private static final Category log = Category.getInstance(CloseTest.class);
+    private static final Logger log = Logger.getLogger(CloseTest.class);
 
 
     /**

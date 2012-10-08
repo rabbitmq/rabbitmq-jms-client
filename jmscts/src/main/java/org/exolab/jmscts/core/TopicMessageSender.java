@@ -49,7 +49,7 @@ import javax.jms.Message;
 import javax.jms.TopicPublisher;
 import javax.jms.MessageListener;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 
 /**
@@ -65,8 +65,8 @@ class TopicMessageSender extends AbstractMessageSender {
     /**
      * The logger
      */
-    private static final Category _log =
-        Category.getInstance(TopicMessageSender.class.getName());
+    private static final Logger _log =
+        Logger.getLogger(TopicMessageSender.class.getName());
 
 
     /**

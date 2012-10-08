@@ -53,7 +53,7 @@ import javax.jms.XATopicConnectionFactory;
 import junit.framework.Test;
 import junit.framework.TestResult;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import org.exolab.jmscts.provider.Administrator;
 import org.exolab.jmscts.provider.Provider;
@@ -82,8 +82,8 @@ public class ProviderTestRunner extends TestRunner {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(ProviderTestRunner.class);
+    private static final Logger log =
+        Logger.getLogger(ProviderTestRunner.class);
 
 
     /**

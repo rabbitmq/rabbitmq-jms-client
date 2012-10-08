@@ -46,7 +46,7 @@ package org.exolab.jmscts.stress;
 
 import javax.jms.Message;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import org.exolab.jmscts.core.CountingListener;
 
@@ -63,8 +63,8 @@ public class AckingListener extends CountingListener {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(AckingListener.class);
+    private static final Logger log =
+        Logger.getLogger(AckingListener.class);
 
 
     /**

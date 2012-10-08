@@ -51,7 +51,7 @@ import javax.jms.IllegalStateException;
 import javax.jms.Message;
 import javax.jms.Session;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import junit.framework.Test;
 
@@ -99,8 +99,8 @@ public class RollbackTest extends SessionSendReceiveTestCase {
     /**
      * The logger
      */
-    private static final Category _log = 
-        Category.getInstance(RollbackTest.class.getName());
+    private static final Logger _log = 
+        Logger.getLogger(RollbackTest.class.getName());
 
     /**
      * Construct an instance of this class for a specific test case.

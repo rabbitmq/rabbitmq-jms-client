@@ -47,7 +47,7 @@ package org.exolab.jmscts.core;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import EDU.oswego.cs.dl.util.concurrent.Semaphore;
 
@@ -91,8 +91,8 @@ public class WaitingListener extends DelegatingListener {
     /**
      * The logger
      */
-    private static final Category _log =
-        Category.getInstance(WaitingListener.class);
+    private static final Logger _log =
+        Logger.getLogger(WaitingListener.class);
 
 
     /**

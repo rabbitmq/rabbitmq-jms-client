@@ -49,7 +49,7 @@ import javax.jms.Message;
 import javax.jms.QueueSender;
 import javax.jms.MessageListener;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 
 /**
@@ -65,8 +65,8 @@ class QueueMessageSender extends AbstractMessageSender {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(QueueMessageSender.class);
+    private static final Logger log =
+        Logger.getLogger(QueueMessageSender.class);
 
 
     /**

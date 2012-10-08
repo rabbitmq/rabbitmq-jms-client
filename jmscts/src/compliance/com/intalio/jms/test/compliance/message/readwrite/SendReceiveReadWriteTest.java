@@ -53,7 +53,7 @@ import javax.jms.MessageNotWriteableException;
 import javax.jms.Session;
 import javax.jms.StreamMessage;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import junit.framework.Test;
 
@@ -109,8 +109,8 @@ public class SendReceiveReadWriteTest extends AbstractSendReceiveTestCase
     /**
      * The logger
      */
-    private static final Category _log = 
-        Category.getInstance(SendReceiveReadWriteTest.class.getName());
+    private static final Logger _log = 
+        Logger.getLogger(SendReceiveReadWriteTest.class.getName());
 
 
     /**

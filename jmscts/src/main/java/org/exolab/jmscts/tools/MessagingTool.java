@@ -60,7 +60,7 @@ import javax.jms.XAQueueConnectionFactory;
 import javax.jms.XATopicConnectionFactory;
 import javax.naming.NamingException;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import org.exolab.jmscts.core.TestContext;
 import org.exolab.jmscts.core.TestStatistics;
@@ -125,8 +125,8 @@ public abstract class MessagingTool {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(MessagingTool.class);
+    private static final Logger log =
+        Logger.getLogger(MessagingTool.class);
 
 
     /**

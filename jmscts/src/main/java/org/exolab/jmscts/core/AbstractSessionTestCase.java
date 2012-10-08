@@ -44,7 +44,7 @@
  */
 package org.exolab.jmscts.core;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 
 /**
@@ -64,7 +64,7 @@ public abstract class AbstractSessionTestCase
      * The logger
      */
     @SuppressWarnings("unused")
-    private static final Category log = Category.getInstance(
+    private static final Logger log = Logger.getLogger(
         AbstractSessionTestCase.class);
 
 

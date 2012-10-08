@@ -55,7 +55,7 @@ import org.xml.sax.Parser;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributeListImpl;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import org.exolab.castor.util.Configuration;
 import org.exolab.castor.xml.EventProducer;
@@ -97,8 +97,8 @@ public class ConfigExpander implements EventProducer {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(ConfigExpander.class);
+    private static final Logger log =
+        Logger.getLogger(ConfigExpander.class);
 
 
     /**

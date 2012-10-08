@@ -48,7 +48,7 @@ import java.util.List;
 
 import javax.jms.Message;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import junit.framework.Test;
 
@@ -94,8 +94,8 @@ public class RepublishTest extends AbstractSendReceiveTestCase {
      * The logger
      */
     @SuppressWarnings("unused")
-    private static final Category log =
-        Category.getInstance(RepublishTest.class);
+    private static final Logger log =
+        Logger.getLogger(RepublishTest.class);
 
 
     /**

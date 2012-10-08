@@ -47,7 +47,7 @@ package org.exolab.jmscts.core;
 import junit.framework.Test;
 import junit.framework.TestResult;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import org.exolab.jmscts.provider.ProviderLoader;
 import org.exolab.jmscts.report.StatisticsReport;
@@ -103,8 +103,8 @@ public class StressTestRunner extends AbstractTestRunner {
      * The logger
      */
     @SuppressWarnings("unused")
-    private static final Category log =
-        Category.getInstance(StressTestRunner.class);
+    private static final Logger log =
+        Logger.getLogger(StressTestRunner.class);
 
 
     /**

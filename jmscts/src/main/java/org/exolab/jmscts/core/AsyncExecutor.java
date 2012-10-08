@@ -46,7 +46,7 @@ package org.exolab.jmscts.core;
 
 import java.io.OutputStream;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import org.exolab.jmscts.core.service.ExecutionMonitorService;
 
@@ -82,8 +82,8 @@ public class AsyncExecutor {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(AsyncExecutor.class.getName());
+    private static final Logger log =
+        Logger.getLogger(AsyncExecutor.class.getName());
 
 
     /**

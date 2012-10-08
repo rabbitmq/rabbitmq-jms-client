@@ -44,7 +44,7 @@
  */
 package org.exolab.jmscts.core;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import junit.framework.TestCase;
 
@@ -68,8 +68,8 @@ public abstract class JMSTestCase extends TestCase implements JMSTest {
      * The logger
      */
     @SuppressWarnings("unused")
-    private static final Category log
-        = Category.getInstance(JMSTestCase.class.getName());
+    private static final Logger log
+        = Logger.getLogger(JMSTestCase.class.getName());
 
 
     /**

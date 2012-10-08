@@ -44,7 +44,7 @@
  */
 package org.exolab.jmscts.core;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -70,8 +70,8 @@ public final class TestProperties {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(TestProperties.class.getName());
+    private static final Logger log =
+        Logger.getLogger(TestProperties.class.getName());
 
 
     /**

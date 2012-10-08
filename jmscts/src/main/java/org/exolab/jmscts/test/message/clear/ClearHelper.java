@@ -50,7 +50,7 @@ import javax.jms.MessageEOFException;
 import javax.jms.MessageNotReadableException;
 import javax.jms.StreamMessage;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import junit.framework.Assert;
 
@@ -71,8 +71,8 @@ class ClearHelper extends Assert {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(ClearHelper.class);
+    private static final Logger log =
+        Logger.getLogger(ClearHelper.class);
 
 
     /**

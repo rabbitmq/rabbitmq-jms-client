@@ -46,7 +46,7 @@ package org.exolab.jmscts.core;
 
 import javax.jms.Message;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import junit.framework.Test;
 import junit.framework.TestResult;
@@ -67,8 +67,8 @@ public class MessageTestRunner extends AbstractMessageTestRunner {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(MessageTestRunner.class.getName());
+    private static final Logger log =
+        Logger.getLogger(MessageTestRunner.class.getName());
 
 
     /**

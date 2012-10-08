@@ -46,7 +46,7 @@ package org.exolab.jmscts.core;
 
 import javax.jms.Connection;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import junit.framework.Test;
 import junit.framework.TestResult;
@@ -71,8 +71,8 @@ public class ConnectionTestRunner extends TestRunner
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(ConnectionTestRunner.class.getName());
+    private static final Logger log =
+        Logger.getLogger(ConnectionTestRunner.class.getName());
 
 
     /**

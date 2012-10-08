@@ -46,7 +46,7 @@ package org.exolab.jmscts.test.connection;
 
 import javax.jms.Connection;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import junit.framework.Test;
 
@@ -77,8 +77,8 @@ public class SendReceiveStopTest extends AbstractSendReceiveTestCase {
      * The logger
      */
     @SuppressWarnings("unused")
-    private static final Category log =
-        Category.getInstance(SendReceiveStopTest.class);
+    private static final Logger log =
+        Logger.getLogger(SendReceiveStopTest.class);
 
 
     /**

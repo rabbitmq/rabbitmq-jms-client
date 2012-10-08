@@ -50,7 +50,7 @@ import java.util.List;
 import javax.jms.Message;
 import javax.jms.Session;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import junit.framework.Test;
 
@@ -85,8 +85,8 @@ public class SubscriberRedeliveredTest extends AbstractSendReceiveTestCase {
      * The logger
      */
     @SuppressWarnings("unused")
-    private static final Category log =
-        Category.getInstance(SubscriberRedeliveredTest.class);
+    private static final Logger log =
+        Logger.getLogger(SubscriberRedeliveredTest.class);
 
 
     /**

@@ -49,7 +49,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import org.xml.sax.InputSource;
 
@@ -78,8 +78,8 @@ public class Configuration {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(Configuration.class);
+    private static final Logger log =
+        Logger.getLogger(Configuration.class);
 
     /**
      * The castor mapping

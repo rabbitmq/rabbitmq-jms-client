@@ -51,7 +51,7 @@ import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 
 /**
@@ -75,8 +75,8 @@ public abstract class AbstractSendReceiveTestCase
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(AbstractSendReceiveTestCase.class);
+    private static final Logger log =
+        Logger.getLogger(AbstractSendReceiveTestCase.class);
 
 
     /**

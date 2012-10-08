@@ -44,7 +44,7 @@
  */
 package org.exolab.jmscts.core;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 
 /**
@@ -64,8 +64,8 @@ public abstract class DelayedAction extends ThreadedAction {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(DelayedAction.class);
+    private static final Logger log =
+        Logger.getLogger(DelayedAction.class);
 
 
     /**

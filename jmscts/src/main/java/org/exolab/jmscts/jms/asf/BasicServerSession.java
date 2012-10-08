@@ -48,7 +48,7 @@ import javax.jms.JMSException;
 import javax.jms.ServerSession;
 import javax.jms.Session;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 
 /**
@@ -73,8 +73,8 @@ public class BasicServerSession implements ServerSession {
      * The logger
      */
     @SuppressWarnings("unused")
-    private static final Category log =
-        Category.getInstance(BasicServerSession.class);
+    private static final Logger log =
+        Logger.getLogger(BasicServerSession.class);
 
 
     /**

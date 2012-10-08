@@ -58,7 +58,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Options;
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.exolab.core.service.ServiceException;
 import org.exolab.core.service.ServiceGroup;
@@ -183,8 +183,8 @@ public abstract class AbstractTestRunner extends TestSetup {
     /**
      * The logger
      */
-    private static final Category log =
-        Category.getInstance(AbstractTestRunner.class.getName());
+    private static final Logger log =
+        Logger.getLogger(AbstractTestRunner.class.getName());
 
 
     /**

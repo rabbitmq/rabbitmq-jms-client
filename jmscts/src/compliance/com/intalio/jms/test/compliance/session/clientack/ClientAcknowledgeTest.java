@@ -49,7 +49,7 @@ import java.util.List;
 import javax.jms.Message;
 import javax.jms.Session;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import junit.framework.Test;
 
@@ -92,8 +92,8 @@ public class ClientAcknowledgeTest extends ClientAcknowledgeTestCase {
     /**
      * The logger
      */
-    private static final Category _log = 
-        Category.getInstance(ClientAcknowledgeTest.class.getName());
+    private static final Logger _log = 
+        Logger.getLogger(ClientAcknowledgeTest.class.getName());
 
 
     /**

@@ -57,7 +57,7 @@ import javax.jms.Session;
 import junit.framework.Test;
 import junit.framework.TestResult;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import org.exolab.jmscts.provider.Administrator;
 
@@ -93,8 +93,8 @@ public class SendReceiveTestInvoker extends MessageTestInvoker {
     /**
      * The logger
      */
-    private static final Category _log =
-        Category.getInstance(SendReceiveTestInvoker.class);
+    private static final Logger _log =
+        Logger.getLogger(SendReceiveTestInvoker.class);
 
 
     /**

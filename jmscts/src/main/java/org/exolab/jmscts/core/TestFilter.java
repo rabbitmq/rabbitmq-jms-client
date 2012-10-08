@@ -64,7 +64,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 import org.apache.oro.text.regex.MalformedPatternException;
 import org.apache.oro.text.regex.Pattern;
 import org.apache.oro.text.regex.PatternMatcher;
@@ -116,7 +116,7 @@ public class TestFilter {
     /**
      * The logger
      */
-    private static final Category log = Category.getInstance(TestFilter.class);
+    private static final Logger log = Logger.getLogger(TestFilter.class);
 
     /**
      * A map of connection factory classes, to their corresponding

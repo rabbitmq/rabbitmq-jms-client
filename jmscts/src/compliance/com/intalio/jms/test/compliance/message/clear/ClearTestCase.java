@@ -50,7 +50,7 @@ import javax.jms.MessageEOFException;
 import javax.jms.MessageNotReadableException;
 import javax.jms.StreamMessage;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import junit.framework.Test;
 
@@ -89,8 +89,8 @@ abstract class ClearTestCase extends AbstractMessageTestCase {
     /**
      * The logger
      */
-    private static final Category _log = 
-        Category.getInstance(ClearTestCase.class.getName());
+    private static final Logger _log = 
+        Logger.getLogger(ClearTestCase.class.getName());
     
 
     /**
