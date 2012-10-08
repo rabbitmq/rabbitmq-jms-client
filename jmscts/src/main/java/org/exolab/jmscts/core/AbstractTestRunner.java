@@ -340,7 +340,7 @@ public abstract class AbstractTestRunner extends TestSetup {
             CONFIG, getHome() + "/config/providers.xml");
 
         _output = commands.getOptionValue(
-            OUTPUT, getHome() + "/target/report");
+            OUTPUT, getHome() + "/target/jmscts-report");
         checkAndMakeDir(new File(_output));
 
         String filter = commands.getOptionValue(FILTER);
