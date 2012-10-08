@@ -19,17 +19,15 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import com.rabbitmq.jms.AbstractTestConnectionFactory;
 
 /**
- * Test we can consume synchronously.
+ * Asynchronous Consumer integration test.
  */
-@Category(IntegrationTest.class)
-public class TestAsyncConsumer {
-    static final String QUEUE_NAME = "test.queue." + TestAsyncConsumer.class.getCanonicalName();
-    static final String MESSAGE = "Hello " + TestAsyncConsumer.class.getName();
+public class AsyncConsumerIT {
+    static final String QUEUE_NAME = "test.queue." + AsyncConsumerIT.class.getCanonicalName();
+    static final String MESSAGE = "Hello " + AsyncConsumerIT.class.getName();
 
     /**
      * Basic send and receive with a Consumer. Uses serial send followed by async receive.

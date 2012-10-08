@@ -20,15 +20,16 @@ import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import com.rabbitmq.jms.AbstractTestConnectionFactory;
 
-@Category(IntegrationTest.class)
-public class TestTemporaryDestination {
+/**
+ * Integration test
+ */
+public class TemporaryDestinationIT {
 
-    static final String MESSAGE = "Hello " + TestTemporaryDestination.class.getName();
-    
+    static final String MESSAGE = "Hello " + TemporaryDestinationIT.class.getName();
+
     @Test
     public void testQueueSendAndReceiveSingleSession() throws Exception {
         QueueConnection queueConn = null;
@@ -52,7 +53,7 @@ public class TestTemporaryDestination {
             queueConn.close();
         }
     }
-    
+
     @Test
     public void testQueueSendAndReceiveTwoSessions() throws Exception {
         QueueConnection queueConn = null;
@@ -75,7 +76,7 @@ public class TestTemporaryDestination {
 
         } finally {
             queueConn.close();
-        }        
+        }
     }
 
     @Test
@@ -90,13 +91,13 @@ public class TestTemporaryDestination {
             Topic topic = topicSession.createTemporaryTopic();
             TopicPublisher topicSender = topicSession.createPublisher(topic);
             topicSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-            
+
             TopicSubscriber topicReceiver1 = topicSession.createSubscriber(topic);
             TopicSubscriber topicReceiver2 = topicSession.createSubscriber(topic);
-            
+
             TextMessage message = topicSession.createTextMessage(MESSAGE);
             topicSender.send(message);
-            
+
             TextMessage message1 = (TextMessage) topicReceiver1.receive(1000);
             TextMessage message2 = (TextMessage) topicReceiver2.receive(1000);
             assertNotNull(message1);
@@ -108,7 +109,7 @@ public class TestTemporaryDestination {
             topicConn.close();
         }
     }
-    
+
     @Test
     public void testTopicSendAndReceiveTwoSessions() throws Exception {
         TopicConnection topicConn = null;
@@ -122,13 +123,13 @@ public class TestTemporaryDestination {
             Topic topic = topicSession1.createTemporaryTopic();
             TopicPublisher topicSender = topicSession1.createPublisher(topic);
             topicSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-            
+
             TopicSubscriber topicReceiver1 = topicSession1.createSubscriber(topic);
             TopicSubscriber topicReceiver2 = topicSession2.createSubscriber(topic);
-            
+
             TextMessage message = topicSession1.createTextMessage(MESSAGE);
             topicSender.send(message);
-            
+
             TextMessage message1 = (TextMessage) topicReceiver1.receive(1000);
             TextMessage message2 = (TextMessage) topicReceiver2.receive(1000);
             assertNotNull(message1);

@@ -13,16 +13,17 @@ import javax.jms.TopicSubscriber;
 import junit.framework.Assert;
 
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import com.rabbitmq.jms.AbstractTestConnectionFactory;
 
-@Category(IntegrationTest.class)
-public class TestSimpleTopicMessage {
-    final String TOPIC_NAME = "test.topic."+TestSimpleTopicMessage.class.getCanonicalName();
+/**
+ * Integration test
+ */
+public class SimpleTopicMessageIT {
+    final String TOPIC_NAME = "test.topic."+SimpleTopicMessageIT.class.getCanonicalName();
     @Test
     public void testSendAndReceiveTextMessage() throws Exception {
-        final String MESSAGE2 = "Hello " + TestSimpleTopicMessage.class.getName();
+        final String MESSAGE2 = "Hello " + SimpleTopicMessageIT.class.getName();
         TopicConnection topicConn = null;
         try {
             TopicConnectionFactory connFactory = (TopicConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()

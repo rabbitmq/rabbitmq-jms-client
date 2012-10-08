@@ -13,14 +13,15 @@ import javax.jms.TextMessage;
 import junit.framework.Assert;
 
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import com.rabbitmq.jms.AbstractTestConnectionFactory;
 
-@Category(IntegrationTest.class)
-public class TestSimpleSendReceiveTransaction {
-    static final String QUEUE_NAME = "test.queue." + TestSimpleSendReceiveTransaction.class.getCanonicalName();
-    static final String MESSAGE = "Hello " + TestSimpleQueueMessage.class.getName();
+/**
+ * Integration test
+ */
+public class SimpleSendReceiveTransactionIT {
+    static final String QUEUE_NAME = "test.queue." + SimpleSendReceiveTransactionIT.class.getCanonicalName();
+    static final String MESSAGE = "Hello " + SimpleQueueMessageIT.class.getName();
 
     @Test
     public void testQueueSendAndRollback() throws Exception {

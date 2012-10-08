@@ -32,7 +32,7 @@ import javax.naming.NamingException;
 /**
  * Stand-alone test to connect and create a session.
  */
-public class BasicConnectTest {
+public class BasicConnectTestStandAlone {
 
     /**
      * @param args - none expected

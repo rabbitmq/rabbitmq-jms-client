@@ -22,7 +22,6 @@ import java.io.IOException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -32,10 +31,9 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 
 /**
- * Test to validate that RabbitMQ server is running and working
+ * Integration Test to validate that RabbitMQ server is running and working
  */
-@Category(IntegrationTest.class)
-public class TestSimpleServerConnection {
+public class SimpleServerConnectionIT {
 
 
     private volatile String username = "guest";
@@ -66,7 +64,7 @@ public class TestSimpleServerConnection {
     }
 
     @Test
-    public void test() throws Exception {
+    public void testRabbitConnection() throws Exception {
         final Channel channel = this.getConnection().createChannel();
         channel.exchangeDeclare("exchangeName", "direct", true);
         String queueName = channel.queueDeclare().getQueue();

@@ -17,21 +17,22 @@ import javax.jms.TextMessage;
 import junit.framework.Assert;
 
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import com.rabbitmq.jms.AbstractTestConnectionFactory;
 import com.rabbitmq.jms.message.TestMessages;
 
-@Category(IntegrationTest.class)
-public class TestSimpleQueueMessage {
+/**
+ * Integration test for simple point-to-point messaging.
+ */
+public class SimpleQueueMessageIT {
 
-    static final String QUEUE_NAME = "test.queue."+TestSimpleQueueMessage.class.getCanonicalName();
-    static final String MESSAGE = "Hello " + TestSimpleQueueMessage.class.getName();
-    
+    static final String QUEUE_NAME = "test.queue."+SimpleQueueMessageIT.class.getCanonicalName();
+    static final String MESSAGE = "Hello " + SimpleQueueMessageIT.class.getName();
+
     @Test
     public void testSendAndReceiveTextMessage() throws Exception {
-        
-        
+
+
         QueueConnection queueConn = null;
         try {
             QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()

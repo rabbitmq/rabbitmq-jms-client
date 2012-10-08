@@ -56,8 +56,6 @@
 
         <configuration>
           <forkMode>always</forkMode>
-          <!-- all but @Category(IntegrationTest.class) test classes -->
-          <excludedGroups>com.rabbitmq.integration.tests.IntegrationTest</excludedGroups>
         </configuration>
       </plugin>
 
@@ -68,8 +66,6 @@
         <configuration>
           <forkMode>always</forkMode>
           <argLine>-Xms1024m -Xmx2048m</argLine>
-          <!-- @Category(IntegrationTest.class) test classes -->
-          <groups>com.rabbitmq.integration.tests.IntegrationTest</groups>
         </configuration>
 
         <executions>

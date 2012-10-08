@@ -15,18 +15,23 @@ import javax.jms.TextMessage;
 import junit.framework.Assert;
 
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import com.rabbitmq.jms.AbstractTestConnectionFactory;
 
-@Category(IntegrationTest.class)
-public class TestRabbitMQRedeliverOnNack {
-    static final String QUEUE_NAME = "test.queue."+TestRabbitMQRedeliverOnNack.class.getCanonicalName();
-    static final String MESSAGE = "Hello " + TestRabbitMQRedeliverOnNack.class.getName();
+/**
+ * Integration test
+ */
+public class RabbitMQRedeliverOnNackIT {
+    static final String QUEUE_NAME = "test.queue."+RabbitMQRedeliverOnNackIT.class.getCanonicalName();
+    static final String MESSAGE = "Hello " + RabbitMQRedeliverOnNackIT.class.getName();
 
 
+    /**
+     * Test that Rabbit re-delivers a message which has been explicitly NACKed.
+     * @throws Exception on test failure
+     */
     @Test
-    public void test() throws Exception {
+    public void testRMQRedeliverOnNack() throws Exception {
         QueueConnection queueConn = null;
         try {
             QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()

@@ -5,12 +5,8 @@ import java.io.File;
 import junit.framework.TestCase;
 
 import org.exolab.jmscts.test.ComplianceTestSuite;
-import org.junit.experimental.categories.Category;
 
-import com.rabbitmq.integration.tests.IntegrationTest;
-
-@Category(IntegrationTest.class)
-public class MainTest extends TestCase {
+public class MainComplianceIT extends TestCase {
 
     public void testAll() throws Exception {
         if (System.getProperty("basedir")==null) {

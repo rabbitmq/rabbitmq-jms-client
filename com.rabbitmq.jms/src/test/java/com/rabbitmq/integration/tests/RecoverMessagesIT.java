@@ -21,17 +21,18 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import com.rabbitmq.jms.AbstractTestConnectionFactory;
 import com.rabbitmq.jms.util.CountUpAndDownLatch;
 
-@Category(IntegrationTest.class)
-public class TestRecoverMessages {
+/**
+ * Integration test
+ */
+public class RecoverMessagesIT {
 
-    static final String QUEUE_NAME = "test.queue."+TestRecoverMessages.class.getCanonicalName();
-    static final String MESSAGE = "Hello " + TestRecoverMessages.class.getName();
-    
+    static final String QUEUE_NAME = "test.queue."+RecoverMessagesIT.class.getCanonicalName();
+    static final String MESSAGE = "Hello " + RecoverMessagesIT.class.getName();
+
     @Test
     public void testRecoverTextMessageSync() throws Exception {
         QueueConnection queueConn = null;
