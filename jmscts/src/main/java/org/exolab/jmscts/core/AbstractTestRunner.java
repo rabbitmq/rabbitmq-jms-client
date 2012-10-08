@@ -340,8 +340,23 @@ public abstract class AbstractTestRunner extends TestSetup {
             CONFIG, getHome() + "/config/providers.xml");
 
         _output = commands.getOptionValue(
-            OUTPUT, getHome() + "/report");
-        File dir = new File(_output);
+            OUTPUT, getHome() + "/target/report");
+        checkAndMakeDir(new File(_output));
+
+        String filter = commands.getOptionValue(FILTER);
+        _port = Integer.parseInt(commands.getOptionValue(PORT, DEFAULT_PORT));
+
+        // load the provider configuration
+        _config = Configuration.read(config);
+
+        // load the filter (if supplied)
+        loadFilter(filter);
+
+        // initialise and start the services
+        startServices();
+    }
+
+    private void checkAndMakeDir(File dir) throws Exception {
         if (!dir.isDirectory()) {
             if (!dir.exists()) {
                 if (!dir.mkdir()) {
@@ -355,18 +370,6 @@ public abstract class AbstractTestRunner extends TestSetup {
             throw new Exception("Cannot write to output directory: "
                                 + _output);
         }
-
-        String filter = commands.getOptionValue(FILTER);
-        _port = Integer.parseInt(commands.getOptionValue(PORT, DEFAULT_PORT));
-
-        // load the provider configuration
-        _config = Configuration.read(config);
-
-        // load the filter (if supplied)
-        loadFilter(filter);
-
-        // initialise and start the services
-        startServices();
     }
 
     /**
