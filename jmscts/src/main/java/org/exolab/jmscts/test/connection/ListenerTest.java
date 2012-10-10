@@ -276,6 +276,7 @@ public class ListenerTest extends AbstractSendReceiveTestCase {
             try {
                 consumer.close();
             } catch (Exception exception) {
+                exception.printStackTrace();
                 fail("Attempting to invoke close() for a consumer on a "
                      + ((stop) ? "stopped" : "closed") + " connection threw "
                      + "exception=" + exception.getClass().getName()

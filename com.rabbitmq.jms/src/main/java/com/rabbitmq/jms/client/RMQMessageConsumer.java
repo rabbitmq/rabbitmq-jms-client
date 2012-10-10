@@ -60,6 +60,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     private final CountUpAndDownLatch listenerRunning = new CountUpAndDownLatch(0);
     /**
+     * TODO: Do we limit the threads we check for to a session/queue/what?
+     * TODO: Do we need to do this if receive() uses a RabbitMQ Consumer (callback signals close) anyway?
      * We must track threads that are invoking {@link #receive()} and {@link #receive(long)}
      * cause we must be able to interrupt those threads if close or stop is called
      */
@@ -435,10 +437,19 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @throws IOException
      * @see Channel#basicCancel(String)
      */
-    protected void basicCancel(String consumerTag) throws IOException {
+    private void basicCancel(String consumerTag) throws IOException {
         if (consumerTag!=null) {
             /*cancel a known subscription*/
-            getSession().getChannel().basicCancel(consumerTag);
+            try {
+                getSession().getChannel().basicCancel(consumerTag);
+            } catch (AlreadyClosedException ace) {
+                // TODO check if basicCancel really necessary in this case.
+                if (ace.isInitiatedByApplication())
+                    return;
+                else {
+                    throw ace;
+                }
+            }
         }
     }
 
