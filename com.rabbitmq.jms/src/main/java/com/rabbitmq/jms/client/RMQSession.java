@@ -275,6 +275,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         try {
             //call commit on the channel
             //this should ack all messages
+            //TODO: This does NOT ack all messages -- correct this.
             this.channel.txCommit();
             /*
              * Reset our NACK tag
