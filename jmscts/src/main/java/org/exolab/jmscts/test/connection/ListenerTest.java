@@ -47,10 +47,9 @@ package org.exolab.jmscts.test.connection;
 import javax.jms.Connection;
 import javax.jms.MessageConsumer;
 
-import org.apache.log4j.Logger;
-
 import junit.framework.Test;
 
+import org.apache.log4j.Logger;
 import org.exolab.jmscts.core.AbstractSendReceiveTestCase;
 import org.exolab.jmscts.core.DelayedAction;
 import org.exolab.jmscts.core.EchoListener;
@@ -225,8 +224,8 @@ public class ListenerTest extends AbstractSendReceiveTestCase {
      */
     private void runTest(TestContext context, boolean stop,
                          int count) throws Exception {
-        final int delayTime = 500; // 500 ms
-        final int maxWaitTime = 5000; // 5000 ms
+        final int delayTime = 500; // 500 ms, half a second
+        final int maxWaitTime = 5000; // 5000 ms, five seconds
         Connection connection = context.getConnection();
         MessageConsumer consumer = null;
 

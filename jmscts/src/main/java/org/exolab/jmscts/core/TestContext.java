@@ -64,9 +64,13 @@ import javax.jms.XATopicSession;
 
 import org.exolab.jmscts.provider.Administrator;
 
-
 /**
  * Instances of this class maintain the context of the current test case.
+ * <br/>
+ * Root contexts are constructed with {@link TestContext#TestContext(TestCoverage) TestContext(TestConverage)}
+ * or {@link TestContext#TestContext(TestStatistics) TestContext(TestStatistics)}.
+ * <br/>
+ * All other <code>TestContext</code>s are created by supplying a parent context.
  *
  * @version     $Revision: 1.7 $ $Date: 2004/01/31 13:44:24 $
  * @author      <a href="mailto:tma@netspace.net.au">Tim Anderson</a>
