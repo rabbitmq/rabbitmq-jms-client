@@ -532,8 +532,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                     //so that we can delete it when we close this session
                     topics.add(queueName);
                 }
-                //bind the queue to the exchange and routing key
-                this.channel.queueBind(queueName, dest.getExchangeName(), dest.getRoutingKey());
+                //bind the queue to the exchange with the correct routing key
+                this.channel.queueBind(queueName, dest.getExchangeInfo().name(), dest.getRoutingKey());
             } catch (IOException x) {
                 throw Util.handleException(x);
             }
@@ -653,18 +653,16 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     /**
-     * Invokes {@link Channel#exchangeDeclare(String, String, boolean, boolean, boolean, java.util.Map)} to define
-     * the fanout exchange used to publish topic messages to
-     * this method invokes {@link RMQDestination#setDeclared(boolean)} with a true value
-     * @param dest the topic used to publish to
+     * Declares the topic exchange (and queue) in RabbitMQ.
+     * @param dest the topic destination
      * @throws JMSException
      */
     protected void declareTopic(RMQDestination dest) throws JMSException {
         try {
             this.channel.exchangeDeclare(/* the name of the exchange */
-                                         dest.getExchangeName(),
-                                         /* the type is always fanout - this will change when selectors come in play*/
-                                         "fanout",
+                                         dest.getExchangeInfo().name(),
+                                         /* the type of exchange to use */
+                                         dest.getExchangeInfo().type(),
                                          /* durable for all except temporary topics */
                                          !dest.isTemporary(),
                                          /* auto delete is true if temporary - TODO how do we delete exchanges used for temporary topics

@@ -90,21 +90,12 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private volatile boolean noLocal = false;
 
     /**
-     * Only used internally
-     */
-    private RMQMessageConsumer() {
-        this.session = null;
-        this.destination = null;
-        this.uuidTag = null;
-    }
-    /**
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
      * @param session - the session object that created this consume
      * @param destination - the destination for this consumer
      * @param uuidTag - when creating queues to a topic, we need a unique queue name for each consumer. This is the unique name
      */
     public RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag, boolean paused) {
-
         this.session = session;
         this.destination = destination;
         this.uuidTag = uuidTag;
@@ -148,18 +139,18 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             //reset the correct listener
             userListenerWrapper  = listener==null?null : new MessageListenerWrapper(listener);
             //see if we had already set a listener
-            MessageListenerConsumer previous = this.listener.get();
-            if (listener == null && previous == null) {
+            MessageListenerConsumer previousConsumer = this.listener.get();
+            if (listener == null && previousConsumer == null) {
                 // do nothing - no previous listener
-            } else if (listener == null && previous != null) {
+            } else if (listener == null && previousConsumer != null) {
                 /*
                  * The user called setMessageListener(null) which means we have
                  * to unsubscribe the previous consumer
                  */
-                if (this.listener.compareAndSet(previous, null)) {
-                    this.basicCancel(previous.getConsumerTag());
+                if (this.listener.compareAndSet(previousConsumer, null)) {
+                    this.basicCancel(previousConsumer.getConsumerTag());
                 }
-            } else if (previous != null) {
+            } else if (previousConsumer != null) {
                 /*
                  * The user called setMessageListener(new listener)
                  * to override the old one. We can keep our current subscription
@@ -173,15 +164,15 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                  *  create a subscription to the RabbitMQ channel
                  *  this is done using the basicConsume call
                  */
-                previous = new MessageListenerConsumer();
-                if (this.listener.compareAndSet(null, previous)) {
+                previousConsumer = new MessageListenerConsumer();
+                if (this.listener.compareAndSet(null, previousConsumer)) {
                     /*
                      * If we reached this point, we have a new subscription
                      * We will subscribe the consumer and set the reference to the
                      * consumer tag so we have it for when we need to cancel the subscription
                      */
-                    String consumerTag = basicConsume(previous);
-                    previous.setConsumerTag(consumerTag);
+                    String consumerTag = basicConsume(previousConsumer);
+                    previousConsumer.setConsumerTag(consumerTag);
                 }
             }
         } catch (IOException x) {
@@ -372,9 +363,9 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     /**
-     * Register an async listener with the Rabbit API
-     * to receive messages
-     * @param consumer - the consumer
+     * Register a {@link Consumer} with the Rabbit API to receive messages
+     *
+     * @param consumer the consumer being registered
      * @return the consumer tag created for this consumer
      * @throws IOException
      * @see Channel#basicConsume(String, boolean, String, boolean, boolean, java.util.Map, Consumer)
@@ -389,7 +380,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             name = this.destination.getName();
         } else {
             /*
-             * javax.jms.Topic we create a unique AMQP queue for each consumer
+             * javax.jms.Topic we created a unique AMQP queue for each consumer
              * and that name is unique for this consumer alone
              */
             name = this.getUUIDTag();
@@ -398,36 +389,22 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         //to the actual consumer so we pass in false as the auto ack mode
         //we must support setMessageListener(null) while messages are arriving
         //and those message we NACK
-        return getSession().getChannel().basicConsume(/*
-                                                       * the name of the subscriber
-                                                       */
+        return getSession().getChannel().basicConsume(/* the name of the queue */
                                                       name,
-                                                      /*
-                                                       * autoack is ALWAYS false, otherwise we risk
+                                                      /* autoack is ALWAYS false, otherwise we risk
                                                        * acking messages that are received to the client
-                                                       * but the client listener(onMessage) has not yet been invoked
-                                                       */
+                                                       * but the client listener(onMessage) has not yet been invoked */
                                                       false,
-                                                      /*
-                                                       * the consumer tag, random plus an identifier
-                                                       */
+                                                      /* the consumer tag, a prefixed unique identifier */
                                                       "jms-consumer-"+Util.generateUUIDTag(), //the consumer tag
-                                                      /*
-                                                       * we do support the noLocal for subscriptions
-                                                       */
+                                                      /* we do support the noLocal for subscriptions */
                                                       this.getNoLocalNoException(),
-                                                      /*
-                                                       * exclusive will always be false
-                                                       * exclusive consumer access, meaning only this consumer can access the queue.
-                                                       */
+                                                      /* exclusive will always be false
+                                                       * exclusive consumer access, meaning only this consumer can access the queue. */
                                                       false,
-                                                      /*
-                                                       * no custom arguments for the subscriber
-                                                       */
+                                                      /* no custom arguments for the subscriber */
                                                       new HashMap<String,Object>(),
-                                                      /*
-                                                       * The callback object for handleDelivery()
-                                                       */
+                                                      /* The callback object for handleDelivery() */
                                                       consumer);
     }
 
@@ -482,11 +459,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             // threads that are waiting
             return null;
         }
-
-        /*
-         * our result will be stored here
-         */
-        RMQMessage message = null;
 
         try {
             GetResponse response = null;
@@ -853,7 +825,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
         /**
          * Returns the consumer tag used for this consumer
-         * @return the consunmer tag for this consumer
+         * @return the consumer tag for this consumer
          */
         public String getConsumerTag() {
             return consumerTag;
@@ -884,13 +856,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         public void handleCancel(String consumerTag) throws IOException {
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
-        public synchronized void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
+        public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
             /*
-             * Assign the consumer tag, we are not reusing consumer objects for different subscriptions
+             * Assign the consumer tag, we are not reusing Consumer objects for different subscriptions
              * this is a safe to do
              */
             if (this.consumerTag==null) this.consumerTag = consumerTag;
@@ -901,7 +870,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             try {
                 try {
                     /*
-                     * Count up our latch, incase Connection.stop is called
+                     * Count up our latch, in case Connection.stop is called
                      * that call wont return until we are done processing the message
                      */
                     listenerRunning.countUp();

@@ -23,7 +23,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     private static final long serialVersionUID = 596966152753718825L;
     private volatile String name;
-    private volatile String exchangeName;
+    private volatile RMQExchangeInfo exchangeInfo;
     private volatile String routingKey;
     private volatile boolean queue;
     private volatile boolean declared;
@@ -42,14 +42,21 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @param temporary true if this is a temporary destination
      */
     public RMQDestination(String name, boolean queue, boolean temporary) {
-        this(name, queueOrTopicExchangeName(queue, name), name, true, false, temporary);
+        this(name, queueOrTopicExchangeName(queue, name), queueOrTopicExchangeType(queue, name), name, true, false, temporary);
     }
 
     private static final String queueOrTopicExchangeName(boolean queue, String name) {
         if (queue)
-            return "";
+            return ""; // default exchange in RabbitMQ (direct)
         else
-            return "topic." + name;
+            return "amq.topic"; // standard topic exchange in RabbitMQ
+    }
+
+    private static final String queueOrTopicExchangeType(boolean queue, String name) {
+        if (queue)
+            return ""; // default exchange type in RabbitMQ (direct)
+        else
+            return "topic"; // standard topic exchange type in RabbitMQ
     }
 
     /**
@@ -57,10 +64,8 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * all the values appropriately.
      *
      * @param name - the name of the topic or the queue
-     * @param exchangeName - the exchange we will publish to and bind queues to.
-     *            If this is a queue, then set this value to an empty string
-     *            <code>&quot;&quot;</code>. If this is a topic, the
-     *            exchangeName should be <code>&quot;topic.&quot;+name</code>
+     * @param exchangeName - the RabbitMQ exchange name we will publish to and bind queues to.
+     * @param exchangeType - the RabbitMQ type of exchange used (only used if it needs to be declared)
      * @param routingKey - the routing key used for this destination. the
      *            routingKey should be the same value as the name parameter.
      * @param queue - true if this is a queue, false if this is a topic
@@ -73,9 +78,9 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      *            to <code>false</code>.
      * @param temporary true if this is a temporary destination
      */
-    private RMQDestination(String name, String exchangeName, String routingKey, boolean queue, boolean declared, boolean temporary) {
+    private RMQDestination(String name, String exchangeName, String exchangeType, String routingKey, boolean queue, boolean declared, boolean temporary) {
         this.name = name;
-        this.exchangeName = exchangeName;
+        this.exchangeInfo = new RMQExchangeInfo(exchangeName, exchangeType);
         this.routingKey = routingKey;
         this.queue = queue;
         this.declared = declared;
@@ -90,11 +95,10 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     /**
-     * @return the name of the RabbitMQ Exchange used to publish/send messages
-     *         to
+     * @return the RabbitMQ Exchange information used to publish/send messages
      */
-    public String getExchangeName() {
-        return this.exchangeName;
+    public RMQExchangeInfo getExchangeInfo() {
+        return this.exchangeInfo;
     }
 
     /**
@@ -126,17 +130,17 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     /**
-     * Sets the name of the exchange in the RabbitMQ broker - should only be
+     * Sets the exchange used in the RabbitMQ broker - should only be
      * used when binding into JNDI
      *
-     * @param exchangeName name of exchange
-     * @throws IllegalStateException if the queue has already been declared
+     * @param exchangeInfo name and type of exchange
+     * @throws IllegalStateException if the destination has already been declared
      *             {@link RMQDestination#isDeclared()} return true
      */
-    public void setExchangeName(String exchangeName) {
+    public void setExchangeInfo(RMQExchangeInfo exchangeInfo) {
         if (isDeclared())
             throw new IllegalStateException();
-        this.exchangeName = exchangeName;
+        this.exchangeInfo = exchangeInfo;
     }
 
     /**
