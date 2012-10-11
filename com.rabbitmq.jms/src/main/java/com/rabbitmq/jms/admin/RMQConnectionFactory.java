@@ -18,10 +18,10 @@ import com.rabbitmq.jms.client.RMQConnection;
 import com.rabbitmq.jms.util.Util;
 
 /**
- * RabbitMQ Implementation of JMS {@link ConnectionFactory}
- * TODO - implement socket and SSL options
+ * RabbitMQ Implementation of JMS {@link ConnectionFactory} TODO - implement socket and SSL options
  */
-public class RMQConnectionFactory implements ConnectionFactory, Referenceable, Serializable, QueueConnectionFactory, TopicConnectionFactory {
+public class RMQConnectionFactory implements ConnectionFactory, Referenceable, Serializable, QueueConnectionFactory,
+                                 TopicConnectionFactory {
 
     private static final long serialVersionUID = -4953157213762979615L;
 
@@ -38,12 +38,10 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     /** Number of threads each connection executor will have */
     private int threadsPerConnection = 2;
     /** The time to wait for threads/messages to terminate during {@link Connection#close()} */
-    private volatile long terminationTimeout = Long.getLong("rabbit.jms.terminationTimeout",15000);
+    private volatile long terminationTimeout = Long.getLong("rabbit.jms.terminationTimeout", 15000);
     /**
-     * The thread prefix for threads created by the executor
-     * If this is null, the value
-     * <code>&quot;Rabbit JMS Connection[&quot;+rabbitConnection.getAddress()+&quot;]-&quot;</code>
-     * will be used
+     * The thread prefix for threads created by the executor If this is null, the value
+     * <code>&quot;Rabbit JMS Connection[&quot;+rabbitConnection.getAddress()+&quot;]-&quot;</code> will be used
      */
     private String threadPrefix = null;
 
@@ -60,7 +58,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     @Override
     public Connection createConnection(String userName, String password) throws JMSException {
-        //Create a new factory and set the properties
+        // Create a new factory and set the properties
         com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
         factory.setUsername(userName);
         factory.setPassword(password);
@@ -71,18 +69,18 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         try {
             rabbitConnection = factory.newConnection();
         } catch (IOException x) {
-            if (x.getMessage()!=null && x.getMessage().indexOf("authentication failure")>=0) {
+            if (x.getMessage() != null && x.getMessage().indexOf("authentication failure") >= 0) {
                 throw Util.handleSecurityException(x);
             } else {
                 throw Util.handleException(x);
             }
         }
-        //TODO: make sure the threads have a identifiable name
-//        if (getThreadPrefix()!=null) {
-//            es.setServiceId(getThreadPrefix());
-//        } else {
-//            es.setServiceId("Rabbit JMS Connection["+rabbitConnection.getAddress()+"]-");
-//        }
+        // TODO: make sure the threads have a identifiable name
+        // if (getThreadPrefix()!=null) {
+        // es.setServiceId(getThreadPrefix());
+        // } else {
+        // es.setServiceId("Rabbit JMS Connection["+rabbitConnection.getAddress()+"]-");
+        // }
         RMQConnection conn = new RMQConnection(rabbitConnection);
         conn.setTerminationTimeout(getTerminationTimeout());
         return conn;
@@ -130,8 +128,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     /**
      * Returns the configured username used when creating a connection If
-     * {@link RMQConnectionFactory#setUsername(String)} has not been called the
-     * default value of 'guest' is returned.
+     * {@link RMQConnectionFactory#setUsername(String)} has not been called the default value of 'guest' is returned.
      *
      * @return a string representing the username for a Rabbit connection
      */
@@ -140,11 +137,9 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * Sets the username to be used when creating a connection to the RabbitMQ
-     * broker
+     * Sets the username to be used when creating a connection to the RabbitMQ broker
      *
-     * @param username - username to be used when creating a connection to the
-     *            RabbitMQ broker
+     * @param username - username to be used when creating a connection to the RabbitMQ broker
      */
     public void setUsername(String username) {
         this.username = username;
@@ -152,8 +147,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     /**
      * Returns the configured password used when creating a connection If
-     * {@link RMQConnectionFactory#setPassword(String)} has not been called the
-     * default value of 'guest' is returned.
+     * {@link RMQConnectionFactory#setPassword(String)} has not been called the default value of 'guest' is returned.
      *
      * @return a string representing the password for a Rabbit connection
      */
@@ -162,11 +156,9 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * Sets the password to be used when creating a connection to the RabbitMQ
-     * broker
+     * Sets the password to be used when creating a connection to the RabbitMQ broker
      *
-     * @param password - password to be used when creating a connection to the
-     *            RabbitMQ broker
+     * @param password - password to be used when creating a connection to the RabbitMQ broker
      */
     public void setPassword(String password) {
         this.password = password;
@@ -174,8 +166,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     /**
      * Returns the configured virtual host used when creating a connection If
-     * {@link RMQConnectionFactory#setVirtualHost(String)} has not been called the
-     * default value of '/' is returned.
+     * {@link RMQConnectionFactory#setVirtualHost(String)} has not been called the default value of '/' is returned.
      *
      * @return a string representing the virtual host for a Rabbit connection
      */
@@ -184,19 +175,17 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * Sets the virtual host to be used when creating a connection to the RabbitMQ
-     * broker
+     * Sets the virtual host to be used when creating a connection to the RabbitMQ broker
      *
-     * @param virtualHost - virtual host to be used when creating a connection to the
-     *            RabbitMQ broker
+     * @param virtualHost - virtual host to be used when creating a connection to the RabbitMQ broker
      */
     public void setVirtualHost(String virtualHost) {
         this.virtualHost = virtualHost;
     }
 
     /**
-     * Returns the host name of the RabbitMQ broker
-     * Host name can be in form of an IP address or a host name
+     * Returns the host name of the RabbitMQ broker Host name can be in form of an IP address or a host name
+     *
      * @return the host name of the RabbitMQ broker
      */
     public String getHost() {
@@ -204,8 +193,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * Sets the host name of the RabbitMQ broker
-     * The host name can be an IP address or a host name
+     * Sets the host name of the RabbitMQ broker The host name can be an IP address or a host name
+     *
      * @param host ip address or a host name of the RabbitMQ broker
      */
     public void setHost(String host) {
@@ -213,8 +202,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * Returns the port the RabbitMQ broker listens to
-     * This port is used to connect to the broker
+     * Returns the port the RabbitMQ broker listens to; this port is used to connect to the broker.
+     *
      * @return the port the RabbitMQ broker listens to
      */
     public int getPort() {
@@ -222,8 +211,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * Set the port that the RabbitMQ broker listens to
-     * This port is used to connect to the broker
+     * Set the port that the RabbitMQ broker listens to; this port is used to connect to the broker.
+     *
      * @param port a TCP port of the RabbitMQ broker
      */
     public void setPort(int port) {
@@ -232,6 +221,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     /**
      * Returns the number of threads that are configured for each connection.
+     *
      * @return the number of threads that are used for each connection, default is 2
      */
     public int getThreadsPerConnection() {
@@ -239,8 +229,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * Configures how many threads should be used to receive messages for each TCP
-     * connection that is established.
+     * Configures how many threads should be used to receive messages for each TCP connection that is established.
+     *
      * @param threadsPerConnection the number of threads for each executor service to handle a TCP connection
      */
     public void setThreadsPerConnection(int threadsPerConnection) {
@@ -249,6 +239,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     /**
      * Returns the thread prefix used when creating threads in the executor
+     *
      * @return the thread prefix used
      */
     public String getThreadPrefix() {
@@ -256,8 +247,9 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * Sets the thread prefix to be used when threads are created in this system.
-     * If this is null, a default prefix will be created
+     * Sets the thread prefix to be used when threads are created in this system. If this is null, a default prefix will
+     * be created
+     *
      * @param threadPrefix the prefix such as &quot;Rabbit JMS Thread #&quot;
      */
     public void setThreadPrefix(String threadPrefix) {
@@ -265,8 +257,9 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * The time to wait in milliseconds when {@link Connection#close()} has
-     * been called for listeners and threads to complete.
+     * The time to wait in milliseconds when {@link Connection#close()} has been called for listeners and threads to
+     * complete.
+     *
      * @return the time in milliseconds the {@link Connection#close()} waits before continuing shutdown sequence
      */
     public long getTerminationTimeout() {
@@ -275,6 +268,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     /**
      * Sets the time in milliseconds a {@link Connection#close()} should wait for threads/tasks/listeners to complete
+     *
      * @param terminationTimeout time in milliseconds
      */
     public void setTerminationTimeout(long terminationTimeout) {

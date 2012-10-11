@@ -4,9 +4,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
 /**
- * Similar implementation like the count down latch, except this latch can be counted up 
+ * Similar implementation like the count down latch, except this latch can be counted up
  * and counted down. Once it has reached zero, it will allow for a release, but can then be counted up or down again.
- * @see {link java.util.concurrent.CountDownLatch}
+ * @see java.util.concurrent.CountDownLatch
  */
 
 public class CountUpAndDownLatch {
@@ -63,8 +63,8 @@ public class CountUpAndDownLatch {
     private final CountSync countSync;
 
     /**
-     * Create a latch with the initial value.
-     * @param count
+     * Create a latch.
+     * @param count initial latch count
      */
     public CountUpAndDownLatch(int count) {
         this.countSync = new CountSync(count);
@@ -87,7 +87,7 @@ public class CountUpAndDownLatch {
     public void countDown() {
         countSync.releaseShared(-1);
     }
-    
+
     /**
      * Counts up the latch, if it reaches zero then it will release the waiting threads
      */

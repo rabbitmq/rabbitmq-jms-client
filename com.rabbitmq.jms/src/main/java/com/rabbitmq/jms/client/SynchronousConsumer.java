@@ -72,7 +72,6 @@ class SynchronousConsumer implements Consumer {
     }
 
     protected void handleDelivery(String consumerTag, GetResponse response) throws IOException {
-        IOException iox = null;
         try {
             if (cancelled.compareAndSet(false, true)) {
                 channel.basicCancel(consumerTag);
