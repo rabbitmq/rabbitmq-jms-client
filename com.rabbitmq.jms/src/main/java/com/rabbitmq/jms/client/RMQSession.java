@@ -494,20 +494,19 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public MessageConsumer createConsumer(Destination destination) throws JMSException {
         Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
-        return createConsumerInternal(destination, null, false);
+        return createConsumerInternal((RMQDestination) destination, null, false);
     }
 
     /**
      * Creates a consumer for a destination. If this is a topic, we can specify the autoDelete flag
-     * @param destination
+     * @param dest internal destination object
      * @param uuidTag only used for topics, if null, one is generated as the queue name for this topic
      * @param durableSubscriber true if this is a durable topic subscription
      * @return {@link #createConsumer(Destination)}
      * @throws JMSException if destination is null or we fail to create the destination on the broker
      * @see #createConsumer(Destination)
      */
-    private MessageConsumer createConsumerInternal(Destination destination, String uuidTag, boolean durableSubscriber) throws JMSException {
-        RMQDestination dest = (RMQDestination) destination;
+    private MessageConsumer createConsumerInternal(RMQDestination dest, String uuidTag, boolean durableSubscriber) throws JMSException {
         String consumerTag = uuidTag != null ? uuidTag : "jms-topic-"+Util.generateUUIDTag();
 
         if (!dest.isDeclared()) {
@@ -538,7 +537,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 throw Util.handleException(x);
             }
         }
-        RMQMessageConsumer consumer = new RMQMessageConsumer(this, (RMQDestination) destination, consumerTag, getConnection().isStopped());
+        RMQMessageConsumer consumer = new RMQMessageConsumer(this, dest, consumerTag, getConnection().isStopped());
         consumers.add(consumer);
         return consumer;
     }
@@ -709,7 +708,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         /*
          * Create the new subscription
          */
-        RMQMessageConsumer result = (RMQMessageConsumer)createConsumerInternal(topic, name, true);
+        RMQMessageConsumer result = (RMQMessageConsumer)createConsumerInternal((RMQDestination) topic, name, true);
         result.setDurable(true);
         subscriptions.put(name, result);
         return result;
