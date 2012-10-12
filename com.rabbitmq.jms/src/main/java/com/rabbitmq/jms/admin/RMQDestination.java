@@ -42,7 +42,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @param temporary true if this is a temporary destination
      */
     public RMQDestination(String name, boolean queue, boolean temporary) {
-        this(name, queueOrTopicExchangeName(queue, name), queueOrTopicExchangeType(queue, name), name, true, false, temporary);
+        this(name, queueOrTopicExchangeName(queue, name), queueOrTopicExchangeType(queue, name), name, queue, false, temporary);
     }
 
     private static final String queueOrTopicExchangeName(boolean queue, String name) {
