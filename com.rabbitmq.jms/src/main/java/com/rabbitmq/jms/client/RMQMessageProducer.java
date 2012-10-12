@@ -13,7 +13,7 @@ import javax.jms.TopicPublisher;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.jms.admin.RMQDestination;
-import com.rabbitmq.jms.util.Util;
+import com.rabbitmq.jms.util.RMQJMSException;
 
 /**
  *
@@ -228,7 +228,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
              */
             this.session.getChannel().basicPublish(dest.getExchangeInfo().name(), dest.getRoutingKey(), bob.build(), data);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 

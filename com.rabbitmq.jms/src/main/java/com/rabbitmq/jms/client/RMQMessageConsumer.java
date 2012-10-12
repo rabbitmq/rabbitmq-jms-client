@@ -28,6 +28,7 @@ import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.util.CountUpAndDownLatch;
 import com.rabbitmq.jms.util.PauseLatch;
+import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.Util;
 
 public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscriber {
@@ -176,7 +177,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 }
             }
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -323,7 +324,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             }
             return message;
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         } finally {
             /*
              * Don't attempt to cancel if we are either closing or closed
@@ -478,7 +479,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
              */
             return processMessage(response, isAutoAck());
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -569,13 +570,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             }
             return message;
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         } catch (ClassNotFoundException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         } catch (IllegalAccessException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         } catch (InstantiationException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 

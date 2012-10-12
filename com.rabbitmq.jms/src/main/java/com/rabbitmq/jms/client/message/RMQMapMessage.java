@@ -16,6 +16,7 @@ import javax.jms.MessageNotWriteableException;
 import com.rabbitmq.jms.client.RMQMessage;
 import com.rabbitmq.jms.util.DiscardingObjectOutput;
 import com.rabbitmq.jms.util.IteratorEnum;
+import com.rabbitmq.jms.util.RMQMessageFormatException;
 import com.rabbitmq.jms.util.Util;
 
 /**
@@ -246,7 +247,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
                 /* Make sure we can write this type of object */
                 writePrimitiveData(value, new DiscardingObjectOutput(), false);
             } catch (IOException x) {
-                throw Util.handleMessageFormatException(x);
+                throw new RMQMessageFormatException(x);
             }
         }
 

@@ -21,53 +21,6 @@ import javax.jms.MessageNotWriteableException;
  */
 public final class Util {
     /**
-     * Wraps an exception as a {@link JMSException}
-     * This method will return a {@link JMSException}
-     * and is used to encapsulate Rabbit API exceptions (all declared as {@link IOException}).
-     * @param x the exception to wrap
-     * @param message the message for the {@link JMSException#JMSException(String)} constructor.
-     * @return wrapped exception for caller to throw
-     */
-    public final static JMSException handleException(Exception x, String message) {
-        JMSException jx = new JMSException(message);
-        jx.initCause(x);
-        return jx;
-    }
-
-    /**
-     * @see #handleException(Exception, String)
-     * @param x exception to wrap
-     * @return wrapped exception
-     */
-    public final static JMSException handleException(Exception x) {
-        return handleException(x, x.getMessage());
-    }
-
-    /**
-     * Wraps exception as a {@link JMSSecurityException}.
-     * @see #handleException(Exception, String)
-     * @param x exception to wrap
-     * @return wrapped exception
-     */
-    public final static JMSException handleSecurityException(Exception x) {
-        JMSSecurityException jx = new JMSSecurityException(x.getMessage());
-        jx.initCause(x);
-        return jx;
-    }
-
-    /**
-     * Wraps exception as a {@link MessageFormatException}.
-     * @see #handleException(Exception, String)
-     * @param x exception to wrap
-     * @return wrapped exception
-     */
-    public final static JMSException handleMessageFormatException(Exception x) {
-        MessageFormatException jx = new MessageFormatException(x.getMessage());
-        jx.initCause(x);
-        return jx;
-    }
-
-    /**
      * Throws an exception of the supplied type if the first parameter is <b>true</b>.
      * @param bool whether to construct and throw an exception
      * @param msg the message string to pass the exception constructor

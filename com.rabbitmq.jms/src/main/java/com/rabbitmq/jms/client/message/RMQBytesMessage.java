@@ -18,6 +18,8 @@ import javax.jms.MessageNotReadableException;
 import javax.jms.MessageNotWriteableException;
 
 import com.rabbitmq.jms.client.RMQMessage;
+import com.rabbitmq.jms.util.RMQJMSException;
+import com.rabbitmq.jms.util.RMQMessageFormatException;
 import com.rabbitmq.jms.util.Util;
 
 /**
@@ -108,7 +110,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (EOFException x) {
             throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -124,7 +126,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (EOFException x) {
             throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -140,7 +142,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (EOFException x) {
             throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -156,7 +158,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (EOFException x) {
             throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -173,7 +175,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (EOFException x) {
             throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -189,7 +191,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (EOFException x) {
             throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -205,7 +207,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (EOFException x) {
             throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
 
     }
@@ -222,7 +224,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (EOFException x) {
             throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -238,7 +240,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (EOFException x) {
             throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -254,7 +256,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } catch (EOFException x) {
             throw new MessageEOFException(MSG_EOF);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
 
     }
@@ -274,9 +276,9 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             throw new MessageEOFException(MSG_EOF);
         } catch (UTFDataFormatException x) {
             this.bin.reset();
-            throw Util.handleMessageFormatException(x);
+            throw new RMQMessageFormatException(x);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -313,7 +315,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             }
             return count;
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -328,9 +330,9 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         try {
             return this.in.readObject();
         } catch (ClassNotFoundException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -344,7 +346,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         try {
             this.out.writeBoolean(value);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -358,7 +360,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         try {
             this.out.writeByte(value);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -372,7 +374,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         try {
             this.out.writeShort(value);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -386,7 +388,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         try {
             this.out.writeChar(value);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -400,7 +402,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         try {
             this.out.writeInt(value);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -414,7 +416,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         try {
             this.out.writeLong(value);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -428,7 +430,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         try {
             this.out.writeFloat(value);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -442,7 +444,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         try {
             this.out.writeDouble(value);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -456,7 +458,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         try {
             this.out.writeUTF(value);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -470,7 +472,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         try {
             this.out.write(value);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -489,7 +491,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             }
             this.out.write(value, offset, length);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -507,7 +509,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         try {
             this.writePrimitiveData(value, this.out, allowSerializable);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -524,7 +526,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
                 this.in = new ObjectInputStream(this.bin);
                 return;
             } catch (IOException x) {
-                throw Util.handleException(x);
+                throw new RMQJMSException(x);
             }
         }
 
@@ -539,7 +541,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             this.bin = new ByteArrayInputStream(buf);
             this.in = new ObjectInputStream(this.bin);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
         this.reading = true;
         this.out = null;
@@ -563,7 +565,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         try {
             this.out = new ObjectOutputStream(this.bout);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
         this.bin = null;
         this.in = null;

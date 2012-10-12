@@ -46,6 +46,7 @@ import com.rabbitmq.jms.client.message.RMQObjectMessage;
 import com.rabbitmq.jms.client.message.RMQStreamMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.util.CountUpAndDownLatch;
+import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.Util;
 
 /**
@@ -145,7 +146,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 this.channel.txSelect();
             }
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -282,7 +283,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
              */
             lastReceivedTag.set(Long.MIN_VALUE);
         } catch (Exception x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -319,7 +320,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
              */
             this.channel.txCommit();
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -390,7 +391,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 if (x.getCause() instanceof ShutdownSignalException) {
                     //nothing to do
                 }
-                throw Util.handleException(x);
+                throw new RMQJMSException(x);
             } finally {
             }
         } finally {
@@ -427,7 +428,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                          */
                         this.channel.basicNack(deliveryTag, true, true);
                     }catch (IOException x) {
-                        throw Util.handleException(x);
+                        throw new RMQJMSException(x);
                     }
                     /*
                      * we must clear our received messages
@@ -534,7 +535,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 //bind the queue to the exchange with the correct routing key
                 this.channel.queueBind(queueName, dest.getExchangeInfo().name(), dest.getRoutingKey());
             } catch (IOException x) {
-                throw Util.handleException(x);
+                throw new RMQJMSException(x);
             }
         }
         RMQMessageConsumer consumer = new RMQMessageConsumer(this, dest, consumerTag, getConnection().isStopped());
@@ -635,7 +636,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 topics.add(dest.getQueueName());
             }
         } catch (Exception x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
         dest.setDeclared(true);
     }
@@ -673,7 +674,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                                          /* object parameters */
                                          null);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
         dest.setDeclared(true);
     }
@@ -783,7 +784,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 this.channel.queueDelete(name);
             }
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -920,7 +921,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             try {
                 consumer.pause();
             } catch (IllegalStateException x) {
-                throw Util.handleException(x);
+                throw new RMQJMSException(x);
             }
         }
     }
@@ -936,7 +937,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             try {
                 consumer.resume();
             } catch (IllegalStateException x) {
-                throw Util.handleException(x);
+                throw new RMQJMSException(x);
             }
         }
     }
@@ -1021,7 +1022,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 }
             }
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
