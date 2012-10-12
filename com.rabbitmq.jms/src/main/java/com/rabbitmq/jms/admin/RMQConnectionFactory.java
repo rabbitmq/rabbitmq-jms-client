@@ -15,7 +15,8 @@ import javax.naming.Reference;
 import javax.naming.Referenceable;
 
 import com.rabbitmq.jms.client.RMQConnection;
-import com.rabbitmq.jms.util.Util;
+import com.rabbitmq.jms.util.RMQJMSException;
+import com.rabbitmq.jms.util.RMQJMSSecurityException;
 
 /**
  * RabbitMQ Implementation of JMS {@link ConnectionFactory} TODO - implement socket and SSL options
@@ -70,9 +71,9 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             rabbitConnection = factory.newConnection();
         } catch (IOException x) {
             if (x.getMessage() != null && x.getMessage().indexOf("authentication failure") >= 0) {
-                throw Util.handleSecurityException(x);
+                throw new RMQJMSSecurityException(x);
             } else {
-                throw Util.handleException(x);
+                throw new RMQJMSException(x);
             }
         }
         // TODO: make sure the threads have a identifiable name

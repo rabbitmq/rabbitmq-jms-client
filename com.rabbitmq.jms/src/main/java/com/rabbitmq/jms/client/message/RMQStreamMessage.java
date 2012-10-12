@@ -18,7 +18,8 @@ import javax.jms.MessageNotWriteableException;
 import javax.jms.StreamMessage;
 
 import com.rabbitmq.jms.client.RMQMessage;
-import com.rabbitmq.jms.util.Util;
+import com.rabbitmq.jms.util.RMQJMSException;
+import com.rabbitmq.jms.util.RMQMessageFormatException;
 
 /* TODO For now we don't handle direct TCP streaming
  * this should write to disk, and when we send the message
@@ -63,7 +64,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         try {
             RMQMessage.writePrimitive(value, this.out);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -184,22 +185,22 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
             throw x;
         } catch (ClassNotFoundException x) {
             success = false;
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         } catch (EOFException x) {
             success = false;
             throw new MessageEOFException(MSG_EOF);
         } catch (UTFDataFormatException x) {
             success = false;
-            throw Util.handleMessageFormatException(x);
+            throw new RMQMessageFormatException(x);
         } catch (IOException x) {
             success = false;
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         } catch (Exception x) {
             success = false;
             if (x instanceof JMSException) {
                 throw (JMSException)x;
             } else {
-                throw Util.handleException(x);
+                throw new RMQJMSException(x);
             }
         } finally {
             if (!success) {
@@ -428,7 +429,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         try {
             RMQMessage.writePrimitive(value, this.out, allowSerializable);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -446,7 +447,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
                 this.bin = new ByteArrayInputStream(buf);
                 this.in = new ObjectInputStream(this.bin);
             } catch (IOException x) {
-                throw Util.handleException(x);
+                throw new RMQJMSException(x);
             }
         } else {
             try {
@@ -460,7 +461,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
                 this.bin = new ByteArrayInputStream(buf);
                 this.in = new ObjectInputStream(this.bin);
             } catch (IOException x) {
-                throw Util.handleException(x);
+                throw new RMQJMSException(x);
             }
             this.reading = true;
             this.out = null;
@@ -477,7 +478,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         try {
             this.out = new ObjectOutputStream(this.bout);
         } catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
         this.bin = null;
         this.in = null;

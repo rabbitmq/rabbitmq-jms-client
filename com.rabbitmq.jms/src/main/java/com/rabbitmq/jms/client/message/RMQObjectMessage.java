@@ -14,6 +14,7 @@ import javax.jms.MessageNotWriteableException;
 import javax.jms.ObjectMessage;
 
 import com.rabbitmq.jms.client.RMQMessage;
+import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.Util;
 
 public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
@@ -40,7 +41,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
                 buf = bout.toByteArray();
             }
         }catch (IOException x) {
-            throw Util.handleException(x);
+            throw new RMQJMSException(x);
         }
 
     }
@@ -54,9 +55,9 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
                 ObjectInputStream in = new ObjectInputStream(bin);
                 return (Serializable)in.readObject();
             }catch (ClassNotFoundException x) {
-                throw Util.handleException(x);
+                throw new RMQJMSException(x);
             }catch (IOException x) {
-                throw Util.handleException(x);
+                throw new RMQJMSException(x);
             }
         }
     }

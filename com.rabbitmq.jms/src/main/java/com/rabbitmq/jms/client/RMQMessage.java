@@ -21,6 +21,7 @@ import javax.jms.MessageFormatException;
 import javax.jms.MessageNotWriteableException;
 
 import com.rabbitmq.jms.util.IteratorEnum;
+import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.Util;
 
 /**
@@ -706,7 +707,7 @@ public abstract class RMQMessage implements Message, Cloneable {
                 }
             }
         } catch (ClassCastException x) {
-            throw Util.handleException(x, "Property value not serializable.");
+            throw new RMQJMSException("Property value not serializable.", x);
         }
     }
 
