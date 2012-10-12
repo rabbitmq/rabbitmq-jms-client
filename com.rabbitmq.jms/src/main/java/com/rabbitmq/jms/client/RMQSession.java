@@ -671,7 +671,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                                          /* internal is false JMS will always publish to the exchange*/
                                          false,
                                          /* object parameters */
-                                         new HashMap<String,Object>());
+                                         null);
         } catch (IOException x) {
             throw Util.handleException(x);
         }
@@ -684,20 +684,21 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name) throws JMSException {
         Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
-        RMQMessageConsumer previous = subscriptions.get(name);
-        if (previous!=null) {
+        RMQDestination topicDest = (RMQDestination) topic;
+        RMQMessageConsumer previousConsumer = subscriptions.get(name);
+        if (previousConsumer!=null) {
             /*
              * we are changing subscription, or not, if called with the same topic
              */
 
-            if (previous.getDestination().equals(topic)) {
-                if (previous.isClosed()) {
+            if (previousConsumer.getDestination().equals(topicDest)) {
+                if (previousConsumer.isClosed()) {
                     /*
                      * They called TopicSubscriber.close but didn't unsubscribe
                      * and they are simply resubscribing with a new one
                      */
                 } else {
-                    throw new JMSException("Subscription with name["+name+"] and topic["+topic+"] already exists");
+                    throw new JMSException("Subscription with name["+name+"] and topic["+topicDest+"] already exists");
                 }
             } else {
                 //change in subscription
@@ -708,7 +709,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         /*
          * Create the new subscription
          */
-        RMQMessageConsumer result = (RMQMessageConsumer)createConsumerInternal((RMQDestination) topic, name, true);
+        RMQMessageConsumer result = (RMQMessageConsumer)createConsumerInternal(topicDest, name, true);
         result.setDurable(true);
         subscriptions.put(name, result);
         return result;
@@ -784,15 +785,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         } catch (IOException x) {
             throw Util.handleException(x);
         }
-    }
-
-    /**
-     * Simply here to satisfy a test
-     * @param dest
-     * @return
-     */
-    public QueueReceiver createReceiver(RMQDestination dest) throws JMSException {
-        return (QueueReceiver)createReceiver((Queue)dest);
     }
 
     /**
