@@ -658,24 +658,28 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @throws JMSException
      */
     protected void declareTopic(RMQDestination dest) throws JMSException {
-        try {
-            this.channel.exchangeDeclare(/* the name of the exchange */
-                                         dest.getExchangeInfo().name(),
-                                         /* the type of exchange to use */
-                                         dest.getExchangeInfo().type(),
-                                         /* durable for all except temporary topics */
-                                         !dest.isTemporary(),
-                                         /* auto delete is true if temporary - TODO how do we delete exchanges used for temporary topics
-                                          * this could be autoDelete=dest.isTemporary()
-                                          */
-                                         false,
-                                         /* internal is false JMS will always publish to the exchange*/
-                                         false,
-                                         /* object parameters */
-                                         null);
-        } catch (IOException x) {
-            throw new RMQJMSException(x);
+        if ("amq.topic".equals(dest.getExchangeInfo().name())) {
+            /* built-in exchange -- do not redeclare */
         }
+        else
+            try {
+                this.channel.exchangeDeclare(/* the name of the exchange */
+                                             dest.getExchangeInfo().name(),
+                                             /* the type of exchange to use */
+                                             dest.getExchangeInfo().type(),
+                                             /* durable for all except temporary topics */
+                                             !dest.isTemporary(),
+                                             /* auto delete is true if temporary - TODO how do we delete exchanges used for temporary topics
+                                              * this could be autoDelete=dest.isTemporary()
+                                              */
+                                             false,
+                                             /* internal is false JMS will always publish to the exchange*/
+                                             false,
+                                             /* object parameters */
+                                             null);
+            } catch (IOException x) {
+                throw new RMQJMSException(x);
+            }
         dest.setDeclared(true);
     }
 
