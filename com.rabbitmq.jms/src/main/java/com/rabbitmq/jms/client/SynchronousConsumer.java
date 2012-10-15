@@ -95,11 +95,7 @@ class SynchronousConsumer implements Consumer {
 
         }
         if (waiter == ACCEPT_MSG) {
-            /* we never ack any message, that is
-             * the responsibility of the
-             * calling thread
-             */
-
+            /* we never ack any message, that is the responsibility of the calling thread */
         } else {
             channel.basicNack(response.getEnvelope().getDeliveryTag(), false, true);
         }
