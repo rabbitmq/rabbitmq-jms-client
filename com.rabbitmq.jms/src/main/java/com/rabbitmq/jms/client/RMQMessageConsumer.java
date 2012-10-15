@@ -61,10 +61,9 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     private final CountUpAndDownLatch listenerRunning = new CountUpAndDownLatch(0);
     /**
-     * TODO: Do we limit the threads we check for to a session/queue/what?
+     * We track threads that are invoking {@link #receive()} and {@link #receive(long)}
+     * to be able to interrupt those threads if close is called (but NOT stop).
      * TODO: Do we need to do this if receive() uses a RabbitMQ Consumer (callback signals close) anyway?
-     * We must track threads that are invoking {@link #receive()} and {@link #receive(long)}
-     * cause we must be able to interrupt those threads if close or stop is called
      */
     private final ConcurrentLinkedQueue<Thread> currentSynchronousReceiver = new ConcurrentLinkedQueue<Thread>();
     /**
@@ -209,29 +208,23 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
         /*
          * Try to receive a message without waiting
-         * This call can pause on the pauseLatch
-         * if the Connection.stop method has been called
          */
         Message msg = null;
         /*this is a state that can be interrupted */
         this.currentSynchronousReceiver.offer(Thread.currentThread());
         try {
+            /* This call can pause on the pauseLatch if the Connection.stop method has been called */
             msg = receiveNoWait(timeout);
         } finally {
             this.currentSynchronousReceiver.remove(Thread.currentThread());
         }
 
-        if (Thread.currentThread().isInterrupted()) {
-            /* if the thread has been interrupted waiting for the pause */
-            //TODO logging implementation - add in a debug message here
-            return null;
-        }
+        /* If the thread has been interrupted waiting for the pause we get null. */
 
         /*
          * Calculate the new timeout
          */
         timeout = Math.max(timeout - (System.currentTimeMillis() - now), 0);
-
 
         if (msg != null) {
             /*
