@@ -1,7 +1,7 @@
 package com.rabbitmq.jms.client;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
@@ -41,7 +41,7 @@ public class TestSynchronousConsumer {
         SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT);
         CountDownLatch senderLatch = new CountDownLatch(1);
         CountDownLatch receiverLatch = new CountDownLatch(1);
-        SenderThread senderThread = new SenderThread(TEST_RESPONSE, consumer, senderLatch);
+        DriveConsumerThread senderThread = new DriveConsumerThread(TEST_RESPONSE, consumer, senderLatch);
         ReceiverThread receiverThread = new ReceiverThread(TEST_RESPONSE, consumer, receiverLatch);
         senderThread.start();
         receiverThread.start();
@@ -54,8 +54,26 @@ public class TestSynchronousConsumer {
 
         verify(channel, atLeastOnce()).basicNack(anyLong(),anyBoolean(),anyBoolean());
         verify(channel, atLeastOnce()).basicCancel(anyString());
-        assertTrue(receiverThread.isSuccess());
-        assertTrue(senderThread.isSuccess());
+        assertThreads(true, true, senderThread, receiverThread);
+    }
+
+    private static void assertThreads(boolean s, boolean r, DriveConsumerThread senderThread, ReceiverThread receiverThread) {
+        String errMsg = "";
+        if (!senderThread.isSuccess()) {
+            Exception se = senderThread.getException();
+            if (null != se) se.printStackTrace();
+            if (s) errMsg += "Did not send (exception=" + se + "); ";
+        } else {
+            if (!s) errMsg += "Sent; ";
+        }
+        if (!receiverThread.isSuccess()) {
+            Exception re = receiverThread.getException();
+            if (null != re) re.printStackTrace();
+            if (r) errMsg += "Did not receive (exception=" + re + "); ";
+        } else {
+            if (!r) errMsg += "Received; ";
+        }
+        if (!"".equals(errMsg)) fail(errMsg);
     }
 
     /**
@@ -69,7 +87,7 @@ public class TestSynchronousConsumer {
         SynchronousConsumer consumer = new SynchronousConsumer(channel, 10);
         CountDownLatch senderLatch = new CountDownLatch(1);
         CountDownLatch receiverLatch = new CountDownLatch(1);
-        SenderThread senderThread = new SenderThread(TEST_RESPONSE, consumer, senderLatch);
+        DriveConsumerThread senderThread = new DriveConsumerThread(TEST_RESPONSE, consumer, senderLatch);
         ReceiverThread receiverThread = new ReceiverThread(TEST_RESPONSE, consumer, receiverLatch);
         senderThread.start();
         receiverThread.start();
@@ -81,8 +99,7 @@ public class TestSynchronousConsumer {
         senderThread.join();
 
         verify(channel, atLeastOnce()).basicCancel(anyString());
-        assertTrue(receiverThread.isSuccess());
-        assertTrue(senderThread.isSuccess());
+        assertThreads(true, true, senderThread, receiverThread);
     }
 
     /**
@@ -97,7 +114,7 @@ public class TestSynchronousConsumer {
         SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT);
         CountDownLatch senderLatch = new CountDownLatch(1);
         CountDownLatch receiverLatch = new CountDownLatch(1);
-        SenderThread senderThread = new SenderThread(TEST_RESPONSE, consumer, senderLatch);
+        DriveConsumerThread senderThread = new DriveConsumerThread(TEST_RESPONSE, consumer, senderLatch);
         ReceiverThread receiverThread = new ReceiverThread(TEST_RESPONSE, consumer, receiverLatch);
         senderThread.start();
         receiverThread.start();
@@ -112,8 +129,7 @@ public class TestSynchronousConsumer {
 
         verify(channel, atLeastOnce()).basicNack(anyLong(),anyBoolean(), anyBoolean());
         verify(channel, atLeastOnce()).basicCancel(anyString());
-        assertFalse(receiverThread.isSuccess());
-        assertTrue(senderThread.isSuccess());
+        assertThreads(true, false, senderThread, receiverThread);
     }
 
     /**
@@ -134,18 +150,18 @@ public class TestSynchronousConsumer {
 
         receiverThread.join();
 
-        assertFalse(receiverThread.isSuccess());
+        assertFalse("Received!", receiverThread.isSuccess());
     }
 
 
-    private static class SenderThread extends Thread {
+    private static class DriveConsumerThread extends Thread {
         final GetResponse response;
         final SynchronousConsumer consumer;
         final CountDownLatch latch;
         volatile boolean success = false;
         volatile Exception exception;
 
-        public SenderThread(GetResponse response, SynchronousConsumer consumer, CountDownLatch latch) {
+        public DriveConsumerThread(GetResponse response, SynchronousConsumer consumer, CountDownLatch latch) {
             this.response = response;
             this.consumer = consumer;
             this.latch = latch;
@@ -164,11 +180,10 @@ public class TestSynchronousConsumer {
                 return;
             }
             try {
-                this.latch.await();
-                //this will work fine, but it will be a nack
+                // this will work fine, and it should provoke a NACK
                 this.consumer.handleDelivery(fakeConsumerTag, this.response);
             } catch (Exception x) {
-                //this is expected, it's a 2nd invocation
+                //this is unexpected
                 this.exception = x;
                 this.success = false;
                 return;
@@ -179,7 +194,6 @@ public class TestSynchronousConsumer {
             return this.success;
         }
 
-        @SuppressWarnings("unused")
         public Exception getException() {
             return this.exception;
         }
@@ -213,7 +227,6 @@ public class TestSynchronousConsumer {
             return this.success;
         }
 
-        @SuppressWarnings("unused")
         public Exception getException() {
             return this.exception;
         }
