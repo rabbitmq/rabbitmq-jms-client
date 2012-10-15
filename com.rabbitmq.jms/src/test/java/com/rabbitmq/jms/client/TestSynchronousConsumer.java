@@ -23,7 +23,7 @@ import com.rabbitmq.client.GetResponse;
  */
 public class TestSynchronousConsumer {
 
-    private static final long TIMEOUT = 100; // ms
+    private static final long TIMEOUT = 200; // ms
     private static final Envelope envelope = mock(Envelope.class);
     static {
         when(envelope.getDeliveryTag()).thenReturn(1l);
@@ -159,7 +159,7 @@ public class TestSynchronousConsumer {
         final SynchronousConsumer consumer;
         final CountDownLatch latch;
         volatile boolean success = false;
-        volatile Exception exception;
+        volatile Exception exception = null;
 
         public DriveConsumerThread(GetResponse response, SynchronousConsumer consumer, CountDownLatch latch) {
             this.response = response;
@@ -204,7 +204,7 @@ public class TestSynchronousConsumer {
         final SynchronousConsumer consumer;
         final CountDownLatch latch;
         volatile boolean success = false;
-        volatile Exception exception;
+        volatile Exception exception = null;
 
         public ReceiverThread(GetResponse response, SynchronousConsumer consumer, CountDownLatch latch) {
             this.response = response;

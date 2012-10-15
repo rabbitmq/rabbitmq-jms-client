@@ -37,7 +37,7 @@ class SynchronousConsumer implements Consumer {
 
     GetResponse receive() throws JMSException {
         if (!useOnce.compareAndSet(false, true)) {
-            throw new JMSException("SynchronousConsumer.receive can only be used once.");
+            throw new JMSException("SynchronousConsumer.receive can be called only once.");
         }
         GetResponse response = null;
         try {
@@ -71,17 +71,17 @@ class SynchronousConsumer implements Consumer {
         handleDelivery(consumerTag,response);
     }
 
-    protected void handleDelivery(String consumerTag, GetResponse response) throws IOException {
-        try {
-            if (cancelled.compareAndSet(false, true)) {
+    final void handleDelivery(String consumerTag, GetResponse response) throws IOException {
+        if (cancelled.compareAndSet(false, true)) {
+            try {
                 channel.basicCancel(consumerTag);
+            } catch (Exception x) {
+                x.printStackTrace();
+                //TODO logging implementation
             }
-        } catch (IOException x) {
-            x.printStackTrace();
-            //TODO logging implementation
         }
 
-        // give the other thread enough time to arrive
+        // give a receive() thread enough time to arrive
         GetResponse waiter = null;
         try {
             if (oneReceived.compareAndSet(false, true)) {
@@ -111,15 +111,7 @@ class SynchronousConsumer implements Consumer {
         // noop
     }
 
-    public long getTimeout() {
-        return timeout;
-    }
-
-    public Channel getChannel() {
-        return channel;
-    }
-
-    public boolean cancel(String consumerTag) {
+    boolean cancel(String consumerTag) {
         boolean result = cancelled.compareAndSet(false, true);
         if (result) {
             try {
@@ -138,9 +130,5 @@ class SynchronousConsumer implements Consumer {
             }
         }
         return result;
-
     }
-
-
-
 }
