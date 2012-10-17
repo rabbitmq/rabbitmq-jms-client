@@ -9,7 +9,6 @@ import javax.jms.MessageNotWriteableException;
 import javax.jms.TextMessage;
 
 import com.rabbitmq.jms.client.RMQMessage;
-import com.rabbitmq.jms.util.Util;
 
 public class RMQTextMessage extends RMQMessage implements TextMessage {
 
@@ -20,7 +19,7 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
      */
     @Override
     public void setText(String string) throws JMSException {
-        Util.checkTrue(isReadonlyBody(), "Message has been received and is read only.", MessageNotWriteableException.class);
+        if (isReadonlyBody()) throw new MessageNotWriteableException("Message has been received and is read only.");
         this.text = string;
     }
 

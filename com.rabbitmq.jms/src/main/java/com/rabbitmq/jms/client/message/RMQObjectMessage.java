@@ -15,7 +15,6 @@ import javax.jms.ObjectMessage;
 
 import com.rabbitmq.jms.client.RMQMessage;
 import com.rabbitmq.jms.util.RMQJMSException;
-import com.rabbitmq.jms.util.Util;
 
 public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
 
@@ -25,7 +24,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
      */
     @Override
     public void setObject(Serializable object) throws JMSException {
-        Util.checkTrue(isReadonlyBody(), "Message not writeable", MessageNotWriteableException.class);
+        if (isReadonlyBody()) throw new MessageNotWriteableException("Message not writeable");
         try {
             if (object==null) {
                 buf = null;

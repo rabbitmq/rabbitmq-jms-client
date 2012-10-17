@@ -144,7 +144,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public BytesMessage createBytesMessage() throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         return new RMQBytesMessage();
     }
 
@@ -153,7 +153,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public MapMessage createMapMessage() throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         return new RMQMapMessage();
     }
 
@@ -162,7 +162,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public Message createMessage() throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         return createTextMessage();
     }
 
@@ -171,7 +171,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public ObjectMessage createObjectMessage() throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         return new RMQObjectMessage();
     }
 
@@ -180,7 +180,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public ObjectMessage createObjectMessage(Serializable object) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         ObjectMessage message = createObjectMessage();
         message.setObject(object);
         return message;
@@ -191,7 +191,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public StreamMessage createStreamMessage() throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         return new RMQStreamMessage();
     }
 
@@ -200,7 +200,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public TextMessage createTextMessage() throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         return new RMQTextMessage();
     }
 
@@ -209,7 +209,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public TextMessage createTextMessage(String text) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         TextMessage msg = createTextMessage();
         msg.setText(text);
         return msg;
@@ -220,7 +220,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public boolean getTransacted() throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         return getTransactedNoException();
     }
 
@@ -239,7 +239,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public int getAcknowledgeMode() throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         return getAcknowledgeModeNoException();
     }
 
@@ -259,8 +259,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public void commit() throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
-        Util.checkTrue(!this.transacted, "Session is not transacted", IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
+        if (!this.transacted) throw new IllegalStateException("Session is not transacted");
 
         try {
             //call commit on the channel
@@ -281,8 +281,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public void rollback() throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
-        Util.checkTrue(!this.transacted, "Session is not transacted", IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
+        if (!this.transacted) throw new IllegalStateException("Session is not transacted");
         try {
             //call rollback
             this.channel.txRollback();
@@ -313,14 +313,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
     }
 
-    /**
-     * Returns true if {@link #close()} has been called and completed.
-     * May return false if close is still in progress
-     * @return
-     */
-    public boolean isClosed() {
-        return this.closed;
-    }
     /**
      * {@inheritDoc}
      */
@@ -397,7 +389,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public void recover() throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         if (getTransactedNoException()) {
             throw new javax.jms.IllegalStateException("Session is transacted.");
         } else {
@@ -433,7 +425,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public MessageListener getMessageListener() throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         return this.messageListener;
     }
 
@@ -442,7 +434,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         if (listener==null) {
             this.messageListener = null;
         } else {
@@ -464,7 +456,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public MessageProducer createProducer(Destination destination) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         RMQDestination dest = (RMQDestination) destination;
         if (!dest.isDeclared()) {
             if (dest.isQueue()) {
@@ -483,7 +475,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public MessageConsumer createConsumer(Destination destination) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         return createConsumerInternal((RMQDestination) destination, null, false);
     }
 
@@ -538,7 +530,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         if (messageSelector==null || messageSelector.trim().length()==0) {
             return createConsumer(destination);
         } else {
@@ -553,7 +545,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean noLocal) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         if (messageSelector==null || messageSelector.trim().length()==0) {
             RMQMessageConsumer consumer = (RMQMessageConsumer)createConsumer(destination);
             consumer.setNoLocal(noLocal);
@@ -569,7 +561,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public Queue createQueue(String queueName) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         RMQDestination dest = new RMQDestination(queueName, true, false);
         declareQueue(dest, null, false);
         return dest;
@@ -635,7 +627,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public Topic createTopic(String topicName) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         RMQDestination dest = new RMQDestination(topicName, false, false);
         declareTopic(dest);
         return dest;
@@ -677,7 +669,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         RMQDestination topicDest = (RMQDestination) topic;
         RMQMessageConsumer previousConsumer = subscriptions.get(name);
         if (previousConsumer!=null) {
@@ -715,7 +707,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         if (messageSelector==null || messageSelector.trim().length()==0) {
             RMQMessageConsumer consumer = (RMQMessageConsumer) createDurableSubscriber(topic, name);
             consumer.setNoLocal(noLocal);
@@ -731,7 +723,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public QueueBrowser createBrowser(Queue queue) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         return null;
     }
 
@@ -740,7 +732,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public QueueBrowser createBrowser(Queue queue, String messageSelector) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         // TODO Auto-generated method stub
         return null;
     }
@@ -750,7 +742,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public TemporaryQueue createTemporaryQueue() throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         RMQDestination result = new RMQDestination("jms-temp-queue-"+Util.generateUUIDTag(), true, true);
         return result;
     }
@@ -760,7 +752,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public TemporaryTopic createTemporaryTopic() throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         RMQDestination result = new RMQDestination("jms-temp-topic-"+Util.generateUUIDTag(), false, true);
         return result;
     }
@@ -770,7 +762,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public void unsubscribe(String name) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         try {
             if (name!=null && subscriptions.remove(name)!=null) {
                 //remove the queue from the fanout exchange
@@ -786,7 +778,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public QueueReceiver createReceiver(Queue queue) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         return (QueueReceiver) this.createConsumer(queue);
     }
 
@@ -795,7 +787,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public QueueReceiver createReceiver(Queue queue, String messageSelector) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         return (QueueReceiver) this.createConsumer(queue, messageSelector);
     }
 
@@ -804,7 +796,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public QueueSender createSender(Queue queue) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         return (QueueSender) this.createProducer(queue);
     }
 
@@ -813,7 +805,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public TopicSubscriber createSubscriber(Topic topic) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         return (TopicSubscriber) this.createConsumer(topic);
     }
 
@@ -822,7 +814,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public TopicSubscriber createSubscriber(Topic topic, String messageSelector, boolean noLocal) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         if (messageSelector==null || messageSelector.trim().length()==0) {
             RMQMessageConsumer consumer = (RMQMessageConsumer)createSubscriber(topic);
             consumer.setNoLocal(noLocal);
@@ -838,7 +830,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public TopicPublisher createPublisher(Topic topic) throws JMSException {
-        Util.checkTrue(this.closed, "Session has been closed",IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         return (TopicPublisher) this.createProducer(topic);
     }
 
@@ -951,7 +943,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @param message - the message to be acknowledged
      */
     public void acknowledge(RMQMessage message) throws JMSException{
-        Util.checkTrue(isClosed(), "Session has already been closed.", IllegalStateException.class);
+        if (closed) throw new IllegalStateException("Session is closed");
         try {
             //TODO future functionality, allow group ack up until the current tag
             boolean groupAck = false;

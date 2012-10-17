@@ -5,56 +5,13 @@ import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.UUID;
 
-import javax.jms.IllegalStateException;
-import javax.jms.InvalidClientIDException;
-import javax.jms.InvalidDestinationException;
-import javax.jms.JMSException;
-import javax.jms.JMSSecurityException;
-import javax.jms.MessageEOFException;
 import javax.jms.MessageFormatException;
-import javax.jms.MessageNotReadableException;
-import javax.jms.MessageNotWriteableException;
 
 /**
  * Utility class which variously wraps exceptions, writes primitive/serializable types, checks state
  * information. and generates unique ids.
  */
 public final class Util {
-    /**
-     * Throws an exception of the supplied type if the first parameter is <b>true</b>.
-     * @param bool whether to construct and throw an exception
-     * @param msg the message string to pass the exception constructor
-     * @param clazz the type of exception to be thrown
-     * @throws JMSException sub-type if <code>bool</code> is <code>true</code>
-     */
-    public final static void checkTrue(boolean bool, String msg, Class<? extends JMSException> clazz) throws JMSException {
-        if (bool) {
-            if (IllegalStateException.class.equals(clazz)) {
-                throw new IllegalStateException(msg);
-            } else if (InvalidClientIDException.class.equals(clazz)) {
-                throw new InvalidClientIDException(msg);
-            } else if (IllegalStateException.class.equals(clazz)) {
-                throw new IllegalStateException(msg);
-            } else if (InvalidDestinationException.class.equals(clazz)) {
-                throw new InvalidDestinationException(msg);
-            } else if (JMSException.class.equals(clazz)) {
-                throw new JMSException(msg);
-            } else if (JMSSecurityException.class.equals(clazz)) {
-                throw new JMSSecurityException(msg);
-            } else if (MessageEOFException.class.equals(clazz)) {
-                throw new MessageEOFException(msg);
-            } else if (MessageFormatException.class.equals(clazz)) {
-                throw new MessageFormatException(msg);
-            } else if (MessageNotReadableException.class.equals(clazz)) {
-                throw new MessageNotReadableException(msg);
-            } else if (MessageNotWriteableException.class.equals(clazz)) {
-                throw new MessageNotWriteableException(msg);
-            } else {
-                throw new JMSException(msg);
-            }
-        }
-    }
-
     /**
      * Generates a random UUID string
      * @return a random UUID string
