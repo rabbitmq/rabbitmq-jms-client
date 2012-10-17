@@ -81,6 +81,7 @@ public class RabbitJmsCtsProvider implements Administrator, Provider {
     private static class TestConnectionFactory extends RMQConnectionFactory {
         /** TODO */
         private static final long serialVersionUID = 1L;
+        private static final int RABBIT_PORT = 5672;
         @Override
         public Connection createConnection() throws JMSException {
             return super.createConnection();
@@ -88,6 +89,7 @@ public class RabbitJmsCtsProvider implements Administrator, Provider {
 
         @Override
         public Connection createConnection(String userName, String password) throws JMSException {
+            this.setPort(RABBIT_PORT);
             return super.createConnection(userName, password);
         }
 
