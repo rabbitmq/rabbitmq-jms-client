@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.BytesMessage;
@@ -102,14 +101,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private final CountUpAndDownLatch runningListener = new CountUpAndDownLatch(0);
     /**
-     * We are manually numbering our channels, this serves no purpose right now
-     */
-    private static final AtomicInteger channelNr = new AtomicInteger(0);
-    /**
      * We are listing all messages we have received. This tree set is used to meet the
      * requirement of Message.acknowledge, to be able to acknowledge all the messages
-     * for this session. we do this using a single ack, and we always use the
-     * largest delivery tag to do so
+     * for this session. We do this using a single ack, and we always use the
+     * largest delivery tag to do so.
      */
     private volatile TreeSet<Long> receivedMessages = new TreeSet<Long>();
 
@@ -124,7 +119,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * Creates a session object associated with a connection
      * @param connection the connection that we will send data on
      * @param transacted whether this session is transacted or not
-     * @param mode the default ack mode
+     * @param mode the default ACK mode
      * @throws JMSException if we fail to create a {@link Channel} object on the connection
      */
     public RMQSession(RMQConnection connection, boolean transacted, int mode, ConcurrentHashMap<String, RMQMessageConsumer> subscriptions) throws JMSException {
@@ -134,15 +129,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.subscriptions = subscriptions;
         this.acknowledgeMode = transacted ? Session.SESSION_TRANSACTED : mode;
         try {
-            /*
-             * Create the channel that we will use, give it a known ID
-             */
-            this.channel = connection.getRabbitConnection().createChannel(channelNr.incrementAndGet());
+            this.channel = connection.getRabbitConnection().createChannel();
             if (transacted) {
-                /*
-                 * txSelect is only called once, then the channel stays in transactional mode
-                 * until closed
-                 */
+                /* Make the channel (RabbitMQ) transactional: this cannot be undone */
                 this.channel.txSelect();
             }
         } catch (IOException x) {
