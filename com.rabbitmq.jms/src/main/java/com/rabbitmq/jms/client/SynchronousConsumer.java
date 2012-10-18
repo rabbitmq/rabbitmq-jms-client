@@ -45,7 +45,8 @@ class SynchronousConsumer implements Consumer {
         } catch (TimeoutException x) {
             // this is expected
         } catch (InterruptedException x) {
-            // this we can ignore
+            /* Reset the thread interrupted status */
+            Thread.currentThread().interrupt();
         }
         return response;
     }
@@ -91,6 +92,8 @@ class SynchronousConsumer implements Consumer {
             // this is ok, it means we had a message
             // but no one there to receive it and got
             // interrupted
+            /* Reset the thread interrupted status anyway */
+            Thread.currentThread().interrupt();
         } catch (TimeoutException x) {
 
         }
