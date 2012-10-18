@@ -93,7 +93,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
      * @param session - the session object that created this consume
      * @param destination - the destination for this consumer
-     * @param uuidTag - when creating queues to a topic, we need a unique queue name for each consumer. This is the unique name
+     * @param uuidTag - when creating queues to a topic, we need a unique queue name for each consumer. This is the unique name.
      */
     public RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag, boolean paused) {
         this.session = session;
@@ -708,8 +708,9 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * This is called by the session indirectly after
      * {@link javax.jms.Connection#stop()} has been invoked.
      * In this implementation, any async consumers will be
-     * cancelled, only to be re-subscribed when
+     * cancelled, only to be re-subscribed when <code>resume()</code>d.
      * @throws javax.jms.JMSException if the thread is interrupted
+     * @see #resume()
      */
     public void pause() throws JMSException {
         pauseLatch.pause();
@@ -726,8 +727,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     /**
-     * Return true if durable
-     * @return
+     * @return true if durable
      */
     public boolean isDurable() {
         return durable;
