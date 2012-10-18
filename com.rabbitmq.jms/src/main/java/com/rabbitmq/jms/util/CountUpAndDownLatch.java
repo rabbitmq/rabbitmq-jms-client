@@ -4,8 +4,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
 /**
- * Similar implementation like the count down latch, except this latch can be counted up
- * and counted down. Once it has reached zero, it will allow for a release, but can then be counted up or down again.
+ * Similar implementation to the count down latch, except this latch can be counted upn or down.
+ * Once it has reached zero, it will allow for a release, but can then be counted up or down again.
  * @see java.util.concurrent.CountDownLatch
  */
 

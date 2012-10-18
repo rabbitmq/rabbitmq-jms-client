@@ -299,9 +299,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                      */
                     isTimedout = ! pauseLatch.await(timeout, TimeUnit.MILLISECONDS);
                 }catch (InterruptedException x) {
-                    /*
-                     * Do nothing , keep the thread interrupt status intact
-                     */
+                    /* Reset the thread interrupted status */
+                    Thread.currentThread().interrupt();
                 }
                 if (isTimedout) {
                     /*
@@ -584,8 +583,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     /**
-     * returns true if {@link RMQMessageConsumer#close()} has been invoked and the call has completed.
-     * returns false if the {@link RMQMessageConsumer#close()} has not been called or is in progress
+     * @return <code>true</code> if {@link #close()} has been invoked and the call has completed,
+     * or <code>false</code> if the {@link #close()} has not been called or is in progress
      */
     public boolean isClosed() {
         return this.closed;
