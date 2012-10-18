@@ -448,6 +448,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         } catch (InterruptedException x) {
             // this is normal since the implementation can interrupt
             // threads that are waiting
+            /* Reset the thread interrupted status */
+            Thread.currentThread().interrupt();
             return null;
         }
 
@@ -631,7 +633,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
              */
             listenerRunning.awaitZero(timeoutMillis, TimeUnit.MILLISECONDS);
         }catch (InterruptedException x) {
-            //do nothing
+            /* Reset the thread interrupted status */
+            Thread.currentThread().interrupt();
             //TODO log debug level message
         } finally {
             closed = true;
