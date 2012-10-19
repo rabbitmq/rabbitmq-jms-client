@@ -131,7 +131,7 @@ public class PauseLatch {
      * @param timeout the time to wait for the latch to open.
      * @param unit the time unit of the timeout argument.
      * @return <code>false</code> if timeout was reached before latch opens; <code>true</code> if latch is open or opens while we are waiting.
-     * @throws InterruptedException if the calling thread was interrupted while waiting.
+     * @throws InterruptedException if the callers thread is interrupted.
      */
     public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
         return sync.tryAcquireSharedNanos(0, unit.toNanos(timeout)); // first parameter is ignored
