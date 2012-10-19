@@ -757,7 +757,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * To stop this listener from processing
      * lock the write lock
      */
-    protected class MessageListenerWrapper implements MessageListener {
+    private static class MessageListenerWrapper implements MessageListener {
         /**
          * This lock is used as a read lock when invoked async
          * by the subscription we have with the RabbitMQ API.
@@ -773,12 +773,12 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
          * @param listener the listener to invoke onMessage on, may NOT be null
          */
         public MessageListenerWrapper(MessageListener listener) {
+            if (listener == null) throw new NullPointerException();
             this.listener = listener;
         }
 
         /**
-         * Returns the listener we are delivering messages to
-         * @return
+         * @return the listener we are delivering messages to
          */
         public MessageListener getMessageListener() {
             return listener;
@@ -804,12 +804,11 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * messages and propagate them to the calling client
      * this implements a RabbitMQ Consumer callback object
      */
-    protected class MessageListenerConsumer implements Consumer {
+    private class MessageListenerConsumer implements Consumer {
         /**
          * The consumer tag for this RabbitMQ consumer
          */
         private volatile String consumerTag;
-
 
         /**
          * Constructor
@@ -891,19 +890,11 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                                 //My recommendation is that we bail out here and not proceed
                             }
                         }
-                        /*
-                         * Create a javax.jms.Message object
-                         */
-                        Message message = processMessage(response, acked);
-                        /*
-                         * Deliver it to the client
-                         */
-                        listener.onMessage(message);
+                        // Create a javax.jms.Message object and deliver it to the client
+                        listener.onMessage(processMessage(response, acked));
                     } else {
                         try {
-                            /*
-                             * We are unable to deliver the message, nack it
-                             */
+                            // We are unable to deliver the message, nack it
                             getSession().getChannel().basicNack(envelope.getDeliveryTag(), false, true);
                         } catch (AlreadyClosedException x) {
                             //TODO logging impl debug message
