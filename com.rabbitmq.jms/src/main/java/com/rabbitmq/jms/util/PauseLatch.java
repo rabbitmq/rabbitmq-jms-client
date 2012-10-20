@@ -3,6 +3,8 @@ package com.rabbitmq.jms.util;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
+import com.rabbitmq.jms.client.Completion;
+
 /**
  * Latch which can pause and resume multiple participating threads.
  * <p>
@@ -32,7 +34,7 @@ public class PauseLatch {
      * <dd>succeeds if in CLOSED state, and fails if in OPEN state (</dd>
      * </dl>
      */
-    private static class PauseSync extends AbstractQueuedSynchronizer {
+    private class PauseSync extends AbstractQueuedSynchronizer {
         private static final long serialVersionUID = 1715200786237741115L;
 
         /**
@@ -110,8 +112,8 @@ public class PauseLatch {
     }
 
     /**
-     * Wakes up all waiting threads.
-     * After this call, all subsequent calls to <code>pause()</code> will be ignored
+     * Opens the latch and wakes up all waiting threads. Does not block.
+     * After this call, all subsequent calls to <code>pause()</code> will be ignored.
      * @return <code>true</code> if the latch is open after this call
      */
     public boolean finalResume() {
@@ -120,20 +122,22 @@ public class PauseLatch {
     }
 
     /**
-     * Returns true immediately if the latch is open.
-     * Otherwise the latch is closed and the thread blocks until one of the following occurs:
+     * Returns {@link Completion} object immediately if the latch is open.
+     * Otherwise if the latch is closed the thread blocks until one of the following occurs:
      * <dl>
-     * <dt>latch is opened (by another thread)</dt>
-     * <dd>thread unblocked and returns <code>true</code></dd>
-     * <dt>timeout expires before latch is opened</dt>
-     * <dd>thread unblocked and returns <code>false</code></dd>
+     * <dt>latch is opened (by another thread);</dt>
+     * <dt>timeout expires before latch is opened.</dt>
      * </dl>
+     * <p>If latch is opened, a {@link Completion} object is returned.
      * @param timeout the time to wait for the latch to open.
      * @param unit the time unit of the timeout argument.
-     * @return <code>false</code> if timeout was reached before latch opens; <code>true</code> if latch is open or opens while we are waiting.
+     * @return <code>null</code> if timeout was reached before latch opens; <code>Completion</code> object if latch is open or opens while we are waiting.
      * @throws InterruptedException if the callers thread is interrupted.
      */
-    public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
-        return sync.tryAcquireSharedNanos(0, unit.toNanos(timeout)); // first parameter is ignored
+    public Completion await(long timeout, TimeUnit unit) throws InterruptedException {
+        if (sync.tryAcquireSharedNanos(0, unit.toNanos(timeout)))
+            return new Completion();
+        else
+            return null;
     }
 }

@@ -3,7 +3,9 @@ package com.rabbitmq.jms.client;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -76,12 +78,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private volatile MessageListener messageListener;
     /**
-     * A list of all the producers created by this session
+     * A list of all the producers created by this session.
      * When a producer is closed, it will be removed from this list
      */
     private final ArrayList<RMQMessageProducer> producers = new ArrayList<RMQMessageProducer>();
     /**
-     * A list of all the consumer created by this session
+     * A list of all the consumer created by this session.
      * When a consumer is closed, it will be removed from this list
      */
     private final ArrayList<RMQMessageConsumer> consumers = new ArrayList<RMQMessageConsumer>();
@@ -91,12 +93,11 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private final CountUpAndDownLatch runningListener = new CountUpAndDownLatch(0);
     /**
-     * We are listing all messages we have received. This tree set is used to meet the
-     * requirement of Message.acknowledge, to be able to acknowledge all the messages
-     * for this session. We do this using a single ack, and we always use the
-     * largest delivery tag to do so.
+     * We keep an ordered set of the message tags (acknowledgement tags) for all messages received and unacknowledged.
+     * Each message acknowledgement must ACK all (unacknowledged) messages received up to this point, and
+     * we must never acknowledge a message more than once (nor acknowledge a message that doesn't exist).
      */
-    private volatile TreeSet<Long> receivedMessages = new TreeSet<Long>();
+    private final SortedSet<Long> unackedMessageTags = Collections.synchronizedSortedSet(new TreeSet<Long>());
 
     /**
      * List of all our durable subscriptions so we can track them
@@ -298,9 +299,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             for (RMQMessageConsumer consumer : this.consumers) {
                 try {
                     consumer.internalClose();
-                }catch (JMSException x) {
+                } catch (Exception x) {
                     x.printStackTrace(); //TODO logging implementation
-
                 }
             }
             this.consumers.clear();
@@ -359,28 +359,15 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (getTransactedNoException()) {
             throw new javax.jms.IllegalStateException("Session is transacted.");
         } else {
-            synchronized (this.receivedMessages) {
-                /*
-                 * First make sure that we have messages to recover
-                 */
-                if (this.receivedMessages.size()>0) {
-                    /*
-                     * get the largest tag
-                     */
-                    long deliveryTag = this.receivedMessages.last();
+            synchronized (this.unackedMessageTags) {
+                /* If we have messages to recover */
+                if (this.unackedMessageTags.size()>0) {
                     try {
-                        /*
-                         * nack the largest tag, this will
-                         * nack and requeue the other messages too
-                         */
-                        this.channel.basicNack(deliveryTag, true, true);
+                        this.channel.basicRecover(true);
                     }catch (IOException x) {
                         throw new RMQJMSException(x);
                     }
-                    /*
-                     * we must clear our received messages
-                     */
-                    this.receivedMessages.clear();
+                    this.unackedMessageTags.clear();
                 }
             }
         }
@@ -869,87 +856,66 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
     }
 
-
-    public void unackedMessageReceived(RMQMessage message) {
+    void unackedMessageReceived(RMQMessage message) {
         if (!getTransactedNoException()) {
-            synchronized (this.receivedMessages) {
-                this.receivedMessages.add(message.getRabbitDeliveryTag());
+            synchronized (this.unackedMessageTags) {
+                this.unackedMessageTags.add(message.getRabbitDeliveryTag());
             }
         }
     }
 
     /**
-     * Acknowledges a message manually.
+     * Acknowledges sessions messages.
      * Invoked when the method
      * {@link javax.jms.Message#acknowledge()}
      * @param message - the message to be acknowledged
      */
-    public void acknowledge(RMQMessage message) throws JMSException{
+    void acknowledgeMessage(RMQMessage message) throws JMSException {
         if (this.closed) throw new IllegalStateException("Session is closed");
-        try {
-            // TODO: future functionality, allow group ack up until the current tag
-            boolean groupAck = false;
-            // TODO: future functionality, allow ack of single message
-            boolean individualAck = false;
-            if ((!isAutoAck()) && (!getTransacted())) {
+        boolean groupAck      = false; // TODO: future functionality, allow group ack prior to the current tag
+        boolean individualAck = false; // TODO: future functionality, allow ack of single message
+        if (!isAutoAck() && !getTransacted() && !this.unackedMessageTags.isEmpty()) {
+            long messageTag = message.getRabbitDeliveryTag();
+            /*
+             * Per JMS specification Message.acknowledge(), if we ack
+             * the last message in a group, we will ack all the ones prior received.
+             * Spec 11.2.21 says:
+             * "Note that the acknowledge method of Message acknowledges all messages
+             * received on that message's session."
+             */
+            synchronized (this.unackedMessageTags) {
                 /*
-                 * Per JMS specification Message.acknowledge(), if we ack
-                 * the last message in a group, we will ack all the ones prior received
-                 * Spec 11.2.21 says
-                 * "Note that the acknowledge method of Message acknowledges all messages
-                 * received on that message's session."
-                 * However, the JavaDoc states
+                 * Make sure that the message is in our unack list
+                 * or we can't proceed
+                 * if it is not in the list, then the message is either
+                 * auto acked or been manually acked previously
                  */
-                synchronized (this.receivedMessages) {
-                    /*
-                     * Make sure that the message is in our unack list
-                     * or we can't proceed
-                     * if it is not in the list, then the message is either
-                     * auto acked or been manually acked previously
-                     */
-                    if (!this.receivedMessages.contains(message.getRabbitDeliveryTag())) {
-                        //if we acked a non existent tag, it may close the channel
-                        return;
-                    } else if (individualAck) {
+                try {
+                    if (individualAck) {
+                        if (!this.unackedMessageTags.contains(messageTag)) return; // nothing to do
                         /* ACK a single message */
-                        getChannel().basicAck(/* we ack the highest tag */
-                                              message.getRabbitDeliveryTag(),
-                                              /* and we ack everything up to that tag */
-                                              false);
+                        getChannel().basicAck(messageTag, // we ack the tag
+                                              false);     // and only that tag
                         /* remove the message just acked from our list of un-acked messages */
-                        this.receivedMessages.remove(message.getRabbitDeliveryTag());
-                    }else if (groupAck) {
-                        /* ack multiple message up until the existing tag */
-                        getChannel().basicAck(/* we ack the highest tag */
-                                              message.getRabbitDeliveryTag(),
-                                              /* and we ack everything up to that tag */
-                                              true);
-                        /* now delete all the messages that we tagged */
-                        long first = this.receivedMessages.first();
-                        while (first<=message.getRabbitDeliveryTag()) {
-                            this.receivedMessages.remove(first);
-                            if (this.receivedMessages.size()>0) {
-                                first = this.receivedMessages.first();
-                            } else {
-                                break;
-                            }
-                        }
-                    } else if (this.receivedMessages.contains(message.getRabbitDeliveryTag())) {
-                        long deliveryTag = this.receivedMessages.last();
-                        /*
-                         * Ack all the messages up to this message
-                         */
-                        getChannel().basicAck(/* we ack the highest tag */
-                                              deliveryTag,
-                                              /* and we ack everything up to that tag */
-                                              true);
-                        this.receivedMessages.clear();
-                    }
+                        this.unackedMessageTags.remove(messageTag);
 
+                    } else if (groupAck) {
+                        SortedSet<Long> previousTags = this.unackedMessageTags.headSet(messageTag+1);
+                        if (previousTags.isEmpty()) return; // nothing to do
+                        /* ack multiple message up until the existing tag */
+                        getChannel().basicAck(previousTags.last(), // we ack the latest one
+                                              true);               // and everything prior to that
+                        // now remove all the tags <= messageTag
+                        previousTags.clear();
+                    } else {
+                        getChannel().basicAck(this.unackedMessageTags.last(), // we ack the highest tag
+                                              true);                          // and everything prior to that
+                        this.unackedMessageTags.clear();
+                    }
+                } catch (IOException x) {
+                    throw new RMQJMSException(x);
                 }
             }
-        } catch (IOException x) {
-            throw new RMQJMSException(x);
         }
     }
 
