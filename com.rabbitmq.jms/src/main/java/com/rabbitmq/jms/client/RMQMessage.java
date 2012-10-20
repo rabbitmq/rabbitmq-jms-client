@@ -143,7 +143,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * When a message is received, it has a delivery tag
      * We use this delivery tag when we ack
      * a single message
-     * @see RMQSession#acknowledge(RMQMessage)
+     * @see RMQSession#acknowledgeMessage(RMQMessage)
      * @see RMQMessageConsumer#processMessage(com.rabbitmq.client.GetResponse, boolean)
      */
     private long rabbitDeliveryTag = -1;
@@ -167,7 +167,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     /**
      * The Message must hold a reference to the session itself
      * So that it can ack itself. Ack belongs to the session
-     * @see RMQSession#acknowledge(RMQMessage)
+     * @see RMQSession#acknowledgeMessage(RMQMessage)
      */
     private volatile transient RMQSession session = null;
     /**
@@ -180,7 +180,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     /**
      * Sets the session this object was received by
      * @see RMQMessageConsumer#processMessage(com.rabbitmq.client.GetResponse, boolean)
-     * @see RMQSession#acknowledge(RMQMessage)
+     * @see RMQSession#acknowledgeMessage(RMQMessage)
      * @param session
      */
     protected void setSession(RMQSession session) {
@@ -713,12 +713,12 @@ public abstract class RMQMessage implements Message, Cloneable {
 
     /**
      * {@inheritDoc}
-     * @see RMQSession#acknowledge(RMQMessage)
+     * @see RMQSession#acknowledgeMessage(RMQMessage)
      */
     @Override
     public void acknowledge() throws JMSException {
         if (this.isAcked.compareAndSet(false, true)) {
-            getSession().acknowledge(this);
+            getSession().acknowledgeMessage(this);
         }
     }
 
