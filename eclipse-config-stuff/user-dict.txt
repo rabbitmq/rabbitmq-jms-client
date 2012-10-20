@@ -1,3 +1,5 @@
 serializable
 uid
 transactional
+rollback
+requeue

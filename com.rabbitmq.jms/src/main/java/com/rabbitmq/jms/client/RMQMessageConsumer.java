@@ -490,13 +490,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 return null;
             }
             /*
-             * notify the session that the message has been
-             * received. this call will store the delivery tag
-             * if it is the greatest delivery tag so that it can be used
-             * to nack messages upon rollback
-             */
-            this.session.messageReceived(response);
-            /*
              * Deserialize the message from the byte[]
              */
             RMQMessage message = RMQMessage.fromMessage(response.getBody());

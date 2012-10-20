@@ -153,7 +153,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void close() throws JMSException {
-        this.session.producerClose(this);
+        this.session.removeProducer(this);
         internalClose();
     }
 
