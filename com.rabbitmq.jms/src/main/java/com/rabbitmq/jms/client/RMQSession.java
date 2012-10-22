@@ -834,7 +834,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         for (RMQMessageConsumer consumer : this.consumers) {
             try {
                 consumer.pause();
-            } catch (IllegalStateException x) {
+            } catch (InterruptedException x) {
                 throw new RMQJMSException(x);
             }
         }

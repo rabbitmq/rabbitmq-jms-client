@@ -53,12 +53,13 @@ public class Completion {
 
         public Boolean get(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
             if (this.completed) return true;
-            long remainingTime = unit.toNanos(timeout);
+            timeout = unit.toNanos(timeout);
+            long remainingTime = timeout;
+            long startTime = System.nanoTime();
             synchronized (this.lock) {
                 while (!this.completed && remainingTime > 0) {
-                    long startTime = System.nanoTime();
                     TimeUnit.NANOSECONDS.timedWait(this.lock, remainingTime);
-                    remainingTime -= (System.nanoTime() - startTime);
+                    remainingTime = timeout - (System.nanoTime() - startTime);
                 }
                 if (this.completed)
                     return true;

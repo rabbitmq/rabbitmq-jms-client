@@ -3,8 +3,6 @@ package com.rabbitmq.jms.util;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
-import com.rabbitmq.jms.client.Completion;
-
 /**
  * Latch which can pause and resume multiple participating threads.
  * <p>
@@ -122,22 +120,18 @@ public class PauseLatch {
     }
 
     /**
-     * Returns {@link Completion} object immediately if the latch is open.
+     * Returns <code>true</code> immediately if the latch is open.
      * Otherwise if the latch is closed the thread blocks until one of the following occurs:
      * <dl>
      * <dt>latch is opened (by another thread);</dt>
      * <dt>timeout expires before latch is opened.</dt>
      * </dl>
-     * <p>If latch is opened, a {@link Completion} object is returned.
      * @param timeout the time to wait for the latch to open.
      * @param unit the time unit of the timeout argument.
-     * @return <code>null</code> if timeout was reached before latch opens; <code>Completion</code> object if latch is open or opens while we are waiting.
+     * @return <code>false</code> if timeout was reached before latch opens; <code>true</code> if latch is open or opens while we are waiting.
      * @throws InterruptedException if the callers thread is interrupted.
      */
-    public Completion await(long timeout, TimeUnit unit) throws InterruptedException {
-        if (sync.tryAcquireSharedNanos(0, unit.toNanos(timeout)))
-            return new Completion();
-        else
-            return null;
+    public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
+        return sync.tryAcquireSharedNanos(0, unit.toNanos(timeout)); // first parameter is ignored
     }
 }

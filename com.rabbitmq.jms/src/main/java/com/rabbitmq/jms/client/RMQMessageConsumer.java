@@ -27,7 +27,7 @@ import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.util.CountUpAndDownLatch;
-import com.rabbitmq.jms.util.PauseLatch;
+import com.rabbitmq.jms.util.EntryExitManager;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.Util;
 
@@ -48,11 +48,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * The async listener that we use to subscribe to Rabbit messages
      */
     private final AtomicReference<MessageListenerConsumer> listenerConsumer = new AtomicReference<MessageListenerConsumer>();
+
     /**
-     * Pause latch, used by
-     * {@link javax.jms.Connection#start()} and {@link javax.jms.Connection#stop()}
+     * Entry and exit of receive() threads are controlled by this gate.
+     * See {@link javax.jms.Connection#start()} and {@link javax.jms.Connection#stop()}
      */
-    private final PauseLatch pauseLatch = new PauseLatch(true);
+    private final EntryExitManager entryExitManager = new EntryExitManager(true);
+
     /**
      * We need to keep track of how many listeners are running.
      * The reason for this latch is to be able to
@@ -65,7 +67,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * to be able to interrupt those threads if close is called (but NOT stop).
      * TODO: Do we need to do this if receive() uses a RabbitMQ Consumer (callback signals close) anyway?
      */
-    private final ConcurrentLinkedQueue<Thread> currentSynchronousReceiver = new ConcurrentLinkedQueue<Thread>();
+    private final InterruptibleThreadHolder interruptibleThreads = new InterruptibleThreadHolder();
     /**
      * Is this consumer closed. this value should change to true, but never change back
      */
@@ -99,7 +101,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         this.session = session;
         this.destination = destination;
         this.uuidTag = uuidTag;
-        if (!paused) this.pauseLatch.resume();
+        if (!paused) this.entryExitManager.openGate();
     }
 
     /**
@@ -190,6 +192,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
     /**
      * {@inheritDoc}
+     * @param timeout (in milliseconds) {@inheritDoc}
      */
     @Override
     public Message receive(long timeout) throws JMSException {
@@ -223,11 +226,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
          */
         this.listenerRunning.countUp();
         try {
-            /*
-             * Register the existing thread so we can interrupt it
-             * if we need to
-             */
-            this.currentSynchronousReceiver.offer(Thread.currentThread());
+            this.interruptibleThreads.addThisThread();
             /*
              * Create the consumer object - in here we specify the timeout too
              */
@@ -246,7 +245,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
              */
             RMQMessage message = (RMQMessage) processMessage(response, isAutoAck());
             /*
-             * This is WRONG -- Connection.stop() mustn't return if we are still processing this.
+             * This is WRONG -- Connection.stop() mustn't return to the caller if we are still processing this.
              * sc must take a completion latch, and close it.
              * Now we must handle the case where Connection.stop has been called
              * while we were waiting for the message to arrive
@@ -269,8 +268,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                      * We need to wait for the Connection.start method to be called
                      * and we need to respect the timeout and return null if isTimedout==true
                      */
-                    c = this.pauseLatch.await(timeout, TimeUnit.MILLISECONDS);
-                    isTimedout = (c==null);
+                    isTimedout = !this.entryExitManager.enter(timeout, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException x) {
                     /* Reset the thread interrupted status */
                     Thread.currentThread().interrupt();
@@ -313,8 +311,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                  */
                 this.listenerRunning.countDown();
             }
-            /* we are not in an interrupt state anymore */
-            this.currentSynchronousReceiver.remove(Thread.currentThread());
+            this.interruptibleThreads.removeThisThread();
         }
     }
 
@@ -413,8 +410,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         try {
             /* If the connection is stopped, by Connection.stop we will wait here until we either timeout or
              * Connection.start is called again */
-            Completion c = this.pauseLatch.await(timeout, TimeUnit.MILLISECONDS);
-            if (null==c) {
+            if (!this.entryExitManager.enter(timeout, TimeUnit.MILLISECONDS)) {
                 /* timeout happened before we got a chance to look for a message */
                 return true;
             }
@@ -429,29 +425,34 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     private Message synchronousGet(long timeout) throws JMSException {
-        this.currentSynchronousReceiver.offer(Thread.currentThread());
+        this.interruptibleThreads.addThisThread();
         try {
             if (blockIfStopped(timeout)) return null;
-            GetResponse response = null;
+            // We have entered receiving region, so must exit.
             try {
-                if (this.destination.isQueue()) {
-                    /*
-                     * For queue, issue a basic.get on the queue name
-                     */
-                    response = this.getSession().getChannel().basicGet(this.destination.getQueueName(), this.isAutoAck());
-                } else {
-                    /*
-                     * For topic, issue a basic.get on the unique queue name for the consumer
-                     */
-                    response = this.getSession().getChannel().basicGet(this.getUUIDTag(), this.isAutoAck());
+                GetResponse response = null;
+                try {
+                    if (this.destination.isQueue()) {
+                        /*
+                         * For queue, issue a basic.get on the queue name
+                         */
+                        response = this.getSession().getChannel().basicGet(this.destination.getQueueName(), this.isAutoAck());
+                    } else {
+                        /*
+                         * For topic, issue a basic.get on the unique queue name for the consumer
+                         */
+                        response = this.getSession().getChannel().basicGet(this.getUUIDTag(), this.isAutoAck());
+                    }
+                } catch (IOException x) {
+                    throw new RMQJMSException(x);
                 }
-            } catch (IOException x) {
-                throw new RMQJMSException(x);
+                /* convert the message (and remember tag if we need to) */
+                return processMessage(response, this.isAutoAck());
+            } finally {
+                this.entryExitManager.exit();
             }
-            /* convert the message (and remember tag if we need to) */
-            return processMessage(response, this.isAutoAck());
         } finally {
-            this.currentSynchronousReceiver.remove(Thread.currentThread());
+            this.interruptibleThreads.removeThisThread();
         }
     }
 
@@ -574,11 +575,11 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
          */
         this.closing = true;
         /*
-         * if we are in a pause state, we must break that
-         * this will release all threads waiting on the pause latch
-         * and effectively disable the use of the latch
+         * If we are stopped, we must break that.
+         * This will release all threads waiting on the gate
+         * and effectively disable the use of the gate
          */
-        this.pauseLatch.finalResume();
+        this.entryExitManager.finalOpenGate();
         /*
          * cancel any subscriptions that we have
          * active at this time. there is no way to notify the
@@ -586,14 +587,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
          */
         setMessageListener(null);
         try {
-            /*
-             * Loop through all threads that are waiting in the
-             * receive() or receive(timeout) methods and interrupt them
-             */
-            Thread t = null;
-            while ((t=this.currentSynchronousReceiver.poll())!=null) {
-                t.interrupt();
-            }
+            this.interruptibleThreads.interruptThreads();
             /*
              * The timeout is configurable as part of the connection factory
              */
@@ -612,8 +606,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             this.closed = true;
             this.closing = false;
         }
-
-
     }
 
     /**
@@ -674,20 +666,20 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @return true if we are not receiving any messages at this time
      */
     public boolean isPaused() {
-        return this.pauseLatch.isPaused();
+        return this.entryExitManager.isClosed();
     }
 
     /**
      * Stops this consumer from receiving messages.
-     * This is called by the session indirectly after
-     * {@link javax.jms.Connection#stop()} has been invoked.
-     * In this implementation, any async consumers will be
-     * cancelled, only to be re-subscribed when <code>resume()</code>d.
-     * @throws javax.jms.JMSException if the thread is interrupted
+     * This is called by the session indirectly when
+     * {@link javax.jms.Connection#stop()} is invoked.
+     * TODO: In this implementation, any async consumers will be cancelled, only to be re-subscribed when <code>resume()</code>d.
+     * @throws InterruptedException if the thread is interrupted
      * @see #resume()
      */
-    public void pause() throws JMSException {
-        this.pauseLatch.pause();
+    public void pause() throws InterruptedException {
+        this.entryExitManager.closeGate();
+        this.entryExitManager.waitToClear(10, TimeUnit.SECONDS);
     }
 
     /**
@@ -697,7 +689,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @throws javax.jms.JMSException if the thread is interrupted
      */
     public void resume() throws JMSException  {
-        this.pauseLatch.resume();
+        this.entryExitManager.openGate();
     }
 
     /**
@@ -768,7 +760,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 this.rwl.readLock().unlock();
             }
         }
-
     }
 
     /**
@@ -891,7 +882,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         @Override
         public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
             // noop
-
         }
 
         /**
@@ -900,9 +890,29 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         @Override
         public void handleRecoverOk(String consumerTag) {
             // noop
-
         }
 
     }
 
+    /**
+     * Holder for threads we may wish to interrupt later.
+     */
+    private static class InterruptibleThreadHolder {
+        private final ConcurrentLinkedQueue<Thread> threadQueue = new ConcurrentLinkedQueue<Thread>();
+
+        public void addThisThread() {
+            this.threadQueue.add(Thread.currentThread());
+        }
+
+        public void removeThisThread() {
+            this.threadQueue.remove(Thread.currentThread());
+        }
+
+        public void interruptThreads() {
+            Thread t = null;
+            while ((t=this.threadQueue.poll())!=null) {
+                t.interrupt();
+            }
+        }
+    }
 }
