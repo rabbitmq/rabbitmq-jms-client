@@ -9,15 +9,15 @@ public class RMQJMSException extends JMSException {
     /** TODO */
     private static final long serialVersionUID = 1L;
 
-    public RMQJMSException(String msg, Exception x) {
+    public RMQJMSException(String msg, Throwable x) {
         this(msg, null, x);
     }
 
-    public RMQJMSException(Exception x) {
+    public RMQJMSException(Throwable x) {
         this(x.getMessage(), x);
     }
 
-    private RMQJMSException(String msg, String errorCode, Exception x) {
+    private RMQJMSException(String msg, String errorCode, Throwable x) {
         super(msg, errorCode);
         this.initCause(x);
     }

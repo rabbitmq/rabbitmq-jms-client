@@ -6,13 +6,12 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
 import com.rabbitmq.jms.client.Completion;
 
 /**
  * Manages threads entering and exiting a notional region. Entry is controlled by a gate, and exit is signalled by
- * {@link Completion}. Can prevent threads entering, and wait for threads which have entered to exit.
+ * {@link Completion}. Can block threads entering, abort waiting threads and wait for threads which have entered to exit.
  * <p>
  * When the gate is open, threads are not prevented from entering. When the gate is closed, threads will block on
  * {@link #enter enter(...)}, until the gate is opened (by some other thread).
@@ -35,80 +34,22 @@ import com.rabbitmq.jms.client.Completion;
  * <dt>{@link #exit()}</dt>
  * <dd>will signal the calling thread to exit the region,</dd>
  * <dt>{@link #waitToClear waitToClear(...)}</dt>
- * <dd>will block until all the threads currently in the region have exited.</dd>
+ * <dd>will block until all the threads currently in the region have exited,</dd>
+ * <dt>{@link #abortWaiters()}</dt>
+ * <dd>will reject all waiting threads with an <code>InterruptedException</code>.</dd>
  * </dl>
  */
 public class EntryExitManager {
 
-    private static final int GATE_CLOSED = 1;
-    private static final int GATE_OPEN = 0;
-    private ThreadLocal<Completion> completion = new ThreadLocal<Completion>();
-
-    private final GateSync sync;
+    private final GateWaiter gate;
     private final Queue<Completion> entered = new ConcurrentLinkedQueue<Completion>();
+    private ThreadLocal<Completion> threadCompletion = new ThreadLocal<Completion>();
 
     private volatile boolean gateFixedOpen = false;
 
-    /**
-     * AQS implementation of synchronisation primitive to pause (block) and resume multiple threads.
-     * <p>State is single integer with two values: 0 meaning OPEN, 1 meaning CLOSED.</p>
-     * <dl>
-     * <dt>acquire</dt>
-     * <dd>fails if in CLOSED state (and blocks thread), and succeeds if in OPEN state</dd>
-     * <dt>release</dt>
-     * <dd>succeeds if in CLOSED state, and fails if in OPEN state (</dd>
-     * </dl>
-     */
-    private class GateSync extends AbstractQueuedSynchronizer {
-        private static final long serialVersionUID = 1715200786237741115L;
-
-        /**
-         * @param closed initial state of the gate
-         */
-        GateSync(boolean closed) {
-            setState(closed?GATE_CLOSED:GATE_OPEN);
-        }
-
-        /**
-         * Returns true if the gate is closed
-         * @return
-         */
-        boolean isClosed() {
-            return getState() == GATE_CLOSED;
-        }
-
-        /**
-         * {@inheritDoc}
-         * @return fail (return -1) if CLOSED; succeed (return +1) if OPEN
-         * <p/>{@inheritDoc}
-         */
-        @Override
-        public int tryAcquireShared(int ignored) {
-            if (isClosed())
-                return -1;
-            else {
-                registerEntry();
-                return 1;
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         * @param nextState the state to set the <code>GateSync</code> to.
-         * <p/>{@inheritDoc}
-         * @return <code>true</code> if set to <code>OPEN</code>; <code>false</code> if set to <code>CLOSED</code>.
-         * <p/>{@inheritDoc}
-         */
-        @Override
-        public boolean tryReleaseShared(int nextState) {
-            while (!compareAndSetState(getState(), nextState)) {}
-            return (nextState == GATE_OPEN);
-        }
-    }
-
     private void registerEntry() {
         Completion comp = new Completion();
-        this.completion.set(comp); // thread-local
+        this.threadCompletion.set(comp); // thread-local
         this.entered.add(comp);
     }
 
@@ -117,24 +58,33 @@ public class EntryExitManager {
      * @param closed initially with gate closed if <code>true</code>, open if <code>false</code>.
      */
     public EntryExitManager(boolean closed) {
-        sync = new GateSync(closed);
+        this.gate = new GateWaiter(!closed) {
+            @Override
+            public void onWait() { } //no-op
+
+            @Override
+            public void onEntry() {
+                EntryExitManager.this.registerEntry();
+            }};
     }
 
     /**
-     * Is the gate closed.
+     * Is the gate closed?
      * @return <code>true</code> if the gate is closed, <code>false</code> otherwise.
      */
     public boolean isClosed() {
-        return sync.isClosed();
+        return !gate.isOpen();
     }
 
     /**
-     * Close the gate, so subsequent <code>enter()</code>ing threads will block.
+     * Close the gate, if allowed, so subsequent <code>enter()</code>ing threads will block.
      * @return <code>true</code> if the gate is closed after this call, <code>false</code> if {@link #finalOpenGate()}
      *         has been called or the gate is open after this call.
      */
     public boolean closeGate() {
-        return !gateFixedOpen && !sync.releaseShared(GATE_CLOSED);
+        if (this.gateFixedOpen) return false;
+        gate.close();
+        return true;
     }
 
     /**
@@ -142,7 +92,8 @@ public class EntryExitManager {
      * @return <code>true</code> in all cases.
      */
     public boolean openGate() {
-        return sync.releaseShared(GATE_OPEN);
+        gate.open();
+        return true;
     }
 
     /**
@@ -151,7 +102,7 @@ public class EntryExitManager {
      * @return <code>true</code> if the gate is open after this call
      */
     public boolean finalOpenGate() {
-        gateFixedOpen = true;
+        this.gateFixedOpen = true;
         return openGate();
     }
 
@@ -166,16 +117,17 @@ public class EntryExitManager {
      * @param unit the time unit of the timeout argument.
      * @return <code>false</code> if timeout was reached before gate opens; <code>true</code> if gate is open or opens while we are waiting.
      * @throws InterruptedException if the callers thread is interrupted while waiting.
+     * @throws AbortedException if this thread is aborted by a <code>stop()</code> or <code>close()</code> while waiting.
      */
-    public boolean enter(long timeout, TimeUnit unit) throws InterruptedException {
-        return sync.tryAcquireSharedNanos(0, unit.toNanos(timeout)); // first parameter is ignored
+    public boolean enter(long timeout, TimeUnit unit) throws InterruptedException, AbortedException {
+        return gate.waitForOpen(unit.toNanos(timeout));
     }
 
     /**
      * This thread is exiting the region. Must be called eventually by the thread that entered the region.
      */
     public void exit() {
-        Completion comp = this.completion.get(); // this thread's completion object
+        Completion comp = this.threadCompletion.get(); // this thread's completion object
         if (comp != null) {
             comp.setComplete();
             this.entered.remove(comp);
@@ -193,18 +145,25 @@ public class EntryExitManager {
         List<Completion> comps = new LinkedList<Completion>(this.entered);
         if (comps.isEmpty()) return true; // nothing to wait for
 
-        long remainingTime = unit.toNanos(timeout);
+        timeout = unit.toNanos(timeout);
+        long remainingTime = timeout;
         long startTime = System.nanoTime();
         for (Completion c : comps) {
             try {
+                if (remainingTime < 0) return false;
                 c.waitUntilComplete(remainingTime, TimeUnit.NANOSECONDS);
-                long newStartTime = System.nanoTime();
-                remainingTime -= (newStartTime - startTime);
-                startTime = newStartTime;
+                remainingTime = timeout - (System.nanoTime() - startTime);
             } catch (TimeoutException unused) {
                 return false; // we ran out of time
             }
         }
         return true;
+    }
+
+    /**
+     * Abort all threads waiting to enter with an <code>AbortedException</code>.
+     */
+    public void abortWaiters() {
+        gate.abortWaiters();
     }
 }

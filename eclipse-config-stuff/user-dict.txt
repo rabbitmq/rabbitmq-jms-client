@@ -4,3 +4,8 @@ transactional
 rollback
 requeue
 notional
+throwable
+entrants
+abortable
+deserialize
+noop

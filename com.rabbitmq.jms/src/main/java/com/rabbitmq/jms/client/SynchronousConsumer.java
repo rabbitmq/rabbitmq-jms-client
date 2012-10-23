@@ -15,28 +15,37 @@ import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
+import com.rabbitmq.jms.util.Abortable;
+import com.rabbitmq.jms.util.AbortedException;
+import com.rabbitmq.jms.util.EntryExitManager;
 
 /**
  * Implementation of a one-shot {@link Consumer}.
  * This is used to support the JMS semantics described in
  * {@link MessageConsumer#receive()} and {@link MessageConsumer#receive(long)}.
  */
-class SynchronousConsumer implements Consumer {
+class SynchronousConsumer implements Consumer, Abortable {
     private static final GetResponse ACCEPT_MSG = new GetResponse(null, null, null, 0);
+    private static final GetResponse REJECT_MSG = new GetResponse(null, null, null, 0);
     private final Exchanger<GetResponse> exchanger = new Exchanger<GetResponse>();
 
     private final long timeout;
     private final Channel channel;
+    private final Completion completion = new Completion();
+    private final EntryExitManager entryExitManager;
     private final AtomicBoolean useOnce = new AtomicBoolean(false);
     private final AtomicBoolean oneReceived = new AtomicBoolean(false);
     private final AtomicBoolean cancelled = new AtomicBoolean(false);
 
-    SynchronousConsumer(Channel channel, long timeout) {
+    private volatile String consumerTag;
+
+    SynchronousConsumer(Channel channel, long timeout, EntryExitManager entryExitManager) {
         this.timeout = timeout;
         this.channel = channel;
+        this.entryExitManager = entryExitManager;
     }
 
-    GetResponse receive() throws JMSException {
+    GetResponse receive() throws JMSException, AbortedException {
         if (!this.useOnce.compareAndSet(false, true)) {
             throw new JMSException("SynchronousConsumer.receive can be called only once.");
         }
@@ -44,27 +53,40 @@ class SynchronousConsumer implements Consumer {
         try {
             response = this.exchanger.exchange(ACCEPT_MSG, this.timeout, TimeUnit.MILLISECONDS);
         } catch (TimeoutException x) {
-            // this is expected
+            return null;
         } catch (InterruptedException x) {
             /* Reset the thread interrupted status */
             Thread.currentThread().interrupt();
         }
+        if (response == REJECT_MSG) {
+            throw new AbortedException();
+        }
         return response;
+    }
+
+    /**
+     * Returns the consumer tag used for this consumer
+     * @return the consumer tag for this consumer
+     */
+    public String getConsumerTag() {
+        return this.consumerTag;
     }
 
     @Override
     public void handleConsumeOk(String consumerTag) {
-        // noop
+        this.consumerTag = consumerTag;
     }
 
     @Override
     public void handleCancelOk(String consumerTag) {
-        // noop
+        this.completion.setComplete();
+        this.consumerTag = null;
     }
 
     @Override
     public void handleCancel(String consumerTag) throws IOException {
-        // noop
+        this.completion.setComplete();
+        this.consumerTag = null;
     }
 
     @Override
@@ -83,10 +105,9 @@ class SynchronousConsumer implements Consumer {
             }
         }
 
-        // give a receive() thread enough time to arrive
         GetResponse waiter = null;
         try {
-            if (this.oneReceived.compareAndSet(false, true)) {
+            if (this.oneReceived.compareAndSet(false, true)) { // give a receive() thread enough time to arrive
                 waiter = this.exchanger.exchange(response, Math.min(100, this.timeout), TimeUnit.MILLISECONDS);
             }
         } catch (InterruptedException x) {
@@ -120,7 +141,7 @@ class SynchronousConsumer implements Consumer {
         if (result) {
             try {
                 if (this.channel.isOpen()) {
-                    this.channel.basicCancel(consumerTag);
+                    this.channel.basicCancel(this.consumerTag);
                 }
             } catch (ShutdownSignalException x) {
                 //do nothing
@@ -134,5 +155,26 @@ class SynchronousConsumer implements Consumer {
             }
         }
         return result;
+    }
+
+    public void abort() {
+        this.entryExitManager.finalOpenGate();
+        try {
+            this.exchanger.exchange(REJECT_MSG, 1000, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            /* Reset the thread interrupted status */
+            Thread.currentThread().interrupt();
+        } catch (TimeoutException _) {
+        }
+    }
+
+    @Override
+    public void stop() {
+        this.entryExitManager.closeGate();
+    }
+
+    @Override
+    public void start() {
+        this.entryExitManager.openGate();
     }
 }
