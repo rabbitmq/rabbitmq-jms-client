@@ -32,7 +32,6 @@ class SynchronousConsumer implements Consumer, Abortable {
     private final long timeout;
     private final Channel channel;
     private final Completion completion = new Completion();
-    private final EntryExitManager entryExitManager;
     private final AtomicBoolean useOnce = new AtomicBoolean(false);
     private final AtomicBoolean oneReceived = new AtomicBoolean(false);
     private final AtomicBoolean cancelled = new AtomicBoolean(false);
@@ -42,7 +41,6 @@ class SynchronousConsumer implements Consumer, Abortable {
     SynchronousConsumer(Channel channel, long timeout, EntryExitManager entryExitManager) {
         this.timeout = timeout;
         this.channel = channel;
-        this.entryExitManager = entryExitManager;
     }
 
     GetResponse receive() throws JMSException, AbortedException {
@@ -158,7 +156,6 @@ class SynchronousConsumer implements Consumer, Abortable {
     }
 
     public void abort() {
-        this.entryExitManager.finalOpenGate();
         try {
             this.exchanger.exchange(REJECT_MSG, 1000, TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
@@ -170,11 +167,9 @@ class SynchronousConsumer implements Consumer, Abortable {
 
     @Override
     public void stop() {
-        this.entryExitManager.closeGate();
     }
 
     @Override
     public void start() {
-        this.entryExitManager.openGate();
     }
 }

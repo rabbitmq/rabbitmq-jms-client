@@ -66,6 +66,11 @@ abstract class GateWaiter {
     public abstract void onEntry();
 
     /**
+     * Called when thread is aborted while waiting for open.
+     */
+    public abstract void onAbort();
+
+    /**
      * Wait (and queue) if gate is closed; or register and return <code>true</code> if gate is opened soon enough.
      * @param timeoutNanos - time to wait if gate is closed, must be >= 0
      * @return <code>true</code> if gate is open or opened within time limit, <code>false</code> if timed out
@@ -75,6 +80,7 @@ abstract class GateWaiter {
     public final boolean waitForOpen(long timeoutNanos) throws InterruptedException, AbortedException {
         if (!this.isOpen())
             this.onWait();
+        boolean aborted = false;
         synchronized(this.lock) {
             if (!this.isOpen()) { // gate closed -- we queue
                 long gen = this.generation;  // generation we arrived in
@@ -85,12 +91,16 @@ abstract class GateWaiter {
                     rem = timeoutNanos - (System.nanoTime() - startTime);
                 }
                 // this.abortGeneration >= gen  OR  this.openGeneration >= gen  OR  rem <= 0
-                if (this.abortGeneration == gen) // we are aborted
-                    throw new AbortedException();
-                if (this.openGeneration < gen)  // we should have been opened by now
+                if (this.abortGeneration == gen) { // we are aborted
+                    aborted = true;
+                } else if (this.openGeneration < gen)  // we should have been opened by now
                     return false;  // we timed out
-                // fall through when open
+                // fall through when open or aborted
             }
+        }
+        if (aborted) { // execute onAbort() out of the synchronised block.
+            this.onAbort();
+            throw new AbortedException();
         }
         this.onEntry();
         return true;

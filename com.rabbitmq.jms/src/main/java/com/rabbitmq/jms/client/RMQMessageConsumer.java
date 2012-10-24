@@ -188,8 +188,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         if (timeout == 0) timeout = Long.MAX_VALUE; // The spec identifies 0 as infinite timeout
         long now = System.currentTimeMillis();
         /* Try to receive a message synchronously */
-        Message msg = synchronousGet(timeout);
-        /* If the thread has been interrupted waiting for the pause we get null. */
+        Message msg;
+        try {
+            msg = synchronousGet(timeout);
+        } catch (AbortedException _) {
+            /* If the get has been aborted waiting for the pause we return null, too. */
+            return null;
+        }
 
         if (msg != null) return msg; // We received a message - return it
 
@@ -226,7 +231,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                  * are not allowed to return this message cause we are in a stop/pause state {@link Connection#stop}. */
                 timeout = Math.max(timeout - (System.currentTimeMillis() - now), 0);
 
-                boolean isTimedout = true;
                 try {
                     if (this.entryExitManager.enter(timeout, TimeUnit.MILLISECONDS)) {
                         if (isAutoAck()) {
@@ -343,28 +347,52 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     @Override
     public Message receiveNoWait() throws JMSException {
         if (this.closed || this.closing) throw new IllegalStateException("Consumer is closed or closing.");
-        return synchronousGet(0); // with zero timeout, i.e. no patience if stopped.
+        try {
+            return synchronousGet(0);
+        } catch (AbortedException _) {
+            return null;
+        }
     }
 
-    private Message synchronousGet(long timeout) throws JMSException {
-        GetResponse response = null;
+    /**
+     * The spec for {@link Connection#stop()} says:
+     * <blockquote>
+     * When the connection is stopped, delivery to all the connection's message consumers is inhibited: synchronous
+     * receives block, and messages are not delivered to message listeners.
+     * {@link Connection#stop()} blocks until receives and/or message listeners in progress have completed.
+     * </blockquote>
+     * <p>
+     * For synchronous gets, we therefore have to potentially block on the way in.
+     * </p>
+     * @return a received message, or null if no message was received.
+     * @throws JMSException
+     */
+    private Message synchronousGet(long timeout) throws JMSException, AbortedException {
         try {
-            if (this.destination.isQueue()) {
-                /*
-                 * For queue, issue a basic.get on the queue name
-                 */
-                response = this.getSession().getChannel().basicGet(this.destination.getQueueName(), this.isAutoAck());
-            } else {
-                /*
-                 * For topic, issue a basic.get on the unique queue name for the consumer
-                 */
-                response = this.getSession().getChannel().basicGet(this.getUUIDTag(), this.isAutoAck());
+            if (!this.entryExitManager.enter(timeout, TimeUnit.MILLISECONDS))
+                return null; // timed out
+            try {
+                GetResponse response = null;
+                try {
+                    if (this.destination.isQueue()) {
+                        /* For queue, issue a basic.get on the queue name */
+                        response = this.getSession().getChannel().basicGet(this.destination.getQueueName(), this.isAutoAck());
+                    } else {
+                        /* For topic, issue a basic.get on the unique queue name for the consumer */
+                        response = this.getSession().getChannel().basicGet(this.getUUIDTag(), this.isAutoAck());
+                    }
+                } catch (IOException x) {
+                    throw new RMQJMSException(x);
+                }
+                /* convert the message (and remember tag if we need to) */
+                return processMessage(response, this.isAutoAck());
+            } finally {
+                this.entryExitManager.exit();
             }
-        } catch (IOException x) {
-            throw new RMQJMSException(x);
+        } catch (InterruptedException _) {
+            Thread.currentThread().interrupt();
+            return null;
         }
-        /* convert the message (and remember tag if we need to) */
-        return processMessage(response, this.isAutoAck());
     }
 
     /**
@@ -373,7 +401,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @return
      * @throws JMSException
      */
-    protected RMQMessage processMessage(GetResponse response, boolean acknowledged) throws JMSException {
+    RMQMessage processMessage(GetResponse response, boolean acknowledged) throws JMSException {
         try {
             if (response == null) {
                 /*
@@ -474,10 +502,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
          * disable the use of the gate */
         this.entryExitManager.finalOpenGate();
 
-        /* cancel any subscriptions that we have active at this time. */
+        /* cancel any subscription that we have active at this time. */
         setMessageListener(null);
 
-        this.abortables.stop();
+        this.abortables.abort();
 
         this.closed = true;
         this.closing = false;
@@ -543,6 +571,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @see #resume()
      */
     public void pause() throws InterruptedException {
+        this.entryExitManager.closeGate();
         this.abortables.stop();
     }
 
@@ -554,6 +583,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     public void resume() throws JMSException  {
         this.abortables.start();
+        this.entryExitManager.openGate();
     }
 
     /**
@@ -585,10 +615,17 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     private static class AbortableHolder implements Abortable {
         private final ConcurrentLinkedQueue<Abortable> abortableQueue = new ConcurrentLinkedQueue<Abortable>();
-        private volatile boolean aborting = false; // to prevent infinite regress
-        private volatile boolean starting = false; // to prevent infinite regress
-        private volatile boolean stopping = false; // to prevent infinite regress
-        private enum Action {ABORT, START, STOP};
+        private final boolean[] flags = new boolean[]{false, false, false}; // to prevent infinite regress
+
+        private enum Action {
+            ABORT(0) { void doit(Abortable a) { a.abort(); } },
+            START(1) { void doit(Abortable a) { a.start(); } },
+            STOP(2)  { void doit(Abortable a) { a.stop();  } };
+            private final int ind;
+            Action(int ind) { this.ind = ind; }
+            int index() { return this.ind; }
+            abstract void doit(Abortable a);
+            };
 
         public void add(Abortable a) {
             this.abortableQueue.add(a);
@@ -599,41 +636,25 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         }
 
         public void abort() {
-            if (this.aborting) return;
-            this.aborting = true;
             act(Action.ABORT);
-            this.aborting = false;
         }
 
         public void start() {
-            if (this.starting) return;
-            this.starting = true;
-            act(Action.ABORT);
-            this.starting = false;
+            act(Action.START);
         }
 
         public void stop() {
-            if (this.stopping) return;
-            this.stopping = true;
-            act(Action.ABORT);
-            this.stopping = false;
+            act(Action.STOP);
         }
 
         private void act(Action action) {
+            if (this.flags[action.index()]) return;
+            this.flags[action.index()] = true;
             Abortable[] as = this.abortableQueue.toArray(new Abortable[this.abortableQueue.size()]);
             for (Abortable a : as) {
-                switch (action) {
-                case ABORT:
-                    a.abort();
-                    break;
-                case START:
-                    a.start();
-                    break;
-                case STOP:
-                    a.stop();
-                    break;
-                }
+                action.doit(a);
             }
+            this.flags[action.index()] = false;
         }
     }
 }

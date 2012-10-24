@@ -26,8 +26,8 @@ import com.rabbitmq.jms.AbstractTestConnectionFactory;
  * Asynchronous Consumer integration test.
  */
 public class AsyncConsumerIT {
-    static final String QUEUE_NAME = "test.queue." + AsyncConsumerIT.class.getCanonicalName();
-    static final String MESSAGE = "Hello " + AsyncConsumerIT.class.getName();
+    private static final String QUEUE_NAME = "test.queue." + AsyncConsumerIT.class.getCanonicalName();
+    private static final String MESSAGE = "Hello " + AsyncConsumerIT.class.getName();
 
     /**
      * Basic send and receive with a Consumer. Uses serial send followed by async receive.

@@ -59,13 +59,10 @@ public class EntryExitManager {
      */
     public EntryExitManager(boolean closed) {
         this.gate = new GateWaiter(!closed) {
-            @Override
-            public void onWait() { } //no-op
-
-            @Override
-            public void onEntry() {
-                EntryExitManager.this.registerEntry();
-            }};
+            @Override public void onWait()  { /*noop*/ }
+            @Override public void onEntry() { /*register on entry*/ EntryExitManager.this.registerEntry();}
+            @Override public void onAbort() { /*noop*/ }
+            };
     }
 
     /**
