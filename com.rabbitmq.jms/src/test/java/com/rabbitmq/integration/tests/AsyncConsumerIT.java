@@ -20,7 +20,6 @@ import javax.jms.TextMessage;
 
 import org.junit.Test;
 
-import com.rabbitmq.jms.AbstractTestConnectionFactory;
 
 /**
  * Asynchronous Consumer integration test.
@@ -80,7 +79,6 @@ public class AsyncConsumerIT {
         private final CountDownLatch latch;
 
         public MessageListener(CountDownLatch latch) {
-            super();
             this.latch = latch;
         }
 

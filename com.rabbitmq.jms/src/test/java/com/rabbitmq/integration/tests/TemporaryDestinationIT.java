@@ -21,7 +21,6 @@ import javax.jms.TopicSubscriber;
 
 import org.junit.Test;
 
-import com.rabbitmq.jms.AbstractTestConnectionFactory;
 
 /**
  * Integration test

@@ -22,7 +22,6 @@ import javax.jms.TextMessage;
 
 import org.junit.Test;
 
-import com.rabbitmq.jms.AbstractTestConnectionFactory;
 import com.rabbitmq.jms.util.CountUpAndDownLatch;
 
 /**

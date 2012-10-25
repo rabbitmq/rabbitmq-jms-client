@@ -1,6 +1,4 @@
-package com.rabbitmq.jms;
-
-import com.rabbitmq.jms.rabbitapi.RabbitAPIConnectionFactory;
+package com.rabbitmq.integration.tests;
 
 public abstract class AbstractTestConnectionFactory {
     public abstract javax.jms.ConnectionFactory getConnectionFactory();

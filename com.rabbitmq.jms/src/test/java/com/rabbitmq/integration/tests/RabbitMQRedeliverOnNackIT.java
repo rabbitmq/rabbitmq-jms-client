@@ -16,7 +16,6 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import com.rabbitmq.jms.AbstractTestConnectionFactory;
 
 /**
  * Integration test
