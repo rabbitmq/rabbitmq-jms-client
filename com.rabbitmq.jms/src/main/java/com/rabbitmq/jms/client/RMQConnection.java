@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -50,21 +51,19 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private final List<RMQSession> sessions = Collections.<RMQSession> synchronizedList(new ArrayList<RMQSession>());
     /** value to see if this connection has been closed */
     private volatile boolean closed = false;
-    /** atomic flag to pause and unpause the connection by calling the {@link #start()} and {@link #stop()} methods */
+    /** atomic flag to pause and unpause the connection consumers (see {@link #start()} and {@link #stop()} methods) */
     private final AtomicBoolean stopped = new AtomicBoolean(true);
 
     private volatile long terminationTimeout = 15000;
 
     private static ConcurrentHashMap<String, String> CLIENT_IDS = new ConcurrentHashMap<String, String>();
 
-    /**
-     * List of all our durable subscriptions so we can track them on a per connection basis
-     */
-    private static final ConcurrentHashMap<String, RMQMessageConsumer> subscriptions = new ConcurrentHashMap<String, RMQMessageConsumer>();
-
+    /** List of all our durable subscriptions so we can track them on a per connection basis (maintained by sessions).*/
+    private static final Map<String, RMQMessageConsumer> subscriptions = new ConcurrentHashMap<String, RMQMessageConsumer>();
 
     /** This is used for JMSCTS test cases, as ClientID should only be configurable right after the connection has been created */
     private volatile boolean canSetClientID = true;
+
     /**
      * Creates an RMQConnection object
      * @param rabbitConnection the TCP connection wrapper to the RabbitMQ broker
@@ -233,7 +232,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public QueueSession createQueueSession(boolean transacted, int acknowledgeMode) throws JMSException {
-        if (closed) throw new IllegalStateException("Connection is closed");
+        if (this.closed) throw new IllegalStateException("Connection is closed");
         return (QueueSession) this.createSession(transacted, acknowledgeMode);
     }
 

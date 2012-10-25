@@ -5,9 +5,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.jms.BytesMessage;
@@ -102,7 +102,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     /**
      * List of all our durable subscriptions so we can track them
      */
-    private final ConcurrentHashMap<String, RMQMessageConsumer> subscriptions;
+    private final Map<String, RMQMessageConsumer> subscriptions;
 
     private ConcurrentLinkedQueue<String> topics = new ConcurrentLinkedQueue<String>();
 
@@ -111,9 +111,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @param connection the connection that we will send data on
      * @param transacted whether this session is transacted or not
      * @param mode the default ACK mode
+     * @param subscriptions the connection's subscriptions, shared with all sessions
      * @throws JMSException if we fail to create a {@link Channel} object on the connection
      */
-    public RMQSession(RMQConnection connection, boolean transacted, int mode, ConcurrentHashMap<String, RMQMessageConsumer> subscriptions) throws JMSException {
+    public RMQSession(RMQConnection connection, boolean transacted, int mode, Map<String, RMQMessageConsumer> subscriptions) throws JMSException {
         assert (mode >= 0 && mode <= 3);
         this.connection = connection;
         this.transacted = transacted;
@@ -446,7 +447,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
         if (!dest.isDeclared()) {
             if (dest.isQueue()) {
-                declareQueue(dest,null, false);
+                declareQueue(dest, null, false);
             } else {
                 declareTopic(dest);
             }
@@ -527,9 +528,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @param temporary true if the queue is temporary
      * @throws JMSException if an IOException occurs in the {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)} call
      */
-    protected void declareQueue(RMQDestination dest, String queueNameOverride, boolean durableSubscriber) throws JMSException {
+    private void declareQueue(RMQDestination dest, String queueNameOverride, boolean durableSubscriber) throws JMSException {
         try {
-            String queueName = queueNameOverride!=null?queueNameOverride:dest.getQueueName();
+            String queueName = queueNameOverride!=null ? queueNameOverride : dest.getQueueName();
 
             /*
              * We only want destinations to survive server restarts if
@@ -546,26 +547,18 @@ public class RMQSession implements Session, QueueSession, TopicSession {
              */
             boolean exclusive = dest.isTemporary() || ((!dest.isQueue()) && (!durableSubscriber));
 
-            HashMap<String,Object> options = new HashMap<String,Object>();
+            HashMap<String,Object> options = null; //new HashMap<String,Object>();
 
-            this.channel.queueDeclare(/* the name of the queue */
-                                      queueName,
-                                      /* temporary destinations are not durable
-                                       * will not survive a server restart
-                                       * all JMS queues except temp survive restarts
-                                       * only durable topic queues
-                                       */
+            this.channel.queueDeclare(
+            /* name of the queue */   queueName,
+            /* temporary destinations are not durable will not survive a server restart all JMS queues except temp
+             * survive restarts only durable topic queues */
                                       durable,
-                                      /* exclusive flag */
-                                      exclusive,
-                                      /*
-                                       * We don't set auto delete to true ever
-                                       * that is cause exclusive(rabbit)==true automatically
-                                       * get deleted when a Connection is closed
-                                       */
+            /* exclusive flag */      exclusive,
+            /* We don't set auto delete to true ever that is cause exclusive(rabbit)==true automatically get deleted
+             * when a Connection is closed */
                                       false,
-                                      /* Queue properties */
-                                      options);
+            /* Queue properties */    options);
             if (dest.isTemporary()) {
                 this.topics.add(dest.getQueueName());
             }
@@ -712,14 +705,15 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     /**
+     * This is only available for topic subscriptions.
      * {@inheritDoc}
      */
     @Override
     public void unsubscribe(String name) throws JMSException {
         if (this.closed) throw new IllegalStateException("Session is closed");
         try {
-            if (name!=null && this.subscriptions.remove(name)!=null) {
-                //remove the queue from the fanout exchange
+            if (name != null && this.subscriptions.remove(name) != null) {
+                // remove the queue
                 this.channel.queueDelete(name);
             }
         } catch (IOException x) {
@@ -804,18 +798,17 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         return this.channel;
     }
 
-    public void consumerClose(RMQMessageConsumer consumer) {
-        this.consumers.remove(consumer);
-        if (consumer.isDurable()) {
-            /*
-             * TODO: We are closing but haven't unsubscribed, so we can't cancel the subscription
-             */
-
+    public void consumerClose(RMQMessageConsumer consumer) throws JMSException {
+        if (this.consumers.remove(consumer)) {
+            //TODO: if (consumer.isDurable()) { don't cancel it? cancel it? -- decide }
+            consumer.internalClose();
         }
     }
 
     public void removeProducer(RMQMessageProducer producer) {
-        this.producers.remove(producer);
+        if (this.producers.remove(producer)) {
+            producer.internalClose();
+        }
     }
 
     public boolean isAutoAck() {

@@ -27,6 +27,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
 
     private final RMQMessageConsumer messageConsumer;
     private final Channel channel;
+    private final MessageListener messageListener;
     private final boolean autoAck;
     private final Completion completion = new Completion();
     private final long terminationTimeout;
@@ -34,19 +35,19 @@ class MessageListenerConsumer implements Consumer, Abortable {
 
     /**
      * Constructor
-     * @param messageConsumer
-     * @param channel
-     * @param terminationTimeout
+     * @param messageConsumer to which this Rabbit Consumer belongs
+     * @param channel Rabbit channel this Consumer uses
+     * @param terminationTimeout wait time (in nanoseconds) for cancel to take effect
      */
-    public MessageListenerConsumer(RMQMessageConsumer messageConsumer, Channel channel, long terminationTimeout) {
+    public MessageListenerConsumer(RMQMessageConsumer messageConsumer, Channel channel, MessageListener listener, long terminationTimeout) {
         this.messageConsumer = messageConsumer;
         this.channel = channel;
+        this.messageListener = listener;
         this.autoAck = messageConsumer.isAutoAck();
         this.terminationTimeout = terminationTimeout;
     }
 
     /**
-     * Returns the consumer tag used for this consumer
      * @return the consumer tag for this consumer
      */
     public String getConsumerTag() {
@@ -89,8 +90,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
         /* Wrap the incoming message in a GetResponse */
         GetResponse response = new GetResponse(envelope, properties, body, 0);
         try {
-            MessageListener messageListener = this.messageConsumer.getMessageListener();
-            if (messageListener != null) {
+            if (this.messageListener != null) {
                 boolean acked = this.autoAck;
                 if (this.autoAck) {
                     try {
@@ -106,8 +106,8 @@ class MessageListenerConsumer implements Consumer, Abortable {
                         //My recommendation is that we bail out here and not proceed
                     }
                 }
-                // Create a javax.jms.Message object and deliver it to the client
-                messageListener.onMessage(messageConsumer.processMessage(response, acked));
+                // Create a javax.jms.Message object and deliver it to the listener
+                this.messageListener.onMessage(messageConsumer.processMessage(response, acked));
             } else {
                 try {
                     // We are unable to deliver the message, nack it

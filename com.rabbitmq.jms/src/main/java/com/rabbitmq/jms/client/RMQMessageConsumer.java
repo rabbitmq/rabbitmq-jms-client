@@ -117,13 +117,14 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     /**
      * Remove the listener and dispose of any Rabbit Consumer that may be active and tracked.
      */
-    private void removeMessageListener() {
-        this.messageListener = null;
+    private void replaceMessageListener(MessageListener listener) {
+        if (listener == this.messageListener) return;
         MessageListenerConsumer listenerConsumer = this.listenerConsumer.getAndSet(null);
         if (listenerConsumer!=null) {
             this.abortables.remove(listenerConsumer);
             listenerConsumer.abort();
         }
+        this.messageListener = listener;
     }
 
     /**
@@ -145,14 +146,12 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * {@inheritDoc}
      */
     @Override
-    public void setMessageListener(MessageListener listener) throws JMSException {
+    public void setMessageListener(MessageListener messageListener) throws JMSException {
         try {
-            if (listener != this.messageListener) {
-                this.removeMessageListener();
-            }
-            if (listener != null) {
+            this.replaceMessageListener(messageListener);
+            if (messageListener != null) {
                 MessageListenerConsumer mlConsumer =
-                    new MessageListenerConsumer(this, getSession().getChannel(),
+                    new MessageListenerConsumer(this, getSession().getChannel(), messageListener,
                                                 TimeUnit.MILLISECONDS.toNanos(this.session.getConnection()
                                                                                           .getTerminationTimeout()));
                 if (this.listenerConsumer.compareAndSet(null, mlConsumer)) {
@@ -443,22 +442,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                  */
                 getSession().unackedMessageReceived(message);
             }
-            try {
-                /*
-                 * If the Session.setMessageListener() has been
-                 * set with a listener, we must invoke it at this time
-                 */
-                MessageListener listener = getSession().getMessageListener();
-                if (listener != null) {
-                    listener.onMessage(message);
-                }
-            } catch (JMSException x) {
-                /*
-                 * We can not propagate this exception
-                 * but it should be logged
-                 */
-                x.printStackTrace(); //TODO logging implementation
-            }
             return message;
         } catch (IOException x) {
             throw new RMQJMSException(x);
@@ -476,11 +459,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public void close() throws JMSException {
-        try {
-            internalClose();
-        } finally {
-            getSession().consumerClose(this);
-        }
+        getSession().consumerClose(this);
     }
 
     /**

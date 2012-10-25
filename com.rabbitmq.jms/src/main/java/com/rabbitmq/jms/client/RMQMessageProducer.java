@@ -38,23 +38,28 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      * In this implementation, this flag is ignored and we will
      * always use message IDs
      */
-    private boolean disableMessageID;
+    private boolean disableMessageID = false;
     /**
      * Should we disable timestamps
      * In this implementation, this flag is ignored and we will
      * always use message timestamps
      */
-    private boolean disableMessageTimestamp;
+    private boolean disableMessageTimestamp = false;
     /**
      * The default priority for a message
      */
     private int priority = Message.DEFAULT_PRIORITY;
     /**
-     * RabbitMQ doesn't support TTL but when it does
+     * RabbitMQ doesn't support TTL for individual messages but when it does
      * we can use this
      */
     private long ttl = Message.DEFAULT_TIME_TO_LIVE;
 
+    /**
+     * Create a producer of messages.
+     * @param session which this producer uses
+     * @param destination to which this producer sends messages.
+     */
     public RMQMessageProducer(RMQSession session, RMQDestination destination) {
         this.session = session;
         this.destination = destination;
@@ -154,7 +159,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     @Override
     public void close() throws JMSException {
         this.session.removeProducer(this);
-        internalClose();
     }
 
     /**
@@ -162,7 +166,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      * when system is shutting down
      */
     protected void internalClose() {
-
     }
 
     /**

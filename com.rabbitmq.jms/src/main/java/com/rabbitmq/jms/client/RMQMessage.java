@@ -802,19 +802,15 @@ public abstract class RMQMessage implements Message, Cloneable {
      * This method invokes the {@link #readBody(ObjectInput)} method
      * on the deserialized class
      * @param b - the message bytes
-     * @return a subclass to a RMQmessage
+     * @return a subclass to a RMQMessage
      * @throws ClassNotFoundException - if the class to be deserialized wasn't found
      * @throws IOException if an exception occurs during deserialization
      * @throws IllegalAccessException if an exception occurs during class instantiation
      * @throws InstantiationException if an exception occurs during class instantiation
      */
-    public static RMQMessage fromMessage(byte[] b) throws ClassNotFoundException,
-    IOException,
-    IllegalAccessException,
-    InstantiationException {
-        /* TODO If we don't recognize the message format then we need to
-         * create a generic BytesMessage
-         */
+    public static RMQMessage fromMessage(byte[] b) throws ClassNotFoundException, IOException, IllegalAccessException,
+                                                  InstantiationException {
+        /* TODO If we don't recognise the message format then we need to create a generic BytesMessage */
         ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(b));
         //read the classname from the stream
         String clazz = in.readUTF();
