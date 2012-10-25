@@ -37,12 +37,13 @@ class MessageListenerConsumer implements Consumer, Abortable {
      * Constructor
      * @param messageConsumer to which this Rabbit Consumer belongs
      * @param channel Rabbit channel this Consumer uses
+     * @param messageListener to call {@link MessageListener#onMessage(javax.jms.Message) onMessage(Message)} with received messages
      * @param terminationTimeout wait time (in nanoseconds) for cancel to take effect
      */
-    public MessageListenerConsumer(RMQMessageConsumer messageConsumer, Channel channel, MessageListener listener, long terminationTimeout) {
+    public MessageListenerConsumer(RMQMessageConsumer messageConsumer, Channel channel, MessageListener messageListener, long terminationTimeout) {
         this.messageConsumer = messageConsumer;
         this.channel = channel;
-        this.messageListener = listener;
+        this.messageListener = messageListener;
         this.autoAck = messageConsumer.isAutoAck();
         this.terminationTimeout = terminationTimeout;
     }

@@ -33,7 +33,7 @@ public class AsyncConsumerIT {
      * @throws Exception if test error.
      */
     @Test
-    public void testSendAndReceiveTextMessage() throws Exception {
+    public void testSendAndAsyncReceiveTextMessage() throws Exception {
 
         QueueConnection queueConn = null;
         try {

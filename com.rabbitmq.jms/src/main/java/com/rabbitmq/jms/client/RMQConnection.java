@@ -54,7 +54,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     /** atomic flag to pause and unpause the connection consumers (see {@link #start()} and {@link #stop()} methods) */
     private final AtomicBoolean stopped = new AtomicBoolean(true);
 
-    private volatile long terminationTimeout = 15000;
+    /** maximum time (in ms) to wait for close() to complete */
+    private final long terminationTimeout;
 
     private static ConcurrentHashMap<String, String> CLIENT_IDS = new ConcurrentHashMap<String, String>();
 
@@ -65,11 +66,22 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private volatile boolean canSetClientID = true;
 
     /**
-     * Creates an RMQConnection object
+     * Creates an RMQConnection object.
+     * @param rabbitConnection the TCP connection wrapper to the RabbitMQ broker
+     * @param terminationTimeout timeout for close in milliseconds
+     */
+    public RMQConnection(com.rabbitmq.client.Connection rabbitConnection, long terminationTimeout) {
+        this.rabbitConnection = rabbitConnection;
+        this.terminationTimeout = terminationTimeout;
+    }
+
+    private final static long FIFTEEN_SECONDS_MS = 15000;
+    /**
+     * Creates an RMQConnection object, with default termination timeout of 15 seconds.
      * @param rabbitConnection the TCP connection wrapper to the RabbitMQ broker
      */
     public RMQConnection(com.rabbitmq.client.Connection rabbitConnection) {
-        this.rabbitConnection = rabbitConnection;
+        this(rabbitConnection, FIFTEEN_SECONDS_MS);
     }
 
     /**
@@ -171,9 +183,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     }
 
     /**
-     * Returns true if this connection is in a stopped state
-     *
-     * @return
+     * @return <code>true</code> if this connection is in a stopped state
      */
     public boolean isStopped() {
         return stopped.get();
@@ -184,15 +194,18 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void close() throws JMSException {
-        if (closed)
-            return;
+        if (closed) return;
+
         String clientID = getClientID();
         closed = true;
-        if (clientID!=null) CLIENT_IDS.remove(clientID);
-            while (this.sessions.size()>0) {
-                RMQSession session = sessions.get(0);
-                session.close();
-            }
+
+        if (clientID != null)
+            CLIENT_IDS.remove(clientID);
+
+        for (RMQSession session : sessions) {
+            session.internalClose();
+        }
+        this.sessions.clear();
 
         try {
             this.rabbitConnection.close();
@@ -205,7 +218,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         }
     }
 
-    public com.rabbitmq.client.Connection getRabbitConnection() {
+    com.rabbitmq.client.Connection getRabbitConnection() {
         return this.rabbitConnection;
     }
 
@@ -279,15 +292,13 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      *
      * @param session - the session that is being closed
      */
-    protected void sessionClose(RMQSession session) {
-        this.sessions.remove(session);
+    void sessionClose(RMQSession session) throws JMSException {
+        if (this.sessions.remove(session)) {
+            session.internalClose();
+        }
     }
 
-    public long getTerminationTimeout() {
-        return terminationTimeout;
-    }
-
-    public void setTerminationTimeout(long terminationTimeout) {
-        this.terminationTimeout = terminationTimeout;
+    long getTerminationTimeout() {
+        return this.terminationTimeout;
     }
 }

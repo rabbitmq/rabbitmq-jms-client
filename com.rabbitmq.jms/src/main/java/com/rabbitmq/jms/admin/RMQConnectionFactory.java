@@ -82,8 +82,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         // } else {
         // es.setServiceId("Rabbit JMS Connection["+rabbitConnection.getAddress()+"]-");
         // }
-        RMQConnection conn = new RMQConnection(rabbitConnection);
-        conn.setTerminationTimeout(getTerminationTimeout());
+        RMQConnection conn = new RMQConnection(rabbitConnection, getTerminationTimeout());
         return conn;
     }
 

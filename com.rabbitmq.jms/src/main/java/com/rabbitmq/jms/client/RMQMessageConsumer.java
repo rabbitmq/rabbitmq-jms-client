@@ -122,7 +122,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         MessageListenerConsumer listenerConsumer = this.listenerConsumer.getAndSet(null);
         if (listenerConsumer!=null) {
             this.abortables.remove(listenerConsumer);
-            listenerConsumer.abort();
+            listenerConsumer.stop(); // orderly stop
+            listenerConsumer.abort(); // force it if it didn't work
         }
         this.messageListener = listener;
     }
@@ -482,7 +483,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         this.entryExitManager.finalOpenGate();
 
         /* cancel any subscription that we have active at this time. */
-        setMessageListener(null);
+        this.setMessageListener(null);
 
         this.abortables.abort();
 

@@ -44,7 +44,6 @@ import com.rabbitmq.jms.client.message.RMQMapMessage;
 import com.rabbitmq.jms.client.message.RMQObjectMessage;
 import com.rabbitmq.jms.client.message.RMQStreamMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
-import com.rabbitmq.jms.util.CountUpAndDownLatch;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.Util;
 
@@ -87,11 +86,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * When a consumer is closed, it will be removed from this list
      */
     private final ArrayList<RMQMessageConsumer> consumers = new ArrayList<RMQMessageConsumer>();
-    /**
-     * A latch that we use when listeners are running, that way we can
-     * pause and wait for listeners to complete during close and Connection.stop
-     */
-    private final CountUpAndDownLatch runningListener = new CountUpAndDownLatch(0);
     /**
      * We keep an ordered set of the message tags (acknowledgement tags) for all messages received and unacknowledged.
      * Each message acknowledgement must ACK all (unacknowledged) messages received up to this point, and
@@ -285,68 +279,71 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * {@inheritDoc}
      */
     @Override
-    public synchronized void close() throws JMSException {
-        if (this.closed)
-            return;
+    public void close() throws JMSException {
+        this.getConnection().sessionClose(this);
+    }
+
+    synchronized void internalClose() throws JMSException {
+        if (this.closed) return;
 
         try {
+            //close all consumers created by this session
+            for (RMQMessageConsumer consumer : this.consumers) {
+                try {
+                    consumer.internalClose();
+                } catch (JMSException x) {
+                    x.printStackTrace(); //TODO logging implementation
+                }
+            }
+            this.consumers.clear();
+
             //close all producers created by this session
             for (RMQMessageProducer producer : this.producers) {
                 producer.internalClose();
             }
             this.producers.clear();
 
-            //close all consumers created by this session
-            for (RMQMessageConsumer consumer : this.consumers) {
-                try {
-                    consumer.internalClose();
-                } catch (Exception x) {
-                    x.printStackTrace(); //TODO logging implementation
-                }
-            }
-            this.consumers.clear();
-
-            this.setMessageListener(null);
-
             if (this.getTransacted()) {
                 this.rollback();
             }
 
-            String topicQueue = null;
-            while ((topicQueue=this.topics.poll())!=null) {
-                try {
-                    this.channel.queueDelete(topicQueue);
-                    //TODO delete exchanges created for temporary topics
-                    //this.channel.exchangeDelete(, true)
-                } catch (AlreadyClosedException x) {
-                    this.topics.clear();//nothing we can do but break out
-                } catch (IOException iox) {
-                    //TODO log warn about not being able to delete a queue
-                    //created only for a topic
-                }
-            }
+            deleteTopicQueues(this.topics, this.channel);
 
-            //close the channel itself
-            try {
-                if (this.channel.isOpen()) {
-                    this.channel.close();
-                }
-            } catch (AlreadyClosedException x) {
-                //nothing to do
-            } catch (ShutdownSignalException x) {
-                //nothing to do
-            } catch (IOException x) {
-                if (x.getCause() instanceof ShutdownSignalException) {
-                    //nothing to do
-                }
-                throw new RMQJMSException(x);
-            } finally {
-            }
+            closeRabbitChannel(this.channel); //close the main channel
+
         } finally {
-            //notify the connection that this session is closed
-            //so that it can be removed from the list of sessions
-            this.getConnection().sessionClose(this);
             this.closed = true;
+        }
+    }
+
+    private static void deleteTopicQueues(ConcurrentLinkedQueue<String> topics, Channel channel) {
+        String topicQueue = null;
+        while ((topicQueue = topics.poll()) != null) {
+            try {
+                channel.queueDelete(topicQueue);
+                // TODO delete exchanges created for temporary topics
+                // this.channel.exchangeDelete(, true)
+            } catch (AlreadyClosedException x) {
+                topics.clear();// nothing we can do but break out
+            } catch (IOException iox) {
+                // TODO log warn about not being able to delete a queue
+                // created only for a topic
+            }
+        }
+    }
+
+    private static void closeRabbitChannel(Channel channel) throws JMSException {
+        if (channel==null) return;
+        try {
+            channel.close();
+        } catch (AlreadyClosedException x) {
+            // nothing to do
+        } catch (ShutdownSignalException x) {
+            // nothing to do
+        } catch (IOException x) {
+            if (!(x.getCause() instanceof ShutdownSignalException)) {
+                throw new RMQJMSException(x);
+            }
         }
     }
 
@@ -388,12 +385,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
-        if (this.closed) throw new IllegalStateException("Session is closed");
-        if (listener==null) {
-            this.messageListener = null;
-        } else {
-            this.messageListener = new MessageListenerWrapper(listener);
-        }
+        // not implemented
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -911,23 +904,4 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             }
         }
     }
-
-    private final class MessageListenerWrapper implements MessageListener {
-        private final MessageListener listener;
-        public MessageListenerWrapper(MessageListener listener) {
-            this.listener = listener;
-        }
-
-        @Override
-        public void onMessage(Message message) {
-            RMQSession.this.runningListener.countUp();
-            try {
-                this.listener.onMessage(message);
-            } finally {
-                RMQSession.this.runningListener.countDown();
-            }
-
-        }
-    }
-
 }
