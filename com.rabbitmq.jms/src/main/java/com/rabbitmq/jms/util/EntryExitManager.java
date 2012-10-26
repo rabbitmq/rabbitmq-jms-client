@@ -161,6 +161,6 @@ public class EntryExitManager {
      * Abort all threads waiting to enter with an <code>AbortedException</code>.
      */
     public void abortWaiters() {
-        gate.abortWaiters();
+        gate.abort();
     }
 }
