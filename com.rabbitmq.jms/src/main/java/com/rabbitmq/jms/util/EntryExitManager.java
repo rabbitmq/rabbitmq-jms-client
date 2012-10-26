@@ -141,15 +141,12 @@ public class EntryExitManager {
     public boolean waitToClear(long timeout, TimeUnit unit) throws InterruptedException {
         List<Completion> comps = new LinkedList<Completion>(this.entered);
         if (comps.isEmpty()) return true; // nothing to wait for
-
+        TimeTracker tt = new TimeTracker(timeout, unit);
         timeout = unit.toNanos(timeout);
-        long remainingTime = timeout;
-        long startTime = System.nanoTime();
         for (Completion c : comps) {
             try {
-                if (remainingTime < 0) return false;
-                c.waitUntilComplete(remainingTime, TimeUnit.NANOSECONDS);
-                remainingTime = timeout - (System.nanoTime() - startTime);
+                if (tt.timeout()) return false;
+                c.waitUntilComplete(tt.remaining(), TimeUnit.NANOSECONDS);
             } catch (TimeoutException unused) {
                 return false; // we ran out of time
             }

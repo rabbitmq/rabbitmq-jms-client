@@ -3,6 +3,8 @@ package com.rabbitmq.jms.client;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.rabbitmq.jms.util.TimeTracker;
+
 /**
  * Used to signal completion of an asynchronous operation.
  */
@@ -53,13 +55,10 @@ public class Completion {
 
         public Boolean get(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
             if (this.completed) return true;
-            timeout = unit.toNanos(timeout);
-            long remainingTime = timeout;
-            long startTime = System.nanoTime();
+            TimeTracker tt = new TimeTracker(timeout, unit);
             synchronized (this.lock) {
-                while (!this.completed && remainingTime > 0) {
-                    TimeUnit.NANOSECONDS.timedWait(this.lock, remainingTime);
-                    remainingTime = timeout - (System.nanoTime() - startTime);
+                while (!this.completed && !tt.timeout()) {
+                    TimeUnit.NANOSECONDS.timedWait(this.lock, tt.remaining());
                 }
                 if (this.completed)
                     return true;

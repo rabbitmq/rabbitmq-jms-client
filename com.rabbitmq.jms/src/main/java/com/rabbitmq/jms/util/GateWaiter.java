@@ -112,13 +112,11 @@ abstract class GateWaiter {
             boolean aborted = false;
             synchronized(this.lock) {
                 if (this.state == GateState.CLOSED) { // gate closed -- we are waiting
-                    long rem = timeoutNanos;
-                    long startTime = System.nanoTime();
-                    while ((this.state == GateState.CLOSED) && (rem > 0)) {
-                        TimeUnit.NANOSECONDS.timedWait(this.lock, rem);
-                        rem = timeoutNanos - (System.nanoTime() - startTime);
+                    TimeTracker tt = new TimeTracker(timeoutNanos, TimeUnit.NANOSECONDS);
+                    while ((this.state == GateState.CLOSED) && (!tt.timeout())) {
+                        TimeUnit.NANOSECONDS.timedWait(this.lock, tt.remaining());
                     }
-                    // this.state == GateState.OPENED | GateState.ABORTED OR else rem <= 0
+                    // this.state == GateState.OPENED | GateState.ABORTED OR else timedout
                     if (this.state == GateState.OPENED) break;
                     if (this.state == GateState.ABORTED) {
                         aborted = true;
