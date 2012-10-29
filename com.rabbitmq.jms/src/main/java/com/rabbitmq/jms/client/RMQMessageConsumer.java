@@ -476,7 +476,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * when system is shutting down
      */
     protected void internalClose() throws JMSException {
-        /* let the system know we are in the process of closing */
         this.closing = true;
         /* If we are stopped, we must break that. This will release all threads waiting on the gate and effectively
          * disable the use of the gate */

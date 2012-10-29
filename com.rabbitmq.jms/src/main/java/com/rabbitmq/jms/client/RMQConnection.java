@@ -190,17 +190,22 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     }
 
     /**
-     * {@inheritDoc}
+     * <blockquote>
+     * <p>This call blocks until a
+     * receive or message listener in progress has completed. A blocked message consumer receive call returns null when
+     * this message consumer is closed.</p>
+     * </blockquote>
+     * <p/>{@inheritDoc}
      */
     @Override
     public void close() throws JMSException {
         if (closed) return;
 
-        String clientID = getClientID();
+        String cID = getClientID();
         closed = true;
 
-        if (clientID != null)
-            CLIENT_IDS.remove(clientID);
+        if (cID != null)
+            CLIENT_IDS.remove(cID);
 
         for (RMQSession session : sessions) {
             session.internalClose();

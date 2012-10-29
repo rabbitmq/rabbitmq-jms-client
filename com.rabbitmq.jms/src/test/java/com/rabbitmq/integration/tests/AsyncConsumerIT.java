@@ -35,71 +35,69 @@ public class AsyncConsumerIT {
     @Test
     public void testSendAndAsyncReceiveTextMessage() throws Exception {
 
-        QueueConnection queueConn = null;
-        try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                                                                                               .getConnectionFactory();
-            queueConn = connFactory.createQueueConnection();
-            queueConn.start();
-            QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-            Queue queue = queueSession.createQueue(QUEUE_NAME);
-            QueueSender queueSender = queueSession.createSender(queue);
-            queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-            TextMessage message = queueSession.createTextMessage(MESSAGE);
-            queueSender.send(message);
-        } finally {
-            queueConn.close();
+        QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
+                .getConnectionFactory();
+
+        { // publish/send connection
+            QueueConnection queueConn = connFactory.createQueueConnection();
+            try {
+                queueConn.start();
+                QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+                Queue queue = queueSession.createQueue(QUEUE_NAME);
+                QueueSender queueSender = queueSession.createSender(queue);
+                queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+                TextMessage message = queueSession.createTextMessage(MESSAGE);
+                queueSender.send(message);
+            } finally {
+                queueConn.close();
+            }
         }
-        try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                                                                                               .getConnectionFactory();
-            queueConn = connFactory.createQueueConnection();
-            queueConn.start();
-            QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-            Queue queue = queueSession.createQueue(QUEUE_NAME);
-            QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-            CountDownLatch latch = new CountDownLatch(1);
-            MessageListener listener = new MessageListener(latch);
-            queueReceiver.setMessageListener(listener);
-            latch.await(1000, TimeUnit.MILLISECONDS);
-            TextMessage message = (TextMessage) listener.getLastMessage();
-            assertEquals(MESSAGE, message.getText());
-            assertEquals(1, listener.getMessageCount());
-            assertTrue(listener.isSuccess());
-        } finally {
-            queueConn.close();
+
+        { // receive connection
+            QueueConnection queueConn = connFactory.createQueueConnection();
+            try {
+                queueConn.start();
+                QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+                Queue queue = queueSession.createQueue(QUEUE_NAME);
+                QueueReceiver queueReceiver = queueSession.createReceiver(queue);
+                CountDownLatch latch = new CountDownLatch(1);
+
+                MessageListener listener = new MessageListener(latch);
+                queueReceiver.setMessageListener(listener);
+
+                latch.await(1000, TimeUnit.MILLISECONDS);
+                TextMessage message = (TextMessage) listener.getLastMessage();
+                assertEquals(MESSAGE, message.getText());
+                assertEquals(1, listener.getMessageCount());
+                assertTrue(listener.isSuccess());
+            } finally {
+                queueConn.close();
+            }
         }
     }
 
     private static class MessageListener implements javax.jms.MessageListener {
-
         private volatile boolean success = false;
         private volatile Message lastMessage;
-        private AtomicInteger messageCount = new AtomicInteger(0);
+        private final AtomicInteger messageCount = new AtomicInteger(0);
         private final CountDownLatch latch;
-
         public MessageListener(CountDownLatch latch) {
             this.latch = latch;
         }
-
         @Override
         public void onMessage(Message message) {
-            success = (messageCount.incrementAndGet() == 1);
-            lastMessage = message;
-            latch.countDown();
+            this.success = (this.messageCount.incrementAndGet() == 1);
+            this.lastMessage = message;
+            this.latch.countDown();
         }
-
         public boolean isSuccess() {
-            return success;
+            return this.success;
         }
-
         public Message getLastMessage() {
-            return lastMessage;
+            return this.lastMessage;
         }
-
         public int getMessageCount() {
-            return messageCount.get();
+            return this.messageCount.get();
         }
-
     }
 }
