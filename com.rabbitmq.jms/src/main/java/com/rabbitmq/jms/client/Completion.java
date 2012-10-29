@@ -38,38 +38,50 @@ public class Completion {
      * @throws InterruptedException if thread is interrupted while waiting.
      */
     public void waitUntilComplete(long timeout, TimeUnit unit) throws TimeoutException, InterruptedException {
-        this.fb.get(timeout, unit);
+        this.fb.get(new TimeTracker(timeout, unit));
+    }
+
+    /**
+     * Wait for a time limit until completion is signalled. Returns normally if completion is signalled before timeout
+     * or interruption.
+     *
+     * @param tt time tracker.
+     * @throws TimeoutException if timed out before completion is signalled.
+     * @throws InterruptedException if thread is interrupted while waiting.
+     */
+    public void waitUntilComplete(TimeTracker tt) throws TimeoutException, InterruptedException {
+        this.fb.get(tt);
     }
 
     private class FutureBoolean {
         private final Object lock = new Object();
-        private volatile boolean completed = false;
+        private boolean completed = false;
 
-        public Boolean get() throws InterruptedException {
+        public boolean get() throws InterruptedException {
             try {
-                return get(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+                return get(new TimeTracker(Long.MAX_VALUE, TimeUnit.NANOSECONDS));
             } catch (TimeoutException e) {
                 throw new IllegalStateException("Impossible timeout.", e);
             }
         }
 
-        public Boolean get(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
-            if (this.completed) return true;
-            TimeTracker tt = new TimeTracker(timeout, unit);
+        public boolean get(TimeTracker tt) throws InterruptedException, TimeoutException {
             synchronized (this.lock) {
+                if (this.completed) return true;
                 while (!this.completed && !tt.timeout()) {
-                    TimeUnit.NANOSECONDS.timedWait(this.lock, tt.remaining());
+                    tt.timedWait(this.lock);
                 }
                 if (this.completed)
                     return true;
-                else
+                else {
                     throw new TimeoutException();
+                }
             }
         }
 
         void setComplete() {
-            this.completed = true;
             synchronized (this.lock) {
+                this.completed = true;
                 this.lock.notifyAll();
             }
         }

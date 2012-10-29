@@ -54,11 +54,10 @@ public class EntryExitManager {
     }
 
     /**
-     * Create an <code>EntryExitManager</code>, with initial state.
-     * @param closed initially with gate closed if <code>true</code>, open if <code>false</code>.
+     * Create an <code>EntryExitManager</code>, initially closed.
      */
-    public EntryExitManager(boolean closed) {
-        this.gate = new GateWaiter(!closed) {
+    public EntryExitManager() {
+        this.gate = new GateWaiter(false) {
             @Override public void onWait()  { /*noop*/ }
             @Override public void onEntry() { /*register on entry*/ EntryExitManager.this.registerEntry();}
             @Override public void onAbort() { /*noop*/ }
@@ -111,13 +110,29 @@ public class EntryExitManager {
      * <dt>timeout expires before gate is opened.</dt>
      * </dl>
      * @param timeout the time to wait for the gate to open.
-     * @param unit the time unit of the timeout argument.
+     * @param unit the time unit of the <code>timeout</code> argument.
      * @return <code>false</code> if timeout was reached before gate opens; <code>true</code> if gate is open or opens while we are waiting.
      * @throws InterruptedException if the callers thread is interrupted while waiting.
      * @throws AbortedException if this thread is aborted by a <code>stop()</code> or <code>close()</code> while waiting.
      */
     public boolean enter(long timeout, TimeUnit unit) throws InterruptedException, AbortedException {
-        return gate.waitForOpen(unit.toNanos(timeout));
+        return enter(new TimeTracker(timeout, unit));
+    }
+
+    /**
+     * Returns <code>true</code> immediately if the gate is open.
+     * Otherwise if the gate is closed the thread blocks until one of the following occurs:
+     * <dl>
+     * <dt>gate is opened (by another thread);</dt>
+     * <dt>timeout expires before gate is opened.</dt>
+     * </dl>
+     * @param tt the time tracker used to wait for the gate to open.
+     * @return <code>false</code> if timeout was reached before gate opens; <code>true</code> if gate is open or opens while we are waiting.
+     * @throws InterruptedException if the callers thread is interrupted while waiting.
+     * @throws AbortedException if this thread is aborted by a <code>stop()</code> or <code>close()</code> while waiting.
+     */
+    public boolean enter(TimeTracker tt) throws InterruptedException, AbortedException {
+        return gate.waitForOpen(tt);
     }
 
     /**
@@ -139,14 +154,22 @@ public class EntryExitManager {
      * @throws InterruptedException if thread is interrupted while waiting.
      */
     public boolean waitToClear(long timeout, TimeUnit unit) throws InterruptedException {
+        return waitToClear(new TimeTracker(timeout, unit));
+    }
+
+    /**
+     * Wait for current threads to exit region.
+     * @param tt timeout tracker.
+     * @return <code>true</code> if they all exited in time, <code>false</code> otherwise.
+     * @throws InterruptedException if thread is interrupted while waiting.
+     */
+    public boolean waitToClear(TimeTracker tt) throws InterruptedException {
         List<Completion> comps = new LinkedList<Completion>(this.entered);
         if (comps.isEmpty()) return true; // nothing to wait for
-        TimeTracker tt = new TimeTracker(timeout, unit);
-        timeout = unit.toNanos(timeout);
         for (Completion c : comps) {
             try {
                 if (tt.timeout()) return false;
-                c.waitUntilComplete(tt.remaining(), TimeUnit.NANOSECONDS);
+                c.waitUntilComplete(tt);
             } catch (TimeoutException unused) {
                 return false; // we ran out of time
             }

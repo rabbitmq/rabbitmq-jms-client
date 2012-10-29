@@ -11,13 +11,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
-import com.rabbitmq.jms.util.EntryExitManager;
+import com.rabbitmq.jms.util.TimeTracker;
 
 /**
  * Explicit receive() tests
@@ -32,7 +33,6 @@ public class TestSynchronousConsumer {
     private static final GetResponse TEST_RESPONSE = new GetResponse(envelope, null, null, 0);
 
     private final Channel channel = mock(Channel.class);
-    private final EntryExitManager entryExitManager = mock(EntryExitManager.class);
 
     /**
      * An explicit message is exchanged successfully
@@ -40,7 +40,7 @@ public class TestSynchronousConsumer {
      */
     @Test
     public void testSynchronousConsumerSuccess() throws Exception {
-        SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT, entryExitManager);
+        SynchronousConsumer consumer = new SynchronousConsumer(channel, new TimeTracker(TIMEOUT, TimeUnit.MILLISECONDS));
         CountDownLatch senderLatch = new CountDownLatch(1);
         CountDownLatch receiverLatch = new CountDownLatch(1);
         DriveConsumerThread senderThread = new DriveConsumerThread(TEST_RESPONSE, consumer, senderLatch);
@@ -86,7 +86,7 @@ public class TestSynchronousConsumer {
     public void testSynchronousConsumerSuccessShortTimeout() throws Exception {
         Channel channel = mock(Channel.class);
 
-        SynchronousConsumer consumer = new SynchronousConsumer(channel, 10, entryExitManager);
+        SynchronousConsumer consumer = new SynchronousConsumer(channel, new TimeTracker(10, TimeUnit.MILLISECONDS));
         CountDownLatch senderLatch = new CountDownLatch(1);
         CountDownLatch receiverLatch = new CountDownLatch(1);
         DriveConsumerThread senderThread = new DriveConsumerThread(TEST_RESPONSE, consumer, senderLatch);
@@ -113,7 +113,7 @@ public class TestSynchronousConsumer {
     public void testSynchronousConsumerReceiverTimeout() throws Exception {
         Channel channel = mock(Channel.class);
 
-        SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT, entryExitManager);
+        SynchronousConsumer consumer = new SynchronousConsumer(channel, new TimeTracker(TIMEOUT, TimeUnit.MILLISECONDS));
         CountDownLatch senderLatch = new CountDownLatch(1);
         CountDownLatch receiverLatch = new CountDownLatch(1);
         DriveConsumerThread senderThread = new DriveConsumerThread(TEST_RESPONSE, consumer, senderLatch);
@@ -143,7 +143,7 @@ public class TestSynchronousConsumer {
     public void testSynchronousConsumerReceiverTimeoutNoSender() throws Exception {
         Channel channel = mock(Channel.class);
 
-        SynchronousConsumer consumer = new SynchronousConsumer(channel, TIMEOUT, entryExitManager);
+        SynchronousConsumer consumer = new SynchronousConsumer(channel, new TimeTracker(TIMEOUT, TimeUnit.MILLISECONDS));
         CountDownLatch receiverLatch = new CountDownLatch(1);
         ReceiverThread receiverThread = new ReceiverThread(TEST_RESPONSE, consumer, receiverLatch);
         receiverThread.start();

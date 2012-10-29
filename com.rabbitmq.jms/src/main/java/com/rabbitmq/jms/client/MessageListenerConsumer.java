@@ -14,6 +14,7 @@ import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.util.Abortable;
+import com.rabbitmq.jms.util.TimeTracker;
 
 /**
  * Class implementing a RabbitMQ Consumer to receive
@@ -68,6 +69,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
      */
     @Override
     public void handleCancelOk(String consumerTag) {
+        this.completion.setComplete();
         this.consumerTag = null;
     }
 
@@ -76,6 +78,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
      */
     @Override
     public void handleCancel(String consumerTag) throws IOException {
+        this.completion.setComplete();
         this.consumerTag = null;
     }
 
@@ -152,9 +155,10 @@ class MessageListenerConsumer implements Consumer, Abortable {
 
     @Override
     public void stop() {
+        TimeTracker tt = new TimeTracker(this.terminationTimeout, TimeUnit.NANOSECONDS);
         try {
             this.channel.basicCancel(this.consumerTag);
-            this.completion.waitUntilComplete(this.terminationTimeout, TimeUnit.NANOSECONDS);
+            this.completion.waitUntilComplete(tt);
         } catch (AlreadyClosedException ace) {
             // TODO check if basicCancel really necessary in this case.
             if (!ace.isInitiatedByApplication()) {

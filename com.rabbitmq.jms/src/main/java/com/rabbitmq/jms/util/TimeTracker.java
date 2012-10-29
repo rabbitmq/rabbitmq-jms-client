@@ -13,7 +13,7 @@ public class TimeTracker {
     /**
      * Initialise tracker with duration supplied.
      * @param timeout - duration of tracker
-     * @param unit - units that <code>timeout</code> is in, e.g. {@link TimeUnit.MILLISECONDS}
+     * @param unit - units that <code>timeout</code> is in, e.g. <code>TimeUnit.MILLISECONDS</code>.
      */
     public TimeTracker(long timeout, TimeUnit unit) {
         this.timeoutNanos = unit.toNanos(timeout);
@@ -33,6 +33,19 @@ public class TimeTracker {
             return 0;
         }
         return rem;
+    }
+
+
+    /**
+     * A {@link TimeUnit#timedWait} utility which uses the <code>TimeTracker</code> state.
+     * <p>
+     * Used in <code>synchronized(<i>lock</i>){}</code> blocks that want to timeout based upon a time tracker object.
+     * </p>
+     * @param lock - object to lock on
+     * @throws InterruptedException if the thread is interrupted while waiting.
+     */
+    public void timedWait(Object lock) throws InterruptedException {
+        TimeUnit.NANOSECONDS.timedWait(lock, this.remaining());
     }
 
     /**

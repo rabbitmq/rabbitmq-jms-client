@@ -17,7 +17,6 @@ import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
-import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
@@ -27,6 +26,7 @@ import com.rabbitmq.jms.util.AbortedException;
 import com.rabbitmq.jms.util.EntryExitManager;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.RuntimeWrapperException;
+import com.rabbitmq.jms.util.TimeTracker;
 import com.rabbitmq.jms.util.Util;
 
 public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscriber {
@@ -50,7 +50,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * Entry and exit of receive() threads are controlled by this gate.
      * See {@link javax.jms.Connection#start()} and {@link javax.jms.Connection#stop()}
      */
-    private final EntryExitManager entryExitManager = new EntryExitManager(true);
+    private final EntryExitManager entryExitManager = new EntryExitManager();
     /**
      * We track things that need to be aborted (for a Connection.close()). Typically these are waits.
      */
@@ -179,87 +179,86 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     /**
+     * Receive a single message from the destination, waiting for up to <code>timeout</code> milliseconds if necessary.
+     * <p>
+     * The spec for {@link Connection#stop()} says:
+     * </p>
+     * <blockquote>
+     * <p>
+     * When the connection is stopped, delivery to all the connection's message consumers is inhibited: synchronous
+     * receives block, and messages are not delivered to message listeners. {@link Connection#stop()} blocks until
+     * receives and/or message listeners in progress have completed.
+     * </p>
+     * </blockquote>
+     * <p>
+     * For synchronous gets, we potentially have to block on the way in.
+     * <p/>
      * {@inheritDoc}
-     * @param timeout (in milliseconds) {@inheritDoc}
+     *
+     * @param timeout - (in milliseconds)<p/>{@inheritDoc}
      */
     @Override
     public Message receive(long timeout) throws JMSException {
-        if (this.closed || this.closing) throw new IllegalStateException("Consumer is closed or closing.");
-        if (timeout == 0) timeout = Long.MAX_VALUE; // The spec identifies 0 as infinite timeout
-        long now = System.currentTimeMillis();
-        /* Try to receive a message synchronously */
+        if (this.closed || this.closing)
+            throw new IllegalStateException("Consumer is closed or closing.");
+        if (timeout == 0)
+            timeout = Long.MAX_VALUE; // The spec identifies 0 as infinite timeout
+        TimeTracker tt = new TimeTracker(timeout, TimeUnit.MILLISECONDS);
+
+
         Message msg;
         try {
-            msg = synchronousGet(timeout);
+            if (!this.entryExitManager.enter(tt))
+                return null; // timed out
+            /* Try to receive a message synchronously */
+            msg = synchronousGet();
+            if (msg != null)
+                return msg;
+            if (tt.timeout())
+                return null; // We timed out already. A timeout means we return null to the caller.
+
+            return asynchronousGet(tt);
         } catch (AbortedException _) {
-            /* If the get has been aborted waiting for the pause we return null, too. */
+            /* If the get has been aborted we return null, too. */
             return null;
+        } catch (InterruptedException _) {
+            Thread.currentThread().interrupt(); // reset interrupt status
+            return null;
+        } finally {
+            this.entryExitManager.exit();
         }
+    }
 
-        if (msg != null) return msg; // We received a message - return it
-
-        // Calculate the remaining timeout
-        timeout = Math.max(timeout - (System.currentTimeMillis() - now), 0);
-        if (timeout==0) return null; // We timed out. A timeout means we return null to the caller
-
-        /* Currently there is no equivalent of receive(timeout) in RabbitMQ's Java API. So we emulate that behaviour by
-         * creating a one-shot subscription. We use the object SynchronousConsumer - this object supports both timeout
-         * and interrupts. */
-        String consumerTag = null;
-        SynchronousConsumer sc = null;
+    private Message asynchronousGet(TimeTracker tt) throws JMSException, InterruptedException,
+                                                   AbortedException {
         try {
-            /* Create the consumer object - in here we specify the timeout too */
-            sc = new SynchronousConsumer(this.session.getChannel(), timeout, this.entryExitManager);
+            /* Currently there is no equivalent of receive(timeout) in RabbitMQ's Java API. So we emulate that behaviour
+             * by creating a one-shot subscription. We use a SynchronousConsumer - this object supports both timeout and
+             * interrupts. */
+            SynchronousConsumer sc = null;
+            /* Create the consumer object - we supply a time tracker */
+            sc = new SynchronousConsumer(this.session.getChannel(), tt);
 
-            this.abortables.add(sc);
-
-            /* Wait for an message to arrive. This returns null if we timeout. */
+            /* Wait for a message to arrive. This returns null if we timeout. */
             GetResponse response;
             try {
-                /* Subscribe the consumer object */
-                consumerTag = basicConsume(sc);
+                /* Subscribe to the consumer object */
+                basicConsume(sc);
                 response = sc.receive();
             } catch (AbortedException ae) {
                 return null;
             }
             /* Process the result - even if it is null */
-            RMQMessage message = (RMQMessage) processMessage(response, isAutoAck());
-            /* This is WRONG -- Connection.stop() mustn't return to the caller if we are still processing this. sc must
-             * take a completion latch, and close it. */
-            if (message!=null) {
-                /* If we reached here, means that the Connection.stop method was called before a message arrived. But we
-                 * are not allowed to return this message cause we are in a stop/pause state {@link Connection#stop}. */
-                timeout = Math.max(timeout - (System.currentTimeMillis() - now), 0);
-
-                try {
-                    if (this.entryExitManager.enter(timeout, TimeUnit.MILLISECONDS)) {
-                        if (isAutoAck()) {
-                            getSession().getChannel().basicAck(message.getRabbitDeliveryTag(), false);
-                        }
-                    } else {
-                        getSession().getChannel().basicNack(message.getRabbitDeliveryTag(), false, true);
-                        return null;
-                    }
-                } catch (AbortedException ax) {
-                    // wait was aborted explicitly
-                } catch (InterruptedException e) {
-                    /* Reset the thread interrupted status */
-                    Thread.currentThread().interrupt();
-                } finally {
-                    this.entryExitManager.exit();
+            RMQMessage msg = (RMQMessage) processMessage(response, isAutoAck());
+            /* TODO: Connection.stop() mustn't return to the caller if we are still processing this? */
+            if (msg != null) {
+                if (isAutoAck()) {
+                    getSession().getChannel().basicAck(msg.getRabbitDeliveryTag(), false);
                 }
-
             }
-            return message;
-        } catch (IOException x) {
-            throw new RMQJMSException(x);
-        } finally {
-            /* Don't attempt to cancel if we are either closing or closed */
-            if (consumerTag!=null && sc!=null && this.closing==false && this.closed==false) {
-                /* Cancel the subscription, if not already done. */
-                sc.cancel(consumerTag);
-            }
-            this.abortables.remove(sc);
+            return msg;
+        } catch (IOException ioe) {
+            throw new RMQJMSException(ioe);
         }
     }
 
@@ -278,7 +277,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      *
      * @param consumer the SynchronousConsumer being registered
      * @return the consumer tag created for this consumer
-     * @throws IOException
+     * @throws IOException from RabbitMQ calls
      * @see Channel#basicConsume(String, boolean, String, boolean, boolean, java.util.Map, Consumer)
      */
     public String basicConsume(Consumer consumer) throws IOException {
@@ -320,79 +319,33 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     /**
-     * Cancels a {@link MessageListenerConsumer} on a channel, and waits for it to be completed (so {@link MessageListener#onMessage} will no longer be called).
-     * @param consumer the consumer to be cancelled
-     * @throws IOException
-     * @see Channel#basicCancel(String)
-     */
-    private void basicCancel(MessageListenerConsumer consumer) throws IOException {
-        String consumerTag = consumer.getConsumerTag();
-        if (consumerTag!=null) {
-            /*cancel a known subscription*/
-            try {
-                getSession().getChannel().basicCancel(consumerTag);
-            } catch (AlreadyClosedException ace) {
-                // TODO check if basicCancel really necessary in this case.
-                if (!ace.isInitiatedByApplication()) {
-                    throw ace;
-                }
-            }
-            consumer.stop();
-        }
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
     public Message receiveNoWait() throws JMSException {
         if (this.closed || this.closing) throw new IllegalStateException("Consumer is closed or closing.");
-        try {
-            return synchronousGet(0);
-        } catch (AbortedException _) {
-            return null;
-        }
+        return synchronousGet();
     }
 
     /**
-     * The spec for {@link Connection#stop()} says:
-     * <blockquote>
-     * When the connection is stopped, delivery to all the connection's message consumers is inhibited: synchronous
-     * receives block, and messages are not delivered to message listeners.
-     * {@link Connection#stop()} blocks until receives and/or message listeners in progress have completed.
-     * </blockquote>
-     * <p>
-     * For synchronous gets, we therefore have to potentially block on the way in.
-     * </p>
      * @return a received message, or null if no message was received.
      * @throws JMSException
      */
-    private Message synchronousGet(long timeout) throws JMSException, AbortedException {
+    private Message synchronousGet() throws JMSException {
+        GetResponse response = null;
         try {
-            if (!this.entryExitManager.enter(timeout, TimeUnit.MILLISECONDS))
-                return null; // timed out
-            try {
-                GetResponse response = null;
-                try {
-                    if (this.destination.isQueue()) {
-                        /* For queue, issue a basic.get on the queue name */
-                        response = this.getSession().getChannel().basicGet(this.destination.getQueueName(), this.isAutoAck());
-                    } else {
-                        /* For topic, issue a basic.get on the unique queue name for the consumer */
-                        response = this.getSession().getChannel().basicGet(this.getUUIDTag(), this.isAutoAck());
-                    }
-                } catch (IOException x) {
-                    throw new RMQJMSException(x);
-                }
-                /* convert the message (and remember tag if we need to) */
-                return processMessage(response, this.isAutoAck());
-            } finally {
-                this.entryExitManager.exit();
+            if (this.destination.isQueue()) {
+                /* For queue, issue a basic.get on the queue name */
+                response = this.getSession().getChannel().basicGet(this.destination.getQueueName(), this.isAutoAck());
+            } else {
+                /* For topic, issue a basic.get on the unique queue name for the consumer */
+                response = this.getSession().getChannel().basicGet(this.getUUIDTag(), this.isAutoAck());
             }
-        } catch (InterruptedException _) {
-            Thread.currentThread().interrupt();
-            return null;
+        } catch (IOException x) {
+            throw new RMQJMSException(x);
         }
+        /* convert the message (and remember tag if we need to) */
+        return processMessage(response, this.isAutoAck());
     }
 
     /**
@@ -402,13 +355,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @throws JMSException
      */
     RMQMessage processMessage(GetResponse response, boolean acknowledged) throws JMSException {
+        if (response == null) /* return null if the response is null */
+            return null;
+
         try {
-            if (response == null) {
-                /*
-                 * return null if the response is null
-                 */
-                return null;
-            }
             /* Deserialize the message from the byte[] */
             RMQMessage message = RMQMessage.fromMessage(response.getBody());
             /*
@@ -593,7 +543,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * Bag of {@link Abortable}s which is itself an {@link Abortable}.
      */
     private static class AbortableHolder implements Abortable {
-        private final ConcurrentLinkedQueue<Abortable> abortableQueue = new ConcurrentLinkedQueue<Abortable>();
+        private final java.util.Queue<Abortable> abortableQueue = new ConcurrentLinkedQueue<Abortable>();
         private final boolean[] flags = new boolean[]{false, false, false}; // to prevent infinite regress
 
         private enum Action {

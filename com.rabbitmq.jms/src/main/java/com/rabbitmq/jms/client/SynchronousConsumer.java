@@ -17,7 +17,7 @@ import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.util.Abortable;
 import com.rabbitmq.jms.util.AbortedException;
-import com.rabbitmq.jms.util.EntryExitManager;
+import com.rabbitmq.jms.util.TimeTracker;
 
 /**
  * Implementation of a one-shot {@link Consumer}.
@@ -38,8 +38,8 @@ class SynchronousConsumer implements Consumer, Abortable {
 
     private volatile String consumerTag;
 
-    SynchronousConsumer(Channel channel, long timeout, EntryExitManager entryExitManager) {
-        this.timeout = timeout;
+    SynchronousConsumer(Channel channel, TimeTracker tt) {
+        this.timeout = TimeUnit.NANOSECONDS.toMillis(tt.remaining());
         this.channel = channel;
     }
 
@@ -134,11 +134,11 @@ class SynchronousConsumer implements Consumer, Abortable {
         // noop
     }
 
-    boolean cancel(String consumerTag) {
+    boolean cancel() {
         boolean result = this.cancelled.compareAndSet(false, true);
         if (result) {
             try {
-                if (this.channel.isOpen()) {
+                if (this.channel.isOpen() && this.consumerTag != null) {
                     this.channel.basicCancel(this.consumerTag);
                 }
             } catch (ShutdownSignalException x) {
