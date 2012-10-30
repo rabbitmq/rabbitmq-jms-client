@@ -66,25 +66,29 @@ public class SimpleServerConnectionIT {
     @Test
     public void testRabbitConnection() throws Exception {
         final Channel channel = this.getConnection().createChannel();
-        channel.exchangeDeclare("exchangeName", "direct", true);
-        String queueName = channel.queueDeclare().getQueue();
-        channel.queueBind(queueName, "exchangeName", "routingKey");
-        byte[] messageBodyBytes = "Hello, world!".getBytes();
-        channel.basicPublish("exchangeName", "routingKey", null, messageBodyBytes);
-        boolean autoAck = false;
-        channel.basicConsume(queueName, autoAck, "myConsumerTag", new DefaultConsumer(channel) {
-            @Override
-            public void
-                    handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-                long deliveryTag = envelope.getDeliveryTag();
-                // (process the message components here
-                // ...)
-                System.out.println("Received Message:" + new String(body));
-                channel.basicAck(deliveryTag, false);
-            }
-        });
+        try {
+            channel.exchangeDeclare("exchangeName", "direct", true);
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, "exchangeName", "routingKey");
+            byte[] messageBodyBytes = "Hello, world!".getBytes();
+            channel.basicPublish("exchangeName", "routingKey", null, messageBodyBytes);
+            boolean autoAck = false;
+            channel.basicConsume(queueName, autoAck, "myConsumerTag", new DefaultConsumer(channel) {
+                @Override
+                public void
+                handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                    long deliveryTag = envelope.getDeliveryTag();
+                    // (process the message components here
+                    // ...)
+                    System.out.println("Received Message:" + new String(body));
+                    channel.basicAck(deliveryTag, false);
+                }
+            });
         Thread.sleep(1000);
-        channel.close();
+        } finally {
+            channel.exchangeDelete("exchangeName");
+            channel.close();
+        }
     }
 
     public Connection getConnection() {
