@@ -27,8 +27,6 @@ import com.rabbitmq.jms.client.Completion;
  * <dd>will close the gate to all threads,</dd>
  * <dt>{@link #openGate()}</dt>
  * <dd>will open the gate, unblocking all waiting threads,</dd>
- * <dt>{@link #finalOpenGate()}</dt>
- * <dd>will open the gate permanently (cannot be closed again),</dd>
  * <dt>{@link #enter enter(...)}</dt>
  * <dd>will allow the calling thread to enter the region, or block if the gate is closed,</dd>
  * <dt>{@link #exit()}</dt>
@@ -44,8 +42,6 @@ public class EntryExitManager {
     private final GateWaiter gate;
     private final Queue<Completion> entered = new ConcurrentLinkedQueue<Completion>();
     private ThreadLocal<Completion> threadCompletion = new ThreadLocal<Completion>();
-
-    private volatile boolean gateFixedOpen = false;
 
     private void registerEntry() {
         Completion comp = new Completion();
@@ -74,11 +70,9 @@ public class EntryExitManager {
 
     /**
      * Close the gate, if allowed, so subsequent <code>enter()</code>ing threads will block.
-     * @return <code>true</code> if the gate is closed after this call, <code>false</code> if {@link #finalOpenGate()}
-     *         has been called or the gate is open after this call.
+     * @return <code>true</code> in all cases.
      */
     public boolean closeGate() {
-        if (this.gateFixedOpen) return false;
         gate.close();
         return true;
     }
@@ -90,16 +84,6 @@ public class EntryExitManager {
     public boolean openGate() {
         gate.open();
         return true;
-    }
-
-    /**
-     * Opens the gate and wakes up all waiting threads. Does not block.
-     * After this call, all subsequent calls to <code>closeGate()</code> will be ignored.
-     * @return <code>true</code> if the gate is open after this call
-     */
-    public boolean finalOpenGate() {
-        this.gateFixedOpen = true;
-        return openGate();
     }
 
     /**

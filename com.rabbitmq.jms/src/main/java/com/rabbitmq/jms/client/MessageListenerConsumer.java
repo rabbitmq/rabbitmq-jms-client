@@ -30,7 +30,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
     private final Channel channel;
     private final MessageListener messageListener;
     private final boolean autoAck;
-    private final Completion completion = new Completion();
+    private volatile Completion completion;
     private final long terminationTimeout;
     private volatile boolean rejecting = false;
 
@@ -47,6 +47,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
         this.messageListener = messageListener;
         this.autoAck = messageConsumer.isAutoAck();
         this.terminationTimeout = terminationTimeout;
+        this.completion = new Completion();
     }
 
     /**
@@ -172,6 +173,8 @@ class MessageListenerConsumer implements Consumer, Abortable {
 
     @Override
     public void start() {
+        this.rejecting = false;
+        this.completion = new Completion();
         try {
             this.messageConsumer.basicConsume(this);
         } catch (Exception _) {

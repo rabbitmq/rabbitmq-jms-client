@@ -31,12 +31,12 @@ class SynchronousConsumer implements Consumer, Abortable {
 
     private final long timeout;
     private final Channel channel;
-    private final Completion completion = new Completion();
     private final AtomicBoolean useOnce = new AtomicBoolean(false);
     private final AtomicBoolean oneReceived = new AtomicBoolean(false);
     private final AtomicBoolean cancelled = new AtomicBoolean(false);
 
     private volatile String consumerTag;
+    private volatile boolean aborted = false;
 
     SynchronousConsumer(Channel channel, TimeTracker tt) {
         this.timeout = TimeUnit.NANOSECONDS.toMillis(tt.remaining());
@@ -77,13 +77,11 @@ class SynchronousConsumer implements Consumer, Abortable {
 
     @Override
     public void handleCancelOk(String consumerTag) {
-        this.completion.setComplete();
         this.consumerTag = null;
     }
 
     @Override
     public void handleCancel(String consumerTag) throws IOException {
-        this.completion.setComplete();
         this.consumerTag = null;
     }
 
@@ -104,19 +102,20 @@ class SynchronousConsumer implements Consumer, Abortable {
         }
 
         GetResponse waiter = null;
-        try {
-            if (this.oneReceived.compareAndSet(false, true)) { // give a receive() thread enough time to arrive
+        if (this.oneReceived.compareAndSet(false, true)) {
+            try {
+                // give a receive() thread enough time to arrive
                 waiter = this.exchanger.exchange(response, Math.min(100, this.timeout), TimeUnit.MILLISECONDS);
+            } catch (InterruptedException x) {
+                // this is ok, it means we had a message
+                // but no one there to receive it and got
+                // interrupted
+                /* Reset the thread interrupted status anyway */
+                Thread.currentThread().interrupt();
+            } catch (TimeoutException x) {
             }
-        } catch (InterruptedException x) {
-            // this is ok, it means we had a message
-            // but no one there to receive it and got
-            // interrupted
-            /* Reset the thread interrupted status anyway */
-            Thread.currentThread().interrupt();
-        } catch (TimeoutException x) {
-
         }
+
         if (waiter == ACCEPT_MSG) {
             /* we never ack any message, that is the responsibility of the calling thread */
         } else {
@@ -156,8 +155,10 @@ class SynchronousConsumer implements Consumer, Abortable {
     }
 
     public void abort() {
+        if (this.aborted) return;
         try {
-            this.exchanger.exchange(REJECT_MSG, 1000, TimeUnit.NANOSECONDS);
+            this.aborted = true;
+            this.exchanger.exchange(REJECT_MSG, 0, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             /* Reset the thread interrupted status */
             Thread.currentThread().interrupt();

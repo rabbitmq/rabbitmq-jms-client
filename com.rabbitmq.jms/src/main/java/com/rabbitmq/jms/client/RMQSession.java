@@ -100,6 +100,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private ConcurrentLinkedQueue<String> topics = new ConcurrentLinkedQueue<String>();
 
+    private final Object closeLock = new Object();
+
     /**
      * Creates a session object associated with a connection
      * @param connection the connection that we will send data on
@@ -251,7 +253,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         try {
             //call commit on the channel
             //this should ACK all messages
-            //TODO: This does not ACK all messages -- correct this?
+            //TODO: This does not ACK all messages (received) -- correct this?
             this.channel.txCommit();
         } catch (Exception x) {
             throw new RMQJMSException(x);
@@ -283,36 +285,38 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.getConnection().sessionClose(this);
     }
 
-    synchronized void internalClose() throws JMSException {
+     void internalClose() throws JMSException {
         if (this.closed) return;
 
-        try {
-            //close all consumers created by this session
-            for (RMQMessageConsumer consumer : this.consumers) {
-                try {
-                    consumer.internalClose();
-                } catch (JMSException x) {
-                    x.printStackTrace(); //TODO logging implementation
+        synchronized (this.closeLock) {
+            try {
+                //close all consumers created by this session
+                for (RMQMessageConsumer consumer : this.consumers) {
+                    try {
+                        consumer.internalClose();
+                    } catch (JMSException x) {
+                        x.printStackTrace(); //TODO logging implementation
+                    }
                 }
+                this.consumers.clear();
+
+                //close all producers created by this session
+                for (RMQMessageProducer producer : this.producers) {
+                    producer.internalClose();
+                }
+                this.producers.clear();
+
+                if (this.getTransacted()) {
+                    this.rollback();
+                }
+
+                deleteTopicQueues(this.topics, this.channel);
+
+                closeRabbitChannel(this.channel); //close the main channel
+
+            } finally {
+                this.closed = true;
             }
-            this.consumers.clear();
-
-            //close all producers created by this session
-            for (RMQMessageProducer producer : this.producers) {
-                producer.internalClose();
-            }
-            this.producers.clear();
-
-            if (this.getTransacted()) {
-                this.rollback();
-            }
-
-            deleteTopicQueues(this.topics, this.channel);
-
-            closeRabbitChannel(this.channel); //close the main channel
-
-        } finally {
-            this.closed = true;
         }
     }
 
@@ -349,7 +353,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * {@inheritDoc}
-     * TODO we can use basic.recover method call instead of basic.nack(requeue=true)
      */
     @Override
     public void recover() throws JMSException {
@@ -359,7 +362,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         } else {
             synchronized (this.unackedMessageTags) {
                 /* If we have messages to recover */
-                if (this.unackedMessageTags.size()>0) {
+                if (!this.unackedMessageTags.isEmpty()) {
                     try {
                         this.channel.basicRecover(true);
                     }catch (IOException x) {

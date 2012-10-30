@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  * The <code>GateWaiter</code> is either <code>OPENED</code>, <code>CLOSED</code> or <code>ABORTED</code>, and the main
  * operations are <code>open()</code>, <code>close()</code>, <code>waitForOpen(<i>timeout</i>)</code> and
  * <code>abort()</code>. The abstract methods <code>onEntry()</code>, <code>onWait()</code> and <code>onAbort()</code>
- * must be defined by an implementing class and are called at appropriate points (described below).
+ * must be defined by an implementing class and are called (under the gate lock) at the appropriate transition points.
  * </p>
  * </dd>
  * <dd>
@@ -21,15 +21,6 @@ import java.util.concurrent.TimeUnit;
  * gate is <code>OPENED</code>, the timeout expires, or the gate is <code>ABORTED</code>. If the gate is
  * <code>OPENED</code>, either already or at a later time, the call returns after the <code>onEntry()</code> method is
  * called.
- * </p>
- * </dd>
- * <dt>Implementation</dt>
- * <dd>
- * <p>
- * The <code>GateWaiter</code> is either <code>OPENED</code>, <code>CLOSED</code> or <code>ABORTED</code>, and the main
- * operations are <code>open()</code>, <code>close()</code>, <code>waitForOpen(<i>timeout</i>)</code> and
- * <code>abort()</code>. The abstract methods <code>onEntry()</code>, <code>onWait()</code> and <code>onAbort()</code>
- * must be defined by an implementing class and are called at appropriate points (described below).
  * </p>
  * </dd>
  * </dl>
@@ -93,17 +84,17 @@ abstract class GateWaiter {
     }
 
     /**
-     * Called when thread actually waits for the gate to open.
+     * Called atomically when thread actually waits for the gate to open.
      */
     public abstract void onWait();
 
     /**
-     * Called when thread passes through open gate.
+     * Called atomically when thread passes through open gate.
      */
     public abstract void onEntry();
 
     /**
-     * Called when thread is aborted while waiting for open.
+     * Called atomically when thread is aborted while waiting for open.
      */
     public abstract void onAbort();
 
@@ -139,27 +130,22 @@ abstract class GateWaiter {
      * @throws AbortedException if gate is <code>ABORTED</code> now or within time limit.
      */
     public final boolean waitForOpen(TimeTracker tracker) throws InterruptedException, AbortedException {
-        GateState derivedState;
         synchronized(this.lock) {
             long arrivalGeneration = this.generation;
             while ((this.state == GateState.CLOSED) && (arrivalGeneration == this.generation) && (!tracker.timeout())) {
                 tracker.timedWait(this.lock);
             }
             // this.state == OPENED | ABORTED OR arrivalGeneration != generation OR timeout()
-            derivedState = this.state;
+            GateState derivedState = this.state;
             if (derivedState == GateState.ABORTED) {
+                this.onAbort();
+                throw new AbortedException();
             } else if (derivedState == GateState.OPENED || arrivalGeneration != this.generation) {
-                derivedState = GateState.OPENED;
+                this.onEntry();
+                return true;
             } else
                 return false;  // we timed out
         }
-        // fall through when opened or aborted
-        if (derivedState == GateState.ABORTED) {
-            this.onAbort();
-            throw new AbortedException();
-        }
-        this.onEntry();
-        return true;
     }
 
     /**
