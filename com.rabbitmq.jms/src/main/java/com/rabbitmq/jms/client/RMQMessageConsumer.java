@@ -222,21 +222,23 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             if (!this.receiveManager.enter(tt))
                 return null; // timed out
             /* Try to receive a message synchronously */
-            msg = synchronousGet();
-            if (msg != null)
-                return msg;
-            if (tt.timeout())
-                return null; // We timed out already. A timeout means we return null to the caller.
+            try {
+                msg = synchronousGet();
+                if (msg != null)
+                    return msg;
+                if (tt.timeout())
+                    return null; // We timed out already. A timeout means we return null to the caller.
 
-            return asynchronousGet(tt);
+                return asynchronousGet(tt);
+            } finally {
+                this.receiveManager.exit();
+            }
         } catch (AbortedException _) {
             /* If the get has been aborted we return null, too. */
             return null;
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt(); // reset interrupt status
             return null;
-        } finally {
-            this.receiveManager.exit();
         }
     }
 
