@@ -44,6 +44,8 @@
  */
 package org.exolab.jmscts.core;
 
+import java.lang.reflect.Method;
+
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
@@ -137,13 +139,16 @@ public final class SessionHelper {
         String selector, boolean noLocal) throws JMSException {
 
         MessageConsumer result = null;
-
         if (session instanceof XAQueueSession) {
             session = ((XAQueueSession) session).getQueueSession();
+        } else if (session instanceof XATopicSession) {
+            session = ((XATopicSession) session).getTopicSession();
+        }
+
+        if (isQueue(destination)) {
             Queue queue = (Queue) destination;
             result = ((QueueSession) session).createReceiver(queue, selector);
         } else {
-            session = ((XATopicSession) session).getTopicSession();
             Topic topic = (Topic) destination;
             if (name != null) {
                 result = ((TopicSession) session).createDurableSubscriber(
@@ -154,6 +159,16 @@ public final class SessionHelper {
             }
         }
         return result;
+    }
+    
+    public static boolean isQueue(Object o) {
+        try {
+            Method m = o.getClass().getMethod("isQueue", new Class[0]);
+            return (Boolean)m.invoke(o, new Object[0]);
+        }catch (Exception x) {
+            x.printStackTrace();
+        }
+        return false;
     }
 
     /**
