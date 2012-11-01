@@ -25,6 +25,7 @@ import com.rabbitmq.jms.util.AbortedException;
 import com.rabbitmq.jms.util.EntryExitManager;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.TimeTracker;
+import com.rabbitmq.jms.util.Util;
 
 public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscriber {
     private static final long STOP_TIMEOUT_MS = 1000; // ONE SECOND
@@ -116,18 +117,15 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     /**
-     * Remove the listener and dispose of any Rabbit Consumer that may be active and tracked.
+     * Dispose of any Rabbit Consumer that may be active and tracked.
      */
-    private void replaceMessageListener(MessageListener listener) {
-        if (listener == this.messageListener)
-            return;
+    private void removeListenerConsumer() {
         MessageListenerConsumer listenerConsumer = this.listenerConsumer.getAndSet(null);
         if (listenerConsumer != null) {
             this.abortables.remove(listenerConsumer);
             listenerConsumer.stop();  // orderly stop
             listenerConsumer.abort(); // force it if it didn't work
         }
-        this.messageListener = listener;
     }
 
     /**
@@ -152,7 +150,19 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public void setMessageListener(MessageListener messageListener) throws JMSException {
-        this.replaceMessageListener(messageListener);
+        if (messageListener == this.messageListener) // no change, so do nothing
+            return;
+        this.removeListenerConsumer();  // if there is any
+        this.messageListener = messageListener;
+        this.setNewListenerConsumer(messageListener); // if needed
+    }
+
+    /**
+     * Create a new RabitMQ Consumer, if necessary.
+     * @param messageListener to drive from Consumer; no Consumer is created if this is null.
+     * @throws IllegalStateException
+     */
+    private void setNewListenerConsumer(MessageListener messageListener) throws IllegalStateException {
         if (messageListener != null) {
             MessageListenerConsumer mlConsumer =
                                                  new MessageListenerConsumer(
@@ -285,11 +295,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * Register a {@link Consumer} with the Rabbit API to receive messages
      *
      * @param consumer the SynchronousConsumer being registered
-     * @return the consumer tag created for this consumer
      * @throws IOException from RabbitMQ calls
      * @see Channel#basicConsume(String, boolean, String, boolean, boolean, java.util.Map, Consumer)
      */
-    public String basicConsume(Consumer consumer) throws IOException {
+    public void basicConsume(Consumer consumer) throws IOException {
         String name = null;
         if (this.destination.isQueue()) {
             /* javax.jms.Queue we share a single AMQP queue among all consumers hence the name will the the name of the
@@ -304,23 +313,24 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         // to the actual consumer so we pass in false as the auto ack mode
         // we must support setMessageListener(null) while messages are arriving
         // and those message we NACK
-        return getSession().getChannel()
-                .basicConsume(name, /* the name of the queue */
-                              false, /* autoack is ALWAYS false, otherwise we risk acking messages that are received
-                                      * to the client but the client listener(onMessage) has not yet been invoked */
-                              newConsumerTag(), /* the consumer tag to use */
-                              this.getNoLocalNoException(), /* RabbitMQ supports the noLocal flag for subscriptions */
-                              false, /* exclusive will always be false: exclusive consumer access true means only this
-                                      * consumer can access the queue. */
-                              null, /* there are no custom arguments for the subscription */
-                              consumer /* the callback object for handleDelivery(), etc. */
-                              );
+        getSession().getChannel()
+         .basicConsume(name, /* the name of the queue */
+                       false, /* autoack is ALWAYS false, otherwise we risk acking messages that are received
+                               * to the client but the client listener(onMessage) has not yet been invoked */
+                       newConsumerTag(), /* the consumer tag to use */
+                       this.getNoLocalNoException(), /* RabbitMQ supports the noLocal flag for subscriptions */
+                       false, /* exclusive will always be false: exclusive consumer access true means only this
+                               * consumer can access the queue. */
+                       null, /* there are no custom arguments for the subscription */
+                       consumer /* the callback object for handleDelivery(), etc. */
+                       );
     }
 
     private static final String newConsumerTag() {
-        /* RabbitMQ basicConsumer accepts null, which causes it to generate a new, unique consumer-tag for us */
-        /* return "jms-consumer-" + Util.generateUUIDTag(); */
-        return null;
+        /* RabbitMQ basicConsume should accept null, to causes it to generate a new, unique consumer-tag for us
+         * but it doesn't :-( */
+        return "jms-consumer-" + Util.generateUUIDTag();
+//        return null;
     }
 
     /**
@@ -422,8 +432,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         this.receiveManager.closeGate(); // stop any more entering receive region
         this.receiveManager.abortWaiters(); // abort any that arrive now
 
-        /* remove any subscription that is active at this time - waits for onMessage processing to finish */
-        this.replaceMessageListener(null);
+        /* stop and remove any active subscription - waits for onMessage processing to finish */
+        this.removeListenerConsumer();
 
         this.abortables.abort(); // abort async Consumers of both types that remain
 

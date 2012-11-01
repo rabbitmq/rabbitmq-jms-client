@@ -32,7 +32,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
     private final boolean autoAck;
     private volatile Completion completion;
     private final long terminationTimeout;
-    private volatile boolean rejecting = false;
+    private volatile boolean rejecting;
 
     /**
      * Constructor
@@ -47,7 +47,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
         this.messageListener = messageListener;
         this.autoAck = messageConsumer.isAutoAck();
         this.terminationTimeout = terminationTimeout;
-        this.completion = new Completion();
+        this.rejecting = this.messageConsumer.getSession().getConnection().isStopped();
     }
 
     /**
@@ -147,8 +147,10 @@ class MessageListenerConsumer implements Consumer, Abortable {
     @Override
     public void abort() {
         try {
-            this.channel.basicCancel(this.consumerTag);
-        } catch (Exception _) {
+            if (this.consumerTag!=null)
+                this.channel.basicCancel(this.consumerTag);
+        } catch (Exception e) {
+            e.printStackTrace(); // for diagnostics
         }
         this.rejecting = true;
         this.completion.setComplete();
@@ -158,8 +160,10 @@ class MessageListenerConsumer implements Consumer, Abortable {
     public void stop() {
         TimeTracker tt = new TimeTracker(this.terminationTimeout, TimeUnit.NANOSECONDS);
         try {
-            this.channel.basicCancel(this.consumerTag);
-            this.completion.waitUntilComplete(tt);
+            if (this.consumerTag!=null) {
+                this.channel.basicCancel(this.consumerTag);
+                this.completion.waitUntilComplete(tt);
+            }
         } catch (AlreadyClosedException ace) {
             // TODO check if basicCancel really necessary in this case.
             if (!ace.isInitiatedByApplication()) {
@@ -167,17 +171,20 @@ class MessageListenerConsumer implements Consumer, Abortable {
             }
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
-        } catch (Exception _) {
+        } catch (Exception e) {
+            e.printStackTrace(); // diagnostics
         }
     }
 
     @Override
     public void start() {
         this.rejecting = false;
-        this.completion = new Completion();
+        this.completion = new Completion();  // need a new completion object
         try {
             this.messageConsumer.basicConsume(this);
-        } catch (Exception _) {
+        } catch (Exception e) {
+            this.completion.setComplete();  // just in case someone is waiting on it
+            e.printStackTrace(); // diagnostics
         }
     }
 

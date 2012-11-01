@@ -794,7 +794,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         return this.channel;
     }
 
-    public void consumerClose(RMQMessageConsumer consumer) throws JMSException {
+    void consumerClose(RMQMessageConsumer consumer) throws JMSException {
         if (this.consumers.remove(consumer)) {
             //TODO: if (consumer.isDurable()) { don't cancel it? cancel it? -- decide }
             consumer.internalClose();
