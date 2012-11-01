@@ -1,7 +1,6 @@
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,7 +25,6 @@ import com.rabbitmq.jms.util.AbortedException;
 import com.rabbitmq.jms.util.EntryExitManager;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.TimeTracker;
-import com.rabbitmq.jms.util.Util;
 
 public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscriber {
     private static final long STOP_TIMEOUT_MS = 1000; // ONE SECOND
@@ -186,12 +184,12 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     /**
      * Receive a single message from the destination, waiting for up to <code>timeout</code> milliseconds if necessary.
      * <p>
-     * The spec for {@link Connection#stop()} says:
+     * The JMS 1.1 specification for {@link javax.jms.Connection#stop()} says:
      * </p>
      * <blockquote>
      * <p>
      * When the connection is stopped, delivery to all the connection's message consumers is inhibited: synchronous
-     * receives block, and messages are not delivered to message listeners. {@link Connection#stop()} blocks until
+     * receives block, and messages are not delivered to message listeners. {@link javax.jms.Connection#stop()} blocks until
      * receives and/or message listeners in progress have completed.
      * </p>
      * </blockquote>
@@ -306,22 +304,23 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         // to the actual consumer so we pass in false as the auto ack mode
         // we must support setMessageListener(null) while messages are arriving
         // and those message we NACK
-        return getSession().getChannel().basicConsume(/* the name of the queue */
-        name,
-        /* autoack is ALWAYS false, otherwise we risk acking messages that are received to the client but the client
-         * listener(onMessage) has not yet been invoked */
-        false,
-        /* the consumer tag, a prefixed unique identifier */
-        "jms-consumer-" + Util.generateUUIDTag(), // the consumer tag
-                                                      /* we do support the noLocal for subscriptions */
-                                                      this.getNoLocalNoException(),
-                                                      /* exclusive will always be false exclusive consumer access,
-                                                       * meaning only this consumer can access the queue. */
-                                                      false,
-                                                      /* no custom arguments for the subscriber */
-                                                      new HashMap<String, Object>(),
-                                                      /* The callback object for handleDelivery() */
-                                                      consumer);
+        return getSession().getChannel()
+                .basicConsume(name, /* the name of the queue */
+                              false, /* autoack is ALWAYS false, otherwise we risk acking messages that are received
+                                      * to the client but the client listener(onMessage) has not yet been invoked */
+                              newConsumerTag(), /* the consumer tag to use */
+                              this.getNoLocalNoException(), /* RabbitMQ supports the noLocal flag for subscriptions */
+                              false, /* exclusive will always be false: exclusive consumer access true means only this
+                                      * consumer can access the queue. */
+                              null, /* there are no custom arguments for the subscription */
+                              consumer /* the callback object for handleDelivery(), etc. */
+                              );
+    }
+
+    private static final String newConsumerTag() {
+        /* RabbitMQ basicConsumer accepts null, which causes it to generate a new, unique consumer-tag for us */
+        /* return "jms-consumer-" + Util.generateUUIDTag(); */
+        return null;
     }
 
     /**
@@ -528,11 +527,11 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     /**
-     * Configures the no local for this consumer This is currently only used when subscribing an async consumer
+     * Configures the no local for this consumer.  This is currently only used when subscribing an async consumer.
      *
-     * @param noLocal
+     * @param noLocal - true if NACKed
      */
-    public void setNoLocal(boolean noLocal) {
+    void setNoLocal(boolean noLocal) {
         this.noLocal = noLocal;
     }
 
