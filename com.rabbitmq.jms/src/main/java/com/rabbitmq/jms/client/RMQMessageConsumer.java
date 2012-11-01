@@ -25,7 +25,6 @@ import com.rabbitmq.jms.util.Abortable;
 import com.rabbitmq.jms.util.AbortedException;
 import com.rabbitmq.jms.util.EntryExitManager;
 import com.rabbitmq.jms.util.RMQJMSException;
-import com.rabbitmq.jms.util.RuntimeWrapperException;
 import com.rabbitmq.jms.util.TimeTracker;
 import com.rabbitmq.jms.util.Util;
 
@@ -155,28 +154,24 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public void setMessageListener(MessageListener messageListener) throws JMSException {
-        try {
-            this.replaceMessageListener(messageListener);
-            if (messageListener != null) {
-                MessageListenerConsumer mlConsumer =
-                                                     new MessageListenerConsumer(
-                                                                                 this,
-                                                                                 getSession().getChannel(),
-                                                                                 messageListener,
-                                                                                 TimeUnit.MILLISECONDS.toNanos(this.session.getConnection()
-                                                                                                                           .getTerminationTimeout()));
-                if (this.listenerConsumer.compareAndSet(null, mlConsumer)) {
-                    this.abortables.add(mlConsumer);
-                    if (!this.getSession().getConnection().isStopped()) {
-                        mlConsumer.start();
-                    }
-                } else {
-                    mlConsumer.abort();
-                    throw new IllegalStateException("MessageListener concurrently set on Consumer " + this);
+        this.replaceMessageListener(messageListener);
+        if (messageListener != null) {
+            MessageListenerConsumer mlConsumer =
+                                                 new MessageListenerConsumer(
+                                                                             this,
+                                                                             getSession().getChannel(),
+                                                                             messageListener,
+                                                                             TimeUnit.MILLISECONDS.toNanos(this.session.getConnection()
+                                                                                                                       .getTerminationTimeout()));
+            if (this.listenerConsumer.compareAndSet(null, mlConsumer)) {
+                this.abortables.add(mlConsumer);
+                if (!this.getSession().getConnection().isStopped()) {
+                    mlConsumer.start();
                 }
+            } else {
+                mlConsumer.abort();
+                throw new IllegalStateException("MessageListener concurrently set on Consumer " + this);
             }
-        } catch (RuntimeWrapperException rwe) {
-            throw new RMQJMSException(rwe.getCause());
         }
     }
 
