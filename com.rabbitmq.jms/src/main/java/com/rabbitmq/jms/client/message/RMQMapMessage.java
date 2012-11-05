@@ -19,7 +19,7 @@ import com.rabbitmq.jms.util.IteratorEnum;
 import com.rabbitmq.jms.util.RMQMessageFormatException;
 
 /**
- * Rabbit implementation of {@link MapMessage} interface.
+ * Implementation of {@link MapMessage} interface.
  */
 public class RMQMapMessage extends RMQMessage implements MapMessage {
 

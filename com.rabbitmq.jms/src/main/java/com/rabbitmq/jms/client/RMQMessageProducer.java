@@ -200,7 +200,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         try {
             if (deliveryMode<1 || deliveryMode>2) {
                 /*
-                 * If delivery mode is invalid, set it to non persistnt
+                 * If delivery mode is invalid, set it to NON_PERSISTENT
                  */
                 deliveryMode = javax.jms.DeliveryMode.NON_PERSISTENT;
             }

@@ -10,6 +10,9 @@ import javax.jms.TextMessage;
 
 import com.rabbitmq.jms.client.RMQMessage;
 
+/**
+ * Implements {@link TextMessage} interface.
+ */
 public class RMQTextMessage extends RMQMessage implements TextMessage {
 
     private volatile String text;

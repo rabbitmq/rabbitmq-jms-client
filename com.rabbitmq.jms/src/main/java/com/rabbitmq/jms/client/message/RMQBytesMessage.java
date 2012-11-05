@@ -23,7 +23,7 @@ import com.rabbitmq.jms.util.RMQMessageFormatException;
 import com.rabbitmq.jms.util.Util;
 
 /**
- * Implementation of {@link javax.jms.StreamMessage}
+ * Implementation of {@link BytesMessage} interface.
  */
 public class RMQBytesMessage extends RMQMessage implements BytesMessage {
     /**

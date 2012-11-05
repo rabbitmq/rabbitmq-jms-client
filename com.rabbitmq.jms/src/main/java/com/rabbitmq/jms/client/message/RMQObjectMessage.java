@@ -16,6 +16,9 @@ import javax.jms.ObjectMessage;
 import com.rabbitmq.jms.client.RMQMessage;
 import com.rabbitmq.jms.util.RMQJMSException;
 
+/**
+ * Implements {@link ObjectMessage} interface.
+ */
 public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
 
     private volatile byte[] buf = null;

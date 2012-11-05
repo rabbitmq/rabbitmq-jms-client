@@ -12,7 +12,6 @@ import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -89,10 +88,6 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     private final Map<String, Serializable> jmsProperties = new HashMap<String, Serializable>();
     /**
-     * Has this message been acked?
-     */
-    private final AtomicBoolean isAcked = new AtomicBoolean(false);
-    /**
      * We generate a unique message ID each time we send a message
      * It is stored here. This is also used for
      * {@link #hashCode()} and {@link #equals(Object)}
@@ -143,7 +138,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * When a message is received, it has a delivery tag
      * We use this delivery tag when we ack
      * a single message
-     * @see RMQSession#acknowledgeMessage(RMQMessage)
+     * @see RMQSession#acknowledgeMessages()
      * @see RMQMessageConsumer#processMessage(com.rabbitmq.client.GetResponse, boolean)
      */
     private long rabbitDeliveryTag = -1;
@@ -167,7 +162,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     /**
      * The Message must hold a reference to the session itself
      * So that it can ack itself. Ack belongs to the session
-     * @see RMQSession#acknowledgeMessage(RMQMessage)
+     * @see RMQSession#acknowledgeMessages()
      */
     private volatile transient RMQSession session = null;
     /**
@@ -180,7 +175,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     /**
      * Sets the session this object was received by
      * @see RMQMessageConsumer#processMessage(com.rabbitmq.client.GetResponse, boolean)
-     * @see RMQSession#acknowledgeMessage(RMQMessage)
+     * @see RMQSession#acknowledgeMessages()
      * @param session
      */
     protected void setSession(RMQSession session) {
@@ -712,14 +707,29 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
 
     /**
+     * Although the JavaDoc implies otherwise, this call acknowledges all unacknowledged messages on the message's
+     * session.
+     * <p>
+     * The JavaDoc says:
+     * </p>
+     * <blockquote>
+     * <p>A client may individually acknowledge each message as it is consumed, or it may choose to
+     * acknowledge messages as an application-defined group (which is done by calling acknowledge on the last received
+     * message of the group, thereby acknowledging all messages consumed by the session.)
+     * </p>
+     * </blockquote>
+     * <p>
+     * ...but there is no way to do either of these things, as is explained by the specification[1].
+     * </p>
      * {@inheritDoc}
-     * @see RMQSession#acknowledgeMessage(RMQMessage)
+     * <p>
+     * [1] <a href="http://download.oracle.com/otn-pub/jcp/7195-jms-1.1-fr-spec-oth-JSpec/jms-1_1-fr-spec.pdf">JMS 1.1 spec</a> Section 11.3.2.2.
+     * </p>
+     * @see RMQSession#acknowledgeMessages()
      */
     @Override
     public void acknowledge() throws JMSException {
-        if (this.isAcked.compareAndSet(false, true)) {
-            getSession().acknowledgeMessage(this);
-        }
+        getSession().acknowledgeMessages();
     }
 
     /**

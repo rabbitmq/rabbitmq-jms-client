@@ -26,6 +26,9 @@ import com.rabbitmq.jms.util.RMQMessageFormatException;
  * we have disassemble into multiple messages and reassemble multiple messages
  * on the other side
  */
+/**
+ * Implements {@link StreamMessage} interface.
+ */
 public class RMQStreamMessage extends RMQMessage implements StreamMessage {
 
     private static final String NOT_READABLE = "Message not readable";
@@ -46,7 +49,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         this(false);
     }
 
-    public RMQStreamMessage(boolean reading) {
+    private RMQStreamMessage(boolean reading) {
         this.reading = reading;
         if (!reading) {
             this.bout = new ByteArrayOutputStream(RMQMessage.DEFAULT_MESSAGE_BODY_SIZE);
