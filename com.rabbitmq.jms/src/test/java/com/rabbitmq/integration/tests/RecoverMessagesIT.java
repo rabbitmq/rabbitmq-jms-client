@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.DeliveryMode;
@@ -21,8 +22,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.junit.Test;
-
-import com.rabbitmq.jms.util.CountUpAndDownLatch;
 
 /**
  * Integration test
@@ -77,7 +76,7 @@ public class RecoverMessagesIT {
             TextMessage message = queueSession.createTextMessage(MESSAGE);
             queueSender.send(message);
             QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-            final CountUpAndDownLatch latch = new CountUpAndDownLatch(2);
+            final CountDownLatch latch = new CountDownLatch(2);
             queueReceiver.setMessageListener(new MessageListener() {
                 @Override
                 public void onMessage(Message message) {
@@ -92,7 +91,7 @@ public class RecoverMessagesIT {
             TextMessage tmsg1 = (TextMessage)messages.get(0);
             assertFalse(tmsg1.getJMSRedelivered());
             queueSession.recover();
-            latch.awaitZero(1000, TimeUnit.MILLISECONDS);
+            latch.await(1000, TimeUnit.MILLISECONDS);
             //we should have received two messages
             assertEquals(2, messages.size());
             TextMessage tmsg2 = (TextMessage)messages.get(1);
