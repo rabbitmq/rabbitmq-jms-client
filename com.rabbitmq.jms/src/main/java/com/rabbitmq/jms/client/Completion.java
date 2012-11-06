@@ -59,7 +59,7 @@ public class Completion {
 
         public boolean get() throws InterruptedException {
             try {
-                return get(new TimeTracker(Long.MAX_VALUE, TimeUnit.NANOSECONDS));
+                return get(new TimeTracker());
             } catch (TimeoutException e) {
                 throw new IllegalStateException("Impossible timeout.", e);
             }

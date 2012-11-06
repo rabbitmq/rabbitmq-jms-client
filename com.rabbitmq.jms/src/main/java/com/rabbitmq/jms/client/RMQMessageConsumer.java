@@ -216,9 +216,11 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     public Message receive(long timeout) throws JMSException {
         if (this.closed || this.closing)
             throw new IllegalStateException("Consumer is closed or closing.");
+        TimeTracker tt;
         if (timeout == 0)
-            timeout = Long.MAX_VALUE; // The spec identifies 0 as infinite timeout
-        TimeTracker tt = new TimeTracker(timeout, TimeUnit.MILLISECONDS);
+            tt = new TimeTracker(); // The spec identifies 0 as infinite timeout
+        else
+            tt = new TimeTracker(timeout, TimeUnit.MILLISECONDS);
 
         Message msg;
         try {

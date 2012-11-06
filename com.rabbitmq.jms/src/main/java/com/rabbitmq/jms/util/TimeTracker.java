@@ -22,6 +22,13 @@ public class TimeTracker {
     }
 
     /**
+     * Initialise tracker with maximum duration -- effectively an infinite time.
+     */
+    public TimeTracker() {
+        this(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+    }
+
+    /**
      * Return the remaining time to go in nanoseconds, or zero if there is no more.
      * @return remaining time (in nanoseconds) - 0 means time has run out
      */
