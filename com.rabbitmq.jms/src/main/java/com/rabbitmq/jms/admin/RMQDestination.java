@@ -225,4 +225,13 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
         //TODO implement Channel.queueDelete
         //See RMQSession.close how we call Channel.queueDelete
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("RMQDestination{");
+        sb.append("name='").append(name)
+//          .append("', routingKey='").append(routingKey)
+          ;
+        return sb.append("'}").toString();
+    }
 }
