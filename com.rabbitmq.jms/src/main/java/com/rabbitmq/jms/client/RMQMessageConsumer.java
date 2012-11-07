@@ -42,13 +42,14 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     private final String uuidTag;
     /**
-     * The async listener that we use to subscribe to Rabbit messages
+     * The {@link Consumer} that we use to subscribe to Rabbit messages which drives {@link MessageListener#onMessage}.
      */
     private final AtomicReference<MessageListenerConsumer> listenerConsumer =
                                                                               new AtomicReference<MessageListenerConsumer>();
     /**
-     * Entry and exit of receive() threads are controlled by this gate. See {@link javax.jms.Connection#start()} and
-     * {@link javax.jms.Connection#stop()}
+     * Entry and exit of application threads calling {@link #receive} are managed by this.
+     * @see javax.jms.Connection#start()
+     * @see javax.jms.Connection#stop()
      */
     private final EntryExitManager receiveManager = new EntryExitManager();
     /**
@@ -56,25 +57,28 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     private final AbortableHolder abortables = new AbortableHolder();
     /**
-     * Is this consumer closed. this value should change to true, but never change back
+     * Is this consumer closed? This value can change to true, but never changes back.
      */
     private volatile boolean closed = false;
     /**
-     * If this consumer is in the process of closing
+     * If this consumer is in the process of closing.
      */
     private volatile boolean closing = false;
     /**
-     * {@link MessageListener}, set by the user*
+     * {@link MessageListener}, set by the user.
      */
     private volatile MessageListener messageListener;
     /**
-     * Flag to check if we are a durable subscription
+     * Flag to check if we are a durable subscription.
      */
     private volatile boolean durable = false;
     /**
      * Flag to check if we have noLocal set
      */
     private volatile boolean noLocal = false;
+
+    /** Buffer for messages on {@link #receive} queues, but not yet handed to application. */
+    private final ConcurrentLinkedQueue<GetResponse> receiveBuffer = new ConcurrentLinkedQueue<GetResponse>();
 
     /**
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
