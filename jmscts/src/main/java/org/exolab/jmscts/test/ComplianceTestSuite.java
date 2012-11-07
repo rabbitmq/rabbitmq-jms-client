@@ -44,18 +44,19 @@
  */
 package org.exolab.jmscts.test;
 
+import static junit.framework.Assert.fail;
 import junit.framework.Test;
+import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
 import org.exolab.jmscts.core.JMSTestRunner;
 import org.exolab.jmscts.core.JUnitTestRunner;
-
 import org.exolab.jmscts.test.asf.ASFTestSuite;
 import org.exolab.jmscts.test.connection.ConnectionTestSuite;
 import org.exolab.jmscts.test.message.MessageTestSuite;
 import org.exolab.jmscts.test.producer.ProducerTestSuite;
-import org.exolab.jmscts.test.session.SessionTestSuite;
 import org.exolab.jmscts.test.selector.SelectorTestSuite;
+import org.exolab.jmscts.test.session.SessionTestSuite;
 import org.exolab.jmscts.test.topic.TopicTestSuite;
 
 
@@ -80,7 +81,15 @@ public final class ComplianceTestSuite {
      */
     public static void main(String[] args) {
         JMSTestRunner test = new JMSTestRunner(suite(), args);
-        JUnitTestRunner.run(test);
+        TestResult testResult = JUnitTestRunner.run(test);
+        boolean hasErrors = testResult.errors().hasMoreElements();
+        boolean hasFailures = testResult.failures().hasMoreElements();
+        if (hasErrors || hasFailures) {
+            StringBuilder sb = new StringBuilder("ComplianceTestSuite: reports ");
+            sb.append(hasFailures?"Failure(s) and ":"NO Failures but ");
+            sb.append(hasErrors?"Error(s)":"NO Errors");
+            fail(sb.toString());
+        }
     }
 
     /**
@@ -90,7 +99,7 @@ public final class ComplianceTestSuite {
      */
     public static Test suite() {
         TestSuite suite = new TestSuite();
-        
+
         suite.addTest(ConnectionTestSuite.suite());
         suite.addTest(SessionTestSuite.suite());
         suite.addTest(TopicTestSuite.suite());

@@ -259,10 +259,11 @@ public class JUnitTestRunner extends BaseTestRunner {
      * Runs a suite
      *
      * @param suite the suite to run
+     * @return result of test suite
      */
-    public static void run(Test suite) {
+    public static TestResult run(Test suite) {
         JUnitTestRunner runner = new JUnitTestRunner();
-        runner.doRun(suite);
+        return runner.doRun(suite);
     }
 
     /**

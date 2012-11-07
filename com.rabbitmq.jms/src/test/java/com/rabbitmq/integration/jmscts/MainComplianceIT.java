@@ -6,6 +6,9 @@ import junit.framework.TestCase;
 
 import org.exolab.jmscts.test.ComplianceTestSuite;
 
+/**
+ * Runs the jmscts test suite as a single (integration) test (using maven/failsafe).
+ */
 public class MainComplianceIT extends TestCase {
 
     public void testAll() throws Exception {
