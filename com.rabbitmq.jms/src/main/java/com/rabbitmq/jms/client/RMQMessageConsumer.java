@@ -427,7 +427,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     /**
      * Method called internally or by the Session when system is shutting down
      */
-    protected void internalClose() throws JMSException {
+    void internalClose() throws JMSException {
         this.closing = true;
         /* If we are stopped, we must break that. This will release all threads waiting on the gate and effectively
          * disable the use of the gate */
@@ -514,10 +514,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     /**
      * Resubscribes all async listeners and continues to receive messages
      *
-     * @see javax.jms.Connection#stop()
+     * @see javax.jms.Connection#start()
      * @throws javax.jms.JMSException if the thread is interrupted
      */
-    public void resume() throws JMSException {
+    void resume() throws JMSException {
         this.abortables.start();
         this.receiveManager.openGate();
     }

@@ -62,14 +62,6 @@ class SynchronousConsumer implements Consumer, Abortable {
         return response;
     }
 
-    /**
-     * Returns the consumer tag used for this consumer
-     * @return the consumer tag for this consumer
-     */
-    public String getConsumerTag() {
-        return this.consumerTag;
-    }
-
     @Override
     public void handleConsumeOk(String consumerTag) {
         this.consumerTag = consumerTag;
