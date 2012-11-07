@@ -10,10 +10,9 @@
   <properties>
     <java-compile-version>1.6</java-compile-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
+<!-- plugin versions -->
     <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
-    <maven-surefire-plugin.version>2.12</maven-surefire-plugin.version>
-    <surefire-junit47.version>2.12</surefire-junit47.version>
+    <maven-surefire-plugin.version>2.12.4</maven-surefire-plugin.version>
     <maven-failsafe-plugin.version>2.12.4</maven-failsafe-plugin.version>
     <maven-antrun-plugin.version>1.7</maven-antrun-plugin.version>
     <maven-jar-plugin.version>2.4</maven-jar-plugin.version>
@@ -73,14 +72,6 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${maven-surefire-plugin.version}</version>
 
-          <dependencies>
-            <dependency>
-              <groupId>org.apache.maven.surefire</groupId>
-              <artifactId>surefire-junit47</artifactId>
-              <version>${surefire-junit47.version}</version>
-            </dependency>
-          </dependencies>
-
           <configuration>
             <encoding>UTF-8</encoding>
           </configuration>
@@ -89,14 +80,6 @@
         <plugin>
           <artifactId>maven-failsafe-plugin</artifactId>
           <version>${maven-failsafe-plugin.version}</version>
-
-          <dependencies>
-            <dependency>
-              <groupId>org.apache.maven.surefire</groupId>
-              <artifactId>surefire-junit47</artifactId>
-              <version>${surefire-junit47.version}</version>
-            </dependency>
-          </dependencies>
 
           <configuration>
             <encoding>UTF-8</encoding>
