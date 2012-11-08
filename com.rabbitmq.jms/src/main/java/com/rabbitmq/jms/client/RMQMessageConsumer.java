@@ -36,6 +36,7 @@ import com.rabbitmq.jms.util.Util;
  * </p>
  */
 public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscriber {
+    private static final int DEFAULT_BATCHING_SIZE = 5;
     private static final long STOP_TIMEOUT_MS = 1000; // ONE SECOND
     /**
      * The destination that this consumer belongs to
@@ -102,7 +103,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         this.uuidTag = uuidTag;
         if (!paused)
             this.receiveManager.openGate();
-        this.receiveBuffer = new ReceiveBuffer(10, this);
+        this.receiveBuffer = new ReceiveBuffer(DEFAULT_BATCHING_SIZE, this);
     }
 
     /**

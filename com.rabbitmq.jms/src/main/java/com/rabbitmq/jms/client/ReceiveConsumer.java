@@ -37,9 +37,9 @@ class ReceiveConsumer implements Consumer, Abortable {
     private final BlockingQueue<GetResponse> buffer;
 
     private final Completion completion = new Completion(); // RabbitMQ called Cancel, or CancelOK.
+    private final String consumerTag;
 
     private final Object lock = new Object(); // synchronising lock
-    @GuardedBy("lock") private String consumerTag;
     @GuardedBy("lock") private boolean aborted = false;
     @GuardedBy("lock") private boolean cancelled = false;
 
@@ -48,38 +48,41 @@ class ReceiveConsumer implements Consumer, Abortable {
         this.rmqMessageConsumer = rmqMessageConsumer;
         this.buffer = buffer;
         this.channel = rmqMessageConsumer.getSession().getChannel();
+        this.consumerTag = RMQMessageConsumer.newConsumerTag(); // generate unique consumer tag for our private use
     }
 
     @Override
     public void handleConsumeOk(String consumerTag) {
         synchronized (this.lock) {
-            this.consumerTag = consumerTag;
+            log("handleConsumeOK");
         }
     }
 
     @Override
     public void handleCancelOk(String consumerTag) {
         synchronized (this.lock) {
-            this.consumerTag = null;
+            log("handleCancelOk");
+            this.completion.setComplete();
         }
     }
 
     @Override
     public void handleCancel(String consumerTag) throws IOException {
         synchronized (this.lock) {
-            this.consumerTag = null;
+            log("handleCancel");
             this.abort();
         }
     }
 
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
+        log("handleDelivery");
         GetResponse response = new GetResponse(envelope, properties, body, 1);
         this.handleDelivery(consumerTag, response);
     }
 
-    final void handleDelivery(String consumerTag, GetResponse response) throws IOException {
-        this.cancel(); // cancel immediately (idempotent)
+    private final void handleDelivery(String consumerTag, GetResponse response) throws IOException {
+        this.cancel(false); // cancel and don't wait for completion
 
         synchronized (this.lock) {
             if (!this.aborted && this.buffer.size() < this.batchingSize) {
@@ -104,19 +107,25 @@ class ReceiveConsumer implements Consumer, Abortable {
 
     @Override
     public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
+        log("handleShutdownSignal");
         this.abort();
     }
 
     @Override
     public void handleRecoverOk(String consumerTag) {
+        log("handleRecoverOk");
         // noop
     }
 
+    /**
+     * Issue Consumer cancellation, and wait for the confirmation from the server.
+     */
     public void cancel() {
-        this.cancel(false); // don't wait for completion
+        this.cancel(true); // wait for completion
     }
 
-    private void cancel(boolean wait) {
+    private final void cancel(boolean wait) {
+        log("cancel", wait);
         synchronized (this.lock) {
             try {
                 if (!this.cancelled) {
@@ -124,10 +133,11 @@ class ReceiveConsumer implements Consumer, Abortable {
                     this.cancelled = true;
                 }
             } catch (ShutdownSignalException x) {
+                log("cancel", x, "basicCancel");
                 this.abort();
             } catch (IOException x) {
                 if (!(x.getCause() instanceof ShutdownSignalException)) {
-                    x.printStackTrace(); // TODO: log
+                    log("cancel", x, "basicCancel");
                 }
                 this.abort();
             }
@@ -136,14 +146,15 @@ class ReceiveConsumer implements Consumer, Abortable {
             try {
                 completion.waitUntilComplete(new TimeTracker(CANCELLATION_TIMEOUT, TimeUnit.MILLISECONDS));
             } catch (TimeoutException e) {
-                e.printStackTrace(); // TODO: log
+                log("cancel", e, "waitUntilComplete");
             } catch (InterruptedException e) {
-                e.printStackTrace(); // TODO: log
                 this.abort();
+                Thread.currentThread().interrupt();
             }
     }
 
     public void abort() {
+        log("abort");
         synchronized (this.lock) {
             if (this.aborted)
                 return;
@@ -166,21 +177,38 @@ class ReceiveConsumer implements Consumer, Abortable {
     }
 
     void register() {
+        log("register");
         try {
             this.channel.basicConsume(this.rmqMessageConsumer.rmqQueueName(), // queue we are listening on
-                                      false, // no autoAck - we do all our own acking
-                                      RMQMessageConsumer.newConsumerTag(), // generate a new unique consumer tag
+                                      false, // no autoAck - caller does all ACKs
+                                      this.consumerTag, // generated on construction
                                       this.rmqMessageConsumer.getNoLocalNoException(), // noLocal option
                                       false, // not exclusive
                                       null, // no arguments
                                       this); // drive this consumer
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log("register", e, "basicConsume");
         }
     }
 
     public static boolean isEOFMessage(GetResponse response) {
         return response==EOF_RESPONSE;
+    }
+
+    private static final boolean LOGGING = false;
+
+    private final void log(String s, Exception x, Object c) {
+        if (LOGGING)
+            log("Exception ("+x+") in "+s, c);
+    }
+
+    private final void log(String s, Object c) {
+        if (LOGGING)
+            log(s+"("+String.valueOf(c)+")");
+    }
+
+    private final void log(String s) {
+        if (LOGGING)
+            System.err.println("--->ReceiveConsumer("+String.valueOf(this.consumerTag)+"): "+s);
     }
 }

@@ -66,7 +66,9 @@ class ReceiveBuffer {
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
         } finally {
+            log("get","about to cancel+wait");
             rc.cancel(); // ensure consumer is removed (eventually; may block).
+            log("get", "returned from cancel+wait");
         }
         // real messages (or interruptions) drop through to here
         return resp;
@@ -79,5 +81,22 @@ class ReceiveBuffer {
         ReceiveConsumer receiveConsumer = new ReceiveConsumer(this.rmqMessageConsumer, this.buffer, this.batchingSize);
         receiveConsumer.register();
         return receiveConsumer;
+    }
+
+    private static final boolean LOGGING = false;
+
+    private final void log(String s, Exception x, Object c) {
+        if (LOGGING)
+            log("Exception ("+x+") in "+s, c);
+    }
+
+    private final void log(String s, Object c) {
+        if (LOGGING)
+            log(s+"("+String.valueOf(c)+")");
+    }
+
+    private final void log(String s) {
+        if (LOGGING)
+            System.err.println("--"+System.nanoTime()+"->ReceiveConsumer("+String.valueOf(this.rmqMessageConsumer)+"): "+s);
     }
 }
