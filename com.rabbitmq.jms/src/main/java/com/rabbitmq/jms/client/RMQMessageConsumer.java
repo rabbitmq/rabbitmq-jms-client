@@ -231,7 +231,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 msg = synchronousGet();
                 if (msg != null)
                     return msg;
-                if (tt.timeout())
+                if (tt.timedOut())
                     return null; // We timed out already. A timeout means we return null to the caller.
 
                 return asynchronousGet(tt);
@@ -301,16 +301,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @see Channel#basicConsume(String, boolean, String, boolean, boolean, java.util.Map, Consumer)
      */
     public void basicConsume(Consumer consumer) throws IOException {
-        String name = null;
-        if (this.destination.isQueue()) {
-            /* javax.jms.Queue we share a single AMQP queue among all consumers hence the name will the the name of the
-             * destination */
-            name = this.destination.getName();
-        } else {
-            /* javax.jms.Topic we created a unique AMQP queue for each consumer and that name is unique for this
-             * consumer alone */
-            name = this.getUUIDTag();
-        }
+        String name = rmqQueueName();
         // never ack async messages automatically, only when we can deliver them
         // to the actual consumer so we pass in false as the auto ack mode
         // we must support setMessageListener(null) while messages are arriving
@@ -328,9 +319,24 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                        );
     }
 
-    private static final String newConsumerTag() {
-        /* RabbitMQ basicConsume should accept null, to causes it to generate a new, unique consumer-tag for us
-         * but it doesn't :-( */
+    String rmqQueueName() {
+        String name = null;
+        if (this.destination.isQueue()) {
+            /* javax.jms.Queue we share a single AMQP queue among all consumers hence the name will the the name of the
+             * destination */
+            name = this.destination.getName();
+        } else {
+            /* javax.jms.Topic we created a unique AMQP queue for each consumer and that name is unique for this
+             * consumer alone */
+            name = this.getUUIDTag();
+        }
+        return name;
+    }
+
+    /** RabbitMQ's {@link Channel#basicConsume} should accept null, to cause it to generate a new, unique consumer-tag for us
+     * but it doesn't :-(
+     */
+    static final String newConsumerTag() {
         return "jms-consumer-" + Util.generateUUIDTag();
 //        return null;
     }
