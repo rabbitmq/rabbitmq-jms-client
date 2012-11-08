@@ -33,12 +33,11 @@ import com.rabbitmq.jms.util.TimeTracker;
  */
 class ReceiveBuffer {
 
-    private final BlockingQueue<GetResponse> bq = new LinkedBlockingQueue<GetResponse>();
+    private final BlockingQueue<GetResponse> buffer = new LinkedBlockingQueue<GetResponse>();
     private final int batchingSize;
     private final Channel channel;
     private final RMQMessageConsumer rmqMessageConsumer;
 
-    private final static GetResponse CLOSING_RESPONSE = new GetResponse(null, null, null, 0);
     private final static GetResponse TIMEOUT_RESPONSE = new GetResponse(null, null, null, 0);
 
     private final AtomicReference<ReceiveConsumer> receiveConsumer = new AtomicReference<ReceiveConsumer>(null);
@@ -53,27 +52,36 @@ class ReceiveBuffer {
         this.rmqMessageConsumer = rmqMessageConsumer;
     }
 
+    /**
+     * Get a message if one arrives in the time available.
+     * @param tt - keeps track of the time
+     * @return message gotten, or <code>null</code> if timeout or connection closed.
+     */
     public GetResponse get(TimeTracker tt) {
-        if (this.bq.isEmpty()) { // if no messages, ask for more
-            this.populateBuffer(tt);
+        GetResponse resp = this.buffer.poll();
+        while (TIMEOUT_RESPONSE==resp) { // drain old TIMEOUTs
+            resp = this.buffer.poll();
         }
+        if (null!=resp)
+            return resp;
+        this.getSomeMore(tt);
         try {
-            GetResponse resp = this.bq.take(); // timeouts happen elsewhere
-            // we get a message of some sort
-            if (resp!=CLOSING_RESPONSE && resp!=TIMEOUT_RESPONSE) {
+            resp = this.buffer.take(); // timeouts will pop this
+            if (resp!=TIMEOUT_RESPONSE) {
                 return resp;
             }
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
         }
+        // timeouts (or interruptions) drop through to here
         return null;
     }
 
-    private void populateBuffer(TimeTracker tt) {
+    private void getSomeMore(TimeTracker tt) {
         // TODO: set up a Consumer to put messages in the buffer, and die after timeout or if buffer is filled.
         // TODO: If there is a Consumer already setup, and not cancelling, adjust the timeout.
         // TODO: If the existing Consumer is cancelling, wait for it to finish before creating a new one.
-        ReceiveConsumer callback = new ReceiveConsumer(this.channel, tt);
+        ReceiveConsumer callback = new ReceiveConsumer(this.channel, tt, this.batchingSize);
         if (receiveConsumer.compareAndSet(null, callback)) {
             try {
                 this.channel.basicConsume(rmqMessageConsumer.rmqQueueName(), // queue we are listening on

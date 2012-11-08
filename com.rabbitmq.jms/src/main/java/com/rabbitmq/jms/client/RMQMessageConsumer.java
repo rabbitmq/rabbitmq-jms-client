@@ -235,7 +235,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 msg = synchronousGet();
                 if (msg != null)
                     return msg;
-                if (tt.timeout())
+                if (tt.timedOut())
                     return null; // We timed out already. A timeout means we return null to the caller.
 
                 return asynchronousGet(tt);

@@ -68,7 +68,7 @@ public class Completion {
         public boolean get(TimeTracker tt) throws InterruptedException, TimeoutException {
             synchronized (this.lock) {
                 if (this.completed) return true;
-                while (!this.completed && !tt.timeout()) {
+                while (!this.completed && !tt.timedOut()) {
                     tt.timedWait(this.lock);
                 }
                 if (this.completed)

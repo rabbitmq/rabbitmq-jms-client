@@ -39,7 +39,7 @@ class SynchronousConsumer implements Consumer, Abortable {
     private volatile boolean aborted = false;
 
     SynchronousConsumer(Channel channel, TimeTracker tt) {
-        this.timeout = TimeUnit.NANOSECONDS.toMillis(tt.remaining());
+        this.timeout = tt.remainingMillis();
         this.channel = channel;
     }
 

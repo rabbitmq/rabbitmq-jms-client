@@ -1,13 +1,10 @@
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
-import java.util.concurrent.Exchanger;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
+
+import net.jcip.annotations.GuardedBy;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
@@ -16,7 +13,6 @@ import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.util.Abortable;
-import com.rabbitmq.jms.util.AbortedException;
 import com.rabbitmq.jms.util.TimeTracker;
 
 /**
@@ -25,41 +21,18 @@ import com.rabbitmq.jms.util.TimeTracker;
  * {@link MessageConsumer#receive()} and {@link MessageConsumer#receive(long)}.
  */
 class ReceiveConsumer implements Consumer, Abortable {
-    private static final GetResponse ACCEPT_MSG = new GetResponse(null, null, null, 0);
-    private static final GetResponse REJECT_MSG = new GetResponse(null, null, null, 0);
-    private final Exchanger<GetResponse> exchanger = new Exchanger<GetResponse>();
-
+    private final int batchingSize;
     private final long timeout;
     private final Channel channel;
-    private final AtomicBoolean useOnce = new AtomicBoolean(false);
-    private final AtomicBoolean oneReceived = new AtomicBoolean(false);
-    private final AtomicBoolean cancelled = new AtomicBoolean(false);
 
-    private volatile String consumerTag;
-    private volatile boolean aborted = false;
+    private final Object lock = new Object(); // synchronising lock
+    @GuardedBy("lock") private String consumerTag;
+    @GuardedBy("lock") private boolean aborted = false;
 
-    ReceiveConsumer(Channel channel, TimeTracker tt) {
-        this.timeout = TimeUnit.NANOSECONDS.toMillis(tt.remaining());
+    ReceiveConsumer(Channel channel, TimeTracker tt, int batchingSize) {
+        this.timeout = tt.remainingMillis();
         this.channel = channel;
-    }
-
-    GetResponse receive() throws JMSException, AbortedException {
-        if (!this.useOnce.compareAndSet(false, true)) {
-            throw new JMSException("SynchronousConsumer.receive can be called only once.");
-        }
-        GetResponse response = null;
-        try {
-            response = this.exchanger.exchange(ACCEPT_MSG, this.timeout, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException x) {
-            return null;
-        } catch (InterruptedException x) {
-            /* Reset the thread interrupted status */
-            Thread.currentThread().interrupt();
-        }
-        if (response == REJECT_MSG) {
-            throw new AbortedException();
-        }
-        return response;
+        this.batchingSize = batchingSize;
     }
 
     @Override
@@ -84,31 +57,18 @@ class ReceiveConsumer implements Consumer, Abortable {
     }
 
     final void handleDelivery(String consumerTag, GetResponse response) throws IOException {
-        if (this.cancelled.compareAndSet(false, true)) {
             try {
                 this.channel.basicCancel(consumerTag);
             } catch (Exception x) {
                 x.printStackTrace();
                 //TODO logging implementation
             }
-        }
 
         GetResponse waiter = null;
-        if (this.oneReceived.compareAndSet(false, true)) {
-            try {
-                // give a receive() thread enough time to arrive
-                waiter = this.exchanger.exchange(response, Math.min(100, this.timeout), TimeUnit.MILLISECONDS);
-            } catch (InterruptedException x) {
-                // this is ok, it means we had a message
-                // but no one there to receive it and got
-                // interrupted
-                /* Reset the thread interrupted status anyway */
-                Thread.currentThread().interrupt();
-            } catch (TimeoutException x) {
-            }
-        }
+        // give a receive() thread enough time to arrive
+        // exchanger
 
-        if (waiter == ACCEPT_MSG) {
+        if (waiter == /*ACCEPT_MSG*/null) {
             /* we never ack any message, that is the responsibility of the calling thread */
         } else {
             this.channel.basicNack(response.getEnvelope().getDeliveryTag(), false, true);
@@ -126,8 +86,7 @@ class ReceiveConsumer implements Consumer, Abortable {
     }
 
     boolean cancel() {
-        boolean result = this.cancelled.compareAndSet(false, true);
-        if (result) {
+        if (true) {
             try {
                 if (this.channel.isOpen() && this.consumerTag != null) {
                     this.channel.basicCancel(this.consumerTag);
@@ -143,19 +102,12 @@ class ReceiveConsumer implements Consumer, Abortable {
                 }
             }
         }
-        return result;
+        return true;
     }
 
     public void abort() {
         if (this.aborted) return;
-        try {
-            this.aborted = true;
-            this.exchanger.exchange(REJECT_MSG, 0, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            /* Reset the thread interrupted status */
-            Thread.currentThread().interrupt();
-        } catch (TimeoutException _) {
-        }
+        this.aborted = true;
     }
 
     @Override

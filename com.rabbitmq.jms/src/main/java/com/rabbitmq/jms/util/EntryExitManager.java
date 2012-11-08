@@ -152,7 +152,7 @@ public class EntryExitManager {
         if (comps.isEmpty()) return true; // nothing to wait for
         for (Completion c : comps) {
             try {
-                if (tt.timeout()) return false;
+                if (tt.timedOut()) return false;
                 c.waitUntilComplete(tt);
             } catch (TimeoutException unused) {
                 return false; // we ran out of time
