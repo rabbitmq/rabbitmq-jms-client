@@ -150,7 +150,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         return this.rabbitDeliveryTag;
     }
     /**
-     * Sets the delivery tag for this message, this field is
+     * Sets the RabbitMQ delivery tag for this message.
       * @see RMQMessageConsumer#processMessage(com.rabbitmq.client.GetResponse, boolean)
 
      * @param rabbitDeliveryTag

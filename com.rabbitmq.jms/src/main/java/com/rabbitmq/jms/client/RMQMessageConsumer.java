@@ -76,9 +76,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * Flag to check if we have noLocal set
      */
     private volatile boolean noLocal = false;
-
     /** Buffer for messages on {@link #receive} queues, but not yet handed to application. */
-    private final ConcurrentLinkedQueue<GetResponse> receiveBuffer = new ConcurrentLinkedQueue<GetResponse>();
+    private final ReceiveBuffer receiveBuffer;
 
     /**
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
@@ -94,6 +93,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         this.uuidTag = uuidTag;
         if (!paused)
             this.receiveManager.openGate();
+        this.receiveBuffer = new ReceiveBuffer(10, session.getChannel(), this);
     }
 
     /**
@@ -246,6 +246,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             /* If the get has been aborted we return null, too. */
             return null;
         } catch (InterruptedException _) {
+            /* Someone interrupted us -- we ought to terminate */
             Thread.currentThread().interrupt(); // reset interrupt status
             return null;
         }
@@ -305,16 +306,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @see Channel#basicConsume(String, boolean, String, boolean, boolean, java.util.Map, Consumer)
      */
     public void basicConsume(Consumer consumer) throws IOException {
-        String name = null;
-        if (this.destination.isQueue()) {
-            /* javax.jms.Queue we share a single AMQP queue among all consumers hence the name will the the name of the
-             * destination */
-            name = this.destination.getName();
-        } else {
-            /* javax.jms.Topic we created a unique AMQP queue for each consumer and that name is unique for this
-             * consumer alone */
-            name = this.getUUIDTag();
-        }
+        String name = rmqQueueName();
         // never ack async messages automatically, only when we can deliver them
         // to the actual consumer so we pass in false as the auto ack mode
         // we must support setMessageListener(null) while messages are arriving
@@ -332,11 +324,48 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                        );
     }
 
-    private static final String newConsumerTag() {
+    static final String newConsumerTag() {
         /* RabbitMQ basicConsume should accept null, to causes it to generate a new, unique consumer-tag for us
          * but it doesn't :-( */
         return "jms-consumer-" + Util.generateUUIDTag();
 //        return null;
+    }
+
+    String rmqQueueName() {
+        if (this.destination.isQueue()) {
+            /* javax.jms.Queue we share a single AMQP queue among all consumers hence the name will the the name of the
+             * destination */
+            return this.destination.getName();
+        } else {
+            /* javax.jms.Topic we created a unique AMQP queue for each consumer and that name is unique for this
+             * consumer alone */
+            return this.getUUIDTag();
+        }
+    }
+
+    private Message internalReceive(TimeTracker tt)  throws JMSException {
+    // Pseudocode:
+    //   poll msg-buffer(0)
+    //   if msg-buffer had a message return it
+    //   else {
+    //     initiate async-get // we must try *not* to start more than one at a time
+    //     poll msg-buffer(timeout)
+    //   }
+        GetResponse resp = this.receiveBuffer.get(tt);
+        if (resp == null) return null;
+        boolean aa = isAutoAck();
+        if (aa)
+            this.acknowledgeMessage(resp);
+        return processMessage(resp, aa);
+    }
+
+    private void acknowledgeMessage(GetResponse resp) {
+        // acknowledge just this one RabbitMQ message
+        try {
+            this.getSession().getChannel().basicAck(resp.getEnvelope().getDeliveryTag(), false);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -373,8 +402,9 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     /**
      * Converts a {@link GetResponse} to a {@link Message}
      *
-     * @param response
-     * @return
+     * @param response - the message information from RabbitMQ {@link Channel#basicGet} or via a {@link Consumer}.
+     * @param acknowledged - whether the message has been acknowledged.
+     * @return the JMS message corresponding to the RabbitMQ message
      * @throws JMSException
      */
     RMQMessage processMessage(GetResponse response, boolean acknowledged) throws JMSException {
