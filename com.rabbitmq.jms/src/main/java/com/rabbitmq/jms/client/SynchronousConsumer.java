@@ -194,7 +194,7 @@ class SynchronousConsumer implements Consumer, Abortable {
         log(this.consumerTag, "start");
     }
 
-    private static final boolean LOGGING = true;
+    private static final boolean LOGGING = false;
 
     private static final void log(String ctag, Exception x, String s) {
         if (LOGGING)

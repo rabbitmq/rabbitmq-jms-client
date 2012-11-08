@@ -583,7 +583,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         }
     }
 
-    private static final boolean LOGGING = true;
+    private static final boolean LOGGING = false;
 
     private final void log(String s, Exception x, Object c) {
         if (LOGGING)
