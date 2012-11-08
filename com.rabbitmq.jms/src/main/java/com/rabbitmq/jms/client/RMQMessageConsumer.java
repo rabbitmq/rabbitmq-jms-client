@@ -21,12 +21,20 @@ import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.util.Abortable;
-import com.rabbitmq.jms.util.AbortedException;
 import com.rabbitmq.jms.util.EntryExitManager;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.TimeTracker;
 import com.rabbitmq.jms.util.Util;
 
+/**
+ * The implementation of {@link MessageConsumer} in the RabbitMQ JMS Client.
+ * <p>
+ * Single message {@link #receive receive()}s are implemented with a special buffer and {@link Consumer}.
+ * </p>
+ * <p>
+ * {@link MessageListener#onMessage} calls are implemented with a more conventional {@link Consumer}.
+ * </p>
+ */
 public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscriber {
     private static final long STOP_TIMEOUT_MS = 1000; // ONE SECOND
     /**
@@ -86,6 +94,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @param destination - the destination for this consumer
      * @param uuidTag - when creating queues to a topic, we need a unique queue name for each consumer. This is the
      *            unique name.
+     * @param paused - true if the connection is {@link javax.jms.Connection#stop}ped, false otherwise.
      */
     public RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag, boolean paused) {
         this.session = session;
@@ -93,7 +102,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         this.uuidTag = uuidTag;
         if (!paused)
             this.receiveManager.openGate();
-        this.receiveBuffer = new ReceiveBuffer(10, session.getChannel(), this);
+        this.receiveBuffer = new ReceiveBuffer(10, this);
     }
 
     /**
@@ -124,6 +133,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * Dispose of any Rabbit Consumer that may be active and tracked.
      */
     private void removeListenerConsumer() {
+        log("removeListenerConsumer");
         MessageListenerConsumer listenerConsumer = this.listenerConsumer.getAndSet(null);
         if (listenerConsumer != null) {
             this.abortables.remove(listenerConsumer);
@@ -154,6 +164,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public void setMessageListener(MessageListener messageListener) throws JMSException {
+        log("setMessageListener", messageListener);
         if (messageListener == this.messageListener) // no change, so do nothing
             return;
         this.removeListenerConsumer();  // if there is any
@@ -192,7 +203,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public Message receive() throws JMSException {
-        return receive(Long.MAX_VALUE);
+        log("receive");
+        if (this.closed || this.closing)
+            throw new IllegalStateException("Consumer is closed or closing.");
+        return internalReceive(new TimeTracker());
     }
 
     /**
@@ -218,73 +232,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public Message receive(long timeout) throws JMSException {
+        log("receive", timeout);
         if (this.closed || this.closing)
             throw new IllegalStateException("Consumer is closed or closing.");
-        TimeTracker tt;
-        if (timeout == 0)
-            tt = new TimeTracker(); // The spec identifies 0 as infinite timeout
-        else
-            tt = new TimeTracker(timeout, TimeUnit.MILLISECONDS);
-
-        Message msg;
-        try {
-            if (!this.receiveManager.enter(tt))
-                return null; // timed out
-            /* Try to receive a message synchronously */
-            try {
-                msg = synchronousGet();
-                if (msg != null)
-                    return msg;
-                if (tt.timedOut())
-                    return null; // We timed out already. A timeout means we return null to the caller.
-
-                return asynchronousGet(tt);
-            } finally {
-                this.receiveManager.exit();
-            }
-        } catch (AbortedException _) {
-            /* If the get has been aborted we return null, too. */
-            return null;
-        } catch (InterruptedException _) {
-            /* Someone interrupted us -- we ought to terminate */
-            Thread.currentThread().interrupt(); // reset interrupt status
-            return null;
-        }
-    }
-
-    private Message asynchronousGet(TimeTracker tt) throws JMSException, InterruptedException, AbortedException {
-        try {
-            /* Currently there is no equivalent of receive(timeout) in RabbitMQ's Java API. So we emulate that behaviour
-             * by creating a one-shot subscription. We use a SynchronousConsumer - this object supports both timeout and
-             * interrupts. */
-            /* Create the consumer object - we supply a time tracker */
-            SynchronousConsumer sc = new SynchronousConsumer(this.session.getChannel(), tt);
-
-            /* Wait for a message to arrive. This returns null if we timeout. */
-            GetResponse response;
-            this.abortables.add(sc);
-            try {
-                /* Subscribe to the consumer object */
-                basicConsume(sc);
-                response = sc.receive();
-            } catch (AbortedException ae) {
-                return null;
-            } finally {
-                this.abortables.remove(sc);
-            }
-            /* Process the result - even if it is null */
-            RMQMessage msg = (RMQMessage) processMessage(response, isAutoAck());
-            /* Connection.stop() must not prevent us from returning to the caller if we are still processing this
-             * because we have received it from RabbitMQ and may not have acknowledged it. */
-            if (msg != null) {
-                if (isAutoAck()) {
-                    getSession().getChannel().basicAck(msg.getRabbitDeliveryTag(), false);
-                }
-            }
-            return msg;
-        } catch (IOException ioe) {
-            throw new RMQJMSException(ioe);
-        }
+        return internalReceive(new TimeTracker(timeout==0?Long.MAX_VALUE:timeout, TimeUnit.MILLISECONDS));
     }
 
     /**
@@ -324,11 +275,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                        );
     }
 
+    /**
+     * RabbitMQ {@link Channel#basicConsume} should accept a {@link null} consumer-tag, to cause it to generate a new,
+     * unique one for us; but it doesn't :-(
+     */
     static final String newConsumerTag() {
-        /* RabbitMQ basicConsume should accept null, to causes it to generate a new, unique consumer-tag for us
-         * but it doesn't :-( */
         return "jms-consumer-" + Util.generateUUIDTag();
-//        return null;
+        // return null;
     }
 
     String rmqQueueName() {
@@ -343,7 +296,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         }
     }
 
-    private Message internalReceive(TimeTracker tt)  throws JMSException {
+    private RMQMessage internalReceive(TimeTracker tt)  throws JMSException {
     // Pseudocode:
     //   poll msg-buffer(0)
     //   if msg-buffer had a message return it
@@ -364,7 +317,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         try {
             this.getSession().getChannel().basicAck(resp.getEnvelope().getDeliveryTag(), false);
         } catch (IOException e) {
-            e.printStackTrace();
+            log("acknowledgeMessage", e, resp);
         }
     }
 
@@ -373,30 +326,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public Message receiveNoWait() throws JMSException {
+        log("receiveNoWait");
         if (this.closed || this.closing)
             throw new IllegalStateException("Consumer is closed or closing.");
-        return synchronousGet();
-    }
-
-    /**
-     * @return a received message, or null if no message was received.
-     * @throws JMSException
-     */
-    private Message synchronousGet() throws JMSException {
-        GetResponse response = null;
-        try {
-            if (this.destination.isQueue()) {
-                /* For queue, issue a basic.get on the queue name */
-                response = this.getSession().getChannel().basicGet(this.destination.getQueueName(), this.isAutoAck());
-            } else {
-                /* For topic, issue a basic.get on the unique queue name for the consumer */
-                response = this.getSession().getChannel().basicGet(this.getUUIDTag(), this.isAutoAck());
-            }
-        } catch (IOException x) {
-            throw new RMQJMSException(x);
-        }
-        /* convert the message (and remember tag if we need to) */
-        return processMessage(response, this.isAutoAck());
+        return internalReceive(TimeTracker.ZERO);
     }
 
     /**
@@ -462,6 +395,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * Method called internally or by the Session when system is shutting down
      */
     void internalClose() throws JMSException {
+        log("internalClose");
         this.closing = true;
         /* If we are stopped, we must break that. This will release all threads waiting on the gate and effectively
          * disable the use of the gate */
@@ -537,7 +471,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * only to be re-subscribed when <code>resume()</code>d.
      *
      * @throws InterruptedException if the thread is interrupted
-     * @see #resume()
      */
     public void pause() throws InterruptedException {
         this.receiveManager.closeGate();
@@ -552,6 +485,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @throws javax.jms.JMSException if the thread is interrupted
      */
     void resume() throws JMSException {
+        log("resume");
         this.abortables.start();
         this.receiveManager.openGate();
     }
@@ -647,5 +581,22 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             }
             this.flags[action.index()] = false;
         }
+    }
+
+    private static final boolean LOGGING = true;
+
+    private final void log(String s, Exception x, Object c) {
+        if (LOGGING)
+            log("Exception ("+x+") in "+s, c);
+    }
+
+    private final void log(String s, Object c) {
+        if (LOGGING)
+            log(s+"("+String.valueOf(c)+")");
+    }
+
+    private final void log(String s) {
+        if (LOGGING)
+            System.err.println("--->RMQMessageConsumer("+String.valueOf(this.destination)+"): "+s);
     }
 }

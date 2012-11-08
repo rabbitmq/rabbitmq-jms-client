@@ -8,7 +8,10 @@ import java.util.concurrent.TimeUnit;
 public class TimeTracker {
     private final long timeoutNanos;
     private final long startNanos;
-    private volatile boolean timeout; /* becomes true and then sticks there */
+    private volatile boolean timed_out; /* becomes true and then sticks there */
+
+    /** Public tracker that is permanently timed out. */
+    public static final TimeTracker ZERO = new TimeTracker(0);
 
     /**
      * Initialise tracker with duration supplied.
@@ -16,16 +19,24 @@ public class TimeTracker {
      * @param unit - units that <code>timeout</code> is in, e.g. <code>TimeUnit.MILLISECONDS</code>.
      */
     public TimeTracker(long timeout, TimeUnit unit) {
-        this.timeoutNanos = unit.toNanos(timeout);
-        this.startNanos = System.nanoTime();
-        this.timeout = (this.timeoutNanos <= 0);
+        this(unit.toNanos(timeout));
     }
 
     /**
      * Initialise tracker with maximum duration -- effectively an infinite time.
      */
     public TimeTracker() {
-        this(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        this(Long.MAX_VALUE);
+    }
+
+    /**
+     * Initialise tracker with nanoseconds duration supplied.
+     * @param timeoutNanos - duration of tracker in nanoseconds
+     */
+    private TimeTracker(long timeoutNanos) {
+        this.timeoutNanos = timeoutNanos;
+        this.startNanos = System.nanoTime();
+        this.timed_out = (timeoutNanos <= 0);
     }
 
     /**
@@ -33,10 +44,10 @@ public class TimeTracker {
      * @return remaining time (in nanoseconds) - 0 means time has run out
      */
     private long internalRemaining() {
-        if (this.timeout) return 0;
+        if (this.timed_out) return 0;
         long rem = this.timeoutNanos - (System.nanoTime() - this.startNanos);
         if (rem<=0) {
-            this.timeout = true;
+            this.timed_out = true;
             return 0;
         }
         return rem;
@@ -74,6 +85,6 @@ public class TimeTracker {
      * @return <code>true</code> if time has run out, <code>false</code> otherwise
      */
     public boolean timedOut() {
-        return (this.timeout || this.internalRemaining()==0);
+        return (this.timed_out || this.internalRemaining()==0);
     }
 }

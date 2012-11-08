@@ -9,3 +9,4 @@ entrants
 abortable
 deserialize
 noop
+idempotent
