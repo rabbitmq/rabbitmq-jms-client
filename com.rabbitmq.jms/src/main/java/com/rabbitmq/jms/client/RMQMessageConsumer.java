@@ -503,7 +503,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      *
      * @param durable
      */
-    protected void setDurable(boolean durable) {
+    void setDurable(boolean durable) {
         this.durable = durable;
     }
 
@@ -573,14 +573,14 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         }
 
         private void act(Action action) {
-            if (this.flags[action.index()])
-                return;
-            this.flags[action.index()] = true;
+            if (this.flags[action.index()]) return; // prevent infinite
+            this.flags[action.index()] = true;      // regress
+
             Abortable[] as = this.abortableQueue.toArray(new Abortable[this.abortableQueue.size()]);
             for (Abortable a : as) {
                 action.doit(a);
             }
-            this.flags[action.index()] = false;
+            this.flags[action.index()] = false;     // allow multiple invocations
         }
     }
 
