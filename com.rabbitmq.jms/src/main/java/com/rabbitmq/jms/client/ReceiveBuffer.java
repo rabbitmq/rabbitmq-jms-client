@@ -1,7 +1,7 @@
 package com.rabbitmq.jms.client;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 import com.rabbitmq.client.Consumer;
@@ -31,7 +31,7 @@ import com.rabbitmq.jms.util.TimeTracker;
  */
 class ReceiveBuffer {
 
-    private final BlockingQueue<GetResponse> buffer = new LinkedBlockingQueue<GetResponse>();
+    private final BlockingDeque<GetResponse> buffer = new LinkedBlockingDeque<GetResponse>();
     private final int batchingSize;
     private final RMQMessageConsumer rmqMessageConsumer;
 
@@ -56,14 +56,16 @@ class ReceiveBuffer {
         }
         if (null!=resp)
             return resp;
-        // nothing of import on the queue, let's try to get some more
-        ReceiveConsumer rc = this.getSomeMore(tt);
+        // Nothing of import on the queue, let's try to get some more.
+        // We must do this even if we have timed out, in case we never fetch any.
+        ReceiveConsumer rc = this.getSomeMore();
         try {
             resp = this.buffer.poll(tt.remainingNanos(), TimeUnit.NANOSECONDS);
             if (resp==null                          // we timed out
              || ReceiveConsumer.isEOFMessage(resp)) // Consumer ended before we timed out
                 return null;
-        } catch (InterruptedException _) {
+        } catch (InterruptedException e) {
+            log("get", e, "interrupted while buffer.poll-ing");
             Thread.currentThread().interrupt();
         } finally {
             log("get","about to cancel+wait");
@@ -74,12 +76,18 @@ class ReceiveBuffer {
         return resp;
     }
 
-    private ReceiveConsumer getSomeMore(TimeTracker tt) {
-        // TODO: set up a Consumer to put messages in the buffer, and die after timeout or if buffer is filled.
-        // TODO: If there is a Consumer already setup, and not cancelling, adjust the timeout.
-        // TODO: If the existing Consumer is cancelling, wait for it to finish before creating a new one.
+    /**
+     * Push a message back on the (head of the) buffer.
+     * @param resp - the message to put back
+     */
+    public void push(GetResponse resp) {
+        this.buffer.offerFirst(resp);
+    }
+
+    private ReceiveConsumer getSomeMore() {
+        // set up a Consumer to put messages in the buffer, and die after first message.
         ReceiveConsumer receiveConsumer = new ReceiveConsumer(this.rmqMessageConsumer, this.buffer, this.batchingSize);
-        receiveConsumer.register();
+        receiveConsumer.register(); // with RabbitMQ server
         return receiveConsumer;
     }
 
@@ -97,6 +105,6 @@ class ReceiveBuffer {
 
     private final void log(String s) {
         if (LOGGING)
-            System.err.println("--"+System.nanoTime()+"->ReceiveConsumer("+String.valueOf(this.rmqMessageConsumer)+"): "+s);
+            System.err.println("--->ReceiveBuffer("+String.valueOf(this.rmqMessageConsumer)+"): "+s+" ["+System.nanoTime()+"]");
     }
 }

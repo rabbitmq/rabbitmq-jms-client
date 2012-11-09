@@ -32,6 +32,10 @@ public class TestReceiveConsumer {
     static {
         when(envelope.getDeliveryTag()).thenReturn(1l);
     }
+    private static final Envelope anotherEnvelope = mock(Envelope.class);
+    static {
+        when(anotherEnvelope.getDeliveryTag()).thenReturn(2l);
+    }
 
     private static final Channel channel = mock(Channel.class);
     private static final RMQSession session = mock(RMQSession.class);
@@ -63,9 +67,8 @@ public class TestReceiveConsumer {
         receiverThread.join();
         senderThread.join();
 
-        verify(channel, atLeastOnce()).basicNack(anyLong(),anyBoolean(),anyBoolean());
-        verify(channel, atLeastOnce()).basicCancel(anyString());
         assertThreads(true, true, senderThread, receiverThread);
+        verify(channel, atLeastOnce()).basicCancel(anyString());
     }
 
     private static void assertThreads(boolean s, boolean r, DriveConsumerThread senderThread, ReceiverThread receiverThread) {
@@ -107,8 +110,8 @@ public class TestReceiveConsumer {
         receiverThread.join();
         senderThread.join();
 
-        verify(channel, atLeastOnce()).basicCancel(anyString());
         assertThreads(true, true, senderThread, receiverThread);
+        verify(channel, atLeastOnce()).basicCancel(anyString());
     }
 
     /**
@@ -133,9 +136,9 @@ public class TestReceiveConsumer {
         receiverThread.join();
         senderThread.join();
 
+        assertThreads(true, false, senderThread, receiverThread);
         verify(channel, atLeastOnce()).basicNack(anyLong(),anyBoolean(), anyBoolean());
         verify(channel, atLeastOnce()).basicCancel(anyString());
-        assertThreads(true, false, senderThread, receiverThread);
     }
 
     /**
@@ -182,8 +185,10 @@ public class TestReceiveConsumer {
                 return;
             }
             try {
-                // this will work fine, and it should provoke a NACK
-                this.consumer.handleDelivery(fakeConsumerTag, this.envelope, null, null);
+                // this should work fine, and it may provoke a NACK because of buffer limitation
+                this.consumer.handleDelivery(fakeConsumerTag, anotherEnvelope, null, null);
+                this.consumer.handleCancelOk(fakeConsumerTag); // simulates cancellation trigger
+                this.consumer.cancel();  // shouldn't have to wait for cancellation
             } catch (Exception x) {
                 //this is unexpected
                 this.exception = x;

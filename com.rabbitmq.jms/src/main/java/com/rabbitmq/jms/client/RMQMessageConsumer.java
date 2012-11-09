@@ -21,6 +21,7 @@ import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.util.Abortable;
+import com.rabbitmq.jms.util.AbortedException;
 import com.rabbitmq.jms.util.EntryExitManager;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.TimeTracker;
@@ -305,12 +306,28 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     //     initiate async-get // we must try *not* to start more than one at a time
     //     poll msg-buffer(timeout)
     //   }
-        GetResponse resp = this.receiveBuffer.get(tt);
-        if (resp == null) return null;
-        boolean aa = isAutoAck();
-        if (aa)
-            this.acknowledgeMessage(resp);
-        return processMessage(resp, aa);
+        try {
+            if (!this.receiveManager.enter(tt))  // stopped?
+                return null; // timed out while stopped
+            /* Try to receive a message, there's still some time left! */
+            try {
+                GetResponse resp = this.receiveBuffer.get(tt);
+                if (resp == null) return null; // nothing received in time
+                boolean aa = isAutoAck();
+                if (aa)
+                    this.acknowledgeMessage(resp);
+                return processMessage(resp, aa);
+            } finally {
+                this.receiveManager.exit();
+            }
+        } catch (AbortedException _) {
+            /* If we were aborted (closed) we return null, too. */
+            return null;
+        } catch (InterruptedException _) {
+            /* Someone interrupted us -- we ought to terminate */
+            Thread.currentThread().interrupt(); // reset interrupt status
+            return null;
+        }
     }
 
     private void acknowledgeMessage(GetResponse resp) {

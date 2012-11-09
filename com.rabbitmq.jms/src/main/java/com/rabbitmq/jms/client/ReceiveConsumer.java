@@ -36,7 +36,7 @@ class ReceiveConsumer implements Consumer, Abortable {
     private final RMQMessageConsumer rmqMessageConsumer;
     private final BlockingQueue<GetResponse> buffer;
 
-    private final Completion completion = new Completion(); // RabbitMQ called Cancel, or CancelOK.
+    private final Completion completion = new Completion(); // RabbitMQ called handleCancelOK.
     private final String consumerTag;
 
     private final Object lock = new Object(); // synchronising lock
@@ -85,11 +85,13 @@ class ReceiveConsumer implements Consumer, Abortable {
         this.cancel(false); // cancel and don't wait for completion
 
         synchronized (this.lock) {
-            if (!this.aborted && this.buffer.size() < this.batchingSize) {
+            if (!this.aborted && this.buffer.size() < this.batchingSize) { // room in buffer
                 try {
+                    log("handleDelivery", "put messsage");
                     this.buffer.put(response);
                     return;
-                } catch (InterruptedException _) {
+                } catch (InterruptedException e) {
+                    log("handleDelivery",e,"buffer.put");
                     Thread.currentThread().interrupt(); // reinstate interrupt status
                     this.abort();                       // we abort if interrupted
                 }
@@ -97,8 +99,12 @@ class ReceiveConsumer implements Consumer, Abortable {
             /* Drop through if we do not put message in buffer. */
             /* We never ACK any message, that is the responsibility of the caller. */
             try {
-                this.channel.basicNack(response.getEnvelope().getDeliveryTag(), false, true);
+                log("handleDelivery", "NACK messsage");
+                this.channel.basicNack(response.getEnvelope().getDeliveryTag(),
+                                       false, // single message
+                                       true); // requeue this message
             } catch (IOException e) {
+                log("handleDelivery",e,response.getEnvelope());
                 this.abort();
                 throw e; // RabbitMQ should close the channel
             }
@@ -127,30 +133,31 @@ class ReceiveConsumer implements Consumer, Abortable {
     private final void cancel(boolean wait) {
         log("cancel", wait);
         synchronized (this.lock) {
-            try {
-                if (!this.cancelled) {
+            if (!this.cancelled) {
+                try {
                     this.channel.basicCancel(this.consumerTag);
                     this.cancelled = true;
-                }
-            } catch (ShutdownSignalException x) {
-                log("cancel", x, "basicCancel");
-                this.abort();
-            } catch (IOException x) {
-                if (!(x.getCause() instanceof ShutdownSignalException)) {
+                } catch (ShutdownSignalException x) {
                     log("cancel", x, "basicCancel");
+                    this.abort();
+                } catch (IOException x) {
+                    if (!(x.getCause() instanceof ShutdownSignalException)) {
+                        log("cancel", x, "basicCancel");
+                    }
+                    this.abort();
                 }
-                this.abort();
             }
         }
-        if (wait)
+        if (wait) { // don't wait holding the lock
             try {
-                completion.waitUntilComplete(new TimeTracker(CANCELLATION_TIMEOUT, TimeUnit.MILLISECONDS));
+                this.completion.waitUntilComplete(new TimeTracker(CANCELLATION_TIMEOUT, TimeUnit.MILLISECONDS));
             } catch (TimeoutException e) {
                 log("cancel", e, "waitUntilComplete");
             } catch (InterruptedException e) {
                 this.abort();
                 Thread.currentThread().interrupt();
             }
+        }
     }
 
     public void abort() {
@@ -197,14 +204,23 @@ class ReceiveConsumer implements Consumer, Abortable {
 
     private static final boolean LOGGING = false;
 
-    private final void log(String s, Exception x, Object c) {
-        if (LOGGING)
+    private final void log(String s, Exception x, Object ... c) {
+        if (LOGGING) {
             log("Exception ("+x+") in "+s, c);
+        }
     }
 
-    private final void log(String s, Object c) {
-        if (LOGGING)
-            log(s+"("+String.valueOf(c)+")");
+    private final void log(String s, Object ... c) {
+        if (LOGGING) {
+            StringBuilder sb = new StringBuilder(s).append('(');
+            boolean first = true;
+            for (Object obj : c) {
+                if (first) first = false;
+                else sb.append(", ");
+                sb.append(String.valueOf(obj));
+            }
+            log(sb.append(')').toString());
+        }
     }
 
     private final void log(String s) {
