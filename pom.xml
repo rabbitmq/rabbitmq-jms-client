@@ -10,14 +10,22 @@
   <properties>
     <java-compile-version>1.6</java-compile-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+<!-- code dependency versions -->
+    <geronimo-spec.version>1.1.1</geronimo-spec.version>
+    <mockito-core.version>1.9.0</mockito-core.version>
+    <junit.version>4.10</junit.version>
+    <amqp-client.version>2.8.6</amqp-client.version>
+    <jcip-annotations.version>1.0</jcip-annotations.version>
+
 <!-- plugin versions -->
     <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>2.12.4</maven-surefire-plugin.version>
     <maven-failsafe-plugin.version>2.12.4</maven-failsafe-plugin.version>
-    <maven-antrun-plugin.version>1.7</maven-antrun-plugin.version>
     <maven-jar-plugin.version>2.4</maven-jar-plugin.version>
-    <ant-junit.version>1.8.4</ant-junit.version>
-    <ant.version>1.8.4</ant.version>
+    <maven-antrun-plugin.version>1.7</maven-antrun-plugin.version>
+      <ant-junit.version>1.8.4</ant-junit.version>
+      <ant.version>1.8.4</ant.version>
 
   </properties>
 
@@ -32,27 +40,27 @@
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
         <artifactId>geronimo-jms_1.1_spec</artifactId>
-        <version>1.1.1</version>
+        <version>${geronimo-spec.version}</version>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>1.9.0</version>
+        <version>${mockito-core.version}</version>
       </dependency>
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
-        <version>4.10</version>
+        <version>${junit.version}</version>
       </dependency>
       <dependency>
         <groupId>com.rabbitmq</groupId>
         <artifactId>amqp-client</artifactId>
-        <version>2.8.6</version>
+        <version>${amqp-client.version}</version>
       </dependency>
       <dependency>
         <groupId>net.jcip</groupId>
         <artifactId>jcip-annotations</artifactId>
-        <version>1.0</version>
+        <version>${jcip-annotations.version}</version>
       </dependency>
     </dependencies>
 

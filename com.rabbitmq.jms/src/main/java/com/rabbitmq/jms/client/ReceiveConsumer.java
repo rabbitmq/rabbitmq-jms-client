@@ -85,7 +85,7 @@ class ReceiveConsumer implements Consumer, Abortable {
         this.cancel(false); // cancel and don't wait for completion
 
         synchronized (this.lock) {
-            if (!this.aborted && this.buffer.size() < this.batchingSize) { // room in buffer
+            if (!this.aborted /* && this.buffer.size() < this.batchingSize */ ) { // room in buffer
                 try {
                     log("handleDelivery", "put messsage");
                     this.buffer.put(response);
@@ -160,6 +160,7 @@ class ReceiveConsumer implements Consumer, Abortable {
         }
     }
 
+    @Override
     public void abort() {
         log("abort");
         synchronized (this.lock) {

@@ -1,7 +1,6 @@
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -20,7 +19,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
-import com.rabbitmq.jms.util.Abortable;
+import com.rabbitmq.jms.util.AbortableHolder;
 import com.rabbitmq.jms.util.AbortedException;
 import com.rabbitmq.jms.util.EntryExitManager;
 import com.rabbitmq.jms.util.RMQJMSException;
@@ -102,9 +101,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         this.session = session;
         this.destination = destination;
         this.uuidTag = uuidTag;
+        this.receiveBuffer = new ReceiveBuffer(DEFAULT_BATCHING_SIZE, this);
+        this.abortables.add(this.receiveBuffer);
         if (!paused)
             this.receiveManager.openGate();
-        this.receiveBuffer = new ReceiveBuffer(DEFAULT_BATCHING_SIZE, this);
     }
 
     /**
@@ -208,7 +208,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         log("receive");
         if (this.closed || this.closing)
             throw new IllegalStateException("Consumer is closed or closing.");
-        return internalReceive(new TimeTracker());
+        return receive(new TimeTracker());
     }
 
     /**
@@ -237,7 +237,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         log("receive", timeout);
         if (this.closed || this.closing)
             throw new IllegalStateException("Consumer is closed or closing.");
-        return internalReceive(new TimeTracker(timeout==0?Long.MAX_VALUE:timeout, TimeUnit.MILLISECONDS));
+        return receive(new TimeTracker(timeout==0?Long.MAX_VALUE:timeout, TimeUnit.MILLISECONDS));
     }
 
     /**
@@ -298,7 +298,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         }
     }
 
-    private RMQMessage internalReceive(TimeTracker tt)  throws JMSException {
+    private RMQMessage receive(TimeTracker tt)  throws JMSException {
     // Pseudocode:
     //   poll msg-buffer(0)
     //   if msg-buffer had a message return it
@@ -316,7 +316,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 boolean aa = isAutoAck();
                 if (aa)
                     this.acknowledgeMessage(resp);
-                return processMessage(resp, aa);
+                return this.processMessage(resp, aa);
             } finally {
                 this.receiveManager.exit();
             }
@@ -334,7 +334,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         // acknowledge just this one RabbitMQ message
         try {
             this.getSession().getChannel().basicAck(resp.getEnvelope().getDeliveryTag(), false);
-        } catch (IOException e) {
+        } catch (Exception e) {
             log("acknowledgeMessage", e, resp);
         }
     }
@@ -347,7 +347,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         log("receiveNoWait");
         if (this.closed || this.closing)
             throw new IllegalStateException("Consumer is closed or closing.");
-        return internalReceive(TimeTracker.ZERO);
+        return receive(TimeTracker.ZERO);
     }
 
     /**
@@ -410,7 +410,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     /**
-     * Method called internally or by the Session when system is shutting down
+     * Method called by the Session when system is shutting down
      */
     void internalClose() throws JMSException {
         log("internalClose");
@@ -423,7 +423,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         /* stop and remove any active subscription - waits for onMessage processing to finish */
         this.removeListenerConsumer();
 
-        this.abortables.abort(); // abort async Consumers of both types that remain
+        this.abortables.abort(); // abort Consumers of both types that remain
 
         this.closed = true;
         this.closing = false;
@@ -531,74 +531,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     void setNoLocal(boolean noLocal) {
         this.noLocal = noLocal;
-    }
-
-    /**
-     * Bag of {@link Abortable}s which is itself an {@link Abortable}.
-     */
-    private static class AbortableHolder implements Abortable {
-        private final java.util.Queue<Abortable> abortableQueue = new ConcurrentLinkedQueue<Abortable>();
-        private final boolean[] flags = new boolean[] { false, false, false }; // to prevent infinite regress
-
-        private enum Action {
-            ABORT(0) {
-                void doit(Abortable a) {
-                    a.abort();
-                }
-            },
-            START(1) {
-                void doit(Abortable a) {
-                    a.start();
-                }
-            },
-            STOP(2) {
-                void doit(Abortable a) {
-                    a.stop();
-                }
-            };
-            private final int ind;
-
-            Action(int ind) {
-                this.ind = ind;
-            }
-
-            int index() {
-                return this.ind;
-            }
-
-            abstract void doit(Abortable a);
-        };
-
-        public void add(Abortable a) {
-            this.abortableQueue.add(a);
-        }
-
-        public void remove(Abortable a) {
-            this.abortableQueue.remove(a);
-        }
-
-        public void abort() {
-            act(Action.ABORT);
-        }
-
-        public void start() {
-            act(Action.START);
-        }
-
-        public void stop() {
-            act(Action.STOP);
-        }
-
-        private void act(Action action) {
-            if (this.flags[action.index()]) return; // prevent infinite
-            this.flags[action.index()] = true;      // regress
-
-            Abortable[] as = this.abortableQueue.toArray(new Abortable[this.abortableQueue.size()]);
-            for (Abortable a : as) {
-                action.doit(a);
-            }
-            this.flags[action.index()] = false;     // allow multiple invocations
-        }
     }
 
     private static final boolean LOGGING = false;

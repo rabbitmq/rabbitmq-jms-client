@@ -2,8 +2,6 @@ package com.rabbitmq.jms.client;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
@@ -137,7 +135,6 @@ public class TestReceiveConsumer {
         senderThread.join();
 
         assertThreads(true, false, senderThread, receiverThread);
-        verify(channel, atLeastOnce()).basicNack(anyLong(),anyBoolean(), anyBoolean());
         verify(channel, atLeastOnce()).basicCancel(anyString());
     }
 
