@@ -16,6 +16,8 @@ import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.util.Abortable;
+import com.rabbitmq.jms.util.RJMSLogger;
+import com.rabbitmq.jms.util.RJMSLogger.LogTemplate;
 import com.rabbitmq.jms.util.TimeTracker;
 
 /**
@@ -27,6 +29,13 @@ import com.rabbitmq.jms.util.TimeTracker;
  * </p>
  */
 class ReceiveConsumer implements Consumer, Abortable {
+    private final RJMSLogger LOGGER = new RJMSLogger(new LogTemplate(){
+        @Override
+        public String template() {
+            return "ReceiveConsumer("+ReceiveConsumer.this.consTag+")";
+        }
+    });
+
     private static final GetResponse EOF_RESPONSE = new GetResponse(null, null, null, 0);
 
     private static final long CANCELLATION_TIMEOUT = 1000; // milliseconds
@@ -37,7 +46,7 @@ class ReceiveConsumer implements Consumer, Abortable {
     private final BlockingQueue<GetResponse> buffer;
 
     private final Completion completion = new Completion(); // RabbitMQ called handleCancelOK.
-    private final String consumerTag;
+    private final String consTag;
 
     private final Object lock = new Object(); // synchronising lock
     @GuardedBy("lock") private boolean aborted = false;
@@ -48,20 +57,20 @@ class ReceiveConsumer implements Consumer, Abortable {
         this.rmqMessageConsumer = rmqMessageConsumer;
         this.buffer = buffer;
         this.channel = rmqMessageConsumer.getSession().getChannel();
-        this.consumerTag = RMQMessageConsumer.newConsumerTag(); // generate unique consumer tag for our private use
+        this.consTag = RMQMessageConsumer.newConsumerTag(); // generate unique consumer tag for our private use
     }
 
     @Override
     public void handleConsumeOk(String consumerTag) {
         synchronized (this.lock) {
-            log("handleConsumeOK");
+            LOGGER.log("handleConsumeOK");
         }
     }
 
     @Override
     public void handleCancelOk(String consumerTag) {
         synchronized (this.lock) {
-            log("handleCancelOk");
+            LOGGER.log("handleCancelOk");
             this.completion.setComplete();
         }
     }
@@ -69,14 +78,14 @@ class ReceiveConsumer implements Consumer, Abortable {
     @Override
     public void handleCancel(String consumerTag) throws IOException {
         synchronized (this.lock) {
-            log("handleCancel");
+            LOGGER.log("handleCancel");
             this.abort();
         }
     }
 
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
-        log("handleDelivery");
+        LOGGER.log("handleDelivery");
         GetResponse response = new GetResponse(envelope, properties, body, 1);
         this.handleDelivery(consumerTag, response);
     }
@@ -87,11 +96,11 @@ class ReceiveConsumer implements Consumer, Abortable {
         synchronized (this.lock) {
             if (!this.aborted /* && this.buffer.size() < this.batchingSize */ ) { // room in buffer
                 try {
-                    log("handleDelivery", "put messsage");
+                    LOGGER.log("handleDelivery", "put messsage");
                     this.buffer.put(response);
                     return;
                 } catch (InterruptedException e) {
-                    log("handleDelivery",e,"buffer.put");
+                    LOGGER.log("handleDelivery",e,"buffer.put");
                     Thread.currentThread().interrupt(); // reinstate interrupt status
                     this.abort();                       // we abort if interrupted
                 }
@@ -99,12 +108,12 @@ class ReceiveConsumer implements Consumer, Abortable {
             /* Drop through if we do not put message in buffer. */
             /* We never ACK any message, that is the responsibility of the caller. */
             try {
-                log("handleDelivery", "NACK messsage");
+                LOGGER.log("handleDelivery", "NACK messsage");
                 this.channel.basicNack(response.getEnvelope().getDeliveryTag(),
                                        false, // single message
                                        true); // requeue this message
             } catch (IOException e) {
-                log("handleDelivery",e,response.getEnvelope());
+                LOGGER.log("handleDelivery",e,response.getEnvelope());
                 this.abort();
                 throw e; // RabbitMQ should close the channel
             }
@@ -113,13 +122,13 @@ class ReceiveConsumer implements Consumer, Abortable {
 
     @Override
     public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
-        log("handleShutdownSignal");
+        LOGGER.log("handleShutdownSignal");
         this.abort();
     }
 
     @Override
     public void handleRecoverOk(String consumerTag) {
-        log("handleRecoverOk");
+        LOGGER.log("handleRecoverOk");
         // noop
     }
 
@@ -131,18 +140,18 @@ class ReceiveConsumer implements Consumer, Abortable {
     }
 
     private final void cancel(boolean wait) {
-        log("cancel", wait);
+        LOGGER.log("cancel", wait);
         synchronized (this.lock) {
             if (!this.cancelled) {
                 try {
-                    this.channel.basicCancel(this.consumerTag);
+                    this.channel.basicCancel(this.consTag);
                     this.cancelled = true;
                 } catch (ShutdownSignalException x) {
-                    log("cancel", x, "basicCancel");
+                    LOGGER.log("cancel", x, "basicCancel");
                     this.abort();
                 } catch (IOException x) {
                     if (!(x.getCause() instanceof ShutdownSignalException)) {
-                        log("cancel", x, "basicCancel");
+                        LOGGER.log("cancel", x, "basicCancel");
                     }
                     this.abort();
                 }
@@ -152,7 +161,7 @@ class ReceiveConsumer implements Consumer, Abortable {
             try {
                 this.completion.waitUntilComplete(new TimeTracker(CANCELLATION_TIMEOUT, TimeUnit.MILLISECONDS));
             } catch (TimeoutException e) {
-                log("cancel", e, "waitUntilComplete");
+                LOGGER.log("cancel", e, "waitUntilComplete");
             } catch (InterruptedException e) {
                 this.abort();
                 Thread.currentThread().interrupt();
@@ -162,7 +171,7 @@ class ReceiveConsumer implements Consumer, Abortable {
 
     @Override
     public void abort() {
-        log("abort");
+        LOGGER.log("abort");
         synchronized (this.lock) {
             if (this.aborted)
                 return;
@@ -185,47 +194,21 @@ class ReceiveConsumer implements Consumer, Abortable {
     }
 
     void register() {
-        log("register");
+        LOGGER.log("register");
         try {
             this.channel.basicConsume(this.rmqMessageConsumer.rmqQueueName(), // queue we are listening on
                                       false, // no autoAck - caller does all ACKs
-                                      this.consumerTag, // generated on construction
+                                      this.consTag, // generated on construction
                                       this.rmqMessageConsumer.getNoLocalNoException(), // noLocal option
                                       false, // not exclusive
                                       null, // no arguments
                                       this); // drive this consumer
         } catch (IOException e) {
-            log("register", e, "basicConsume");
+            LOGGER.log("register", e, "basicConsume");
         }
     }
 
     public static boolean isEOFMessage(GetResponse response) {
         return response==EOF_RESPONSE;
-    }
-
-    private static final boolean LOGGING = false;
-
-    private final void log(String s, Exception x, Object ... c) {
-        if (LOGGING) {
-            log("Exception ("+x+") in "+s, c);
-        }
-    }
-
-    private final void log(String s, Object ... c) {
-        if (LOGGING) {
-            StringBuilder sb = new StringBuilder(s).append('(');
-            boolean first = true;
-            for (Object obj : c) {
-                if (first) first = false;
-                else sb.append(", ");
-                sb.append(String.valueOf(obj));
-            }
-            log(sb.append(')').toString());
-        }
-    }
-
-    private final void log(String s) {
-        if (LOGGING)
-            System.err.println("--->ReceiveConsumer("+String.valueOf(this.consumerTag)+"): "+s);
     }
 }

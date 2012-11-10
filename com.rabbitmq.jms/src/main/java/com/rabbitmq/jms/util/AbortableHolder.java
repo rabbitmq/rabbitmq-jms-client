@@ -11,9 +11,9 @@ public class AbortableHolder implements Abortable {
     private final boolean[] flags = new boolean[] { false, false, false }; // to prevent infinite regress
 
     private enum Action {
-        ABORT(0) { void doit(Abortable a) { a.abort(); } },
-        START(1) { void doit(Abortable a) { a.start(); } },
-        STOP(2)  { void doit(Abortable a) { a.stop();  } };
+        ABORT(0) { @Override void doit(Abortable a) { a.abort(); } },
+        START(1) { @Override void doit(Abortable a) { a.start(); } },
+        STOP(2)  { @Override void doit(Abortable a) { a.stop();  } };
         private final int ind;
 
         Action(int ind) { this.ind = ind;  }

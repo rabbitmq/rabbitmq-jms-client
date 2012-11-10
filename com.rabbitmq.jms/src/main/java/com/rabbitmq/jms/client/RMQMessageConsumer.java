@@ -22,6 +22,8 @@ import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.util.AbortableHolder;
 import com.rabbitmq.jms.util.AbortedException;
 import com.rabbitmq.jms.util.EntryExitManager;
+import com.rabbitmq.jms.util.RJMSLogger;
+import com.rabbitmq.jms.util.RJMSLogger.LogTemplate;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.TimeTracker;
 import com.rabbitmq.jms.util.Util;
@@ -36,6 +38,13 @@ import com.rabbitmq.jms.util.Util;
  * </p>
  */
 public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscriber {
+    private final RJMSLogger LOGGER = new RJMSLogger(new LogTemplate(){
+        @Override
+        public String template() {
+            return "RMQMessageConsumer("+RMQMessageConsumer.this.destination+")";
+        }
+    });
+
     private static final int DEFAULT_BATCHING_SIZE = 5;
     private static final long STOP_TIMEOUT_MS = 1000; // ONE SECOND
     /**
@@ -135,12 +144,12 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * Dispose of any Rabbit Consumer that may be active and tracked.
      */
     private void removeListenerConsumer() {
-        log("removeListenerConsumer");
-        MessageListenerConsumer listenerConsumer = this.listenerConsumer.getAndSet(null);
-        if (listenerConsumer != null) {
-            this.abortables.remove(listenerConsumer);
-            listenerConsumer.stop();  // orderly stop
-            listenerConsumer.abort(); // force it if it didn't work
+        LOGGER.log("removeListenerConsumer");
+        MessageListenerConsumer listConsumer = this.listenerConsumer.getAndSet(null);
+        if (listConsumer != null) {
+            this.abortables.remove(listConsumer);
+            listConsumer.stop();  // orderly stop
+            listConsumer.abort(); // force it if it didn't work
         }
     }
 
@@ -166,7 +175,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public void setMessageListener(MessageListener messageListener) throws JMSException {
-        log("setMessageListener", messageListener);
+        LOGGER.log("setMessageListener", messageListener);
         if (messageListener == this.messageListener) // no change, so do nothing
             return;
         this.removeListenerConsumer();  // if there is any
@@ -205,7 +214,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public Message receive() throws JMSException {
-        log("receive");
+        LOGGER.log("receive");
         if (this.closed || this.closing)
             throw new IllegalStateException("Consumer is closed or closing.");
         return receive(new TimeTracker());
@@ -234,7 +243,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public Message receive(long timeout) throws JMSException {
-        log("receive", timeout);
+        LOGGER.log("receive", timeout);
         if (this.closed || this.closing)
             throw new IllegalStateException("Consumer is closed or closing.");
         return receive(new TimeTracker(timeout==0?Long.MAX_VALUE:timeout, TimeUnit.MILLISECONDS));
@@ -335,7 +344,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         try {
             this.getSession().getChannel().basicAck(resp.getEnvelope().getDeliveryTag(), false);
         } catch (Exception e) {
-            log("acknowledgeMessage", e, resp);
+            LOGGER.log("acknowledgeMessage", e, resp);
         }
     }
 
@@ -344,7 +353,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public Message receiveNoWait() throws JMSException {
-        log("receiveNoWait");
+        LOGGER.log("receiveNoWait");
         if (this.closed || this.closing)
             throw new IllegalStateException("Consumer is closed or closing.");
         return receive(TimeTracker.ZERO);
@@ -413,7 +422,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * Method called by the Session when system is shutting down
      */
     void internalClose() throws JMSException {
-        log("internalClose");
+        LOGGER.log("internalClose");
         this.closing = true;
         /* If we are stopped, we must break that. This will release all threads waiting on the gate and effectively
          * disable the use of the gate */
@@ -503,7 +512,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @throws javax.jms.JMSException if the thread is interrupted
      */
     void resume() throws JMSException {
-        log("resume");
+        LOGGER.log("resume");
         this.abortables.start();
         this.receiveManager.openGate();
     }
@@ -531,22 +540,5 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     void setNoLocal(boolean noLocal) {
         this.noLocal = noLocal;
-    }
-
-    private static final boolean LOGGING = false;
-
-    private final void log(String s, Exception x, Object c) {
-        if (LOGGING)
-            log("Exception ("+x+") in "+s, c);
-    }
-
-    private final void log(String s, Object c) {
-        if (LOGGING)
-            log(s+"("+String.valueOf(c)+")");
-    }
-
-    private final void log(String s) {
-        if (LOGGING)
-            System.err.println("--->RMQMessageConsumer("+String.valueOf(this.destination)+"): "+s);
     }
 }

@@ -17,6 +17,7 @@ import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.util.Abortable;
 import com.rabbitmq.jms.util.AbortedException;
+import com.rabbitmq.jms.util.RJMSLogger;
 import com.rabbitmq.jms.util.TimeTracker;
 
 /**
@@ -25,6 +26,8 @@ import com.rabbitmq.jms.util.TimeTracker;
  * {@link MessageConsumer#receive()} and {@link MessageConsumer#receive(long)}.
  */
 class SynchronousConsumer implements Consumer, Abortable {
+    private final static RJMSLogger LOGGER = new RJMSLogger("SynchronousConsumer");
+
     private static final GetResponse ACCEPT_MSG = new GetResponse(null, null, null, 0);
     private static final GetResponse REJECT_MSG = new GetResponse(null, null, null, 0);
     private final Exchanger<GetResponse> exchanger = new Exchanger<GetResponse>();
@@ -35,7 +38,7 @@ class SynchronousConsumer implements Consumer, Abortable {
     private final AtomicBoolean oneReceived = new AtomicBoolean(false);
     private final AtomicBoolean cancelled = new AtomicBoolean(false);
 
-    private volatile String consumerTag;
+    private volatile String consTag;
     private volatile boolean aborted = false;
 
     SynchronousConsumer(Channel channel, TimeTracker tt) {
@@ -44,7 +47,7 @@ class SynchronousConsumer implements Consumer, Abortable {
     }
 
     GetResponse receive() throws JMSException, AbortedException {
-        log(this.consumerTag, "receive");
+        LOGGER.log("receive", this.consTag);
 
         if (!this.useOnce.compareAndSet(false, true)) {
             throw new JMSException("SynchronousConsumer.receive can be called only once.");
@@ -53,10 +56,10 @@ class SynchronousConsumer implements Consumer, Abortable {
         try {
             response = this.exchanger.exchange(ACCEPT_MSG, this.timeout, TimeUnit.MILLISECONDS);
         } catch (TimeoutException x) {
-            log(this.consumerTag, x, "receive(exchange)");
+            LOGGER.log("receive(exchange)", x, this.consTag);
             return null;
         } catch (InterruptedException x) {
-            log(this.consumerTag, x, "receive(exchange)");
+            LOGGER.log("receive(exchange)", x, this.consTag);
             /* Reset the thread interrupted status */
             Thread.currentThread().interrupt();
             return null;
@@ -64,26 +67,26 @@ class SynchronousConsumer implements Consumer, Abortable {
         if (response == REJECT_MSG) {
             throw new AbortedException();
         }
-        log(this.consumerTag, "receive(valid-response)");
+        LOGGER.log("receive(valid-response)", this.consTag);
         return response;
     }
 
     @Override
     public void handleConsumeOk(String consumerTag) {
-        log(consumerTag, "handleConsumeOK");
-        this.consumerTag = consumerTag;
+        LOGGER.log("handleConsumeOK", consumerTag);
+        this.consTag = consumerTag;
     }
 
     @Override
     public void handleCancelOk(String consumerTag) {
-        log(consumerTag, "handleCancelOK");
-        this.consumerTag = null;
+        LOGGER.log("handleCancelOK", consumerTag);
+        this.consTag = null;
     }
 
     @Override
     public void handleCancel(String consumerTag) throws IOException {
-        log(consumerTag, "handleCancel");
-        this.consumerTag = null;
+        LOGGER.log("handleCancel", consumerTag);
+        this.consTag = null;
     }
 
     @Override
@@ -93,13 +96,13 @@ class SynchronousConsumer implements Consumer, Abortable {
     }
 
     final void handleDelivery(String consumerTag, GetResponse response) throws IOException {
-        log(consumerTag, "handleDelivery");
+        LOGGER.log("handleDelivery", consumerTag);
         if (this.cancelled.compareAndSet(false, true)) {
             try {
                 this.channel.basicCancel(consumerTag);
-                log(consumerTag, "handleDelivery(basicCancel)success");
+                LOGGER.log("handleDelivery(basicCancel)success", consumerTag);
             } catch (Exception x) {
-                log(consumerTag, x, "handleDelivery(basicCancel)");
+                LOGGER.log("handleDelivery(basicCancel)", x, consumerTag);
                 // x.printStackTrace();
                 //TODO logging implementation
             }
@@ -110,16 +113,16 @@ class SynchronousConsumer implements Consumer, Abortable {
             try {
                 // give a receive() thread enough time to arrive
                 waiter = this.exchanger.exchange(response, Math.min(100, this.timeout), TimeUnit.MILLISECONDS);
-                log(this.consumerTag, "handleDelivery(exchange)success");
+                LOGGER.log("handleDelivery(exchange)success", this.consTag);
             } catch (InterruptedException x) {
-                log(this.consumerTag, x, "handleDelivery(exchange)");
+                LOGGER.log("handleDelivery(exchange)", x, this.consTag);
                 // this is ok, it means we had a message
                 // but no one there to receive it and got
                 // interrupted
                 /* Reset the thread interrupted status anyway */
                 Thread.currentThread().interrupt();
             } catch (TimeoutException x) {
-                log(this.consumerTag, x, "handleDelivery(exchange)");
+                LOGGER.log("handleDelivery(exchange)", x, this.consTag);
             }
         }
 
@@ -132,31 +135,31 @@ class SynchronousConsumer implements Consumer, Abortable {
 
     @Override
     public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
-        log(consumerTag, "handleShutdownSignal");
+        LOGGER.log("handleShutdownSignal", consumerTag);
         // noop
     }
 
     @Override
     public void handleRecoverOk(String consumerTag) {
-        log(consumerTag, "handleRecoverOK");
+        LOGGER.log("handleRecoverOK", consumerTag);
         // noop
     }
 
     boolean cancel() {
-        log(this.consumerTag, "cancel");
+        LOGGER.log("cancel", this.consTag);
 
         boolean result = this.cancelled.compareAndSet(false, true);
         if (result) {
             try {
-                if (this.channel.isOpen() && this.consumerTag != null) {
-                    this.channel.basicCancel(this.consumerTag);
-                    log(this.consumerTag, "cancel(basicCancel)success");
+                if (this.channel.isOpen() && this.consTag != null) {
+                    this.channel.basicCancel(this.consTag);
+                    LOGGER.log("cancel(basicCancel)success", this.consTag);
                 }
             } catch (ShutdownSignalException x) {
-                log(this.consumerTag, x, "cancel(basicCancel)");
+                LOGGER.log("cancel(basicCancel)", x, this.consTag);
                 //do nothing
             } catch (IOException x) {
-                log(this.consumerTag, x, "cancel(basicCancel)");
+                LOGGER.log("cancel(basicCancel)", x, this.consTag);
                 if (x.getCause() instanceof ShutdownSignalException) {
                     //TODO debug logging impl
                 } else {
@@ -169,45 +172,28 @@ class SynchronousConsumer implements Consumer, Abortable {
     }
 
     public void abort() {
-        log(this.consumerTag, "abort");
+        LOGGER.log("abort", this.consTag);
         if (this.aborted) return;
         try {
             this.aborted = true;
             this.exchanger.exchange(REJECT_MSG, 0, TimeUnit.MILLISECONDS);
-            log(this.consumerTag, "abort(exchange)success");
+            LOGGER.log("abort(exchange)success", this.consTag);
         } catch (InterruptedException e) {
             /* Reset the thread interrupted status */
-            log(this.consumerTag, e, "abort(exchange)");
+            LOGGER.log("abort(exchange)", e, this.consTag);
             Thread.currentThread().interrupt();
         } catch (TimeoutException te) {
-            log(this.consumerTag, te, "abort(exchange)");
+            LOGGER.log("abort(exchange)", te, this.consTag);
         }
     }
 
     @Override
     public void stop() {
-        log(this.consumerTag, "stop");
+        LOGGER.log("stop", this.consTag);
     }
 
     @Override
     public void start() {
-        log(this.consumerTag, "start");
-    }
-
-    private static final boolean LOGGING = false;
-
-    private static final void log(String ctag, Exception x, String s) {
-        if (LOGGING)
-            log(ctag, "Exception ("+x+") in "+s);
-    }
-
-    private static final void log(String ctag, String s) {
-        if (LOGGING)
-            log(s+"("+ctag+")");
-    }
-
-    private static final void log(String s) {
-        if (LOGGING)
-            System.err.println("--->SynchronousConsumer: " + s);
+        LOGGER.log("start", this.consTag);
     }
 }

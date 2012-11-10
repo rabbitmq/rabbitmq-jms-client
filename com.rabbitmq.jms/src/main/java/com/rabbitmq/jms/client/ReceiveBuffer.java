@@ -8,6 +8,7 @@ import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.util.Abortable;
 import com.rabbitmq.jms.util.AbortableHolder;
+import com.rabbitmq.jms.util.RJMSLogger;
 import com.rabbitmq.jms.util.TimeTracker;
 
 /**
@@ -32,6 +33,8 @@ import com.rabbitmq.jms.util.TimeTracker;
  * </p>
  */
 class ReceiveBuffer implements Abortable {
+
+    private static final RJMSLogger LOGGER = new RJMSLogger("ReceiveBuffer");
 
     private final BlockingDeque<GetResponse> buffer = new LinkedBlockingDeque<GetResponse>();
     private final int batchingSize;
@@ -68,13 +71,13 @@ class ReceiveBuffer implements Abortable {
              || ReceiveConsumer.isEOFMessage(resp)) // Consumer ended before we timed out
                 return null;
         } catch (InterruptedException e) {
-            log("get", e, "interrupted while buffer.poll-ing");
+            LOGGER.log("get", e, "interrupted while buffer.poll-ing");
             Thread.currentThread().interrupt();
         } finally {
             this.abortables.remove(rc);
-            log("get","about to cancel+wait");
+            LOGGER.log("get","about to cancel+wait");
             rc.cancel(); // ensure consumer is cancelled (eventually; may block).
-            log("get", "returned from cancel+wait");
+            LOGGER.log("get", "returned from cancel+wait");
         }
         // real messages (or interruptions) drop through to here
         return resp;
@@ -95,32 +98,6 @@ class ReceiveBuffer implements Abortable {
         return receiveConsumer;
     }
 
-    private static final boolean LOGGING = false;
-
-    private final void log(String s, Exception x, Object ... c) {
-        if (LOGGING) {
-            log("Exception ("+x+") in "+s, c);
-        }
-    }
-
-    private final void log(String s, Object ... c) {
-        if (LOGGING) {
-            StringBuilder sb = new StringBuilder(s).append('(');
-            boolean first = true;
-            for (Object obj : c) {
-                if (first) first = false;
-                else sb.append(", ");
-                sb.append(String.valueOf(obj));
-            }
-            log(sb.append(')').toString());
-        }
-    }
-
-    private final void log(String s) {
-        if (LOGGING)
-            System.err.println("--->ReceiveBuffer("+String.valueOf(this.rmqMessageConsumer)+"): "+s+" ["+System.nanoTime()+"]");
-    }
-
     @Override
     public void abort() {
         this.nackAllBuffer();
@@ -128,13 +105,13 @@ class ReceiveBuffer implements Abortable {
     }
 
     private void nackAllBuffer() {
-        log("nackAllBuffer");
+        LOGGER.log("nackAllBuffer");
         for (GetResponse resp : this.buffer) {
             try {
                 this.rmqMessageConsumer.getSession().getChannel().basicNack(resp.getEnvelope().getDeliveryTag(), false, true);
-                log("nackAllBuffer", "basicNack", resp.getEnvelope());
+                LOGGER.log("nackAllBuffer", "basicNack", resp.getEnvelope());
             } catch (Exception e) {
-                log("nackAllBuffer",e,"basicNack");
+                LOGGER.log("nackAllBuffer",e,"basicNack");
                 break;
             }
         }
@@ -144,12 +121,10 @@ class ReceiveBuffer implements Abortable {
     @Override
     public void stop() {
         // TODO Auto-generated method stub
-
     }
 
     @Override
     public void start() {
         // TODO Auto-generated method stub
-
     }
 }
