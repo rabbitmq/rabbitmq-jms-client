@@ -31,11 +31,10 @@ public class TemporaryDestinationIT {
 
     @Test
     public void testQueueSendAndReceiveSingleSession() throws Exception {
-        QueueConnection queueConn = null;
+        QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
+                .getConnectionFactory();
+        QueueConnection queueConn = connFactory.createQueueConnection();
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                                                                                               .getConnectionFactory();
-            queueConn = connFactory.createQueueConnection();
             queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             Queue queue = queueSession.createTemporaryQueue();
@@ -55,11 +54,10 @@ public class TemporaryDestinationIT {
 
     @Test
     public void testQueueSendAndReceiveTwoSessions() throws Exception {
-        QueueConnection queueConn = null;
+        QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
+                .getConnectionFactory();
+        QueueConnection queueConn = connFactory.createQueueConnection();
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                                                                                               .getConnectionFactory();
-            queueConn = connFactory.createQueueConnection();
             queueConn.start();
             QueueSession queueSession1 = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             QueueSession queueSession2 = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
@@ -80,11 +78,10 @@ public class TemporaryDestinationIT {
 
     @Test
     public void testTopicSendAndReceiveSingleSession() throws Exception {
-        TopicConnection topicConn = null;
+        TopicConnectionFactory connFactory = (TopicConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
+                .getConnectionFactory();
+        TopicConnection topicConn = connFactory.createTopicConnection();
         try {
-            TopicConnectionFactory connFactory = (TopicConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                                                                                               .getConnectionFactory();
-            topicConn = connFactory.createTopicConnection();
             topicConn.start();
             TopicSession topicSession = topicConn.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             Topic topic = topicSession.createTemporaryTopic();
@@ -111,11 +108,10 @@ public class TemporaryDestinationIT {
 
     @Test
     public void testTopicSendAndReceiveTwoSessions() throws Exception {
-        TopicConnection topicConn = null;
+        TopicConnectionFactory connFactory = (TopicConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
+                .getConnectionFactory();
+        TopicConnection topicConn = connFactory.createTopicConnection();
         try {
-            TopicConnectionFactory connFactory = (TopicConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                                                                                               .getConnectionFactory();
-            topicConn = connFactory.createTopicConnection();
             topicConn.start();
             TopicSession topicSession1 = topicConn.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             TopicSession topicSession2 = topicConn.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);

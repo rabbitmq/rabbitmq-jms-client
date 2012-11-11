@@ -31,11 +31,11 @@ public class RabbitMQRedeliverOnNackIT {
      */
     @Test
     public void testRMQRedeliverOnNack() throws Exception {
+        QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
+                .getConnectionFactory();
         QueueConnection queueConn = null;
+        queueConn = connFactory.createQueueConnection();
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                                                                                               .getConnectionFactory();
-            queueConn = connFactory.createQueueConnection();
             queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
             Queue queue = queueSession.createQueue(QUEUE_NAME);
@@ -46,10 +46,8 @@ public class RabbitMQRedeliverOnNackIT {
         } finally {
             queueConn.close();
         }
+        queueConn = connFactory.createQueueConnection();
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                                                                                               .getConnectionFactory();
-            queueConn = connFactory.createQueueConnection();
             queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(true, Session.DUPS_OK_ACKNOWLEDGE);
             Queue queue = queueSession.createQueue(QUEUE_NAME);

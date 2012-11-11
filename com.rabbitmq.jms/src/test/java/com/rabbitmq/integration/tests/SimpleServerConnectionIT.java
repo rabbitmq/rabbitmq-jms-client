@@ -41,7 +41,7 @@ public class SimpleServerConnectionIT {
     private volatile String virtualHost = "/";
     private volatile String host = "localhost";
     private volatile int port = 5672;
-    private volatile Connection conn = null;
+    private volatile Connection connection = null;
 
     @Before
     public void setUp() throws Exception {
@@ -51,13 +51,13 @@ public class SimpleServerConnectionIT {
         factory.setVirtualHost(this.getVirtualHost());
         factory.setHost(this.getHost());
         factory.setPort(this.getPort());
-        this.conn = factory.newConnection();
+        this.connection = factory.newConnection();
     }
 
     @After
     public void tearDown() throws Exception {
         Connection conn = this.getConnection();
-        this.conn = null;
+        this.connection = null;
         if (conn != null) {
             conn.close();
         }
@@ -92,7 +92,7 @@ public class SimpleServerConnectionIT {
     }
 
     public Connection getConnection() {
-        return this.conn;
+        return this.connection;
     }
 
     public String getUsername() {

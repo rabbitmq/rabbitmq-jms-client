@@ -166,7 +166,7 @@ public class TestMessages {
         assertEquals(Integer.MAX_VALUE, message.readInt());
         assertEquals(Long.MAX_VALUE, message.readLong());
         assertEquals(Short.MAX_VALUE, message.readShort());
-        assertEquals((int) 0xFFFF, message.readUnsignedShort());
+        assertEquals(0xFFFF, message.readUnsignedShort());
         assertEquals("TEST", message.readUTF());
     }
 
@@ -222,7 +222,7 @@ public class TestMessages {
             assertEquals(-1, message.readBytes(new byte[1024]));
         }
         assertTrue(Arrays.equals(buf, b2));
-        
+
         count = message.readBytes(b1);
         if (count==b1.length) {
             assertEquals(-1, message.readBytes(new byte[1024]));
@@ -234,9 +234,9 @@ public class TestMessages {
         assertEquals(Integer.MAX_VALUE, message.readInt());
         assertEquals(Long.MAX_VALUE, message.readLong());
         assertEquals(Short.MAX_VALUE, message.readShort());
-        assertEquals((int) 0xFFFF, message.readShort() & 0xFFFF);
+        assertEquals(0xFFFF, message.readShort() & 0xFFFF);
         assertEquals("TEST", message.readString());
-        
+
     }
 
     private static class TestSerializable implements Serializable {

@@ -23,11 +23,10 @@ public class SimpleTopicMessageIT {
     @Test
     public void testSendAndReceiveTextMessage() throws Exception {
         final String MESSAGE2 = "Hello " + SimpleTopicMessageIT.class.getName();
-        TopicConnection topicConn = null;
+        TopicConnectionFactory connFactory = (TopicConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
+                .getConnectionFactory();
+        TopicConnection topicConn = connFactory.createTopicConnection();
         try {
-            TopicConnectionFactory connFactory = (TopicConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                                                                                               .getConnectionFactory();
-            topicConn = connFactory.createTopicConnection();
             topicConn.start();
             TopicSession topicSession = topicConn.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             Topic topic = topicSession.createTopic(TOPIC_NAME);

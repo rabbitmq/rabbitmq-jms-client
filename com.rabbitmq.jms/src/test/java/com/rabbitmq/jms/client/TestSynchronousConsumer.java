@@ -84,9 +84,9 @@ public class TestSynchronousConsumer {
      */
     @Test
     public void testSynchronousConsumerSuccessShortTimeout() throws Exception {
-        Channel channel = mock(Channel.class);
+        Channel chan = mock(Channel.class);
 
-        SynchronousConsumer consumer = new SynchronousConsumer(channel, new TimeTracker(10, TimeUnit.MILLISECONDS));
+        SynchronousConsumer consumer = new SynchronousConsumer(chan, new TimeTracker(10, TimeUnit.MILLISECONDS));
         CountDownLatch senderLatch = new CountDownLatch(1);
         CountDownLatch receiverLatch = new CountDownLatch(1);
         DriveConsumerThread senderThread = new DriveConsumerThread(TEST_RESPONSE, consumer, senderLatch);
@@ -100,7 +100,7 @@ public class TestSynchronousConsumer {
         receiverThread.join();
         senderThread.join();
 
-        verify(channel, atLeastOnce()).basicCancel(anyString());
+        verify(chan, atLeastOnce()).basicCancel(anyString());
         assertThreads(true, true, senderThread, receiverThread);
     }
 
@@ -111,9 +111,9 @@ public class TestSynchronousConsumer {
      */
     @Test
     public void testSynchronousConsumerReceiverTimeout() throws Exception {
-        Channel channel = mock(Channel.class);
+        Channel chan = mock(Channel.class);
 
-        SynchronousConsumer consumer = new SynchronousConsumer(channel, new TimeTracker(TIMEOUT, TimeUnit.MILLISECONDS));
+        SynchronousConsumer consumer = new SynchronousConsumer(chan, new TimeTracker(TIMEOUT, TimeUnit.MILLISECONDS));
         CountDownLatch senderLatch = new CountDownLatch(1);
         CountDownLatch receiverLatch = new CountDownLatch(1);
         DriveConsumerThread senderThread = new DriveConsumerThread(TEST_RESPONSE, consumer, senderLatch);
@@ -129,8 +129,8 @@ public class TestSynchronousConsumer {
         senderThread.join();
 
 
-        verify(channel, atLeastOnce()).basicNack(anyLong(),anyBoolean(), anyBoolean());
-        verify(channel, atLeastOnce()).basicCancel(anyString());
+        verify(chan, atLeastOnce()).basicNack(anyLong(),anyBoolean(), anyBoolean());
+        verify(chan, atLeastOnce()).basicCancel(anyString());
         assertThreads(true, false, senderThread, receiverThread);
     }
 
@@ -141,9 +141,9 @@ public class TestSynchronousConsumer {
      */
     @Test
     public void testSynchronousConsumerReceiverTimeoutNoSender() throws Exception {
-        Channel channel = mock(Channel.class);
+        Channel chan = mock(Channel.class);
 
-        SynchronousConsumer consumer = new SynchronousConsumer(channel, new TimeTracker(TIMEOUT, TimeUnit.MILLISECONDS));
+        SynchronousConsumer consumer = new SynchronousConsumer(chan, new TimeTracker(TIMEOUT, TimeUnit.MILLISECONDS));
         CountDownLatch receiverLatch = new CountDownLatch(1);
         ReceiverThread receiverThread = new ReceiverThread(TEST_RESPONSE, consumer, receiverLatch);
         receiverThread.start();
@@ -169,6 +169,7 @@ public class TestSynchronousConsumer {
             this.latch = latch;
         }
 
+        @Override
         public void run() {
             final String fakeConsumerTag = "";
             try {
@@ -214,6 +215,7 @@ public class TestSynchronousConsumer {
             this.latch = latch;
         }
 
+        @Override
         public void run() {
             try {
                 this.latch.await();

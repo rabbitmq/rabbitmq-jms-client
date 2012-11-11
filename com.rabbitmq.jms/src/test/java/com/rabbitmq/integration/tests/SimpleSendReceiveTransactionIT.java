@@ -25,11 +25,11 @@ public class SimpleSendReceiveTransactionIT {
     @Test
     public void testQueueSendAndRollback() throws Exception {
 
+        QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
+                .getConnectionFactory();
         QueueConnection queueConn = null;
+        queueConn = connFactory.createQueueConnection();
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                                                                                               .getConnectionFactory();
-            queueConn = connFactory.createQueueConnection();
             queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(true, Session.DUPS_OK_ACKNOWLEDGE);
             Queue queue = queueSession.createQueue(QUEUE_NAME);
@@ -41,10 +41,8 @@ public class SimpleSendReceiveTransactionIT {
         } finally {
             queueConn.close();
         }
+        queueConn = connFactory.createQueueConnection();
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                                                                                               .getConnectionFactory();
-            queueConn = connFactory.createQueueConnection();
             queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             Queue queue = queueSession.createQueue(QUEUE_NAME);
@@ -58,11 +56,11 @@ public class SimpleSendReceiveTransactionIT {
 
     @Test
     public void testSendAndCommitAndReceiveMessage() throws Exception {
+        QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
+                .getConnectionFactory();
         QueueConnection queueConn = null;
+        queueConn = connFactory.createQueueConnection();
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                                                                                               .getConnectionFactory();
-            queueConn = connFactory.createQueueConnection();
             queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(true, Session.DUPS_OK_ACKNOWLEDGE);
             Queue queue = queueSession.createQueue(QUEUE_NAME);
@@ -74,10 +72,8 @@ public class SimpleSendReceiveTransactionIT {
         } finally {
             queueConn.close();
         }
+        queueConn = connFactory.createQueueConnection();
         try {
-            QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                                                                                               .getConnectionFactory();
-            queueConn = connFactory.createQueueConnection();
             queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             Queue queue = queueSession.createQueue(QUEUE_NAME);

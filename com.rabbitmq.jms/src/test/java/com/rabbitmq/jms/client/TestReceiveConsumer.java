@@ -140,12 +140,11 @@ public class TestReceiveConsumer {
 
     /**
      * In this test the receiver should timeout, since there
-     * is a no sending at all
+     * is a no sending at all.
      * @throws Exception if test error
      */
     @Test
     public void testSynchronousConsumerReceiverTimeoutNoSender() throws Exception {
-        ReceiveConsumer consumer = new ReceiveConsumer(rmqMessageConsumer, blockingQueue, 1);
 
         ReceiverThread receiverThread = new ReceiverThread(blockingQueue, envelope);
         receiverThread.start();
@@ -157,14 +156,14 @@ public class TestReceiveConsumer {
     }
 
     private static class DriveConsumerThread extends Thread {
-        private final Envelope envelope;
+        private final Envelope env;
         private final ReceiveConsumer consumer;
         private final CountDownLatch latch = new CountDownLatch(1);
         private volatile boolean success = false;
         private volatile Exception exception = null;
 
         public DriveConsumerThread(Envelope envelope, ReceiveConsumer consumer) {
-            this.envelope = envelope;
+            this.env = envelope;
             this.consumer = consumer;
         }
 
@@ -173,7 +172,7 @@ public class TestReceiveConsumer {
             final String fakeConsumerTag = "";
             try {
                 this.latch.await();
-                this.consumer.handleDelivery(fakeConsumerTag, this.envelope, null, null);
+                this.consumer.handleDelivery(fakeConsumerTag, this.env, null, null);
                 this.success = true;
             } catch (Exception x) {
                 x.printStackTrace(); //TODO logging implementation
@@ -209,14 +208,14 @@ public class TestReceiveConsumer {
 
     private static class ReceiverThread extends Thread {
         private final BlockingQueue<GetResponse> blockingQueue;
-        private final Envelope envelope;
+        private final Envelope env;
         private final CountDownLatch latch = new CountDownLatch(1);
         private volatile boolean success = false;
         private volatile Exception exception = null;
 
         public ReceiverThread(BlockingQueue<GetResponse> blockingQueue, Envelope envelope) {
             this.blockingQueue = blockingQueue;
-            this.envelope = envelope;
+            this.env = envelope;
         }
 
         @Override
@@ -224,7 +223,7 @@ public class TestReceiveConsumer {
             try {
                 this.latch.await();
                 GetResponse resp = this.blockingQueue.poll(TIMEOUT, TimeUnit.MILLISECONDS);
-                this.success = (resp!=null && resp.getEnvelope() == this.envelope);
+                this.success = (resp!=null && resp.getEnvelope() == this.env);
             } catch (Exception x) {
                 this.exception = x;
                 this.success = false;
