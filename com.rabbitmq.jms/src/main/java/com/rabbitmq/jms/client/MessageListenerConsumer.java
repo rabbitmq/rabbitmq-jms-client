@@ -70,8 +70,8 @@ class MessageListenerConsumer implements Consumer, Abortable {
      */
     @Override
     public void handleCancelOk(String consumerTag) {
-        this.completion.setComplete();
         this.consumerTag = null;
+        this.completion.setComplete();
     }
 
     /**
@@ -79,8 +79,8 @@ class MessageListenerConsumer implements Consumer, Abortable {
      */
     @Override
     public void handleCancel(String consumerTag) throws IOException {
-        this.completion.setComplete();
         this.consumerTag = null;
+        this.completion.setComplete();
     }
 
     @Override
