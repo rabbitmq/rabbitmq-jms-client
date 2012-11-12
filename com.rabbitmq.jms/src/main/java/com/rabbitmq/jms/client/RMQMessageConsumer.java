@@ -149,7 +149,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         if (listConsumer != null) {
             this.abortables.remove(listConsumer);
             listConsumer.stop();  // orderly stop
-            listConsumer.abort(); // force it if it didn't work
         }
     }
 
