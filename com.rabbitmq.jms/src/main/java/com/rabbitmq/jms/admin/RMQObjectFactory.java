@@ -18,7 +18,7 @@ import javax.naming.spi.ObjectFactory;
  * JNDI Factory to create resources in containers such as <a href="http://tomcat.apache.org">Tomcat</a>
  * An example Tomcat configuration for a ConnectionFactory would look like:<br/>
  * &lt;Resource <br/>
- * &emsp;name=&quot;jms/ConnectionFactory&quot; <br/> 
+ * &emsp;name=&quot;jms/ConnectionFactory&quot; <br/>
  * &emsp;type=&quot;javax.jms.ConnectionFactory&quot;  <br/>
  * &emsp;factory=&quot;com.rabbitmq.jms.admin.RMQObjectFactory&quot;  <br/>
  * &emsp;username=&quot;guest&quot; <br/>
@@ -33,12 +33,12 @@ import javax.naming.spi.ObjectFactory;
  * &emsp;name=&quot;jms/Queue&quot; type=&quot;javax.jms.Queue&quot; <br/>
  * &emsp;factory=&quot;com.rabbitmq.jms.admin.RMQObjectFactory&quot;<br/>
  * &emsp;destinationName=&quot;queueName&quot;/&gt; <br/>
- * and a Topic would be created using <br/>              
+ * and a Topic would be created using <br/>
  * &lt;Resource <br/>
  * &emsp;name=&quot;jms/Topic&quot; type=&quot;javax.jms.Topic&quot; <br/>
  * &emsp;factory=&quot;com.rabbitmq.jms.admin.RMQObjectFactory&quot; <br/>
  * &emsp;destinationName=&quot;topicName&quot;/&gt; <br/>
- *              
+ *
  * Valid types are: <br/>
  * javax.jms.ConnectionFactory<br/>
  * javax.jms.QueueConnectionFactory<br/>
@@ -55,14 +55,14 @@ import javax.naming.spi.ObjectFactory;
  *  <li>threadsPerConnection</li>
  *  <li>threadPrefix</li>
  *  <li>terminationTimeout</li>
- * </ul>  
+ * </ul>
  * Properties for a topic or a queue are:
  * <ul>
  *  <li>destinationName</li>
  * </ul>
- * 
- *  
- *  
+ *
+ *
+ *
  *  <br/><br/>
  *  TODO Implement SSL and socket options
  */
@@ -81,17 +81,17 @@ public class RMQObjectFactory implements ObjectFactory {
 
         String className = ref.getClassName();
         if (className == null || className.trim().length() == 0) {
-            throw new NamingException("Unable to instantiate opbject, type has not been specified");
+            throw new NamingException("Unable to instantiate object, type has not been specified");
         }
 
         /*
-         * Valid classnames are:
+         * Valid class names are:
          * javax.jms.ConnectionFactory
          * javax.jms.QueueConnectionFactory
          * javax.jms.TopicConnectionFactory
          * javax.jms.Topic
          * javax.jms.Queue
-         * 
+         *
          */
         boolean topic = false;
         if (QueueConnectionFactory.class.getName().equals(className)) {
@@ -121,9 +121,9 @@ public class RMQObjectFactory implements ObjectFactory {
     /**
      * Creates a RMQConnectionFactory from a Reference
      * @param ref - the reference containing all properties
-     * @param name - the name of the object 
+     * @param name - the name of the object
      * @return a {@link RMQConnectionFactory} object configured
-     * @throws NamingException if a required property is missing 
+     * @throws NamingException if a required property is missing
      */
     public Object createConnectionFactory(Reference ref, Name name) throws NamingException {
         RMQConnectionFactory f = new RMQConnectionFactory();
@@ -131,7 +131,7 @@ public class RMQObjectFactory implements ObjectFactory {
         String username = getStringProperty(ref, "username", true, "guest");
         String password = getStringProperty(ref, "password", true, "guest");
         String virtualHost = getStringProperty(ref, "virtualHost", true, "/");
-        String host = getStringProperty(ref, "localhost", true, "localhost");
+        String host = getStringProperty(ref, "localhost", true, "127.0.0.1");
 
         int port = getIntProperty(ref, "port", true, 5672);
         int threadsPerConnection = getIntProperty(ref, "threadPerConnection", true, 2);
@@ -146,14 +146,14 @@ public class RMQObjectFactory implements ObjectFactory {
         f.setThreadsPerConnection(threadsPerConnection);
         f.setThreadPrefix(threadPrefix);
         f.setTerminationTimeout(terminationTimeout);
-        
+
         return f;
     }
 
     /**
      * Creates a {@link RMQDestination} from a reference
      * @param ref the reference containing the required properties
-     * @param name the name 
+     * @param name the name
      * @param topic true if this is a topic, false if it is a queue
      * @return a {@link RMQDestination} object with the destinationName configured
      * @throws NamingException if the <code>destinationName</code> property is missing
@@ -173,9 +173,9 @@ public class RMQObjectFactory implements ObjectFactory {
      * @return the String value for the property
      * @throws NamingException if the property is missing and <code>mayBeNull==false</code>
      */
-    private String getStringProperty(Reference ref, 
-                                     String propertyName, 
-                                     boolean mayBeNull, 
+    private String getStringProperty(Reference ref,
+                                     String propertyName,
+                                     boolean mayBeNull,
                                      String defaultValue) throws NamingException {
         RefAddr ra = ref.get(propertyName);
         if (!mayBeNull && (ra == null || ra.getContent()==null)) {
@@ -202,9 +202,9 @@ public class RMQObjectFactory implements ObjectFactory {
      * @return the int value representing the property value
      * @throws NamingException if the property is missing while mayBeNull is set to false, or a number format exception happened
      */
-    private int getIntProperty(Reference ref, 
-                               String propertyName, 
-                               boolean mayBeNull, 
+    private int getIntProperty(Reference ref,
+                               String propertyName,
+                               boolean mayBeNull,
                                int defaultValue) throws NamingException {
         RefAddr ra = ref.get(propertyName);
         if (!mayBeNull && ra == null) {
