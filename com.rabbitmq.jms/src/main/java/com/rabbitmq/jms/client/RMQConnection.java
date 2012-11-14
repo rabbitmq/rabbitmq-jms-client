@@ -245,7 +245,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     }
 
     com.rabbitmq.client.Connection getRabbitConnection() {
-        LOGGER.log("<getRabbitConnection>");
         return this.rabbitConnection;
     }
 
@@ -331,5 +330,13 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     long getTerminationTimeout() {
         LOGGER.log("<getTerminationTimeout>");
         return this.terminationTimeout;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("RMQConnection{");
+        sb.append("rabbitConnection=").append(this.rabbitConnection);
+        sb.append(", stopped=").append(this.stopped.get());
+        return sb.append('}').toString();
     }
 }

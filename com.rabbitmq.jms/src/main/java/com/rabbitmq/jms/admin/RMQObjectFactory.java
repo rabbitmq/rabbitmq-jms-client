@@ -14,6 +14,8 @@ import javax.naming.RefAddr;
 import javax.naming.Reference;
 import javax.naming.spi.ObjectFactory;
 
+import com.rabbitmq.jms.util.RJMSLogger;
+
 /**
  * JNDI Factory to create resources in containers such as <a href="http://tomcat.apache.org">Tomcat</a>
  * An example Tomcat configuration for a ConnectionFactory would look like:<br/>
@@ -67,6 +69,8 @@ import javax.naming.spi.ObjectFactory;
  *  TODO Implement SSL and socket options
  */
 public class RMQObjectFactory implements ObjectFactory {
+
+    private static final RJMSLogger LOGGER = new RJMSLogger("RMQObjectFactory");
 
     /**
      * {@inheritDoc}
@@ -187,9 +191,9 @@ public class RMQObjectFactory implements ObjectFactory {
         }
 
         if (content == null && mayBeNull) {
-            return defaultValue;
+            content = defaultValue;
         }
-
+        LOGGER.log("getStringProperty", propertyName, content);
         return content;
     }
 

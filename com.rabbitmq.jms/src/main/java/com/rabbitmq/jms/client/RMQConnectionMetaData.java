@@ -11,7 +11,7 @@ import javax.jms.JMSException;
 public class RMQConnectionMetaData implements ConnectionMetaData {
 
     private static final String JMS_PROVIDER_NAME = "RabbitMQ";
-    private static final String RABBITMQ_VERSION = "2.8.3";
+    private static final String RABBITMQ_VERSION = System.getProperty("RABBITMQ_VERSION","2.8.6");
     private static final int RABBITMQ_MINOR_VERSION = 8;
     private static final int RABBITMQ_MAJOR_VERSION = 2;
     private static final String JMS_VERSION = "1.1";
