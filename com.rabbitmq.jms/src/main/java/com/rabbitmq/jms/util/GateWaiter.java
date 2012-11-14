@@ -158,6 +158,7 @@ abstract class GateWaiter {
         synchronized(this.lock){
             if (this.state != GateState.CLOSED) return false;
             this.state = GateState.ABORTED;
+            this.lock.notifyAll(); // allow current queued threads to see abort.
         }
         return true;
     }

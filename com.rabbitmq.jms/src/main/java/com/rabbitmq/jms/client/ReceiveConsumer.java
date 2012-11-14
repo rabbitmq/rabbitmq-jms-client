@@ -40,12 +40,12 @@ class ReceiveConsumer implements Consumer, Abortable {
 
     private static final long CANCELLATION_TIMEOUT = 1000; // milliseconds
 
-    private final int batchingSize;
+//    private final int batchingSize; // currently ignored
     private final Channel channel;
     private final RMQMessageConsumer rmqMessageConsumer;
     private final BlockingQueue<GetResponse> buffer;
 
-    private final Completion completion = new Completion(); // RabbitMQ called handleCancelOK.
+    private final Completion completion = new Completion(); // RabbitMQ cancelled this Consumer.
     private final String consTag;
 
     private final Object lock = new Object(); // synchronising lock
@@ -53,7 +53,7 @@ class ReceiveConsumer implements Consumer, Abortable {
     @GuardedBy("lock") private boolean cancelled = false;
 
     ReceiveConsumer(RMQMessageConsumer rmqMessageConsumer, BlockingQueue<GetResponse> buffer, int batchingSize) {
-        this.batchingSize = Math.max(batchingSize, 1); // must be at least 1
+//        this.batchingSize = Math.max(batchingSize, 1); // must be at least 1 // currently ignored
         this.rmqMessageConsumer = rmqMessageConsumer;
         this.buffer = buffer;
         this.channel = rmqMessageConsumer.getSession().getChannel();
@@ -122,7 +122,11 @@ class ReceiveConsumer implements Consumer, Abortable {
 
     @Override
     public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
-        LOGGER.log("handleShutdownSignal");
+        synchronized (this.lock) {
+            LOGGER.log("handleShutdownSignal");
+            this.cancelled = true;  // Cannot now cancel this Consumer
+            this.completion.setComplete();  // in case anyone is waiting for this
+        }
         this.abort();
     }
 
@@ -140,8 +144,8 @@ class ReceiveConsumer implements Consumer, Abortable {
     }
 
     private final void cancel(boolean wait) {
-        LOGGER.log("cancel", wait);
         synchronized (this.lock) {
+            LOGGER.log("cancel", wait);
             if (!this.cancelled) {
                 try {
                     this.channel.basicCancel(this.consTag);
@@ -171,8 +175,8 @@ class ReceiveConsumer implements Consumer, Abortable {
 
     @Override
     public void abort() {
-        LOGGER.log("abort");
         synchronized (this.lock) {
+            LOGGER.log("abort");
             if (this.aborted)
                 return;
             this.aborted = true;
