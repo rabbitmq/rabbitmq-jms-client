@@ -15,7 +15,7 @@
     <geronimo-spec.version>1.1.1</geronimo-spec.version>
     <mockito-core.version>1.9.0</mockito-core.version>
     <junit.version>4.10</junit.version>
-    <amqp-client.version>2.8.6</amqp-client.version>
+    <amqp-client.version>2.8.7</amqp-client.version>
     <jcip-annotations.version>1.0</jcip-annotations.version>
 
 <!-- plugin versions -->
