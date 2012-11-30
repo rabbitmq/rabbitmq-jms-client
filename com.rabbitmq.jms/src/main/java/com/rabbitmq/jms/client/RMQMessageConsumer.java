@@ -272,6 +272,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         // to the actual consumer so we pass in false as the auto ack mode
         // we must support setMessageListener(null) while messages are arriving
         // and those message we NACK
+        LOGGER.log("basicConsume", "basicConsume:", name);
         getSession().getChannel()
          .basicConsume(name, /* the name of the queue */
                        false, /* autoack is ALWAYS false, otherwise we risk acking messages that are received

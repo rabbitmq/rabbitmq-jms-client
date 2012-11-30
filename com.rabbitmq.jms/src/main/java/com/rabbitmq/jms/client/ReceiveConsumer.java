@@ -108,8 +108,9 @@ class ReceiveConsumer implements Consumer, Abortable {
             /* Drop through if we do not put message in buffer. */
             /* We never ACK any message, that is the responsibility of the caller. */
             try {
-                LOGGER.log("handleDelivery", "NACK messsage");
-                this.channel.basicNack(response.getEnvelope().getDeliveryTag(),
+                long dtag = response.getEnvelope().getDeliveryTag();
+                LOGGER.log("handleDelivery", "basicNack:", dtag);
+                this.channel.basicNack(dtag,
                                        false, // single message
                                        true); // requeue this message
             } catch (IOException e) {
@@ -148,6 +149,7 @@ class ReceiveConsumer implements Consumer, Abortable {
             LOGGER.log("cancel", wait);
             if (!this.cancelled) {
                 try {
+                    LOGGER.log("cancel", "basicCancel:", this.consTag);
                     this.channel.basicCancel(this.consTag);
                     this.cancelled = true;
                 } catch (ShutdownSignalException x) {
@@ -198,8 +200,8 @@ class ReceiveConsumer implements Consumer, Abortable {
     }
 
     void register() {
-        LOGGER.log("register");
         try {
+            LOGGER.log("register", "basicConsume:", this.consTag);
             this.channel.basicConsume(this.rmqMessageConsumer.rmqQueueName(), // queue we are listening on
                                       false, // no autoAck - caller does all ACKs
                                       this.consTag, // generated on construction

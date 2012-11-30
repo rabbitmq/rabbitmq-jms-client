@@ -341,6 +341,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         String topicQueue = null;
         while ((topicQueue = topics.poll()) != null) {
             try {
+                LOGGER.log("deleteTopicQueues", "queueDelete:", topicQueue);
                 channel.queueDelete(topicQueue);
                 // TODO delete exchanges created for temporary topics
                 // this.channel.exchangeDelete(, true)
@@ -356,6 +357,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private static void closeRabbitChannel(Channel channel) throws JMSException {
         if (channel==null) return;
         try {
+            LOGGER.log("closeRabbitChannel", "close:", channel);
             channel.close();
         } catch (AlreadyClosedException x) {
             // nothing to do

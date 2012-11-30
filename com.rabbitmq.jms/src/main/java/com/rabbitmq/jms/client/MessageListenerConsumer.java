@@ -104,7 +104,9 @@ class MessageListenerConsumer implements Consumer, Abortable {
          * to do */
         if (this.consumerTag==null) this.consumerTag = consumerTag;
         if (this.rejecting) {
-            this.channel.basicNack(envelope.getDeliveryTag(), false, true);
+            long dtag = envelope.getDeliveryTag();
+            LOGGER.log("handleDelivery", "basicNack:rejecting", dtag);
+            this.channel.basicNack(dtag, false, true);
             return;
         }
         /* Wrap the incoming message in a GetResponse */
@@ -115,7 +117,9 @@ class MessageListenerConsumer implements Consumer, Abortable {
                 if (this.autoAck) {
                     try {
                         /* Subscriptions we never auto ack with RabbitMQ, so we have to do this ourselves. */
-                        this.channel.basicAck(envelope.getDeliveryTag(), false);
+                        long dtag = envelope.getDeliveryTag();
+                        LOGGER.log("handleDelivery", "basicAck:", dtag);
+                        this.channel.basicAck(dtag, false);
                         /* Mark message as acked */
                         acked = true;
                     } catch (AlreadyClosedException x) {
@@ -131,7 +135,9 @@ class MessageListenerConsumer implements Consumer, Abortable {
             } else {
                 try {
                     // We are unable to deliver the message, nack it
-                    this.channel.basicNack(envelope.getDeliveryTag(), false, true);
+                    long dtag = envelope.getDeliveryTag();
+                    LOGGER.log("handleDelivery", "basicNack:nullMessageListener", dtag);
+                    this.channel.basicNack(dtag, false, true);
                 } catch (AlreadyClosedException x) {
                     //TODO logging impl debug message
                     //this is fine. we didn't ack the message in the first place
@@ -165,8 +171,10 @@ class MessageListenerConsumer implements Consumer, Abortable {
     public void abort() {
         LOGGER.log("abort");
         try {
-            if (this.consumerTag!=null)
+            if (this.consumerTag!=null) {
+                LOGGER.log("abort", "basicCancel:", this.consumerTag);
                 this.channel.basicCancel(this.consumerTag);
+            }
         } catch (Exception e) {
             LOGGER.log("abort", e, "basicCancel");
             e.printStackTrace(); // for diagnostics
@@ -181,6 +189,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
         TimeTracker tt = new TimeTracker(this.terminationTimeout, TimeUnit.NANOSECONDS);
         try {
             if (this.consumerTag!=null) {
+                LOGGER.log("stop", "basicCancel:", this.consumerTag);
                 this.channel.basicCancel(this.consumerTag);
                 this.completion.waitUntilComplete(tt);
             }
