@@ -73,13 +73,13 @@
   <!-- and here are tests we know are failing                                 -->
   <!-- ====================================================================== -->
 
-  <exclude>    <test>org.exolab.jmscts.test.topic.NoLocalTest.*</test>                                                  </exclude> <!-- rabbitMQ doesn't support noLocal -->
+  <exclude>    <test>org.exolab.jmscts.test.topic.NoLocalTest.*</test>                                                  </exclude> <!-- RabbitMQ doesn't support noLocal -->
   <exclude>    <test>org.exolab.jmscts.test.session.clientack.ClientAcknowledgeTest.testPartialClientAcknowledge</test> </exclude> <!-- The spec is pretty clear, ack one message in a session, and you ack them all partial ack is no longer part of it -->
   <exclude>    <test>org.exolab.jmscts.test.message.foreign.ForeignMessageTest.*</test>                                 </exclude> <!-- we don't allow 'foreign' messages created outside of our implementation -->
-  <exclude>    <test>org.exolab.jmscts.test.asf.ConnectionConsumerTest.test</test>                                      </exclude> <!--This tests Connection Consumers - we don't support that -->
-  <exclude>    <test>org.exolab.jmscts.test.producer.ttl.ExpirationTest</test>                                          </exclude> <!-- RabbitMQ doesn't support expiration -->
-  <exclude>    <test>org.exolab.jmscts.test.producer.ttl.QueueSenderTest</test>                                         </exclude> <!-- RabbitMQ doesn't support expiration -->
-  <exclude>    <test>org.exolab.jmscts.test.producer.ttl.TopicPublisherTest</test>                                      </exclude> <!-- RabbitMQ doesn't support expiration -->
+  <exclude>    <test>org.exolab.jmscts.test.asf.ConnectionConsumerTest.test</test>                                      </exclude> <!-- we don't support Connection Consumers -->
+  <exclude>    <test>org.exolab.jmscts.test.producer.ttl.ExpirationTest</test>                                          </exclude> <!-- RabbitMQ doesn't support message TTL until 3.0.0 -->
+  <exclude>    <test>org.exolab.jmscts.test.producer.ttl.QueueSenderTest</test>                                         </exclude> <!-- RabbitMQ doesn't support message TTL until 3.0.0 -->
+  <exclude>    <test>org.exolab.jmscts.test.producer.ttl.TopicPublisherTest</test>                                      </exclude> <!-- RabbitMQ doesn't support message TTL until 3.0.0 -->
   <exclude>    <test>org.exolab.jmscts.test.selector.AndOperatorTest</test>                                             </exclude> <!-- RabbitMQ doesn't support selectors -->
   <exclude>    <test>org.exolab.jmscts.test.selector.BetweenOperatorTest</test>                                         </exclude> <!-- RabbitMQ doesn't support selectors -->
   <exclude>    <test>org.exolab.jmscts.test.selector.BooleanTest</test>                                                 </exclude> <!-- RabbitMQ doesn't support selectors -->

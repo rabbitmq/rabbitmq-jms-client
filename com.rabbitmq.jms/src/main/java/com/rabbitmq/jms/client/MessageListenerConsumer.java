@@ -20,7 +20,7 @@ import com.rabbitmq.jms.util.RJMSLogger.LogTemplate;
 import com.rabbitmq.jms.util.TimeTracker;
 
 /**
- * Class implementing a RabbitMQ Consumer to receive
+ * Class implementing a RabbitMQ {@link Consumer} to receive
  * messages and propagate them to the calling client.
  */
 class MessageListenerConsumer implements Consumer, Abortable {
