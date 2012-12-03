@@ -149,9 +149,9 @@ class ReceiveConsumer implements Consumer, Abortable {
             LOGGER.log("cancel", wait);
             if (!this.cancelled) {
                 try {
+                    this.cancelled = true;
                     LOGGER.log("cancel", "basicCancel:", this.consTag);
                     this.channel.basicCancel(this.consTag);
-                    this.cancelled = true;
                 } catch (ShutdownSignalException x) {
                     LOGGER.log("cancel", x, "basicCancel");
                     this.abort();

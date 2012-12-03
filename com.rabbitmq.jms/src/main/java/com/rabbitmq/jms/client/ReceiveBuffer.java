@@ -65,6 +65,7 @@ class ReceiveBuffer implements Abortable {
         // Nothing of import on the queue, let's try to get some more.
         // We must do this even if we have timed out, in case we never fetch any.
         ReceiveConsumer rc = this.getSomeMore();
+        this.abortables.add(rc);
         try {
             resp = this.buffer.poll(tt.remainingNanos(), TimeUnit.NANOSECONDS);
             if (resp==null                          // we timed out
