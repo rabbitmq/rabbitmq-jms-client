@@ -61,7 +61,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         }
     }
 
-    protected void writePrimitive(Object value) throws JMSException {
+    private void writePrimitive(Object value) throws JMSException {
         if (this.reading || isReadonlyBody())
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
@@ -71,7 +71,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         }
     }
 
-    protected Object readPrimitiveType(Class<?> type) throws JMSException {
+    private Object readPrimitiveType(Class<?> type) throws JMSException {
         if (!this.reading)
             throw new MessageNotReadableException(NOT_READABLE);
         if (this.readbuf!=null) {
@@ -426,7 +426,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         writeObject(value,false);
     }
 
-    protected void writeObject(Object value, boolean allowSerializable) throws JMSException {
+    private void writeObject(Object value, boolean allowSerializable) throws JMSException {
         if (this.reading || isReadonlyBody())
             throw new MessageNotWriteableException(NOT_WRITEABLE);
         try {
@@ -514,7 +514,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         this.in = new ObjectInputStream(this.bin);
     }
 
-    private class ByteArray {
+    private static class ByteArray {
 
     }
 
