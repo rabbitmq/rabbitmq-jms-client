@@ -50,7 +50,7 @@ class ReceiveConsumer implements Consumer, Abortable {
 
     private final Object lock = new Object(); // synchronising lock
     @GuardedBy("lock") private boolean aborted = false;
-    @GuardedBy("lock") private boolean cancelled = false;
+    @GuardedBy("lock") private volatile boolean cancelled = false;
 
     ReceiveConsumer(RMQMessageConsumer rmqMessageConsumer, BlockingQueue<GetResponse> buffer, int batchingSize) {
 //        this.batchingSize = Math.max(batchingSize, 1); // must be at least 1 // currently ignored
@@ -145,22 +145,20 @@ class ReceiveConsumer implements Consumer, Abortable {
     }
 
     private final void cancel(boolean wait) {
-        synchronized (this.lock) {
-            LOGGER.log("cancel", wait);
-            if (!this.cancelled) {
-                try {
-                    this.cancelled = true;
-                    LOGGER.log("cancel", "basicCancel:", this.consTag);
-                    this.channel.basicCancel(this.consTag);
-                } catch (ShutdownSignalException x) {
+        LOGGER.log("cancel", wait);
+        if (!this.cancelled) { // volatile so as to avoid holding the lock
+            try {
+                LOGGER.log("cancel", "basicCancel:", this.consTag);
+                this.channel.basicCancel(this.consTag); // potential alien call
+                this.cancelled = true;
+            } catch (ShutdownSignalException x) {
+                LOGGER.log("cancel", x, "basicCancel");
+                this.abort();
+            } catch (IOException x) {
+                if (!(x.getCause() instanceof ShutdownSignalException)) {
                     LOGGER.log("cancel", x, "basicCancel");
-                    this.abort();
-                } catch (IOException x) {
-                    if (!(x.getCause() instanceof ShutdownSignalException)) {
-                        LOGGER.log("cancel", x, "basicCancel");
-                    }
-                    this.abort();
                 }
+                this.abort();
             }
         }
         if (wait) { // don't wait holding the lock
