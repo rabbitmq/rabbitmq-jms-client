@@ -836,7 +836,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @return
      */
     public Channel getChannel() {
-        LOGGER.log("<getChannel>");
+//        LOGGER.log("<getChannel>");
         return this.channel;
     }
 

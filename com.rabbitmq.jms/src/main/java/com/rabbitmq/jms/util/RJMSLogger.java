@@ -38,8 +38,9 @@ public final class RJMSLogger {
     }
 
     public final void log(String s) {
-        if (LOGGING)
-            System.err.printf("[%1$tT.%1$tL] %2$s %3$s%n", Calendar.getInstance(), this.logTemplate.template(), s);
+        if (LOGGING) {
+            System.err.printf("[%2$tT.%2$tL] %1$s: %3$s %4$s%n", Thread.currentThread().getName(), Calendar.getInstance(), this.logTemplate.template(), s);
+        }
     }
 
     public static abstract class LogTemplate {
