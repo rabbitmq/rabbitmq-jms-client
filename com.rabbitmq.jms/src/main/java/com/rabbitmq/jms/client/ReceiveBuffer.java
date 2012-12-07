@@ -32,7 +32,7 @@ import com.rabbitmq.jms.util.TimeTracker;
  * When the buffer is <code>close()</code>d, the messages remaining in the buffer are NACKed.
  * </p>
  */
-class ReceiveBuffer implements Abortable {
+class ReceiveBuffer {
 
     private static final RJMSLogger LOGGER = new RJMSLogger("ReceiveBuffer");
 
@@ -56,6 +56,7 @@ class ReceiveBuffer implements Abortable {
      * @return message gotten, or <code>null</code> if timeout or connection closed.
      */
     public GetResponse get(TimeTracker tt) {
+        LOGGER.log("get", tt);
         GetResponse resp = this.buffer.poll();
         if (ReceiveConsumer.isEOFMessage(resp)) { // we've aborted
             return null;
@@ -69,7 +70,7 @@ class ReceiveBuffer implements Abortable {
         try {
             resp = this.buffer.poll(tt.remainingNanos(), TimeUnit.NANOSECONDS);
             if (resp==null                          // we timed out
-             || ReceiveConsumer.isEOFMessage(resp)) // Consumer ended before we timed out
+             || ReceiveConsumer.isEOFMessage(resp)) // Consumer aborted before we timed out
                 return null;
         } catch (InterruptedException e) {
             LOGGER.log("get", e, "interrupted while buffer.poll-ing");
@@ -93,39 +94,32 @@ class ReceiveBuffer implements Abortable {
     }
 
     private ReceiveConsumer getSomeMore() {
+        LOGGER.log("getSomeMore");
         // set up a Consumer to put messages in the buffer, and die after first message.
-        ReceiveConsumer receiveConsumer = new ReceiveConsumer(this.rmqMessageConsumer, this.buffer, this.batchingSize);
+        ReceiveConsumer receiveConsumer = new ReceiveConsumer(this.rmqMessageConsumer.getSession().getChannel(), this.rmqMessageConsumer.rmqQueueName(), this.rmqMessageConsumer.getNoLocalNoException(), this.buffer, this.batchingSize);
         receiveConsumer.register(); // with RabbitMQ server
         return receiveConsumer;
     }
 
-    @Override
-    public void abort() {
+    public void closeBuffer() {
+        LOGGER.log("closeBuffer");
         this.nackAllBuffer();
         this.abortables.abort();
     }
 
     private void nackAllBuffer() {
-        LOGGER.log("nackAllBuffer");
+        LOGGER.log("nackAllBuffer", this.buffer.size());
         for (GetResponse resp : this.buffer) {
-            try {
-                this.rmqMessageConsumer.getSession().getChannel().basicNack(resp.getEnvelope().getDeliveryTag(), false, true);
-                LOGGER.log("nackAllBuffer", "basicNack", resp.getEnvelope());
-            } catch (Exception e) {
-                LOGGER.log("nackAllBuffer",e,"basicNack");
-                break;
+            if (!ReceiveConsumer.isEOFMessage(resp)) {
+                try {
+                    this.rmqMessageConsumer.getSession().getChannel().basicNack(resp.getEnvelope().getDeliveryTag(), false, true);
+                    LOGGER.log("nackAllBuffer", "basicNack", resp.getEnvelope());
+                } catch (Exception e) {
+                    LOGGER.log("nackAllBuffer",e,"basicNack");
+                    break;
+                }
             }
         }
         this.buffer.clear();
-    }
-
-    @Override
-    public void stop() {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void start() {
-        // TODO Auto-generated method stub
     }
 }

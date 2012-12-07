@@ -52,7 +52,9 @@ public class TestReceiveConsumer {
      */
     @Test
     public void testReceiveConsumerSuccess() throws Exception {
-        ReceiveConsumer consumer = new ReceiveConsumer(rmqMessageConsumer, blockingQueue, 1);
+//        ReceiveConsumer(Channel channel, String rmqQueueName, boolean noLocal, BlockingQueue<GetResponse> buffer, int batchingSize) {
+
+        ReceiveConsumer consumer = new ReceiveConsumer(channel, rmqMessageConsumer.rmqQueueName(), rmqMessageConsumer.getNoLocalNoException(), blockingQueue, 1);
 
         DriveConsumerThread senderThread = new DriveConsumerThread(envelope, consumer);
         ReceiverThread receiverThread = new ReceiverThread(blockingQueue, envelope);
@@ -94,7 +96,7 @@ public class TestReceiveConsumer {
      */
     @Test
     public void testSynchronousConsumerSuccessShortTimeout() throws Exception {
-        ReceiveConsumer consumer = new ReceiveConsumer(rmqMessageConsumer, blockingQueue, 1);
+        ReceiveConsumer consumer = new ReceiveConsumer(channel, rmqMessageConsumer.rmqQueueName(), rmqMessageConsumer.getNoLocalNoException(), blockingQueue, 1);
 
         DriveConsumerThread senderThread = new DriveConsumerThread(envelope, consumer);
         ReceiverThread receiverThread = new ReceiverThread(blockingQueue, envelope);
@@ -120,7 +122,7 @@ public class TestReceiveConsumer {
     @Test
     public void testSynchronousConsumerReceiverTimeout() throws Exception {
 
-        ReceiveConsumer consumer = new ReceiveConsumer(rmqMessageConsumer, blockingQueue, 1);
+        ReceiveConsumer consumer = new ReceiveConsumer(channel, rmqMessageConsumer.rmqQueueName(), rmqMessageConsumer.getNoLocalNoException(), blockingQueue, 1);
 
         DriveConsumerThread senderThread = new DriveConsumerThread(envelope, consumer);
         ReceiverThread receiverThread = new ReceiverThread(blockingQueue, envelope);

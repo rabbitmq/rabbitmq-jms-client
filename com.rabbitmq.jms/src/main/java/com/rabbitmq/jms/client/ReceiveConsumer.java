@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.MessageConsumer;
 
@@ -42,7 +43,8 @@ class ReceiveConsumer implements Consumer, Abortable {
 
 //    private final int batchingSize; // currently ignored
     private final Channel channel;
-    private final RMQMessageConsumer rmqMessageConsumer;
+    private final String rmqQueueName;
+    private final boolean noLocal;
     private final BlockingQueue<GetResponse> buffer;
 
     private final Completion completion = new Completion(); // RabbitMQ cancelled this Consumer.
@@ -50,15 +52,17 @@ class ReceiveConsumer implements Consumer, Abortable {
 
     private final Object lock = new Object(); // synchronising lock
     @GuardedBy("lock") private boolean aborted = false;
-    @GuardedBy("lock") private volatile boolean cancelled = false;
+    
+    private final AtomicBoolean isCancelled = new AtomicBoolean(false);
 
-    ReceiveConsumer(RMQMessageConsumer rmqMessageConsumer, BlockingQueue<GetResponse> buffer, int batchingSize) {
-//        this.batchingSize = Math.max(batchingSize, 1); // must be at least 1 // currently ignored
-        this.rmqMessageConsumer = rmqMessageConsumer;
-        this.buffer = buffer;
-        this.channel = rmqMessageConsumer.getSession().getChannel();
-        this.consTag = RMQMessageConsumer.newConsumerTag(); // generate unique consumer tag for our private use
-    }
+    ReceiveConsumer(Channel channel, String rmqQueueName, boolean noLocal, BlockingQueue<GetResponse> buffer, int batchingSize) {
+//      this.batchingSize = Math.max(batchingSize, 1); // must be at least 1 // currently ignored
+      this.rmqQueueName = rmqQueueName;
+      this.buffer = buffer;
+      this.channel = channel;
+      this.noLocal = noLocal;
+      this.consTag = RMQMessageConsumer.newConsumerTag(); // generate unique consumer tag for our private use
+  }
 
     @Override
     public void handleConsumeOk(String consumerTag) {
@@ -77,8 +81,9 @@ class ReceiveConsumer implements Consumer, Abortable {
 
     @Override
     public void handleCancel(String consumerTag) throws IOException {
-        synchronized (this.lock) {
-            LOGGER.log("handleCancel");
+        LOGGER.log("handleCancel");
+        if (this.isCancelled.compareAndSet(false, true)) {
+            this.completion.setComplete();
             this.abort();
         }
     }
@@ -123,12 +128,11 @@ class ReceiveConsumer implements Consumer, Abortable {
 
     @Override
     public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
-        synchronized (this.lock) {
-            LOGGER.log("handleShutdownSignal");
-            this.cancelled = true;  // Cannot now cancel this Consumer
+        LOGGER.log("handleShutdownSignal");
+        if (this.isCancelled.compareAndSet(false, true)) {
             this.completion.setComplete();  // in case anyone is waiting for this
+            this.abort(); // ensure the receivers know
         }
-        this.abort();
     }
 
     @Override
@@ -146,11 +150,10 @@ class ReceiveConsumer implements Consumer, Abortable {
 
     private final void cancel(boolean wait) {
         LOGGER.log("cancel", wait);
-        if (!this.cancelled) { // volatile so as to avoid holding the lock
+        if (this.isCancelled.compareAndSet(false, true)) {
             try {
-                LOGGER.log("cancel", "basicCancel:", this.consTag);
+                LOGGER.log("cancel", "basicCancel");
                 this.channel.basicCancel(this.consTag); // potential alien call
-                this.cancelled = true;
             } catch (ShutdownSignalException x) {
                 LOGGER.log("cancel", x, "basicCancel");
                 this.abort();
@@ -180,6 +183,7 @@ class ReceiveConsumer implements Consumer, Abortable {
             if (this.aborted)
                 return;
             this.aborted = true;
+            this.completion.setComplete();
             try {
                 this.buffer.put(EOF_RESPONSE);
             } catch (InterruptedException _) {
@@ -199,11 +203,11 @@ class ReceiveConsumer implements Consumer, Abortable {
 
     void register() {
         try {
-            LOGGER.log("register", "basicConsume:", this.consTag);
-            this.channel.basicConsume(this.rmqMessageConsumer.rmqQueueName(), // queue we are listening on
+            LOGGER.log("register", "basicConsume");
+            this.channel.basicConsume(this.rmqQueueName, // queue we are listening on
                                       false, // no autoAck - caller does all ACKs
                                       this.consTag, // generated on construction
-                                      this.rmqMessageConsumer.getNoLocalNoException(), // noLocal option
+                                      this.noLocal, // noLocal option
                                       false, // not exclusive
                                       null, // no arguments
                                       this); // drive this consumer

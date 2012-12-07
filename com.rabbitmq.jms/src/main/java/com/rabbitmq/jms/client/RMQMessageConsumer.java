@@ -111,7 +111,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         this.destination = destination;
         this.uuidTag = uuidTag;
         this.receiveBuffer = new ReceiveBuffer(DEFAULT_BATCHING_SIZE, this);
-        this.abortables.add(this.receiveBuffer);
         if (!paused)
             this.receiveManager.openGate();
     }
@@ -213,7 +212,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public Message receive() throws JMSException {
-        LOGGER.log("receive");
+        LOGGER.log("receive", "(wait forever)");
         if (this.closed || this.closing)
             throw new IllegalStateException("Consumer is closed or closing.");
         return receive(new TimeTracker());
@@ -236,16 +235,14 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * <p/>
      * {@inheritDoc}
      *
-     * @param timeout - (in milliseconds)
-     *            <p/>
-     *            {@inheritDoc}
+     * @param timeout - (in milliseconds) zero means wait forever; {@inheritDoc}
      */
     @Override
     public Message receive(long timeout) throws JMSException {
         LOGGER.log("receive", timeout);
         if (this.closed || this.closing)
             throw new IllegalStateException("Consumer is closed or closing.");
-        return receive(new TimeTracker(timeout==0?Long.MAX_VALUE:timeout, TimeUnit.MILLISECONDS));
+        return receive(timeout==0 ? new TimeTracker() : new TimeTracker(timeout, TimeUnit.MILLISECONDS));
     }
 
     /**
@@ -318,10 +315,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         try {
             if (!this.receiveManager.enter(tt))  // stopped?
                 return null; // timed out while stopped
-            /* Try to receive a message, there's still some time left! */
+            /* Try to receive a message, there's some time left! */
             try {
                 GetResponse resp = this.receiveBuffer.get(tt);
-                if (resp == null) return null; // nothing received in time
+                if (resp == null) return null; // nothing received in time or aborted
                 boolean aa = isAutoAck();
                 if (aa)
                     this.acknowledgeMessage(resp);
@@ -419,7 +416,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     /**
-     * Method called by the Session when system is shutting down
+     * Method called when message consumer is closed
      */
     void internalClose() throws JMSException {
         LOGGER.log("internalClose");
@@ -428,6 +425,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
          * disable the use of the gate */
         this.receiveManager.closeGate(); // stop any more entering receive region
         this.receiveManager.abortWaiters(); // abort any that arrive now
+
+        this.receiveBuffer.closeBuffer(); // close the synchronous receive, if any
 
         /* stop and remove any active subscription - waits for onMessage processing to finish */
         this.removeListenerConsumer();
