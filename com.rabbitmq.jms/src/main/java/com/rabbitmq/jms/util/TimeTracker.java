@@ -87,4 +87,9 @@ public class TimeTracker {
     public boolean timedOut() {
         return (this.timed_out || this.internalRemaining()==0);
     }
+    
+    @Override
+    public String toString() {
+        return new StringBuilder("TimeTracker(").append(this.internalRemaining()).append("nanos remaining)").toString();
+    }
 }

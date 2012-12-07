@@ -135,7 +135,7 @@ public class EntryExitManager {
      * @param timeout max time to wait in <code>unit</code>s.
      * @param unit of time measurement for <code>timeout</code>.
      * @return <code>true</code> if they all exited in time, <code>false</code> otherwise.
-     * @throws InterruptedException if thread is interrupted while waiting.
+     * @throws InterruptedException if thread is interrupted and is waiting.
      */
     public boolean waitToClear(long timeout, TimeUnit unit) throws InterruptedException {
         return waitToClear(new TimeTracker(timeout, unit));
@@ -145,7 +145,7 @@ public class EntryExitManager {
      * Wait for current threads to exit region.
      * @param tt timeout tracker.
      * @return <code>true</code> if they all exited in time, <code>false</code> otherwise.
-     * @throws InterruptedException if thread is interrupted while waiting.
+     * @throws InterruptedException if thread is interrupted and is waiting.
      */
     public boolean waitToClear(TimeTracker tt) throws InterruptedException {
         List<Completion> comps = new LinkedList<Completion>(this.entered);
