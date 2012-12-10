@@ -3,7 +3,7 @@ package com.rabbitmq.jms.util;
 import java.util.Calendar;
 
 public final class RJMSLogger {
-    private static final boolean LOGGING = true;
+    private static final boolean LOGGING = false;
     private final LogTemplate logTemplate;
 
     public RJMSLogger(LogTemplate lt) {
