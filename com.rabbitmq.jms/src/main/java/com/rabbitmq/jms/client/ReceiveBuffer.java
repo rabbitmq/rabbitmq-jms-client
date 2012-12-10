@@ -6,7 +6,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
-import com.rabbitmq.jms.util.Abortable;
 import com.rabbitmq.jms.util.AbortableHolder;
 import com.rabbitmq.jms.util.RJMSLogger;
 import com.rabbitmq.jms.util.TimeTracker;

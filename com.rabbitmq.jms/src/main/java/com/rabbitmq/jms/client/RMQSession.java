@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
@@ -100,8 +99,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * List of all our durable subscriptions so we can track them
      */
     private final Map<String, RMQMessageConsumer> subscriptions;
-
-    private ConcurrentLinkedQueue<String> topicsToDeleteOnClose = new ConcurrentLinkedQueue<String>();
 
     private final Object closeLock = new Object();
 
@@ -327,33 +324,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                     this.rollback();
                 }
 
-                deleteTopicQueues(this.topicsToDeleteOnClose, this.channel);
-
                 closeRabbitChannel(this.channel); //close the main channel
 
             } finally {
                 this.closed = true;
             }
         }
-    }
-
-    private static void deleteTopicQueues(ConcurrentLinkedQueue<String> topics, Channel channel) {
-        String topicQueue = null;
-        // Remove: temp queues ought to be exclusive and get automatically deleted on close
-//        while ((topicQueue = topics.poll()) != null) {
-//            try {
-//                LOGGER.log("deleteTopicQueues", "queueDelete:", topicQueue);
-//                channel.queueDelete(topicQueue);
-//                // TODO delete exchanges created for temporary topics
-//                // this.channel.exchangeDelete(, true)
-//            } catch (AlreadyClosedException x) {
-//                break;// nothing we can do but break out
-//            } catch (IOException iox) {
-//                // TODO log warn about not being able to delete a queue
-//                // created only for a topic
-//            }
-//        }
-        topics.clear();
     }
 
     private static void closeRabbitChannel(Channel channel) throws JMSException {
@@ -481,16 +457,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             // this is a topic, we need to define a queue, and bind to it
             // the queue name is a unique ID for each consumer
             try {
-                //we can set auto delete for a topic queue, since if the consumer disappears he is no longer
-                //participating in the topic.
+                // we never set auto delete; exclusive queues (used for topics and temporaries) are deleted on close anyway.
                 this.declareQueue(dest, queueName, durableSubscriber);
 
-                if (!durableSubscriber) {
-                    //store the name of the queue we created for this consumer
-                    //so that we can delete it when we close this session
-                    this.topicsToDeleteOnClose.add(queueName);
-                }
-                //bind the queue to the exchange with the correct routing key
+                // bind the queue to the exchange with the correct routing key
                 this.channel.queueBind(queueName, dest.getExchangeInfo().name(), dest.getRoutingKey());
             } catch (IOException x) {
                 throw new RMQJMSException(x);
@@ -586,9 +556,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
              * when a Connection is closed */
                                       false,
             /* Queue properties */    options);
-            if (dest.isTemporary()) {
-                this.topicsToDeleteOnClose.add(dest.getQueueName());
-            }
+            
+            /* Temporary or 'topic queues' are exclusive and therefore get deleted by RabbitMQ on close */
         } catch (Exception x) {
             throw new RMQJMSException(x);
         }
