@@ -101,7 +101,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private final Map<String, RMQMessageConsumer> subscriptions;
 
-    private ConcurrentLinkedQueue<String> topics = new ConcurrentLinkedQueue<String>();
+    private ConcurrentLinkedQueue<String> topicsToDeleteOnClose = new ConcurrentLinkedQueue<String>();
 
     private final Object closeLock = new Object();
 
@@ -327,7 +327,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                     this.rollback();
                 }
 
-                deleteTopicQueues(this.topics, this.channel);
+                deleteTopicQueues(this.topicsToDeleteOnClose, this.channel);
 
                 closeRabbitChannel(this.channel); //close the main channel
 
@@ -339,19 +339,21 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private static void deleteTopicQueues(ConcurrentLinkedQueue<String> topics, Channel channel) {
         String topicQueue = null;
-        while ((topicQueue = topics.poll()) != null) {
-            try {
-                LOGGER.log("deleteTopicQueues", "queueDelete:", topicQueue);
-                channel.queueDelete(topicQueue);
-                // TODO delete exchanges created for temporary topics
-                // this.channel.exchangeDelete(, true)
-            } catch (AlreadyClosedException x) {
-                topics.clear();// nothing we can do but break out
-            } catch (IOException iox) {
-                // TODO log warn about not being able to delete a queue
-                // created only for a topic
-            }
-        }
+        // Remove: temp queues ought to be exclusive and get automatically deleted on close
+//        while ((topicQueue = topics.poll()) != null) {
+//            try {
+//                LOGGER.log("deleteTopicQueues", "queueDelete:", topicQueue);
+//                channel.queueDelete(topicQueue);
+//                // TODO delete exchanges created for temporary topics
+//                // this.channel.exchangeDelete(, true)
+//            } catch (AlreadyClosedException x) {
+//                break;// nothing we can do but break out
+//            } catch (IOException iox) {
+//                // TODO log warn about not being able to delete a queue
+//                // created only for a topic
+//            }
+//        }
+        topics.clear();
     }
 
     private static void closeRabbitChannel(Channel channel) throws JMSException {
@@ -486,7 +488,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 if (!durableSubscriber) {
                     //store the name of the queue we created for this consumer
                     //so that we can delete it when we close this session
-                    this.topics.add(queueName);
+                    this.topicsToDeleteOnClose.add(queueName);
                 }
                 //bind the queue to the exchange with the correct routing key
                 this.channel.queueBind(queueName, dest.getExchangeInfo().name(), dest.getRoutingKey());
@@ -585,7 +587,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                                       false,
             /* Queue properties */    options);
             if (dest.isTemporary()) {
-                this.topics.add(dest.getQueueName());
+                this.topicsToDeleteOnClose.add(dest.getQueueName());
             }
         } catch (Exception x) {
             throw new RMQJMSException(x);
