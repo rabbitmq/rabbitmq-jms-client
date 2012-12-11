@@ -581,7 +581,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @param dest the topic destination
      * @throws JMSException
      */
-    protected void declareTopic(RMQDestination dest) throws JMSException {
+    private void declareTopic(RMQDestination dest) throws JMSException {
         LOGGER.log("<declareTopic>", dest);
         if ("amq.topic".equals(dest.getExchangeInfo().name())) {
             /* built-in exchange -- do not redeclare */
