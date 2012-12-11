@@ -595,11 +595,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                                              /* durable for all except temporary topics */
                                              !dest.isTemporary(),
                                              // TODO: how do we delete exchanges used for temporary topics
-                                             /* auto delete is true if temporary -
-                                              * this could be autoDelete=dest.isTemporary()
-                                              */
+                                             /* auto delete is always false */
                                              false,
-                                             /* internal is false JMS will always publish to the exchange*/
+                                             /* internal is false JMS will always publish to the exchange */
                                              false,
                                              /* object parameters */
                                              null);
