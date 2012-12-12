@@ -288,7 +288,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * unique one for us; but it doesn't :-(
      */
     static final String newConsumerTag() {
-        return "jms-consumer-" + Util.generateUUIDTag();
+        return Util.generateUUID("jms-consumer-");
         // return null;
     }
 

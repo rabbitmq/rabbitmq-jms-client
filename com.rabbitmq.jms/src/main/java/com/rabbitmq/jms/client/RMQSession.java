@@ -442,7 +442,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private MessageConsumer createConsumerInternal(RMQDestination dest, String uuidTag, boolean durableSubscriber) throws JMSException {
         LOGGER.log("<createConsumerInternal>");
-        String consumerTag = uuidTag != null ? uuidTag : "jms-topic-"+Util.generateUUIDTag();
+        String consumerTag = uuidTag != null ? uuidTag : Util.generateUUID("jms-topic-");
 
         if (!dest.isDeclared()) {
             if (dest.isQueue()) {
@@ -691,7 +691,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public TemporaryQueue createTemporaryQueue() throws JMSException {
         LOGGER.log("createTemporaryQueue");
         if (this.closed) throw new IllegalStateException("Session is closed");
-        RMQDestination result = new RMQDestination("jms-temp-queue-"+Util.generateUUIDTag(), true, true);
+        RMQDestination result = new RMQDestination(Util.generateUUID("jms-temp-queue-"), true, true);
         return result;
     }
 
@@ -702,7 +702,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public TemporaryTopic createTemporaryTopic() throws JMSException {
         LOGGER.log("createTemporaryTopic");
         if (this.closed) throw new IllegalStateException("Session is closed");
-        RMQDestination result = new RMQDestination("jms-temp-topic-"+Util.generateUUIDTag(), false, true);
+        RMQDestination result = new RMQDestination(Util.generateUUID("jms-temp-topic-"), false, true);
         return result;
     }
 
