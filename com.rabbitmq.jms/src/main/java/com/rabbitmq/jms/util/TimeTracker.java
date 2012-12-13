@@ -30,6 +30,14 @@ public class TimeTracker {
     }
 
     /**
+     * Accessor for unit testing
+     * @return time originally set in nanoseconds
+     */
+    long timeoutNanos() {
+        return this.timeoutNanos;
+    }
+
+    /**
      * Initialise tracker with nanoseconds duration supplied.
      * @param timeoutNanos - duration of tracker in nanoseconds
      */
@@ -87,9 +95,11 @@ public class TimeTracker {
     public boolean timedOut() {
         return (this.timed_out || this.internalRemaining()==0);
     }
-    
+
     @Override
     public String toString() {
-        return new StringBuilder("TimeTracker(").append(this.internalRemaining()).append("nanos remaining)").toString();
+        return new StringBuilder("TimeTracker(")
+            .append(TimeUnit.NANOSECONDS.toMillis(timeoutNanos)).append("ms set, ")
+            .append(TimeUnit.NANOSECONDS.toMillis(this.internalRemaining())).append("ms rem)").toString();
     }
 }

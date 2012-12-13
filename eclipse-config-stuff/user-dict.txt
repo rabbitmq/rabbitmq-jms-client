@@ -10,3 +10,4 @@ abortable
 deserialize
 noop
 idempotent
+accessor
