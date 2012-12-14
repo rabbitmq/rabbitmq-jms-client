@@ -21,7 +21,7 @@ import com.rabbitmq.jms.message.TestMessages;
 /**
  * Integration test for simple point-to-point messaging.
  */
-public class SimpleQueueMessageIT extends AbstractQueueIT {
+public class SimpleQueueMessageIT extends AbstractITQueue {
 
     static final String QUEUE_NAME = "test.queue."+SimpleQueueMessageIT.class.getCanonicalName();
     static final String MESSAGE = "Hello " + SimpleQueueMessageIT.class.getName();

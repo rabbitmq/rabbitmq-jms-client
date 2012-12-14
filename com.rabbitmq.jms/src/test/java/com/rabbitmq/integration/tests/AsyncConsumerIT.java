@@ -10,8 +10,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.jms.DeliveryMode;
 import javax.jms.Message;
 import javax.jms.Queue;
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueReceiver;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
@@ -24,7 +22,7 @@ import org.junit.Test;
 /**
  * Asynchronous Consumer integration test.
  */
-public class AsyncConsumerIT {
+public class AsyncConsumerIT extends AbstractITQueue {
     private static final String QUEUE_NAME = "test.queue." + AsyncConsumerIT.class.getCanonicalName();
     private static final String MESSAGE = "Hello " + AsyncConsumerIT.class.getName();
 
@@ -34,46 +32,31 @@ public class AsyncConsumerIT {
      */
     @Test
     public void testSendAndAsyncReceiveTextMessage() throws Exception {
-
-        QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                .getConnectionFactory();
-
-        { // publish/send connection
-            QueueConnection queueConn = connFactory.createQueueConnection();
-            try {
-                queueConn.start();
-                QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-                Queue queue = queueSession.createQueue(QUEUE_NAME);
-                QueueSender queueSender = queueSession.createSender(queue);
-                queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-                TextMessage message = queueSession.createTextMessage(MESSAGE);
-                queueSender.send(message);
-            } finally {
-                queueConn.close();
-            }
+        try {
+            queueConn.start();
+            QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+            Queue queue = queueSession.createQueue(QUEUE_NAME);
+            QueueSender queueSender = queueSession.createSender(queue);
+            queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+            TextMessage message = queueSession.createTextMessage(MESSAGE);
+            queueSender.send(message);
+        } finally {
+            reconnect();
         }
+        queueConn.start();
+        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        Queue queue = queueSession.createQueue(QUEUE_NAME);
+        QueueReceiver queueReceiver = queueSession.createReceiver(queue);
+        CountDownLatch latch = new CountDownLatch(1);
 
-        { // receive connection
-            QueueConnection queueConn = connFactory.createQueueConnection();
-            try {
-                queueConn.start();
-                QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-                Queue queue = queueSession.createQueue(QUEUE_NAME);
-                QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-                CountDownLatch latch = new CountDownLatch(1);
+        MessageListener listener = new MessageListener(latch);
+        queueReceiver.setMessageListener(listener);
 
-                MessageListener listener = new MessageListener(latch);
-                queueReceiver.setMessageListener(listener);
-
-                latch.await(1000, TimeUnit.MILLISECONDS);
-                TextMessage message = (TextMessage) listener.getLastMessage();
-                assertEquals(MESSAGE, message.getText());
-                assertEquals(1, listener.getMessageCount());
-                assertTrue(listener.isSuccess());
-            } finally {
-                queueConn.close();
-            }
-        }
+        latch.await(1000, TimeUnit.MILLISECONDS);
+        TextMessage message = (TextMessage) listener.getLastMessage();
+        assertEquals(MESSAGE, message.getText());
+        assertEquals(1, listener.getMessageCount());
+        assertTrue(listener.isSuccess());
     }
 
     private static class MessageListener implements javax.jms.MessageListener {

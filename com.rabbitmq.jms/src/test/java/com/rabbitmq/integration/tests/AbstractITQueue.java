@@ -1,12 +1,14 @@
 package com.rabbitmq.integration.tests;
 
+import static org.junit.Assert.fail;
+
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
 
 import org.junit.After;
 import org.junit.Before;
 
-public abstract class AbstractQueueIT {
+public abstract class AbstractITQueue {
     protected QueueConnectionFactory connFactory;
     protected QueueConnection queueConn;
 
@@ -18,13 +20,17 @@ public abstract class AbstractQueueIT {
     }
 
     protected void reconnect() throws Exception {
-        this.queueConn.close();
-        this.queueConn = connFactory.createQueueConnection();
+        if (queueConn != null) {
+            this.queueConn.close();
+            this.queueConn = connFactory.createQueueConnection();
+        } else {
+            fail("Cannot reconnect");
+        }
     }
 
     @After
     public void afterTests() throws Exception {
-        queueConn.close();
+        if (queueConn != null)
+            queueConn.close();
     }
-
 }

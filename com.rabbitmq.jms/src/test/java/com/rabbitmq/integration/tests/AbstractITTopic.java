@@ -6,10 +6,10 @@ import javax.jms.TopicConnectionFactory;
 import org.junit.After;
 import org.junit.Before;
 
-public abstract class AbstractTopicIT {
+public abstract class AbstractITTopic {
     protected TopicConnectionFactory connFactory;
     protected TopicConnection topicConn;
-    
+
     @Before
     public void beforeTests() throws Exception {
         this.connFactory =
@@ -17,10 +17,11 @@ public abstract class AbstractTopicIT {
                                                                       .getConnectionFactory();
         this.topicConn = connFactory.createTopicConnection();
     }
-    
+
     @After
     public void afterTests() throws Exception {
-        topicConn.close();
+        if (topicConn != null)
+            topicConn.close();
     }
 
 }
