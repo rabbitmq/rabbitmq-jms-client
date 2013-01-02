@@ -1,5 +1,5 @@
 /*
- * This class was automatically generated with 
+ * This class was automatically generated with
  * <a href="http://www.castor.org">Castor 0.9.4.3</a>, using an XML
  * Schema.
  * $Id$
@@ -11,24 +11,17 @@ package org.exolab.jmscts.core.meta;
  //- Imported classes and packages -/
 //---------------------------------/
 
-import java.io.IOException;
-import java.io.Reader;
-import java.io.Serializable;
-import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Enumeration;
-import org.exolab.castor.xml.MarshalException;
+
 import org.exolab.castor.xml.Marshaller;
 import org.exolab.castor.xml.Unmarshaller;
-import org.exolab.castor.xml.ValidationException;
-import org.xml.sax.ContentHandler;
 
 /**
  * Class ClassMeta.
- * 
+ *
  * @version $Revision$ $Date$
  */
-public class ClassMeta extends org.exolab.jmscts.core.meta.Meta 
+public class ClassMeta extends org.exolab.jmscts.core.meta.Meta
 implements java.io.Serializable
 {
 
@@ -37,10 +30,12 @@ implements java.io.Serializable
      //- Class/Member Variables -/
     //--------------------------/
 
+    /** TODO */
+    private static final long serialVersionUID = 1L;
     /**
      * Field _methodMetaList
      */
-    private java.util.ArrayList _methodMetaList;
+    private java.util.ArrayList<MethodMeta> _methodMetaList;
 
 
       //----------------/
@@ -49,7 +44,7 @@ implements java.io.Serializable
 
     public ClassMeta() {
         super();
-        _methodMetaList = new ArrayList();
+        _methodMetaList = new ArrayList<MethodMeta>();
     } //-- org.exolab.jmscts.core.meta.ClassMeta()
 
 
@@ -59,18 +54,18 @@ implements java.io.Serializable
 
     /**
      * Method addMethodMeta
-     * 
+     *
      * @param vMethodMeta
      */
     public void addMethodMeta(org.exolab.jmscts.core.meta.MethodMeta vMethodMeta)
         throws java.lang.IndexOutOfBoundsException
     {
         _methodMetaList.add(vMethodMeta);
-    } //-- void addMethodMeta(org.exolab.jmscts.core.meta.MethodMeta) 
+    } //-- void addMethodMeta(org.exolab.jmscts.core.meta.MethodMeta)
 
     /**
      * Method addMethodMeta
-     * 
+     *
      * @param index
      * @param vMethodMeta
      */
@@ -78,7 +73,7 @@ implements java.io.Serializable
         throws java.lang.IndexOutOfBoundsException
     {
         _methodMetaList.add(index, vMethodMeta);
-    } //-- void addMethodMeta(int, org.exolab.jmscts.core.meta.MethodMeta) 
+    } //-- void addMethodMeta(int, org.exolab.jmscts.core.meta.MethodMeta)
 
     /**
      * Method clearMethodMeta
@@ -86,35 +81,36 @@ implements java.io.Serializable
     public void clearMethodMeta()
     {
         _methodMetaList.clear();
-    } //-- void clearMethodMeta() 
+    } //-- void clearMethodMeta()
 
     /**
      * Method enumerateMethodMeta
      */
-    public java.util.Enumeration enumerateMethodMeta()
+    @SuppressWarnings("unchecked")
+    public java.util.Enumeration<MethodMeta> enumerateMethodMeta()
     {
         return new org.exolab.castor.util.IteratorEnumeration(_methodMetaList.iterator());
-    } //-- java.util.Enumeration enumerateMethodMeta() 
+    } //-- java.util.Enumeration enumerateMethodMeta()
 
     /**
      * Note: hashCode() has not been overriden
-     * 
+     *
      * @param obj
      */
     public boolean equals(java.lang.Object obj)
     {
         if ( this == obj )
             return true;
-        
+
         if (super.equals(obj)==false)
             return false;
-        
+
         if (obj instanceof ClassMeta) {
-        
+
             ClassMeta temp = (ClassMeta)obj;
             if (this._methodMetaList != null) {
                 if (temp._methodMetaList == null) return false;
-                else if (!(this._methodMetaList.equals(temp._methodMetaList))) 
+                else if (!(this._methodMetaList.equals(temp._methodMetaList)))
                     return false;
             }
             else if (temp._methodMetaList != null)
@@ -122,11 +118,11 @@ implements java.io.Serializable
             return true;
         }
         return false;
-    } //-- boolean equals(java.lang.Object) 
+    } //-- boolean equals(java.lang.Object)
 
     /**
      * Method getMethodMeta
-     * 
+     *
      * @param index
      */
     public org.exolab.jmscts.core.meta.MethodMeta getMethodMeta(int index)
@@ -136,9 +132,9 @@ implements java.io.Serializable
         if ((index < 0) || (index > _methodMetaList.size())) {
             throw new IndexOutOfBoundsException();
         }
-        
-        return (org.exolab.jmscts.core.meta.MethodMeta) _methodMetaList.get(index);
-    } //-- org.exolab.jmscts.core.meta.MethodMeta getMethodMeta(int) 
+
+        return _methodMetaList.get(index);
+    } //-- org.exolab.jmscts.core.meta.MethodMeta getMethodMeta(int)
 
     /**
      * Method getMethodMeta
@@ -148,10 +144,10 @@ implements java.io.Serializable
         int size = _methodMetaList.size();
         org.exolab.jmscts.core.meta.MethodMeta[] mArray = new org.exolab.jmscts.core.meta.MethodMeta[size];
         for (int index = 0; index < size; index++) {
-            mArray[index] = (org.exolab.jmscts.core.meta.MethodMeta) _methodMetaList.get(index);
+            mArray[index] = _methodMetaList.get(index);
         }
         return mArray;
-    } //-- org.exolab.jmscts.core.meta.MethodMeta[] getMethodMeta() 
+    } //-- org.exolab.jmscts.core.meta.MethodMeta[] getMethodMeta()
 
     /**
      * Method getMethodMetaCount
@@ -159,7 +155,7 @@ implements java.io.Serializable
     public int getMethodMetaCount()
     {
         return _methodMetaList.size();
-    } //-- int getMethodMetaCount() 
+    } //-- int getMethodMetaCount()
 
     /**
      * Method isValid
@@ -173,46 +169,46 @@ implements java.io.Serializable
             return false;
         }
         return true;
-    } //-- boolean isValid() 
+    } //-- boolean isValid()
 
     /**
      * Method marshal
-     * 
+     *
      * @param out
      */
     public void marshal(java.io.Writer out)
         throws org.exolab.castor.xml.MarshalException, org.exolab.castor.xml.ValidationException
     {
-        
+
         Marshaller.marshal(this, out);
-    } //-- void marshal(java.io.Writer) 
+    } //-- void marshal(java.io.Writer)
 
     /**
      * Method marshal
-     * 
+     *
      * @param handler
      */
     public void marshal(org.xml.sax.ContentHandler handler)
         throws java.io.IOException, org.exolab.castor.xml.MarshalException, org.exolab.castor.xml.ValidationException
     {
-        
+
         Marshaller.marshal(this, handler);
-    } //-- void marshal(org.xml.sax.ContentHandler) 
+    } //-- void marshal(org.xml.sax.ContentHandler)
 
     /**
      * Method removeMethodMeta
-     * 
+     *
      * @param vMethodMeta
      */
     public boolean removeMethodMeta(org.exolab.jmscts.core.meta.MethodMeta vMethodMeta)
     {
         boolean removed = _methodMetaList.remove(vMethodMeta);
         return removed;
-    } //-- boolean removeMethodMeta(org.exolab.jmscts.core.meta.MethodMeta) 
+    } //-- boolean removeMethodMeta(org.exolab.jmscts.core.meta.MethodMeta)
 
     /**
      * Method setMethodMeta
-     * 
+     *
      * @param index
      * @param vMethodMeta
      */
@@ -224,11 +220,11 @@ implements java.io.Serializable
             throw new IndexOutOfBoundsException();
         }
         _methodMetaList.set(index, vMethodMeta);
-    } //-- void setMethodMeta(int, org.exolab.jmscts.core.meta.MethodMeta) 
+    } //-- void setMethodMeta(int, org.exolab.jmscts.core.meta.MethodMeta)
 
     /**
      * Method setMethodMeta
-     * 
+     *
      * @param methodMetaArray
      */
     public void setMethodMeta(org.exolab.jmscts.core.meta.MethodMeta[] methodMetaArray)
@@ -238,18 +234,18 @@ implements java.io.Serializable
         for (int i = 0; i < methodMetaArray.length; i++) {
             _methodMetaList.add(methodMetaArray[i]);
         }
-    } //-- void setMethodMeta(org.exolab.jmscts.core.meta.MethodMeta) 
+    } //-- void setMethodMeta(org.exolab.jmscts.core.meta.MethodMeta)
 
     /**
      * Method unmarshal
-     * 
+     *
      * @param reader
      */
     public static org.exolab.jmscts.core.meta.ClassMeta unmarshal(java.io.Reader reader)
         throws org.exolab.castor.xml.MarshalException, org.exolab.castor.xml.ValidationException
     {
         return (org.exolab.jmscts.core.meta.ClassMeta) Unmarshaller.unmarshal(org.exolab.jmscts.core.meta.ClassMeta.class, reader);
-    } //-- org.exolab.jmscts.core.meta.ClassMeta unmarshal(java.io.Reader) 
+    } //-- org.exolab.jmscts.core.meta.ClassMeta unmarshal(java.io.Reader)
 
     /**
      * Method validate
@@ -259,6 +255,6 @@ implements java.io.Serializable
     {
         org.exolab.castor.xml.Validator validator = new org.exolab.castor.xml.Validator();
         validator.validate(this);
-    } //-- void validate() 
+    } //-- void validate()
 
 }
