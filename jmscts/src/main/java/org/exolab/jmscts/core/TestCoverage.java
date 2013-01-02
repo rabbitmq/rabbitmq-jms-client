@@ -50,11 +50,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-
-import org.apache.log4j.Logger;
+import java.util.Map;
 
 import junit.framework.Test;
 
+import org.apache.log4j.Logger;
 import org.exolab.jmscts.report.Context;
 import org.exolab.jmscts.report.Coverage;
 import org.exolab.jmscts.report.CurrentTest;
@@ -80,12 +80,12 @@ public class TestCoverage {
     /**
      * A map of requirement id's to {@link Coverage} instances
      */
-    private HashMap<String, Serializable> _coverage = new HashMap<String, Serializable>();
+    private Map<String, Serializable> _coverage = new HashMap<String, Serializable>();
 
     /**
      * A map of test names to their corresponding TestRuns instances
      */
-    private HashMap<String, Serializable> _testRuns = new HashMap<String, Serializable>();
+    private Map<String, Serializable> _testRuns = new HashMap<String, Serializable>();
 
     /**
      * A list of failures not associated with any test case

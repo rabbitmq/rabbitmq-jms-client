@@ -5,8 +5,6 @@ import javax.jms.DeliveryMode;
 import javax.jms.MapMessage;
 import javax.jms.ObjectMessage;
 import javax.jms.Queue;
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueReceiver;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
@@ -23,19 +21,13 @@ import com.rabbitmq.jms.message.TestMessages;
 /**
  * Integration test for simple point-to-point messaging.
  */
-public class SimpleQueueMessageIT {
+public class SimpleQueueMessageIT extends AbstractITQueue {
 
     static final String QUEUE_NAME = "test.queue."+SimpleQueueMessageIT.class.getCanonicalName();
     static final String MESSAGE = "Hello " + SimpleQueueMessageIT.class.getName();
 
     @Test
     public void testSendAndReceiveTextMessage() throws Exception {
-
-        QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                .getConnectionFactory();
-
-        QueueConnection queueConn = null;
-        queueConn = connFactory.createQueueConnection();
         try {
             queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
@@ -45,28 +37,19 @@ public class SimpleQueueMessageIT {
             TextMessage message = queueSession.createTextMessage(MESSAGE);
             queueSender.send(message);
         } finally {
-            queueConn.close();
-        }
-        queueConn = connFactory.createQueueConnection();
-        try {
-            queueConn.start();
-            QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-            Queue queue = queueSession.createQueue(QUEUE_NAME);
-            QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-            TextMessage message = (TextMessage) queueReceiver.receive();
-            Assert.assertEquals(MESSAGE, message.getText());
-        } finally {
-            queueConn.close();
+            reconnect();
         }
 
+        queueConn.start();
+        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        Queue queue = queueSession.createQueue(QUEUE_NAME);
+        QueueReceiver queueReceiver = queueSession.createReceiver(queue);
+        TextMessage message = (TextMessage) queueReceiver.receive();
+        Assert.assertEquals(MESSAGE, message.getText());
     }
 
     @Test
     public void testSendAndReceiveBytesMessage() throws Exception {
-        QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                .getConnectionFactory();
-        QueueConnection queueConn = null;
-        queueConn = connFactory.createQueueConnection();
         try {
             queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
@@ -78,28 +61,19 @@ public class SimpleQueueMessageIT {
             TestMessages.writeBytesMessage(message);
             queueSender.send(message);
         } finally {
-            queueConn.close();
-        }
-        queueConn = connFactory.createQueueConnection();
-        try {
-            queueConn.start();
-            QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-            Queue queue = queueSession.createQueue(QUEUE_NAME);
-            QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-            BytesMessage message = (BytesMessage) queueReceiver.receive();
-            TestMessages.readBytesMessage(message);
-        } finally {
-            queueConn.close();
+            reconnect();
         }
 
+        queueConn.start();
+        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        Queue queue = queueSession.createQueue(QUEUE_NAME);
+        QueueReceiver queueReceiver = queueSession.createReceiver(queue);
+        BytesMessage message = (BytesMessage) queueReceiver.receive();
+        TestMessages.readBytesMessage(message);
     }
 
     @Test
     public void testSendAndReceiveMapMessage() throws Exception {
-        QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                .getConnectionFactory();
-        QueueConnection queueConn = null;
-        queueConn = connFactory.createQueueConnection();
         try {
             queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
@@ -111,28 +85,19 @@ public class SimpleQueueMessageIT {
             TestMessages.writeMapMessage(message);
             queueSender.send(message);
         } finally {
-            queueConn.close();
-        }
-        queueConn = connFactory.createQueueConnection();
-        try {
-            queueConn.start();
-            QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-            Queue queue = queueSession.createQueue(QUEUE_NAME);
-            QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-            MapMessage message = (MapMessage) queueReceiver.receive();
-            TestMessages.readMapMessage(message);
-        } finally {
-            queueConn.close();
+            reconnect();
         }
 
+        queueConn.start();
+        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        Queue queue = queueSession.createQueue(QUEUE_NAME);
+        QueueReceiver queueReceiver = queueSession.createReceiver(queue);
+        MapMessage message = (MapMessage) queueReceiver.receive();
+        TestMessages.readMapMessage(message);
     }
 
     @Test
     public void testSendAndReceiveStreamMessage() throws Exception {
-        QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                .getConnectionFactory();
-        QueueConnection queueConn = null;
-        queueConn = connFactory.createQueueConnection();
         try {
             queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
@@ -143,28 +108,19 @@ public class SimpleQueueMessageIT {
             TestMessages.writeStreamMessage(message);
             queueSender.send(message);
         } finally {
-            queueConn.close();
-        }
-        queueConn = connFactory.createQueueConnection();
-        try {
-            queueConn.start();
-            QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-            Queue queue = queueSession.createQueue(QUEUE_NAME);
-            QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-            StreamMessage message = (StreamMessage) queueReceiver.receive();
-            TestMessages.readStreamMessage(message);
-        } finally {
-            queueConn.close();
+            reconnect();
         }
 
+        queueConn.start();
+        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        Queue queue = queueSession.createQueue(QUEUE_NAME);
+        QueueReceiver queueReceiver = queueSession.createReceiver(queue);
+        StreamMessage message = (StreamMessage) queueReceiver.receive();
+        TestMessages.readStreamMessage(message);
     }
 
     @Test
     public void testSendAndReceiveObjectMessage() throws Exception {
-        QueueConnectionFactory connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
-                .getConnectionFactory();
-        QueueConnection queueConn = null;
-        queueConn = connFactory.createQueueConnection();
         try {
             queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
@@ -175,20 +131,14 @@ public class SimpleQueueMessageIT {
             TestMessages.writeObjectMessage(message);
             queueSender.send(message);
         } finally {
-            queueConn.close();
-        }
-        queueConn = connFactory.createQueueConnection();
-        try {
-            queueConn.start();
-            QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-            Queue queue = queueSession.createQueue(QUEUE_NAME);
-            QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-            ObjectMessage message = (ObjectMessage) queueReceiver.receive();
-            TestMessages.readObjectMessage(message);
-        } finally {
-            queueConn.close();
+            reconnect();
         }
 
+        queueConn.start();
+        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        Queue queue = queueSession.createQueue(QUEUE_NAME);
+        QueueReceiver queueReceiver = queueSession.createReceiver(queue);
+        ObjectMessage message = (ObjectMessage) queueReceiver.receive();
+        TestMessages.readObjectMessage(message);
     }
-
 }

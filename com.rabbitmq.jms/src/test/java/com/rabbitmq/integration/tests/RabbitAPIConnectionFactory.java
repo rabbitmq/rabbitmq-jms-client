@@ -14,7 +14,7 @@ public class RabbitAPIConnectionFactory extends AbstractTestConnectionFactory {
     @Override
     public ConnectionFactory getConnectionFactory() {
         return new RMQConnectionFactory() {
-            /** TODO */
+            /** TODO - what? */
             private static final long serialVersionUID = 1L;
             private static final int RABBIT_PORT = 5672; // 5672 default; 5673 Tracer.
 
