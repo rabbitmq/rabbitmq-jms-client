@@ -307,6 +307,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
         synchronized (this.closeLock) {
             try {
+                //start by rolling back anything not committed already
+                if (this.getTransacted()) {
+                    this.rollback();
+                }
                 //close all consumers created by this session
                 for (RMQMessageConsumer consumer : this.consumers) {
                     try {
@@ -323,8 +327,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 }
                 this.producers.clear();
 
+                //now commit anything done during close
                 if (this.getTransacted()) {
-                    this.rollback();
+                    this.commit();
                 }
 
                 this.closeRabbitChannel(); //close the main channel
