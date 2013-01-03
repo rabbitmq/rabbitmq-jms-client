@@ -164,12 +164,12 @@ public class CloseTest extends AbstractSendReceiveTestCase {
         try {
             received.acknowledge();
             fail("Expected IllegalStateException to be thrown when invoking "
-                 + "ackwnowledge for a closed session");
+                 + "acknowledge for a closed session");
         } catch (IllegalStateException expected) {
             // the expected behaviour
         } catch (Exception exception) {
             fail("Expected IllegalStateException to be thrown when invoking "
-                 + "ackwnowledge for a closed session, but got: " + exception);
+                 + "acknowledge for a closed session, but got: " + exception);
         }
     }
 
@@ -207,12 +207,12 @@ public class CloseTest extends AbstractSendReceiveTestCase {
         try {
             received.acknowledge();
             fail("Expected IllegalStateException to be thrown when invoking "
-                 + "ackwnowledge for a closed connection");
+                 + "acknowledge for a closed connection");
         } catch (IllegalStateException expected) {
             // the expected behaviour
         } catch (Exception exception) {
             fail("Expected IllegalStateException to be thrown when invoking "
-                 + "ackwnowledge for a closed connection, but got: "
+                 + "acknowledge for a closed connection, but got: "
                  + exception);
         }
     }

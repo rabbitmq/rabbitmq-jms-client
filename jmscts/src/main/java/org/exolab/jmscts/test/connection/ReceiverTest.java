@@ -49,10 +49,9 @@ import java.util.List;
 import javax.jms.Connection;
 import javax.jms.Session;
 
-import org.apache.log4j.Logger;
-
 import junit.framework.Test;
 
+import org.apache.log4j.Logger;
 import org.exolab.jmscts.core.AbstractSendReceiveTestCase;
 import org.exolab.jmscts.core.CompletionListener;
 import org.exolab.jmscts.core.ConnectionHelper;
@@ -154,7 +153,7 @@ public class ReceiverTest extends AbstractSendReceiveTestCase {
      */
     public void testConnectionStop() throws Exception {
         final int delayTime = 500; // 500 ms
-        final int receiptTime = 5000; // 5 secs
+        final int receiptTime = 3000; // 3 secs
         TestContext context = getContext();
         final Connection connection = context.getConnection();
         MessageReceiver receiver = createReceiver(DESTINATION);
@@ -254,7 +253,7 @@ public class ReceiverTest extends AbstractSendReceiveTestCase {
 
         // wait for up to 30 seconds for the two threads to complete
         listener.waitForCompletion(completionTime);
-        int completed = listener.getCompleted(); 
+        int completed = listener.getCompleted();
         if (completed != 2) {
             // one or both of the threads didn't complete. Invalidate the
             // connection so that the test runner doesn't attempt to close it,
