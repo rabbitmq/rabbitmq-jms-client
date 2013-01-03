@@ -13,7 +13,7 @@ import net.jcip.annotations.GuardedBy;
  * <p>
  * The <code>GateWaiter</code> is either <code>OPENED</code>, <code>CLOSED</code> or <code>ABORTED</code>, and the main
  * operations are <code>open()</code>, <code>close()</code>, <code>waitForOpen(<i>timeout</i>)</code> and
- * <code>abort()</code>. The abstract methods <code>onEntry()</code>, <code>onWait()</code> and <code>onAbort()</code>
+ * <code>abort()</code>. The abstract methods <code>onEntry()</code> and <code>onAbort()</code>
  * must be defined by an implementing class and are called (under the gate lock) at the appropriate transition points.
  * </p>
  * </dd>
@@ -33,7 +33,7 @@ abstract class GateWaiter {
     private enum GateState { OPENED, CLOSED, ABORTED };
 
     private Object lock = new Object();
-    @GuardedBy("lock")  private volatile GateState state;
+    @GuardedBy("lock")  private GateState state;
     @GuardedBy("lock")  private long generation;
 
     /**
@@ -86,11 +86,6 @@ abstract class GateWaiter {
     }
 
     /**
-     * Called atomically when thread actually waits for the gate to open.
-     */
-    public abstract void onWait();
-
-    /**
      * Called atomically when thread passes through open gate.
      */
     public abstract void onEntry();
@@ -103,9 +98,8 @@ abstract class GateWaiter {
     /**
      * Wait (and queue) if gate is <code>CLOSED</code>; or return <code>true</code> if gate is
      * <code>OPENED</code> soon enough.
-     * <p>Calls <code>onEntry()</code> when gate is <code>OPENED</code> now or later,
-     * <code>onAbort()</code> when the gate is <code>ABORTED</code> now or later, and <code>onWait()</code> (once only)
-     * if the gate is <code>CLOSED</code> now and we may wait (even if <code>timeoutNanos==0</code>)
+     * <p>Calls <code>onEntry()</code> when gate is <code>OPENED</code> now or later and
+     * <code>onAbort()</code> when the gate is <code>ABORTED</code> now or later.
      * </p>
      * @param timeout - time to wait if gate is <code>CLOSED</code>, must be ≥0.
      * @param unit - units that <code>timeout</code> is expressed in.
@@ -121,9 +115,8 @@ abstract class GateWaiter {
     /**
      * Wait (and queue) if gate is <code>CLOSED</code>; or return <code>true</code> if gate is
      * <code>OPENED</code> soon enough.
-     * <p>Calls <code>onEntry()</code> when gate is <code>OPENED</code> now or later,
-     * <code>onAbort()</code> when the gate is <code>ABORTED</code> now or later, and <code>onWait()</code> (once only)
-     * if the gate is <code>CLOSED</code> now and we may wait (even if <code>timeoutNanos==0</code>)
+     * <p>Calls <code>onEntry()</code> when gate is <code>OPENED</code> now or later and
+     * <code>onAbort()</code> when the gate is <code>ABORTED</code> now or later.
      * </p>
      * @param tracker - timeout tracker; tracks time until gate is <code>OPENED</code>.
      * @return <code>true</code> if gate is <code>OPENED</code> now or within time limit, <code>false</code> if time

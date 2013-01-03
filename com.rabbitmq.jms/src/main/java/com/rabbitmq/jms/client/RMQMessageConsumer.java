@@ -400,6 +400,15 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     /**
+     * JMS Spec:
+     * <blockquote>
+     * <p>Closes the message consumer. Since a provider may allocate some resources on behalf of a
+     * MessageConsumer outside the Java virtual machine, clients should close them when they are not needed. Relying on
+     * garbage collection to eventually reclaim these resources may not be timely enough. This call blocks until a
+     * receive or message listener in progress has completed.</p>
+     * <p>A blocked message consumer receive call returns null when
+     * this message consumer is closed.</p>
+     * </blockquote>
      * {@inheritDoc}
      */
     @Override
@@ -409,7 +418,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
     /**
      * @return <code>true</code> if {@link #close()} has been invoked and the call has completed, or <code>false</code>
-     *         if the {@link #close()} has not been called or is in progress
+     *         if {@link #close()} has not been called or is in progress
      */
     public boolean isClosed() {
         return this.closed;
@@ -419,7 +428,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * Method called when message consumer is closed
      */
     void internalClose() throws JMSException {
-        LOGGER.log("internalClose");
+        LOGGER.log("internal:internalClose");
         this.closing = true;
         /* If we are stopped, we must break that. This will release all threads waiting on the gate and effectively
          * disable the use of the gate */

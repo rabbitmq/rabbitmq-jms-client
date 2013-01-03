@@ -25,7 +25,7 @@ import javax.jms.Topic;
 import javax.jms.TopicConnection;
 import javax.jms.TopicSession;
 
-import com.rabbitmq.client.AlreadyClosedException;
+import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.util.RJMSLogger;
 import com.rabbitmq.jms.util.RMQJMSException;
@@ -93,11 +93,19 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
         LOGGER.log("createSession");
-        canSetClientID = false;
-        if (closed) throw new IllegalStateException("Connection is closed");
+        illegalStateExceptionIfClosed();
+        freezeClientID();
         RMQSession session = new RMQSession(this, transacted, acknowledgeMode, subscriptions);
         this.sessions.add(session);
         return session;
+    }
+
+    private void freezeClientID() {
+        this.canSetClientID = false;
+    }
+
+    private void illegalStateExceptionIfClosed() throws IllegalStateException {
+        if (this.closed) throw new IllegalStateException("Connection is closed");
     }
 
     /**
@@ -106,7 +114,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public String getClientID() throws JMSException {
         LOGGER.log("getClientID");
-        if (closed) throw new IllegalStateException("Connection is closed");
+        illegalStateExceptionIfClosed();
         return this.clientID;
     }
 
@@ -116,8 +124,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public void setClientID(String clientID) throws JMSException {
         LOGGER.log("setClientID");
+        illegalStateExceptionIfClosed();
         if (!canSetClientID) throw new IllegalStateException("Client ID can only be set right after connection creation");
-        if (closed) throw new IllegalStateException("Connection is closed");
         if (this.clientID==null) {
             if (CLIENT_IDS.putIfAbsent(clientID, clientID)==null) {
                 this.clientID = clientID;
@@ -136,8 +144,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public ConnectionMetaData getMetaData() throws JMSException {
         LOGGER.log("getMetaData");
-        canSetClientID = false;
-        if (closed) throw new IllegalStateException("Connection is closed");
+        illegalStateExceptionIfClosed();
+        freezeClientID();
         return connectionMetaData;
     }
 
@@ -147,8 +155,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public ExceptionListener getExceptionListener() throws JMSException {
         LOGGER.log("getExceptionListener");
-        canSetClientID = false;
-        if (closed) throw new IllegalStateException("Connection is closed");
+        illegalStateExceptionIfClosed();
+        freezeClientID();
         return this.exceptionListener;
     }
 
@@ -158,8 +166,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public void setExceptionListener(ExceptionListener listener) throws JMSException {
         LOGGER.log("setExceptionListener");
-        canSetClientID = false;
-        if (closed) throw new IllegalStateException("Connection is closed");
+        illegalStateExceptionIfClosed();
+        freezeClientID();
         this.exceptionListener = listener;
     }
 
@@ -169,8 +177,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public void start() throws JMSException {
         LOGGER.log("start");
-        canSetClientID = false;
-        if (closed) throw new IllegalStateException("Connection is closed");
+        illegalStateExceptionIfClosed();
+        freezeClientID();
         if (stopped.compareAndSet(true, false)) {
             for (RMQSession session : this.sessions) {
                 session.resume();
@@ -184,8 +192,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public void stop() throws JMSException {
         LOGGER.log("stop");
-        canSetClientID = false;
-        if (closed) throw new IllegalStateException("Connection is closed");
+        illegalStateExceptionIfClosed();
+        freezeClientID();
         if (stopped.compareAndSet(false, true)) {
             for (RMQSession session : this.sessions) {
                 session.pause();
@@ -202,6 +210,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     }
 
     /**
+     * From the JMS Spec:
      * <blockquote>
      * <p>This call blocks until a
      * receive or message listener in progress has completed. A blocked message consumer receive call returns null when
@@ -212,16 +221,16 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public void close() throws JMSException {
         LOGGER.log("close");
-        if (closed) return;
+        if (this.closed) return;
 
         String cID = getClientID();
-        closed = true;
+        this.closed = true;
 
         if (cID != null)
             CLIENT_IDS.remove(cID);
 
         Exception sessionException = null;
-        for (RMQSession session : sessions) {
+        for (RMQSession session : this.sessions) {
             try {
                 session.internalClose();
             } catch (Exception e) {
@@ -235,17 +244,17 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
         try {
             this.rabbitConnection.close();
-        } catch (AlreadyClosedException x) {
-            //nothing to do
         } catch (ShutdownSignalException x) {
             //nothing to do
         } catch (IOException x) {
-            throw new RMQJMSException(x);
+            if (!(x.getCause() instanceof ShutdownSignalException)) {
+                throw new RMQJMSException(x);
+            }
         }
     }
 
-    com.rabbitmq.client.Connection getRabbitConnection() {
-        return this.rabbitConnection;
+    Channel createRabbitChannel() throws IOException {
+        return this.rabbitConnection.createChannel();
     }
 
     /**
@@ -254,7 +263,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public TopicSession createTopicSession(boolean transacted, int acknowledgeMode) throws JMSException {
         LOGGER.log("createTopicSession");
-        if (closed) throw new IllegalStateException("Connection is closed");
         return (TopicSession) this.createSession(transacted, acknowledgeMode);
     }
 
@@ -273,7 +281,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public QueueSession createQueueSession(boolean transacted, int acknowledgeMode) throws JMSException {
         LOGGER.log("createQueueSession");
-        if (this.closed) throw new IllegalStateException("Connection is closed");
         return (QueueSession) this.createSession(transacted, acknowledgeMode);
     }
 
@@ -321,14 +328,14 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      * @param session - the session that is being closed
      */
     void sessionClose(RMQSession session) throws JMSException {
-        LOGGER.log("<sessionClose>");
+        LOGGER.log("internal:sessionClose");
         if (this.sessions.remove(session)) {
             session.internalClose();
         }
     }
 
     long getTerminationTimeout() {
-        LOGGER.log("<getTerminationTimeout>");
+        LOGGER.log("internal:getTerminationTimeout");
         return this.terminationTimeout;
     }
 
