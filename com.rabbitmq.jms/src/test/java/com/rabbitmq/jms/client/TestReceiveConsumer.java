@@ -13,6 +13,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import net.jcip.annotations.GuardedBy;
+
 import org.junit.Test;
 
 import com.rabbitmq.client.Channel;
@@ -161,8 +163,9 @@ public class TestReceiveConsumer {
         private final Envelope env;
         private final ReceiveConsumer consumer;
         private final CountDownLatch latch = new CountDownLatch(1);
-        private volatile boolean success = false;
-        private volatile Exception exception = null;
+        private Object lock = new Object();
+        @GuardedBy("lock") private boolean success = false;
+        @GuardedBy("lock") private Exception exception = null;
 
         public DriveConsumerThread(Envelope envelope, ReceiveConsumer consumer) {
             this.env = envelope;
@@ -175,11 +178,10 @@ public class TestReceiveConsumer {
             try {
                 this.latch.await();
                 this.consumer.handleDelivery(fakeConsumerTag, this.env, null, null);
-                this.success = true;
+                setResult(true, null);
             } catch (Exception x) {
                 x.printStackTrace(); //TODO logging implementation
-                this.exception = x;
-                this.success = false;
+                setResult(false, x);
                 return;
             }
             try {
@@ -189,8 +191,7 @@ public class TestReceiveConsumer {
                 this.consumer.cancel();  // shouldn't have to wait for cancellation
             } catch (Exception x) {
                 //this is unexpected
-                this.exception = x;
-                this.success = false;
+                setResult(false, x);
                 return;
             }
         }
@@ -199,12 +200,23 @@ public class TestReceiveConsumer {
             this.latch.countDown();
         }
 
+        private void setResult(boolean b, Exception e) {
+            synchronized (this.lock) {
+                this.success = b;
+                this.exception = e;
+            }
+        }
+
         public boolean isSuccess() {
-            return this.success;
+            synchronized (this.lock) {
+                return this.success;
+            }
         }
 
         public Exception getException() {
-            return this.exception;
+            synchronized (this.lock) {
+                return this.exception;
+            }
         }
     }
 
@@ -212,8 +224,9 @@ public class TestReceiveConsumer {
         private final BlockingQueue<GetResponse> blockingQueue;
         private final Envelope env;
         private final CountDownLatch latch = new CountDownLatch(1);
-        private volatile boolean success = false;
-        private volatile Exception exception = null;
+        private Object lock = new Object();
+        @GuardedBy("lock") private boolean success = false;
+        @GuardedBy("lock") private Exception exception = null;
 
         public ReceiverThread(BlockingQueue<GetResponse> blockingQueue, Envelope envelope) {
             this.blockingQueue = blockingQueue;
@@ -225,10 +238,9 @@ public class TestReceiveConsumer {
             try {
                 this.latch.await();
                 GetResponse resp = this.blockingQueue.poll(TIMEOUT, TimeUnit.MILLISECONDS);
-                this.success = (resp!=null && resp.getEnvelope() == this.env);
+                setResult(resp!=null && resp.getEnvelope() == this.env, null);
             } catch (Exception x) {
-                this.exception = x;
-                this.success = false;
+                setResult(false, x);
                 return;
             }
         }
@@ -237,12 +249,23 @@ public class TestReceiveConsumer {
             this.latch.countDown();
         }
 
+        private void setResult(boolean b, Exception e) {
+            synchronized (this.lock) {
+                this.success = b;
+                this.exception = e;
+            }
+        }
+
         public boolean isSuccess() {
-            return this.success;
+            synchronized (this.lock) {
+                return this.success;
+            }
         }
 
         public Exception getException() {
-            return this.exception;
+            synchronized (this.lock) {
+                return this.exception;
+            }
         }
     }
 }
