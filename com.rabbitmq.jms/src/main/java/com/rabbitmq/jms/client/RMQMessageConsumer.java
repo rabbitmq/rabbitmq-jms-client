@@ -23,7 +23,6 @@ import com.rabbitmq.jms.util.AbortableHolder;
 import com.rabbitmq.jms.util.AbortedException;
 import com.rabbitmq.jms.util.EntryExitManager;
 import com.rabbitmq.jms.util.RJMSLogger;
-import com.rabbitmq.jms.util.RJMSLogger.LogTemplate;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.TimeTracker;
 import com.rabbitmq.jms.util.Util;
@@ -38,7 +37,7 @@ import com.rabbitmq.jms.util.Util;
  * </p>
  */
 public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscriber {
-    private final RJMSLogger LOGGER = new RJMSLogger(new LogTemplate(){
+    private final RJMSLogger LOGGER = new RJMSLogger(new RJMSLogger.LogTemplate(){
         @Override
         public String template() {
             return "RMQMessageConsumer("+RMQMessageConsumer.this.destination+")";
@@ -143,7 +142,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * Dispose of any Rabbit Consumer that may be active and tracked.
      */
     private void removeListenerConsumer() {
-        LOGGER.log("removeListenerConsumer");
+        LOGGER.log("internal:removeListenerConsumer");
         MessageListenerConsumer listConsumer = this.listenerConsumer.getAndSet(null);
         if (listConsumer != null) {
             this.abortables.remove(listConsumer);
@@ -212,7 +211,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public Message receive() throws JMSException {
-        LOGGER.log("receive", "(wait forever)");
+        LOGGER.log("receive", "(forever)");
         if (this.closed || this.closing)
             throw new IllegalStateException("Consumer is closed or closing.");
         return receive(new TimeTracker());
@@ -413,6 +412,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public void close() throws JMSException {
+        LOGGER.log("close");
         this.getSession().consumerClose(this);
     }
 
@@ -521,8 +521,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     void resume() throws JMSException {
         LOGGER.log("resume");
-        this.abortables.start();
-        this.receiveManager.openGate();
+        this.abortables.start(); // async listener restarted
+        this.receiveManager.openGate(); // sync listener allowed to run
     }
 
     /**
