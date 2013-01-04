@@ -15,17 +15,29 @@ import java.util.concurrent.TimeUnit;
 
 import net.jcip.annotations.GuardedBy;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
+import com.rabbitmq.jms.util.RJMSLogger;
 
 /**
  * Explicit receive() tests
  */
 public class TestReceiveConsumer {
+
+    @Before
+    public void before() throws Exception {
+        RJMSLogger.setLogging(true);
+    }
+    @After
+    public void after() throws Exception {
+        RJMSLogger.setLogging(false);
+    }
 
     private static final long TIMEOUT = 200; // ms
     private static final Envelope envelope = mock(Envelope.class);
