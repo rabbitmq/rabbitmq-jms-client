@@ -27,13 +27,13 @@ class MessageListenerConsumer implements Consumer, Abortable {
     private final RJMSLogger LOGGER = new RJMSLogger(new LogTemplate(){
         @Override
         public String template() {
-            return "MessageListenerConsumer(consumerTag="+MessageListenerConsumer.this.consumerTag+")";
+            return "MessageListenerConsumer(consumerTag="+MessageListenerConsumer.this.consTag+")";
         }
     });
     /**
      * The consumer tag for this RabbitMQ consumer
      */
-    private volatile String consumerTag;
+    private final String consTag;
 
     private final RMQMessageConsumer messageConsumer;
     private final Channel channel;
@@ -56,16 +56,9 @@ class MessageListenerConsumer implements Consumer, Abortable {
         this.messageListener = messageListener;
         this.autoAck = messageConsumer.isAutoAck();
         this.terminationTimeout = terminationTimeout;
-        this.completion = new Completion();
+        this.completion = new Completion();  // completed when cancelled.
         this.rejecting = this.messageConsumer.getSession().getConnection().isStopped();
-    }
-
-    /**
-     * @return the consumer tag for this consumer
-     */
-    public String getConsumerTag() {
-        LOGGER.log("getConsumerTag");
-        return this.consumerTag;
+        this.consTag = RMQMessageConsumer.newConsumerTag();  // new 'unique' consumer tag
     }
 
     /**
@@ -74,7 +67,6 @@ class MessageListenerConsumer implements Consumer, Abortable {
     @Override
     public void handleConsumeOk(String consumerTag) {
         LOGGER.log("handleConsumeOK");
-        this.consumerTag = consumerTag;
     }
 
     /**
@@ -83,7 +75,6 @@ class MessageListenerConsumer implements Consumer, Abortable {
     @Override
     public void handleCancelOk(String consumerTag) {
         LOGGER.log("handleCancelOK");
-        this.consumerTag = null;
         this.completion.setComplete();
     }
 
@@ -93,16 +84,12 @@ class MessageListenerConsumer implements Consumer, Abortable {
     @Override
     public void handleCancel(String consumerTag) throws IOException {
         LOGGER.log("handleCancel");
-        this.consumerTag = null;
         this.completion.setComplete();
     }
 
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
         LOGGER.log("handleDelivery", envelope);
-        /* Assign the consumer tag, we are not reusing Consumer objects for different subscriptions this is a safe
-         * to do */
-        if (this.consumerTag==null) this.consumerTag = consumerTag;
         if (this.rejecting) {
             long dtag = envelope.getDeliveryTag();
             LOGGER.log("handleDelivery", "basicNack:rejecting", dtag);
@@ -171,9 +158,9 @@ class MessageListenerConsumer implements Consumer, Abortable {
     public void abort() {
         LOGGER.log("abort");
         try {
-            if (this.consumerTag!=null) {
-                LOGGER.log("abort", "basicCancel:", this.consumerTag);
-                this.channel.basicCancel(this.consumerTag);
+            if (!this.completion.isComplete()) { // not yet cancelled
+                LOGGER.log("abort", "basicCancel:");
+                this.channel.basicCancel(this.consTag);
             }
         } catch (Exception e) {
             LOGGER.log("abort", e, "basicCancel");
@@ -188,18 +175,18 @@ class MessageListenerConsumer implements Consumer, Abortable {
         LOGGER.log("stop");
         TimeTracker tt = new TimeTracker(this.terminationTimeout, TimeUnit.NANOSECONDS);
         try {
-            if (this.consumerTag!=null) {
-                LOGGER.log("stop", "basicCancel:", this.consumerTag);
-                this.channel.basicCancel(this.consumerTag);
+            if (!this.completion.isComplete()) {
+                LOGGER.log("stop", "basicCancel:");
+                this.channel.basicCancel(this.consTag);
                 this.completion.waitUntilComplete(tt);
             }
         } catch (TimeoutException te) {
             Thread.currentThread().interrupt();
-        } catch (AlreadyClosedException ace) {
-            LOGGER.log("stop", ace, "basicCancel");
+        } catch (AlreadyClosedException acx) {
+            LOGGER.log("stop", acx, "basicCancel");
             // TODO check if basicCancel really necessary in this case.
-            if (!ace.isInitiatedByApplication()) {
-                throw ace;
+            if (!acx.isInitiatedByApplication()) {
+                throw acx;
             }
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();

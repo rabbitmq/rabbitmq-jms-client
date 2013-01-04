@@ -20,6 +20,13 @@ public class Completion {
     }
 
     /**
+     * Non-blocking snapshot test for completion.
+     */
+    public boolean isComplete() {
+        return this.fb.isComplete();
+    }
+
+    /**
      * Wait (forever) until completion is signalled.
      *
      * @throws InterruptedException if thread is interrupted while waiting.
@@ -83,6 +90,12 @@ public class Completion {
             synchronized (this.lock) {
                 this.completed = true;
                 this.lock.notifyAll();
+            }
+        }
+
+        boolean isComplete() {
+            synchronized (this.lock) {
+                return this.completed;
             }
         }
     }

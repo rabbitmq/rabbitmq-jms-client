@@ -47,12 +47,12 @@ class ReceiveConsumer implements Consumer, Abortable {
     private final boolean noLocal;
     private final BlockingQueue<GetResponse> buffer;
 
-    private final Completion completion = new Completion(); // RabbitMQ cancelled this Consumer.
+    private final Completion completion = new Completion(); // completed when cancelled.
     private final String consTag;
 
     private final Object lock = new Object(); // synchronising lock
     @GuardedBy("lock") private boolean aborted = false;
-    
+
     private final AtomicBoolean isCancelled = new AtomicBoolean(false);
 
     ReceiveConsumer(Channel channel, String rmqQueueName, boolean noLocal, BlockingQueue<GetResponse> buffer, int batchingSize) {
