@@ -259,10 +259,11 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * Register a {@link Consumer} with the Rabbit API to receive messages
      *
      * @param consumer the SynchronousConsumer being registered
+     * @param consTag the ConsumerTag to use for RabbitMQ callbacks
      * @throws IOException from RabbitMQ calls
      * @see Channel#basicConsume(String, boolean, String, boolean, boolean, java.util.Map, Consumer)
      */
-    public void basicConsume(Consumer consumer) throws IOException {
+    public void basicConsume(Consumer consumer, String consTag) throws IOException {
         String name = rmqQueueName();
         // never ack async messages automatically, only when we can deliver them
         // to the actual consumer so we pass in false as the auto ack mode
@@ -273,7 +274,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
          .basicConsume(name, /* the name of the queue */
                        false, /* autoack is ALWAYS false, otherwise we risk acking messages that are received
                                * to the client but the client listener(onMessage) has not yet been invoked */
-                       newConsumerTag(), /* the consumer tag to use */
+                       consTag, /* the consumer tag to use */
                        this.getNoLocalNoException(), /* RabbitMQ supports the noLocal flag for subscriptions */
                        false, /* exclusive will always be false: exclusive consumer access true means only this
                                * consumer can access the queue. */

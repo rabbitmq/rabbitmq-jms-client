@@ -201,7 +201,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
         this.rejecting = false;
         this.completion = new Completion();  // need a new completion object
         try {
-            this.messageConsumer.basicConsume(this);
+            this.messageConsumer.basicConsume(this, this.consTag);
         } catch (Exception e) {
             this.completion.setComplete();  // just in case someone is waiting on it
             e.printStackTrace(); // diagnostics
