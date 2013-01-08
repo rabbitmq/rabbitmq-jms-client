@@ -20,6 +20,7 @@
 
 <!-- plugin versions -->
     <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
+    <maven-erlang-plugin.version>2.2.0</maven-erlang-plugin.version>
     <maven-surefire-plugin.version>2.12.4</maven-surefire-plugin.version>
     <maven-failsafe-plugin.version>2.12.4</maven-failsafe-plugin.version>
     <maven-jar-plugin.version>2.4</maven-jar-plugin.version>
@@ -32,6 +33,7 @@
   <modules>
     <module>com.rabbitmq.jms</module>
     <module>jmscts</module>
+    <module>rjms-topic-selector</module>
   </modules>
 
   <dependencyManagement>
@@ -129,6 +131,12 @@
           <version>${maven-jar-plugin.version}</version>
         </plugin>
 
+        <plugin>
+          <groupId>eu.lindenbaum</groupId>
+          <artifactId>maven-erlang-plugin</artifactId>
+          <version>${maven-erlang-plugin.version}</version>
+          <extensions>true</extensions>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
