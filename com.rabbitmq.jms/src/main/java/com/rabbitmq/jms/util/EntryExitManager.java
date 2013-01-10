@@ -34,7 +34,7 @@ import com.rabbitmq.jms.client.Completion;
  * <dt>{@link #waitToClear waitToClear(...)}</dt>
  * <dd>will block until all the threads currently in the region have exited,</dd>
  * <dt>{@link #abortWaiters()}</dt>
- * <dd>will reject all waiting threads with an <code>InterruptedException</code>.</dd>
+ * <dd>will reject all waiting threads with an <code>AbortedException</code>.</dd>
  * </dl>
  */
 public class EntryExitManager {
