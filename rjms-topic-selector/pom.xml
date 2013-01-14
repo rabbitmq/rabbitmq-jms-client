@@ -2,7 +2,7 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <artifactId>rjms_topic</artifactId>
-  <packaging>erlang-std</packaging>
+  <packaging>pom</packaging>
   <name>rjms_topic</name>
   <description>RabbitMQ JMS Topic Selector Plug-in</description>
 
@@ -17,11 +17,6 @@
   </properties>
   <build>
     <plugins>
-      <plugin>
-        <groupId>eu.lindenbaum</groupId>
-        <artifactId>maven-erlang-plugin</artifactId>
-      </plugin>
-
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
