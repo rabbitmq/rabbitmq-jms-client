@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo Reset RabbitMQ server for Integration Tests
+
+sudo rabbitmqctl stop_app
+sudo rabbitmqctl reset
+# sudo rabbitmq-plugins enable rabbitmq_management
+sudo rabbitmq-plugins list -v
+sudo rabbitmqctl start_app
+
+echo RabbitMQ server reset

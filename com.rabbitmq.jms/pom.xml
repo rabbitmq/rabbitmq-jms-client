@@ -28,6 +28,7 @@
       <artifactId>jcip-annotations</artifactId>
     </dependency>
 
+    <!-- test scope -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -143,6 +144,23 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>set-up-rabbit</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <executable>bin/setUpIntegrationTests</executable>
+        </configuration>
       </plugin>
 
     </plugins>
