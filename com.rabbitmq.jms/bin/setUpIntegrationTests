@@ -2,15 +2,16 @@
 
 echo Reset RabbitMQ server for Integration Tests
 
-if [ -z "${RABBITMQ_BASE}" ] ; then
+if [ -z "${RJMS_RABBITMQ_BASE}" ] ; then
   echo "Couldn't find the RABBITMQ_BASE directory"
   exit 1
 fi
 
-sudo ${RABBITMQ_BASE}/rabbitmqctl stop_app
-sudo ${RABBITMQ_BASE}/rabbitmqctl reset
+sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmqctl stop_app
+sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmqctl reset
 # sudo rabbitmq-plugins enable rabbitmq_rjms_topics
-sudo ${RABBITMQ_BASE}/rabbitmq-plugins list
-sudo ${RABBITMQ_BASE}/rabbitmqctl start_app
+sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmq-plugins list
+sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmqctl start_app
+sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmqctl wait ${RJMS_RABBITMQ_BASE}/var/lib/rabbitmq/mnesia/${RJMS_RABBITMQ_NODENAME}.pid
 
 echo RabbitMQ server reset
