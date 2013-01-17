@@ -12,6 +12,7 @@ sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmq-server &
 # sudo rabbitmq-plugins enable rabbitmq_rjms_topics
 # sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmq-plugins list
 # sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmqctl start_app
-# sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmqctl wait ${RJMS_RABBITMQ_BASE}/var/lib/rabbitmq/mnesia/${RJMS_RABBITMQ_NODENAME}.pid
+
+sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmqctl wait ${RJMS_RABBITMQ_BASE}/var/lib/rabbitmq/mnesia/${RJMS_RABBITMQ_NODENAME}.pid
 
 echo 'RabbitMQ server is started'
