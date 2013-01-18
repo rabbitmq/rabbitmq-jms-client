@@ -73,8 +73,15 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         try {
             rabbitConnection = factory.newConnection();
         } catch (IOException x) {
-            if (x.getMessage() != null && x.getMessage().indexOf("authentication failure") >= 0) {
-                throw new RMQJMSSecurityException(x);
+            if (x.getMessage() != null) {
+                if (x.getMessage().contains("authentication failure")) {
+                    throw new RMQJMSSecurityException(x);
+                } else if (x.getMessage().contains("Connection refused")) {
+                    throw new RMQJMSException("Attempted to connect to RabbitMQ broker, but connection was refused. Is RabbitMQ running?", x);
+                } else {
+                    throw new RMQJMSException(x);
+                }
+                
             } else {
                 throw new RMQJMSException(x);
             }
