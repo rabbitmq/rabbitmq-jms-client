@@ -1,0 +1,10 @@
+#!/bin/bash
+
+echo 'Stop RabbitMQ server after Integration Tests'
+
+if [ -z "${RJMS_RABBITMQ_BASE}" ] ; then
+  echo "Couldn't find the RJMS_RABBITMQ_BASE directory"
+  exit 1
+fi
+
+(sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmqctl -n ${RJMS_RABBITMQ_NODENAME} stop && echo 'RabbitMQ server is stopped') || echo 'not stopped'
