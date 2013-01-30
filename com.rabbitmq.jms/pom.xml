@@ -27,10 +27,6 @@
       <groupId>net.jcip</groupId>
       <artifactId>jcip-annotations</artifactId>
     </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>rjms-topic-selector</artifactId>
-    </dependency>
 
     <!-- test scope -->
     <dependency>

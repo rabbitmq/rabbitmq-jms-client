@@ -1,6 +1,6 @@
 # Makefile for rjms-topic-selector
 
-.PHONY: all clean init dist
+.PHONY: all clean init dist test package
 
 all: dist
 
@@ -17,3 +17,9 @@ init: rabbitmq-jms-topic-exchange.co
 
 dist: init
 	make -C rabbitmq-jms-topic-exchange dist
+
+test: dist
+	# run unit tests
+
+package: dist
+	# transfer .ez file to higher output

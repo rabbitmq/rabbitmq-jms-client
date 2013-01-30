@@ -41,6 +41,26 @@
               <commandlineArgs>dist</commandlineArgs>
             </configuration>
           </execution>
+          <execution>
+            <id>test-jms-topic-plugin</id>
+            <phase>test</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <commandlineArgs>test</commandlineArgs>
+            </configuration>
+          </execution>
+          <execution>
+            <id>package-jms-topic-plugin</id>
+            <phase>package</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <commandlineArgs>package</commandlineArgs>
+            </configuration>
+          </execution>
         </executions>
         <configuration>
           <executable>make</executable>

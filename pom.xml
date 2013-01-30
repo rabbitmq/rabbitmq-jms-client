@@ -69,11 +69,6 @@
         <artifactId>jmscts</artifactId>
         <version>${project.version}</version>
       </dependency>
-      <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>rjms-topic-selector</artifactId>
-        <version>${project.version}</version>
-      </dependency>
     </dependencies>
 
   </dependencyManagement>
