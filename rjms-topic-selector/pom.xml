@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>rjms_topic</artifactId>
+  <artifactId>rjms-topic-selector</artifactId>
   <packaging>pom</packaging>
-  <name>rjms_topic</name>
+  <name>rjms-topic</name>
   <description>RabbitMQ JMS Topic Selector Plug-in</description>
 
   <parent>
@@ -22,17 +22,28 @@
         <artifactId>exec-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>compile_erlang_deps</id>
+            <id>clean-jms-topic-plugin</id>
+            <phase>clean</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <commandlineArgs>clean</commandlineArgs>
+            </configuration>
+          </execution>
+          <execution>
+            <id>compile-jms-topic-plugin</id>
             <phase>compile</phase>
             <goals>
               <goal>exec</goal>
             </goals>
+            <configuration>
+              <commandlineArgs>dist</commandlineArgs>
+            </configuration>
           </execution>
         </executions>
         <configuration>
-          <executable>../bin/rebar</executable>
-          <workingDirectory>rabbitmq-rjms-topic-plugin</workingDirectory>
-          <commandlineArgs>-C rebar.config get-deps compile</commandlineArgs>
+          <executable>make</executable>
         </configuration>
       </plugin>
     </plugins>

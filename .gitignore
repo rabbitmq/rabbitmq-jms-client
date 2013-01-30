@@ -1,5 +1,6 @@
-target
+target/
 .classpath
 .project
 .settings
 erl_crash.dump
+rabbitmq-jms-topic-exchange*
