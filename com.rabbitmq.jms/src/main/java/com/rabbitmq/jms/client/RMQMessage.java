@@ -86,7 +86,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     /**
      * Here we store the users custom JMS properties
      */
-    private final Map<String, Serializable> jmsProperties = new HashMap<String, Serializable>();
+    private final Map<String, Serializable> userJmsProperties = new HashMap<String, Serializable>();
     /**
      * We generate a unique message ID each time we send a message
      * It is stored here. This is also used for
@@ -374,7 +374,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public final void clearProperties() throws JMSException {
-        this.jmsProperties.clear();
+        this.userJmsProperties.clear();
         this.setReadOnlyProperties(false);
     }
 
@@ -383,7 +383,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public boolean propertyExists(String name) throws JMSException {
-        return this.jmsProperties.containsKey(name) || this.rmqProperties.containsKey(name);
+        return this.userJmsProperties.containsKey(name) || this.rmqProperties.containsKey(name);
     }
 
     /**
@@ -550,7 +550,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         if (name.startsWith(PREFIX))
             return this.rmqProperties.get(name);
         else
-            return this.jmsProperties.get(name);
+            return this.userJmsProperties.get(name);
     }
 
     /**
@@ -558,7 +558,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public Enumeration<?> getPropertyNames() throws JMSException {
-        return new IteratorEnum<String>(this.jmsProperties.keySet().iterator());
+        return new IteratorEnum<String>(this.userJmsProperties.keySet().iterator());
     }
 
     /**
@@ -696,9 +696,9 @@ public abstract class RMQMessage implements Message, Cloneable {
                 checkName(name);
 
                 if (value==null) {
-                    this.jmsProperties.remove(name);
+                    this.userJmsProperties.remove(name);
                 } else {
-                    this.jmsProperties.put(name, (Serializable) value);
+                    this.userJmsProperties.put(name, (Serializable) value);
                 }
             }
         } catch (ClassCastException x) {
@@ -762,8 +762,8 @@ public abstract class RMQMessage implements Message, Cloneable {
     public abstract void writeBody(ObjectOutput out) throws IOException;
 
     /**
-     * Invoked when a message is being deserialized. The implementing class
-     * should ONLY read it's body from this stream
+     * Invoked when a message is being deserialized. The implementing class should ONLY read its body from this stream.
+     * 
      * @param in the stream to read it's body from
      * @throws IOException - if an IOException occurs - this will prevent message delivery
      * @throws ClassNotFoundException - if an ClassNotFoundException occurs - this will prevent message delivery
@@ -795,8 +795,8 @@ public abstract class RMQMessage implements Message, Cloneable {
             writePrimitive(entry.getValue(), out, true);
         }
         //write custom properties
-        out.writeInt(msg.jmsProperties.size());
-        for (Map.Entry<String, Serializable> entry : msg.jmsProperties.entrySet()) {
+        out.writeInt(msg.userJmsProperties.size());
+        for (Map.Entry<String, Serializable> entry : msg.userJmsProperties.entrySet()) {
             out.writeUTF(entry.getKey());
             writePrimitive(entry.getValue(), out, true);
         }
@@ -840,7 +840,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         for (int i = 0; i < propsize; i++) {
             String name = in.readUTF();
             Object value = readPrimitive(in);
-            msg.jmsProperties.put(name, (Serializable) value);
+            msg.userJmsProperties.put(name, (Serializable) value);
         }
         //invoke read body on the
         msg.readBody(in);
@@ -888,16 +888,25 @@ public abstract class RMQMessage implements Message, Cloneable {
         this.rmqProperties.put(JMS_MESSAGE_ID, "ID:" + this.internalMessageID);
     }
 
-    /**
-     * Utility method used to be able to write
-     * primitives and objects to a data stream without keeping track of order and type
-     * this also allows any Object to be written.
-     * The purpose of this method is to optimize the writing of a primitive that is represented as an object
-     * by only writing the type and the primitive value to the stream
-     * @param s the primitive to be written
-     * @param out the stream to write the primitive to.
-     * @throws IOException if an IOException occurs.
-     */
+	/**
+	 * Utility method used to be able to write primitives and objects to a data
+	 * stream without keeping track of order and type.
+	 * <p>
+	 * This also allows any Object to be written.
+	 * </p>
+	 * <p>
+	 * The purpose of this method is to optimise the writing of a primitive that
+	 * is represented as an object by only writing the type and the primitive
+	 * value to the stream.
+	 * </p>
+	 * 
+	 * @param s
+	 *            the primitive to be written
+	 * @param out
+	 *            the stream to write the primitive to.
+	 * @throws IOException
+	 *             if an IOException occurs.
+	 */
     public static void writePrimitive(Object s, ObjectOutput out) throws IOException, MessageFormatException {
         writePrimitive(s, out,false);
     }
