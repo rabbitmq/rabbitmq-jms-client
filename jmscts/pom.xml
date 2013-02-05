@@ -12,10 +12,10 @@
     <version>1.0-SNAPSHOT</version>
   </parent>
 
-  <properties>
+<!--   <properties>
     <maven.test.skip>true</maven.test.skip>
   </properties>
-
+ -->
   <dependencies>
 
     <dependency>
@@ -88,40 +88,121 @@
       <version>2.9.0</version>
     </dependency>
 
+	<!-- test scope -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>rabbitmq-jms</artifactId>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
 
     <plugins>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+
+        <configuration>
+          <forkMode>always</forkMode>
+          <argLine>-Xms1024m -Xmx4096m</argLine>
+        </configuration>
+
+        <executions>
+          <execution>
+            <id>integration-test</id>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>verify</id>
+            <goals>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+
+        <executions>
+          <execution>
+            <id>test-integration-reports</id>
+            <phase>integration-test</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <junitreport todir="target/failsafe-reports">
+                  <fileset dir="target/failsafe-reports">
+                    <include name="**/*.xml" />
+                  </fileset>
+                  <report format="noframes" todir="target/failsafe-reports" />
+                </junitreport>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>test-jar</id>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+
+        <executions>
+          <execution>
+            <id>set-up-rabbit</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>../bin/setUpIntegrationTests</executable>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>tear-down-rabbit</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>../bin/tearDownIntegrationTests</executable>
+            </configuration>
+          </execution>
+        </executions>
+
+      </plugin>
+
     </plugins>
 
   </build>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <id>unto.net</id>
-      <url>http://repository.unto.net/maven/</url>
-      <releases>
-        <updatePolicy>daily</updatePolicy>
-        <checksumPolicy>warn</checksumPolicy>
-      </releases>
-      <snapshots>
-        <updatePolicy>daily</updatePolicy>
-        <checksumPolicy>warn</checksumPolicy>
-      </snapshots>
-    </pluginRepository>
-  </pluginRepositories>
-  <repositories>
-
-    <repository>
-      <id>jboss.org</id>
-      <name>Jboss Maven 2 Repository</name>
-      <url>http://repository.jboss.org/nexus/content/groups/public-jboss/</url>
-    </repository>
-  </repositories>
 
 </project>

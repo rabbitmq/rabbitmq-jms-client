@@ -22,4 +22,6 @@ test: dist
 	# run unit tests
 
 package: dist
-	# transfer .ez file to higher output
+	make -C rabbitmq-jms-topic-exchange package
+	mkdir -p target/plugins
+	cp rabbitmq-jms-topic-exchange/target/plugins/* target/plugins/.

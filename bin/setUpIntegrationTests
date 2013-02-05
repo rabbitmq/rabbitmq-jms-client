@@ -9,7 +9,9 @@ fi
 
 sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmqctl -n ${RJMS_RABBITMQ_NODENAME} stop || echo 'not stopped'
 
-#sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmq-plugins enable rabbitmq_rjms_topics
+sudo cp ../rjms-topic-selector/target/plugins/rabbitmq_jms_* ${RJMS_RABBITMQ_PLUGINS}/.
+
+sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmq-plugins enable rabbitmq_jms_topic_exchange
 
 sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmq-plugins list
 
