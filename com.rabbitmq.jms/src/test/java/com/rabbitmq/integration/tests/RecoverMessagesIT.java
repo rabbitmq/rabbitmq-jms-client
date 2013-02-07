@@ -77,7 +77,7 @@ public class RecoverMessagesIT extends AbstractITQueue {
         TextMessage tmsg1 = (TextMessage) messages.get(0);
         assertFalse(tmsg1.getJMSRedelivered());
         queueSession.recover();
-        latch.await(1000, TimeUnit.MILLISECONDS);
+        latch.await(2000, TimeUnit.MILLISECONDS);
         // we should have received two messages
         assertEquals(2, messages.size());
         TextMessage tmsg2 = (TextMessage) messages.get(1);
