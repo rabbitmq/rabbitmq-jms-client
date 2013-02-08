@@ -8,7 +8,7 @@
   <name>rabbitmq-jms-parent</name>
 
   <properties>
-    <java-compile-version>1.7</java-compile-version>
+    <java-compile-version>1.6</java-compile-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 <!-- code dependency versions -->
@@ -20,10 +20,12 @@
 
 <!-- plugin versions -->
     <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
+    <build-helper-maven-plugin.version>1.7</build-helper-maven-plugin.version>
     <exec-maven-plugin.version>1.2.1</exec-maven-plugin.version>
     <maven-surefire-plugin.version>2.12.4</maven-surefire-plugin.version>
     <maven-failsafe-plugin.version>2.12.4</maven-failsafe-plugin.version>
     <maven-jar-plugin.version>2.4</maven-jar-plugin.version>
+    <maven-dependency-plugin.version>2.6</maven-dependency-plugin.version>
     <maven-antrun-plugin.version>1.7</maven-antrun-plugin.version>
       <ant-junit.version>1.8.4</ant-junit.version>
       <ant.version>1.8.4</ant.version>
@@ -69,6 +71,12 @@
         <artifactId>rabbitmq-jms</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>rjms-topic-selector</artifactId>
+        <version>${project.version}</version>
+        <type>ez</type>
+      </dependency>
     </dependencies>
 
   </dependencyManagement>
@@ -76,6 +84,12 @@
   <build>
     <pluginManagement>
       <plugins>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>${maven-dependency-plugin.version}</version>
+        </plugin>
 
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -136,6 +150,13 @@
           <artifactId>exec-maven-plugin</artifactId>
           <version>${exec-maven-plugin.version}</version>
         </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>${build-helper-maven-plugin.version}</version>
+        </plugin>
+
       </plugins>
     </pluginManagement>
   </build>

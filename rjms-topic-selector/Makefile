@@ -24,4 +24,4 @@ test: dist
 package: dist
 	make -C rabbitmq-jms-topic-exchange package
 	mkdir -p target/plugins
-	cp rabbitmq-jms-topic-exchange/target/plugins/* target/plugins/.
+	cp rabbitmq-jms-topic-exchange/target/plugins/rabbitmq_jms* target/plugins/rjms-topic-selector.ez
