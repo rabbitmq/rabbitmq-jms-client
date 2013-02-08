@@ -8,7 +8,7 @@
   <name>rabbitmq-jms-parent</name>
 
   <properties>
-    <java-compile-version>1.7</java-compile-version>
+    <java-compile-version>1.6</java-compile-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 <!-- code dependency versions -->
