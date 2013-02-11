@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<configuration>
-  <proxy provider="com.rabbitmq.integration.jmscts.RabbitJmsCtsProvider" 
-         start="false" stop="true">
-  </proxy>
-</configuration>

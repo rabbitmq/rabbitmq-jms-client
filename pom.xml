@@ -35,7 +35,6 @@
   <modules>
     <module>rjms-topic-selector</module>
     <module>com.rabbitmq.jms</module>
-    <module>jmscts</module>
   </modules>
 
   <dependencyManagement>

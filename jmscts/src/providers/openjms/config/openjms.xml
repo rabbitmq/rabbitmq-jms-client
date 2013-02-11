@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<configuration>
-  <proxy provider="org.exolab.jmscts.openjms.OpenJMSProvider" 
-         start="true" stop="true">
-     <property name="Path" type="java.lang.String" 
-               value="${openjms.home}/config/openjms.xml" />
-  </proxy>
-</configuration>
