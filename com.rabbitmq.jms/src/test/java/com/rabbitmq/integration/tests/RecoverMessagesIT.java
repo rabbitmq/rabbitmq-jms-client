@@ -66,8 +66,8 @@ public class RecoverMessagesIT extends AbstractITQueue {
         queueReceiver.setMessageListener(new MessageListener() {
             @Override
             public void onMessage(Message message) {
-                latch.countDown();
                 messages.add(message);
+                latch.countDown();
             }
         });
         // allow subscription to take place
@@ -77,8 +77,9 @@ public class RecoverMessagesIT extends AbstractITQueue {
         TextMessage tmsg1 = (TextMessage) messages.get(0);
         assertFalse(tmsg1.getJMSRedelivered());
         queueSession.recover();
-        latch.await(2000, TimeUnit.MILLISECONDS);
+        latch.await(1000, TimeUnit.MILLISECONDS);
         // we should have received two messages
+        // There is no synchronisation so no guarantee we see the latest messages!
         assertEquals(2, messages.size());
         TextMessage tmsg2 = (TextMessage) messages.get(1);
         assertEquals(tmsg1, tmsg2);
