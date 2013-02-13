@@ -13,8 +13,9 @@
   </parent>
 
   <properties>
-
+    <maven.artefact>${project.artifactId}-${project.version}.ez</maven.artefact>
   </properties>
+
   <build>
     <plugins>
 
@@ -39,7 +40,7 @@
               <goal>exec</goal>
             </goals>
             <configuration>
-              <commandlineArgs>dist</commandlineArgs>
+              <commandlineArgs>MAVEN_ARTEFACT=${maven.artefact} dist</commandlineArgs>
             </configuration>
           </execution>
           <execution>
@@ -49,7 +50,7 @@
               <goal>exec</goal>
             </goals>
             <configuration>
-              <commandlineArgs>test</commandlineArgs>
+              <commandlineArgs>MAVEN_ARTEFACT=${maven.artefact} test</commandlineArgs>
             </configuration>
           </execution>
           <execution>
@@ -59,7 +60,7 @@
               <goal>exec</goal>
             </goals>
             <configuration>
-              <commandlineArgs>package</commandlineArgs>
+              <commandlineArgs>MAVEN_ARTEFACT=${maven.artefact} package</commandlineArgs>
             </configuration>
           </execution>
         </executions>
@@ -81,7 +82,7 @@
             <configuration>
               <artifacts>
                 <artifact>
-                  <file>target/plugins/${project.artifactId}.ez</file>
+                  <file>target/plugins/${maven.artefact}</file>
                   <type>ez</type>
                 </artifact>
               </artifacts>

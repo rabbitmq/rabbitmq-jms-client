@@ -8,6 +8,7 @@
   <name>rabbitmq-jms-parent</name>
 
   <properties>
+    <rabbitmq.version>3.0.1</rabbitmq.version>
     <java-compile-version>1.6</java-compile-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -15,7 +16,7 @@
     <geronimo-spec.version>1.1.1</geronimo-spec.version>
     <mockito-core.version>1.9.0</mockito-core.version>
     <junit.version>4.10</junit.version>
-    <amqp-client.version>3.0.1</amqp-client.version>
+    <amqp-client.version>${rabbitmq.version}</amqp-client.version>
     <jcip-annotations.version>1.0</jcip-annotations.version>
 
 <!-- plugin versions -->
