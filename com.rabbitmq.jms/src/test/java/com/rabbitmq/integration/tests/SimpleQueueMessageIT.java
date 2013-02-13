@@ -30,6 +30,7 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
     public void testSendAndReceiveTextMessage() throws Exception {
         try {
             queueConn.start();
+            queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             Queue queue = queueSession.createQueue(QUEUE_NAME);
             QueueSender queueSender = queueSession.createSender(queue);
