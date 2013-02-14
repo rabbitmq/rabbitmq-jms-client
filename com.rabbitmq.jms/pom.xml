@@ -40,11 +40,11 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- runtime scope -->
+    <!-- test scope -->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>rjms-topic-selector</artifactId>
-      <scope>runtime</scope>
+      <scope>test</scope>
       <type>ez</type>
     </dependency>
 
@@ -151,7 +151,6 @@
                 <artifactItem>
                   <groupId>${project.groupId}</groupId>
                   <artifactId>rjms-topic-selector</artifactId>
-                  <version>${project.version}</version>
                   <type>ez</type>
                   <outputDirectory>${project.build.directory}/plugins</outputDirectory>
                 </artifactItem>
