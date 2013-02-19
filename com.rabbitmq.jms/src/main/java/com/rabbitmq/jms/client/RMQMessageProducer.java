@@ -246,6 +246,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             bob.contentType("application/octet-stream");
             bob.deliveryMode(deliveryMode);
             bob.priority(priority);
+            bob.headers(RMQMessage.toHeaders(msg));
             // bob.expiration(expiration) // TODO TTL implementation - does nothing in RabbitMQ Java API
             byte[] data = RMQMessage.toMessage(msg);
             /*

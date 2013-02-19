@@ -12,3 +12,4 @@ noop
 idempotent
 accessor
 deserialized
+selectable

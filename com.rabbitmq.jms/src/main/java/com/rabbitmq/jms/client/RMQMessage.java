@@ -13,6 +13,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -56,10 +57,9 @@ public abstract class RMQMessage implements Message, Cloneable {
     protected static final int DEFAULT_MESSAGE_BODY_SIZE = Integer.getInteger("com.rabbitmq.jms.client.message.size", 512);
 
     /**
-     * We store all the JMS hard coded values, such as {@link #setJMSMessageID(String)}, as properties
-     * instead of hard coded fields. This way we can create a structure later on that
-     * the rabbit MQ broker can read by just changing the
-     * {@link #toMessage(RMQMessage)} and {@link #fromMessage(byte[])}
+     * We store all the JMS hard coded values, such as {@link #setJMSMessageID(String)}, as properties instead of hard
+     * coded fields. This way we can create a structure later on that the rabbit MQ broker can read by just changing the
+     * {@link #toMessage(RMQMessage)} and {@link #fromMessage(byte[])}.
      */
     private static final String PREFIX = "rmq.";
     private static final String JMS_MESSAGE_ID = PREFIX + "jms.message.id";
@@ -773,6 +773,62 @@ public abstract class RMQMessage implements Message, Cloneable {
     protected abstract void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException;
 
     /**
+     * Generate the headers for a JMS message.
+     * <p>
+     * We attach <i>some</i> JMS properties as headers on the message. This is so the broker can see them for the
+     * purposes of message selection during routing.
+     * </p>
+     * <p>
+     * The headers are:
+     * </p>
+     *
+     * <pre>
+     * <b>Header Field</b>        <b>Set By</b>
+     * JMSDestination      send or publish method
+     * JMSDeliveryMode     send or publish method
+     * JMSExpiration       send or publish method
+     * JMSPriority         send or publish method
+     * JMSMessageID        send or publish method
+     * JMSTimestamp        send or publish method
+     * JMSCorrelationID    Client
+     * JMSReplyTo          Client
+     * JMSType             Client
+     * JMSRedelivered      JMS provider
+     * </pre>
+     * <p>
+     * But (<i>from the JMS 1.1 spec</i>):<br/>
+     * <blockquote> Message header field references are restricted to <code>JMSDeliveryMode</code>,
+     * <code>JMSPriority</code>, <code>JMSMessageID</code>, <code>JMSTimestamp</code>, <code>JMSCorrelationID</code>,
+     * and <code>JMSType</code>.
+     * <p>
+     * <code>JMSMessageID</code>, <code>JMSCorrelationID</code>, and <code>JMSType</code> values may be
+     * <code>null</code> and if so are treated as a NULL value.
+     * </p>
+     * </blockquote>
+     */
+    static Map<String, Object> toHeaders(RMQMessage msg) throws IOException, JMSException {
+        Map<String, Object> hdrs = new HashMap<String, Object>();
+
+        // set non-null user properties
+        for (Map.Entry<String, Serializable> e : msg.userJmsProperties.entrySet()) {
+            putIfNotNull(hdrs, e.getKey(), e.getValue());
+        }
+
+        // set (overwrite?) selectable JMS properties
+        hdrs.put("JMSDeliveryMode", (msg.getJMSDeliveryMode()==DeliveryMode.PERSISTENT ? "PERSISTENT": "NON_PERSISTENT"));
+        putIfNotNull(hdrs, "JMSMessageID", msg.getJMSMessageID());
+        hdrs.put("JMSTimestamp", msg.getJMSTimestamp());
+        putIfNotNull(hdrs, "JMSCorrelationID", msg.getJMSCorrelationID());
+        putIfNotNull(hdrs, "JMSType", msg.getJMSType());
+
+        return hdrs;
+    }
+
+    private static void putIfNotNull(Map<String, Object> hdrs, String key, Object val) {
+        if (val!=null) hdrs.put(key, val);
+    }
+
+    /**
      * Serializes a {@link RMQMessage} to a byte array.
      * This method invokes the {@link #writeBody(ObjectOutput)} method
      * on the class that is being serialized
@@ -780,7 +836,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @return the body in a byte array
      * @throws IOException if serialization fails
      */
-    public static byte[] toMessage(RMQMessage msg) throws IOException, JMSException {
+    static byte[] toMessage(RMQMessage msg) throws IOException, JMSException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
         ObjectOutputStream out = new ObjectOutputStream(bout);
         //write the class of the message so we can instantiate on the other end
@@ -817,7 +873,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @throws IllegalAccessException if an exception occurs during class instantiation
      * @throws InstantiationException if an exception occurs during class instantiation
      */
-    public static RMQMessage fromMessage(byte[] b) throws ClassNotFoundException, IOException, IllegalAccessException,
+    static RMQMessage fromMessage(byte[] b) throws ClassNotFoundException, IOException, IllegalAccessException,
                                                   InstantiationException {
         /* TODO If we don't recognise the message format then we need to create a generic BytesMessage */
         ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(b));
@@ -907,7 +963,7 @@ public abstract class RMQMessage implements Message, Cloneable {
 	 *             if an IOException occurs.
 	 */
     public static void writePrimitive(Object s, ObjectOutput out) throws IOException, MessageFormatException {
-        writePrimitive(s, out,false);
+        writePrimitive(s, out, false);
     }
 
     public static void writePrimitive(Object s, ObjectOutput out, boolean allowSerializable) throws IOException, MessageFormatException {
