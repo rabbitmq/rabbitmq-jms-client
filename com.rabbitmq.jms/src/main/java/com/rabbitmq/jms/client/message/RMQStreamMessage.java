@@ -505,10 +505,10 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
      * {@inheritDoc}
      */
     @Override
-    public void readBody(ObjectInput in) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-        int len = in.readInt();
+    public void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
+        int len = inputStream.readInt();
         buf = new byte[len];
-        in.read(buf);
+        inputStream.read(buf);
         this.reading = true;
         this.bin = new ByteArrayInputStream(buf);
         this.in = new ObjectInputStream(this.bin);

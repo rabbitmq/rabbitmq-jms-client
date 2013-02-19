@@ -76,16 +76,16 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         }
     }
 
-    public void readBody(ObjectInput in) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
         // the body here is just a byte[] and we delay creating the object
         // until getObject() is called so that
         // we have access to the Thread Context Classloader
         // to deserialize the object
-        boolean isnull = in.readBoolean();
+        boolean isnull = inputStream.readBoolean();
         if (!isnull) {
-            int len = in.readInt();
+            int len = inputStream.readInt();
             buf = new byte[len];
-            in.read(buf);
+            inputStream.read(buf);
         }
     }
 

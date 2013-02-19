@@ -56,10 +56,10 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
      * {@inheritDoc}
      */
     @Override
-    public void readBody(ObjectInput in) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-        boolean isnull = in.readBoolean();
+    public void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
+        boolean isnull = inputStream.readBoolean();
         if (!isnull) {
-            this.text = in.readUTF();
+            this.text = inputStream.readUTF();
         }
     }
 

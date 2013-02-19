@@ -754,7 +754,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     /**
      * Invoked when {@link #toMessage(RMQMessage)} is called to create
      * a byte[] from a message. Each subclass must implement this, but ONLY
-     * write it's specific body. All the properties defined in {@link Message}
+     * write its specific body. All the properties defined in {@link Message}
      * will be written by the parent class.
      * @param out - the output which to write the message body to.
      * @throws IOException you may throw an IOException if the body can not be written
@@ -762,16 +762,15 @@ public abstract class RMQMessage implements Message, Cloneable {
     public abstract void writeBody(ObjectOutput out) throws IOException;
 
     /**
-     * Invoked when a message is being deserialized. The implementing class should ONLY read its body from this stream.
-     * 
-     * @param in the stream to read it's body from
-     * @throws IOException - if an IOException occurs - this will prevent message delivery
-     * @throws ClassNotFoundException - if an ClassNotFoundException occurs - this will prevent message delivery
-     * @throws InstantiationException - if an InstantiationException occurs - this will prevent message delivery
-     * @throws IllegalAccessException - if an IllegalAccessException occurs - this will prevent message delivery
+     * Invoked when a message is being deserialized to read and decode the message body.
+     * The implementing class should <i>only</i> read its body from this stream.
+     * If any exception is thrown, the message will not have been delivered.
+     *
+     * @param inputStream the stream to read its body from
+     * @throws IOException if a read error occurs on the input stream
+     * @throws ClassNotFoundException if the object class cannot be found
      */
-    public abstract void readBody(ObjectInput in) throws IOException,
-        ClassNotFoundException, InstantiationException, IllegalAccessException;
+    public abstract void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException;
 
     /**
      * Serializes a {@link RMQMessage} to a byte array.
@@ -899,7 +898,7 @@ public abstract class RMQMessage implements Message, Cloneable {
 	 * is represented as an object by only writing the type and the primitive
 	 * value to the stream.
 	 * </p>
-	 * 
+	 *
 	 * @param s
 	 *            the primitive to be written
 	 * @param out

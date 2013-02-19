@@ -278,11 +278,11 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         }
     }
 
-    public void readBody(ObjectInput in) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-        int size = in.readInt();
+    public void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
+        int size = inputStream.readInt();
         for (int i = 0; i < size; i++) {
-            String name = in.readUTF();
-            Object value = RMQMessage.readPrimitive(in);
+            String name = inputStream.readUTF();
+            Object value = RMQMessage.readPrimitive(inputStream);
             this.data.put(name, (Serializable) value);
         }
     }
