@@ -1,4 +1,4 @@
-package com.rabbitmq.jms.message;
+package com.rabbitmq.jms.client.message;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;

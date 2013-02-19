@@ -53,7 +53,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * structure, BytesMessage and StreamMessage, this is the default size
      * Can be changed with a system property
      */
-    protected static final int DEFAULT_MESSAGE_BODY_SIZE = Integer.getInteger("com.rabbitmq.jms.message.size", 512);
+    protected static final int DEFAULT_MESSAGE_BODY_SIZE = Integer.getInteger("com.rabbitmq.jms.client.message.size", 512);
 
     /**
      * We store all the JMS hard coded values, such as {@link #setJMSMessageID(String)}, as properties
@@ -759,7 +759,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @param out - the output which to write the message body to.
      * @throws IOException you may throw an IOException if the body can not be written
      */
-    public abstract void writeBody(ObjectOutput out) throws IOException;
+    protected abstract void writeBody(ObjectOutput out) throws IOException;
 
     /**
      * Invoked when a message is being deserialized to read and decode the message body.
@@ -770,7 +770,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @throws IOException if a read error occurs on the input stream
      * @throws ClassNotFoundException if the object class cannot be found
      */
-    public abstract void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException;
+    protected abstract void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException;
 
     /**
      * Serializes a {@link RMQMessage} to a byte array.

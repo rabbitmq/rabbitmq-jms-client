@@ -577,7 +577,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      * {@inheritDoc}
      */
     @Override
-    public void writeBody(ObjectOutput out) throws IOException {
+    protected void writeBody(ObjectOutput out) throws IOException {
         this.out.flush();
         byte[] buf = this.bout.toByteArray();
         out.writeInt(buf.length);
@@ -588,7 +588,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      * {@inheritDoc}
      */
     @Override
-    public void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
+    protected void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
         int len = inputStream.readInt();
         buf = new byte[len];
         inputStream.read(buf);

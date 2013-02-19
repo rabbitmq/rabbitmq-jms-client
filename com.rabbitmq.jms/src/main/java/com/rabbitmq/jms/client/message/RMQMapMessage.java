@@ -265,7 +265,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         this.data.clear();
     }
 
-    public void writeBody(ObjectOutput out) throws IOException {
+    protected void writeBody(ObjectOutput out) throws IOException {
         int size = this.data.size();
         out.writeInt(size);
         for (Map.Entry<String, Serializable> entry : this.data.entrySet()) {
@@ -278,7 +278,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         }
     }
 
-    public void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
+    protected void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
         int size = inputStream.readInt();
         for (int i = 0; i < size; i++) {
             String name = inputStream.readUTF();

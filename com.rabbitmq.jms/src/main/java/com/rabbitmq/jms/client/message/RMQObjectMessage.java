@@ -68,7 +68,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         this.buf = null;
     }
 
-    public void writeBody(ObjectOutput out) throws IOException {
+    protected void writeBody(ObjectOutput out) throws IOException {
         out.writeBoolean(this.buf == null);
         if (this.buf != null) {
             out.writeInt(buf.length);
@@ -76,7 +76,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         }
     }
 
-    public void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
+    protected void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
         // the body here is just a byte[] and we delay creating the object
         // until getObject() is called so that
         // we have access to the Thread Context Classloader

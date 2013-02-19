@@ -16,7 +16,7 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import com.rabbitmq.jms.message.TestMessages;
+import com.rabbitmq.jms.client.message.TestMessages;
 
 /**
  * Integration test for simple point-to-point messaging.

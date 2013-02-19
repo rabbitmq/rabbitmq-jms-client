@@ -38,7 +38,7 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
      * {@inheritDoc}
      */
     @Override
-    public void clearBodyInternal() throws JMSException {
+    protected void clearBodyInternal() throws JMSException {
         this.text = null;
     }
 
@@ -56,7 +56,7 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
      * {@inheritDoc}
      */
     @Override
-    public void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
+    protected void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
         boolean isnull = inputStream.readBoolean();
         if (!isnull) {
             this.text = inputStream.readUTF();
