@@ -543,9 +543,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     /**
-     * Configures the no local for this consumer.  This is currently only used when subscribing an async consumer.
+     * Configures the no local for this consumer. This is currently only used when subscribing an async consumer.
      *
-     * @param noLocal - true if NACKed
+     * @param noLocal - if <code>true</code>, and the destination is a {@link Topic}, inhibits the delivery of messages published by its own
+     *            connection. The behaviour for <code>noLocal</code> is not specified if the destination is a {@link Queue}.
      */
     void setNoLocal(boolean noLocal) {
         this.noLocal = noLocal;

@@ -10,6 +10,7 @@ import javax.jms.TextMessage;
 
 import com.rabbitmq.jms.client.RMQMessage;
 
+
 /**
  * Implements {@link TextMessage} interface.
  */

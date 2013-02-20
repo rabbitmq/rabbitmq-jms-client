@@ -434,19 +434,20 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public MessageConsumer createConsumer(Destination destination) throws JMSException {
         LOGGER.log("createConsumer");
         illegalStateExceptionIfClosed();
-        return createConsumerInternal((RMQDestination) destination, null, false);
+        return createConsumerInternal((RMQDestination) destination, null, false, null);
     }
 
     /**
-     * Creates a consumer for a destination. If this is a topic, we can specify the autoDelete flag
+     * Creates a consumer for a destination. If this is a topic, we can specify the autoDelete flag.
      * @param dest internal destination object
      * @param uuidTag only used for topics, if null, one is generated as the queue name for this topic
      * @param durableSubscriber true if this is a durable topic subscription
+     * @param jmsSelector selector expression - null if no selection required
      * @return {@link #createConsumer(Destination)}
      * @throws JMSException if destination is null or we fail to create the destination on the broker
      * @see #createConsumer(Destination)
      */
-    private MessageConsumer createConsumerInternal(RMQDestination dest, String uuidTag, boolean durableSubscriber) throws JMSException {
+    private RMQMessageConsumer createConsumerInternal(RMQDestination dest, String uuidTag, boolean durableSubscriber, String jmsSelector) throws JMSException {
         LOGGER.log("internal:createConsumerInternal");
         String consumerTag = uuidTag != null ? uuidTag : Util.generateUUID("jms-topic-");
 
@@ -459,15 +460,23 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
 
         if (!dest.isQueue()) {
+            // This is a topic, we need to define a queue, and bind to it.
+            // The queue name is a unique ID for each consumer.
             String queueName = consumerTag;
-            // this is a topic, we need to define a queue, and bind to it
-            // the queue name is a unique ID for each consumer
             try {
                 // we never set auto delete; exclusive queues (used for topics and temporaries) are deleted on close anyway.
                 this.declareQueue(dest, queueName, durableSubscriber);
-
-                // bind the queue to the exchange with the correct routing key
-                this.channel.queueBind(queueName, dest.getExchangeInfo().name(), dest.getRoutingKey());
+                if (jmsSelector==null) {
+                    // bind the queue to the exchange with the correct routing key
+                    this.channel.queueBind(queueName, dest.getExchangeInfo().name(), dest.getRoutingKey());
+                } else {
+                    // get this session's selection exchange
+                    String selectionExchange = this.getSelectionExchange();
+                    // bind it to the topic exchange with the topic routing key
+                    this.channel.exchangeBind(selectionExchange, dest.getExchangeInfo().name(), dest.getRoutingKey());
+                    // bind the queue to the selection exchange with the jmsSelector expression
+                    this.channel.queueBind(queueName, selectionExchange, jmsSelector);
+                }
             } catch (IOException x) {
                 throw new RMQJMSException(x);
             }
@@ -475,6 +484,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         RMQMessageConsumer consumer = new RMQMessageConsumer(this, dest, consumerTag, getConnection().isStopped());
         this.consumers.add(consumer);
         return consumer;
+    }
+
+    /**
+     * The selection exchange may be created for this session (there is at most one per session).
+     * @return this session's Selection Exchange
+     */
+    private String getSelectionExchange() {
+        throw new UnsupportedOperationException("JMS Selectors not implemented yet.");
     }
 
     /**
@@ -603,7 +620,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                                              // TODO: how do we delete exchanges used for temporary topics
                                              /* auto delete is always false */
                                              false,
-                                             /* internal is false JMS will always publish to the exchange */
+                                             /* internal is false: JMS clients will want to publish directly to the exchange */
                                              false,
                                              /* object parameters */
                                              null);
@@ -645,7 +662,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         /*
          * Create the new subscription
          */
-        RMQMessageConsumer result = (RMQMessageConsumer)createConsumerInternal(topicDest, name, true);
+        RMQMessageConsumer result = (RMQMessageConsumer)createConsumerInternal(topicDest, name, true, null);
         result.setDurable(true);
         this.subscriptions.put(name, result);
         return result;
@@ -777,14 +794,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public TopicSubscriber createSubscriber(Topic topic, String messageSelector, boolean noLocal) throws JMSException {
         LOGGER.log("createSubscriber", topic, messageSelector, noLocal);
         illegalStateExceptionIfClosed();
-        if (messageSelector==null || messageSelector.trim().length()==0) {
-            RMQMessageConsumer consumer = (RMQMessageConsumer)createSubscriber(topic);
-            consumer.setNoLocal(noLocal);
-            return consumer;
-        } else {
-            throw new UnsupportedOperationException();
-        }
 
+        if (messageSelector.trim().length() == 0) messageSelector = null;
+
+        RMQMessageConsumer consumer = createConsumerInternal((RMQDestination) topic, null, false, messageSelector);
+        consumer.setNoLocal(noLocal);
+        return consumer;
     }
 
     /**
