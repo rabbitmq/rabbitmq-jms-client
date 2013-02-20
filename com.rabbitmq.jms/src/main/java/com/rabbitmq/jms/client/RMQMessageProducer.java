@@ -220,21 +220,21 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     private void internalSend(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         try {
-            if (deliveryMode<1 || deliveryMode>2) {
-                /*
-                 * If delivery mode is invalid, set it to NON_PERSISTENT
-                 */
+            if (deliveryMode != javax.jms.DeliveryMode.PERSISTENT) {
                 deliveryMode = javax.jms.DeliveryMode.NON_PERSISTENT;
             }
             /*
              * Set known JMS message properties that need to be set during this call
              */
-            RMQMessage msg = (RMQMessage) ((RMQMessage) message);
+            long currentTime = System.currentTimeMillis();
+            long expiration = timeToLive == 0L ? 0L : currentTime + timeToLive;
+
+            RMQMessage msg = (RMQMessage) message;
             msg.setJMSDeliveryMode(deliveryMode);
             msg.setJMSPriority(priority);
-            msg.setJMSExpiration(timeToLive == 0 ? 0 : System.currentTimeMillis() + timeToLive);
+            msg.setJMSExpiration(expiration);
             msg.setJMSDestination(destination);
-            msg.setJMSTimestamp(System.currentTimeMillis());
+            msg.setJMSTimestamp(currentTime);
             msg.generateInternalID();
 
             RMQDestination dest = (RMQDestination) destination;
@@ -244,10 +244,11 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
              */
             AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
             bob.contentType("application/octet-stream");
-            bob.deliveryMode(deliveryMode);
+            bob.deliveryMode(rmqDeliveryMode(deliveryMode));
             bob.priority(priority);
+            bob.expiration(rmqExpiration(expiration));
             bob.headers(RMQMessage.toHeaders(msg));
-            // bob.expiration(expiration) // TODO TTL implementation - does nothing in RabbitMQ Java API
+
             byte[] data = RMQMessage.toMessage(msg);
             /*
              * Send the message
@@ -256,6 +257,23 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         } catch (IOException x) {
             throw new RMQJMSException(x);
         }
+    }
+
+    /**
+     * @param expiration JMS expiration long integer
+     * @return RabbitMQ message expiration setting (null if expiration==0L)
+     */
+    private static final String rmqExpiration(long expiration) {
+        if (expiration == 0L) return null;
+        return String.valueOf(expiration);
+    }
+
+    /**
+     * @param deliveryMode JMS delivery mode value
+     * @return RabbitMQ delivery mode value
+     */
+    private static final int rmqDeliveryMode(int deliveryMode) {
+        return (deliveryMode == javax.jms.DeliveryMode.PERSISTENT ? 2 : 1);
     }
 
     /**
