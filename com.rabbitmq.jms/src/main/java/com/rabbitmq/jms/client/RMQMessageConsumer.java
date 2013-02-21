@@ -46,21 +46,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
     private static final int DEFAULT_BATCHING_SIZE = 5;
     private static final long STOP_TIMEOUT_MS = 1000; // ONE SECOND
-    /**
-     * The destination that this consumer belongs to
-     */
+    /** The destination that this consumer belongs to */
     private final RMQDestination destination;
-    /**
-     * The session that this consumer was created under
-     */
+    /** The session that this consumer was created under */
     private final RMQSession session;
-    /**
-     * Unique tag, used when creating AMQP queues for a consumer that thinks it's a topic
-     */
+    /** Unique tag, used when creating AMQP queues for a consumer that thinks it's a topic */
     private final String uuidTag;
-    /**
-     * The {@link Consumer} that we use to subscribe to Rabbit messages which drives {@link MessageListener#onMessage}.
-     */
+    /** The {@link Consumer} that we use to subscribe to Rabbit messages which drives {@link MessageListener#onMessage}. */
     private final AtomicReference<MessageListenerConsumer> listenerConsumer =
                                                                               new AtomicReference<MessageListenerConsumer>();
     /**
@@ -69,29 +61,17 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @see javax.jms.Connection#stop()
      */
     private final EntryExitManager receiveManager = new EntryExitManager();
-    /**
-     * We track things that need to be aborted (for a Connection.close()). Typically these are waits.
-     */
+    /** We track things that need to be aborted (for a Connection.close()). Typically these are waits. */
     private final AbortableHolder abortables = new AbortableHolder();
-    /**
-     * Is this consumer closed? This value can change to true, but never changes back.
-     */
+    /** Is this consumer closed? This value can change to true, but never changes back. */
     private volatile boolean closed = false;
-    /**
-     * If this consumer is in the process of closing.
-     */
+    /** If this consumer is in the process of closing. */
     private volatile boolean closing = false;
-    /**
-     * {@link MessageListener}, set by the user.
-     */
+    /** {@link MessageListener}, set by the user. */
     private volatile MessageListener messageListener;
-    /**
-     * Flag to check if we are a durable subscription.
-     */
+    /** Flag to check if we are a durable subscription. */
     private volatile boolean durable = false;
-    /**
-     * Flag to check if we have noLocal set
-     */
+    /** Flag to check if we have noLocal set */
     private volatile boolean noLocal = false;
     /** Buffer for messages on {@link #receive} queues, but not yet handed to application. */
     private final ReceiveBuffer receiveBuffer;
