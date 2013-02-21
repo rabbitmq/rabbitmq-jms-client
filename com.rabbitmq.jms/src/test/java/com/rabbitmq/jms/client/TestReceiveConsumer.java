@@ -56,7 +56,7 @@ public class TestReceiveConsumer {
     }
 
     private static final RMQDestination destination = mock(RMQDestination.class);
-    private static final RMQMessageConsumer rmqMessageConsumer = new RMQMessageConsumer(session, destination, "", false);
+    private static final RMQMessageConsumer rmqMessageConsumer = new RMQMessageConsumer(session, destination, "", false, null);
 
     private final BlockingQueue<GetResponse> blockingQueue = new LinkedBlockingQueue<GetResponse>();
 

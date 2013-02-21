@@ -52,6 +52,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private final RMQSession session;
     /** Unique tag, used when creating AMQP queues for a consumer that thinks it's a topic */
     private final String uuidTag;
+    /** The selector used to filter messages consumed */
+    private final String messageSelector;
     /** The {@link Consumer} that we use to subscribe to Rabbit messages which drives {@link MessageListener#onMessage}. */
     private final AtomicReference<MessageListenerConsumer> listenerConsumer =
                                                                               new AtomicReference<MessageListenerConsumer>();
@@ -85,11 +87,12 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      *            unique name.
      * @param paused - true if the connection is {@link javax.jms.Connection#stop}ped, false otherwise.
      */
-    public RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag, boolean paused) {
+    RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag, boolean paused, String messageSelector) {
         this.session = session;
         this.destination = destination;
         this.uuidTag = uuidTag;
         this.receiveBuffer = new ReceiveBuffer(DEFAULT_BATCHING_SIZE, this);
+        this.messageSelector = messageSelector;
         if (!paused)
             this.receiveManager.openGate();
     }
@@ -107,7 +110,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     @Override
     public String getMessageSelector() throws JMSException {
-        return null;
+        return this.messageSelector;
     }
 
     /**

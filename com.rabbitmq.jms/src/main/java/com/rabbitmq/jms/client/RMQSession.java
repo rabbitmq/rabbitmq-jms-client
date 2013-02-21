@@ -470,8 +470,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                     // bind the queue to the exchange with the correct routing key
                     this.channel.queueBind(queueName, dest.getExchangeInfo().name(), dest.getRoutingKey());
                 } else {
-                    // get this session's selection exchange
-                    String selectionExchange = this.getSelectionExchange();
+                    // get this session's selection exchange (name)
+                    String selectionExchange = this.getSelectionExchange(durableSubscriber);
                     // bind it to the topic exchange with the topic routing key
                     this.channel.exchangeBind(selectionExchange, dest.getExchangeInfo().name(), dest.getRoutingKey());
                     // bind the queue to the selection exchange with the jmsSelector expression
@@ -481,16 +481,17 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 throw new RMQJMSException(x);
             }
         }
-        RMQMessageConsumer consumer = new RMQMessageConsumer(this, dest, consumerTag, getConnection().isStopped());
+        RMQMessageConsumer consumer = new RMQMessageConsumer(this, dest, consumerTag, getConnection().isStopped(), jmsSelector);
         this.consumers.add(consumer);
         return consumer;
     }
 
     /**
      * The selection exchange may be created for this session (there is at most one per session).
+     * @param durableSubscriber - set to true if we need to use a durable exchange, false otherwise.    q   q
      * @return this session's Selection Exchange
      */
-    private String getSelectionExchange() {
+    private String getSelectionExchange(boolean durableSubscriber) {
         throw new UnsupportedOperationException("JMS Selectors not implemented yet.");
     }
 
@@ -795,7 +796,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         LOGGER.log("createSubscriber", topic, messageSelector, noLocal);
         illegalStateExceptionIfClosed();
 
-        if (messageSelector.trim().length() == 0) messageSelector = null;
+        if (messageSelector!=null && messageSelector.trim().length()==0) messageSelector = null;
 
         RMQMessageConsumer consumer = createConsumerInternal((RMQDestination) topic, null, false, messageSelector);
         consumer.setNoLocal(noLocal);
