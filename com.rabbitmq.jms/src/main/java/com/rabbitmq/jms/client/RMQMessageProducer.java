@@ -207,7 +207,13 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     @Override
     public void send(Destination destination, Message message) throws JMSException {
         LOGGER.log("send", destination, message);
+        this.checkUnidentifiedMessageProducer(destination);
         this.internalSend(destination, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
+    }
+
+    private void checkUnidentifiedMessageProducer(Destination destination) {
+        if (destination != null && this.destination != null)
+            throw new UnsupportedOperationException("Must not supply a destination unless MessageProducer is unidentified.");
     }
 
     /**
@@ -216,11 +222,12 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         LOGGER.log("send", destination, message, deliveryMode, priority, timeToLive);
+        this.checkUnidentifiedMessageProducer(destination);
         this.internalSend(destination, message, deliveryMode, priority, timeToLive);
     }
 
     private void internalSend(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        if (destination == null)
+        if (destination == null && this.destination == null)
             throw new InvalidDestinationException("No destination supplied, or implied.");
         try {
             if (deliveryMode != javax.jms.DeliveryMode.PERSISTENT) {
@@ -270,7 +277,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     /**
      * Convert long time-to-live to String time-to-live for amqp protocol.
-     * Also constrain to limits: <code>0 <= ttl <= MAX_EXPIRY_TIMER</code>.
+     * Also constrain to limits: <code>0 <= ttl <= MAX_TTL</code>.
      * @param ttl JMS time-to-live long integer
      * @return RabbitMQ message expiration setting (null if expiration==0L)
      */
