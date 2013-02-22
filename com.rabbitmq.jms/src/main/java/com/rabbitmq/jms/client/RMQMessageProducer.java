@@ -246,7 +246,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             bob.contentType("application/octet-stream");
             bob.deliveryMode(rmqDeliveryMode(deliveryMode));
             bob.priority(priority);
-            bob.expiration(rmqExpiration(expiration));
+            bob.expiration(rmqExpiration(timeToLive));
             bob.headers(RMQMessage.toHeaders(msg));
 
             byte[] data = RMQMessage.toMessage(msg);
@@ -259,13 +259,24 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         }
     }
 
+    /** This is dictated by `erlang:send_after' on which rabbitmq depends to implement TTL:
+     * <br/><code>-define(MAX_EXPIRY_TIMER, 4294967295)</code>.
+     */
+    private final static long MAX_TTL = 4294967295L;
+
     /**
-     * @param expiration JMS expiration long integer
+     * Convert long time-to-live to String time-to-live for amqp protocol.
+     * Also constrain to limits: <code>0 <= ttl <= MAX_EXPIRY_TIMER</code>.
+     * @param ttl JMS time-to-live long integer
      * @return RabbitMQ message expiration setting (null if expiration==0L)
      */
-    private static final String rmqExpiration(long expiration) {
-        if (expiration == 0L) return null;
-        return String.valueOf(expiration);
+    private static final String rmqExpiration(long ttl) {
+        if (ttl == 0L) return null;
+
+        return String.valueOf( ttl < 0L      ? 0L
+                             : ttl > MAX_TTL ? MAX_TTL
+                             :                 ttl
+                             );
     }
 
     /**
