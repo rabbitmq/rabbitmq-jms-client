@@ -409,22 +409,29 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * {@inheritDoc}
+     * <p>
+     * <b>Note</b>: The destination may be null.
+     * </p>
      */
     @Override
     public MessageProducer createProducer(Destination destination) throws JMSException {
         LOGGER.log("createProducer", destination);
         illegalStateExceptionIfClosed();
         RMQDestination dest = (RMQDestination) destination;
-        if (!dest.isDeclared()) {
-            if (dest.isQueue()) {
-                declareQueue(dest, null, false);
-            } else {
-                declareTopic(dest);
-            }
-        }
-        RMQMessageProducer producer = new RMQMessageProducer(this, (RMQDestination) destination);
+        declareDestinationIfNecessary(dest);
+        RMQMessageProducer producer = new RMQMessageProducer(this, dest);
         this.producers.add(producer);
         return producer;
+    }
+
+    void declareDestinationIfNecessary(RMQDestination destination) throws JMSException {
+        if (destination != null && !destination.isDeclared()) {
+            if (destination.isQueue()) {
+                declareQueue(destination, null, false);
+            } else {
+                declareTopic(destination);
+            }
+        }
     }
 
     /**
@@ -451,13 +458,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         LOGGER.log("internal:createConsumerInternal");
         String consumerTag = uuidTag != null ? uuidTag : Util.generateUUID("jms-topic-");
 
-        if (!dest.isDeclared()) {
-            if (dest.isQueue()) {
-                declareQueue(dest, null, false);
-            } else {
-                declareTopic(dest);
-            }
-        }
+        declareDestinationIfNecessary(dest);
 
         if (!dest.isQueue()) {
             // This is a topic, we need to define a queue, and bind to it.
@@ -770,6 +771,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * {@inheritDoc}
+     * <p>
+     * <b>Note</b>: The queue may be null -- see {@link #createProducer}.
+     * </p>
      */
     @Override
     public QueueSender createSender(Queue queue) throws JMSException {

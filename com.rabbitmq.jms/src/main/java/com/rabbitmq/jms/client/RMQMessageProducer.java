@@ -238,6 +238,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             msg.generateInternalID();
 
             RMQDestination dest = (RMQDestination) destination;
+            this.session.declareDestinationIfNecessary(dest);
 
             /*
              * Configure the send settings
