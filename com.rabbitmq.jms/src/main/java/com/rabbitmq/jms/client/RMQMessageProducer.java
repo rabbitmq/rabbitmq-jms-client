@@ -3,6 +3,7 @@ package com.rabbitmq.jms.client;
 import java.io.IOException;
 
 import javax.jms.Destination;
+import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
@@ -219,6 +220,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     }
 
     private void internalSend(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+        if (destination == null)
+            throw new InvalidDestinationException("No destination supplied, or implied.");
         try {
             if (deliveryMode != javax.jms.DeliveryMode.PERSISTENT) {
                 deliveryMode = javax.jms.DeliveryMode.NON_PERSISTENT;
