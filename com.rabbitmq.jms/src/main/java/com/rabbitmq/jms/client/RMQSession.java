@@ -37,6 +37,7 @@ import javax.jms.TopicSubscriber;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.admin.RMQDestination;
+import com.rabbitmq.jms.admin.RMQExchangeInfo;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQMapMessage;
 import com.rabbitmq.jms.client.message.RMQObjectMessage;
@@ -608,7 +609,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private void declareTopic(RMQDestination dest) throws JMSException {
         LOGGER.log("internal:declareTopic", dest);
-        if ("amq.topic".equals(dest.getExchangeInfo().name())) {
+        if (RMQExchangeInfo.RABBITMQ_AMQ_TOPIC_EXCHANGE_NAME.equals(dest.getExchangeInfo().name())) {
             /* built-in exchange -- do not redeclare */
         }
         else

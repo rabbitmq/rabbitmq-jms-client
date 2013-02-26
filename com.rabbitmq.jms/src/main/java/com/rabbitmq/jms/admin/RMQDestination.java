@@ -42,14 +42,16 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @param temporary true if this is a temporary destination
      */
     public RMQDestination(String name, boolean queue, boolean temporary) {
-        this(name, queueOrTopicExchangeName(queue, name), queueOrTopicExchangeType(queue, name), name, queue, false, temporary);
+        this(name, queueOrTopicExchangeName(queue, temporary, name), queueOrTopicExchangeType(queue, name), name, queue, false, temporary);
     }
 
-    private static final String queueOrTopicExchangeName(boolean queue, String name) {
+    private static final String queueOrTopicExchangeName(boolean queue, boolean temporary, String name) {
         if (queue)
             return ""; // default exchange in RabbitMQ (direct)
+        else if (temporary)
+            return RMQExchangeInfo.JMS_TEMP_TOPIC_EXCHANGE_NAME; // fixed topic exchange in RabbitMQ for jms traffic
         else
-            return "amq.topic"; // standard topic exchange in RabbitMQ
+            return RMQExchangeInfo.JMS_DURABLE_TOPIC_EXCHANGE_NAME; // fixed topic exchange in RabbitMQ for jms traffic
     }
 
     private static final String queueOrTopicExchangeType(boolean queue, String name) {
