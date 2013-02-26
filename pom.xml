@@ -14,7 +14,10 @@
 
   <properties>
 
+    <!-- overridable parameter -->
     <rabbitmq.version>3.0.1</rabbitmq.version>
+
+    <!-- pervasive properties -->
     <java-compile-version>1.6</java-compile-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
