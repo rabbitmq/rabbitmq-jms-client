@@ -17,56 +17,70 @@ import javax.naming.spi.ObjectFactory;
 import com.rabbitmq.jms.util.RJMSLogger;
 
 /**
- * JNDI Factory to create resources in containers such as <a href="http://tomcat.apache.org">Tomcat</a>
- * An example Tomcat configuration for a ConnectionFactory would look like:<br/>
- * &lt;Resource <br/>
- * &emsp;name=&quot;jms/ConnectionFactory&quot; <br/>
- * &emsp;type=&quot;javax.jms.ConnectionFactory&quot;  <br/>
- * &emsp;factory=&quot;com.rabbitmq.jms.admin.RMQObjectFactory&quot;  <br/>
- * &emsp;username=&quot;guest&quot; <br/>
- * &emsp;password=&quot;guest&quot; <br/>
- * &emsp;virtualHost=&quot;/&quot; <br/>
- * &emsp;host=&quot;localhost&quot; <br/>
- * &emsp;threadsPerConnection=&quot;2&quot;/&gt; <br/>
- * the type attribute can be <code>javax.jms.ConnectionFactory</code>, <code>javax.jms.QueueConnectionFactory</code>, <code>javax.jms.TopicConnectionFactory</code>
- * or the actual classname of the implementation, <code>com.rabbitmq.jms.admin.RMQConnectionFactory</code> <br/>
- * A destination, <code>Queue</code> or <code>Topic</code>, can be created using the following configuration (queue below) <br/>
- * &lt;Resource <br/>
- * &emsp;name=&quot;jms/Queue&quot; type=&quot;javax.jms.Queue&quot; <br/>
- * &emsp;factory=&quot;com.rabbitmq.jms.admin.RMQObjectFactory&quot;<br/>
- * &emsp;destinationName=&quot;queueName&quot;/&gt; <br/>
- * and a Topic would be created using <br/>
- * &lt;Resource <br/>
- * &emsp;name=&quot;jms/Topic&quot; type=&quot;javax.jms.Topic&quot; <br/>
- * &emsp;factory=&quot;com.rabbitmq.jms.admin.RMQObjectFactory&quot; <br/>
- * &emsp;destinationName=&quot;topicName&quot;/&gt; <br/>
- *
- * Valid types are: <br/>
- * javax.jms.ConnectionFactory<br/>
- * javax.jms.QueueConnectionFactory<br/>
- * javax.jms.TopicConnectionFactory<br/>
- * javax.jms.Topic<br/>
- * javax.jms.Queue <br/>
- * Properties for a ConnectionFactory are:
+ * JNDI Factory to create resources in containers such as <a href="http://tomcat.apache.org">Tomcat</a>.
+ * <p>
+ * An example Tomcat configuration for a {@link ConnectionFactory} would look like:
+ * </p>
+ * <pre>
+ * &lt;Resource name=&quot;jms/ConnectionFactory&quot; type=&quot;javax.jms.ConnectionFactory&quot;
+ *           factory=&quot;com.rabbitmq.jms.admin.RMQObjectFactory&quot;
+ *           username=&quot;guest&quot;
+ *           password=&quot;guest&quot;
+ *           virtualHost=&quot;/&quot;
+ *           host=&quot;localhost&quot;
+ *           threadsPerConnection=&quot;2&quot;/&gt;
+ * </pre>
+ * <p>
+ * the type attribute can be {@link javax.jms.ConnectionFactory}, {@link javax.jms.QueueConnectionFactory},
+ * {@link javax.jms.TopicConnectionFactory} or the actual classname of the implementation,
+ * {@link com.rabbitmq.jms.admin.RMQConnectionFactory}.
+ * </p>
+ * <p>
+ * A destination, {@link Queue} or {@link Topic}, can be created using the following configuration ({@link Queue} first):
+ * </p>
+ * <pre>
+ * &lt;Resource name=&quot;jms/Queue&quot; type=&quot;javax.jms.Queue&quot;
+           factory=&quot;com.rabbitmq.jms.admin.RMQObjectFactory&quot;
+           destinationName=&quot;queueName&quot;/&gt;
+ * </pre>
+ * <p>
+ * and a {@link Topic} would be created thus:
+ * </p>
+ * <pre>
+ * &lt;Resource name=&quot;jms/Topic&quot; type=&quot;javax.jms.Topic&quot;
+ *           factory=&quot;com.rabbitmq.jms.admin.RMQObjectFactory&quot;
+ *           destinationName=&quot;topicName&quot;/&gt;
+ * </pre>
+ * <p>
+ * Valid types are:
+ * </p>
+ * <pre>
+ * javax.jms.ConnectionFactory
+ * javax.jms.QueueConnectionFactory
+ * javax.jms.TopicConnectionFactory
+ * javax.jms.Topic
+ * javax.jms.Queue
+ * </pre>
+ * <p>
+ * Properties for a {@link ConnectionFactory} are:
+ * </p>
  * <ul>
- *  <li>username</li>
- *  <li>password</li>
- *  <li>virtualHost</li>
- *  <li>host</li>
- *  <li>port</li>
- *  <li>threadsPerConnection</li>
- *  <li>threadPrefix</li>
- *  <li>terminationTimeout</li>
+ * <li>username</li>
+ * <li>password</li>
+ * <li>virtualHost</li>
+ * <li>host</li>
+ * <li>port</li>
+ * <li>threadsPerConnection</li>
+ * <li>threadPrefix</li>
+ * <li>terminationTimeout</li>
  * </ul>
- * Properties for a topic or a queue are:
+ * <p>
+ * Properties for a {@link Topic} or a {@link Queue} are:
+ * </p>
  * <ul>
- *  <li>destinationName</li>
+ * <li>destinationName</li>
  * </ul>
- *
- *
- *
- *  <br/><br/>
- *  TODO Implement SSL and socket options
+ * TODO Implement SSL and socket options.
  */
 public class RMQObjectFactory implements ObjectFactory {
 
