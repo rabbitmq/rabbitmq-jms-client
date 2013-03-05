@@ -10,6 +10,7 @@ public class RMQExchangeInfo implements Serializable {
     public static final String RABBITMQ_AMQ_TOPIC_EXCHANGE_NAME = "amq.topic";
     public static final String JMS_DURABLE_TOPIC_EXCHANGE_NAME = "jms.durable.topic";
     public static final String JMS_TEMP_TOPIC_EXCHANGE_NAME = "jms.temp.topic";
+    public static final String JMS_TOPIC_SELECTOR_EXCHANGE_TYPE = "x-jms-topic";
 
     /** TODO */
     private static final long serialVersionUID = 1L;

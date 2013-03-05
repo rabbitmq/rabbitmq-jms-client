@@ -54,53 +54,40 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private static final RJMSLogger LOGGER = new RJMSLogger("RMQSession");
 
-    /**
-     * The connection that created this session
-     */
+    /** The connection that created this session */
     private final RMQConnection connection;
-    /**
-     * Set to true if this session is transacted.
-     */
+    /** Set to true if this session is transacted. */
     private final boolean transacted;
-    /**
-     * The ack mode used when receiving message
-     */
+    /** The ack mode used when receiving message */
     private final int acknowledgeMode;
-    /**
-     * The RabbitMQ channel we use under the hood
-     */
+    /** The RabbitMQ channel we use under the hood */
     private final Channel channel;
-    /**
-     * Set to true if close() has been called and completed
-     */
+    /** Set to true if close() has been called and completed */
     private volatile boolean closed = false;
-    /**
-     * The message listener for this session.
-     */
+    /** The message listener for this session. */
     private volatile MessageListener messageListener;
-    /**
-     * A list of all the producers created by this session.
-     * When a producer is closed, it will be removed from this list
-     */
+    /** A list of all the producers created by this session.
+     * When a producer is closed, it will be removed from this list */
     private final ArrayList<RMQMessageProducer> producers = new ArrayList<RMQMessageProducer>();
-    /**
-     * A list of all the consumer created by this session.
-     * When a consumer is closed, it will be removed from this list
-     */
+    /** A list of all the consumer created by this session.
+     * When a consumer is closed, it will be removed from this list */
     private final ArrayList<RMQMessageConsumer> consumers = new ArrayList<RMQMessageConsumer>();
-    /**
-     * We keep an ordered set of the message tags (acknowledgement tags) for all messages received and unacknowledged.
+    /** We keep an ordered set of the message tags (acknowledgement tags) for all messages received and unacknowledged.
      * Each message acknowledgement must ACK all (unacknowledged) messages received up to this point, and
-     * we must never acknowledge a message more than once (nor acknowledge a message that doesn't exist).
-     */
+     * we must never acknowledge a message more than once (nor acknowledge a message that doesn't exist). */
     private final SortedSet<Long> unackedMessageTags = Collections.synchronizedSortedSet(new TreeSet<Long>());
 
-    /**
-     * List of all our durable subscriptions so we can track them
-     */
+    /** List of all our durable subscriptions so we can track them */
     private final Map<String, RMQMessageConsumer> subscriptions;
 
     private final Object closeLock = new Object();
+
+    /** Selector exchange for topic selection */
+    private volatile String durableTopicSelectorExchange;
+    /** Selector exchange for topic selection */
+    private volatile String nonDurableTopicSelectorExchange;
+    /** Selector exchange arg key for selector expression */
+    private static final String RJMS_SELECTOR_ARG = "rjms_selector";
 
     /**
      * Creates a session object associated with a connection
@@ -309,7 +296,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         synchronized (this.closeLock) {
             try {
                 //start by rolling back anything not committed already
-                if (this.getTransacted()) {
+                if (this.getTransactedNoException()) {
                     this.rollback();
                 }
                 //close all consumers created by this session
@@ -329,7 +316,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 this.producers.clear();
 
                 //now commit anything done during close
-                if (this.getTransacted()) {
+                if (this.getTransactedNoException()) {
                     this.commit();
                 }
 
@@ -472,12 +459,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                     // bind the queue to the exchange with the correct routing key
                     this.channel.queueBind(queueName, dest.getExchangeInfo().name(), dest.getRoutingKey());
                 } else {
-                    // get this session's selection exchange (name)
+                    // get this session's topic selector exchange (name)
                     String selectionExchange = this.getSelectionExchange(durableSubscriber);
                     // bind it to the topic exchange with the topic routing key
                     this.channel.exchangeBind(selectionExchange, dest.getExchangeInfo().name(), dest.getRoutingKey());
-                    // bind the queue to the selection exchange with the jmsSelector expression
-                    this.channel.queueBind(queueName, selectionExchange, jmsSelector);
+                    // bind the queue to the topic selector exchange with the jmsSelector expression as argument
+                    Map<String, Object> args = Collections.singletonMap(RJMS_SELECTOR_ARG, (Object)jmsSelector);
+                    this.channel.queueBind(queueName, selectionExchange, dest.getRoutingKey(), args);
                 }
             } catch (IOException x) {
                 throw new RMQJMSException(x);
@@ -489,12 +477,31 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     /**
-     * The selection exchange may be created for this session (there is at most one per session).
-     * @param durableSubscriber - set to true if we need to use a durable exchange, false otherwise.    q   q
+     * The topic selector exchange may be created for this session (there are at most two per session).
+     * @param durableSubscriber - set to true if we need to use a durable exchange, false otherwise.
      * @return this session's Selection Exchange
      */
     private String getSelectionExchange(boolean durableSubscriber) {
-        throw new UnsupportedOperationException("JMS Selectors not implemented yet.");
+        String selectorExchangeName = null;
+        try {
+            if (durableSubscriber) {
+                if (this.durableTopicSelectorExchange == null) {
+                    selectorExchangeName = Util.generateUUID("jms-top-slx-");
+                    this.channel.exchangeDeclare(selectorExchangeName, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, null);
+                    this.durableTopicSelectorExchange = selectorExchangeName;
+                }
+            } else {
+                if (this.nonDurableTopicSelectorExchange == null) {
+                    selectorExchangeName = Util.generateUUID("jms-top-slx-");
+                    this.channel.exchangeDeclare(selectorExchangeName, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, null);
+                    this.nonDurableTopicSelectorExchange = selectorExchangeName;
+                }
+            }
+        } catch (IOException _) {
+            // Ignore exceptions and return null
+            selectorExchangeName = null;
+        }
+        return selectorExchangeName;
     }
 
     /**
