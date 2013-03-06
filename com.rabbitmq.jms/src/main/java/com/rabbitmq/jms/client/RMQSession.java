@@ -480,28 +480,30 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * The topic selector exchange may be created for this session (there are at most two per session).
      * @param durableSubscriber - set to true if we need to use a durable exchange, false otherwise.
      * @return this session's Selection Exchange
+     * @throws IOException
      */
-    private String getSelectionExchange(boolean durableSubscriber) {
-        String selectorExchangeName = null;
-        try {
-            if (durableSubscriber) {
-                if (this.durableTopicSelectorExchange == null) {
-                    selectorExchangeName = Util.generateUUID("jms-top-slx-");
-                    this.channel.exchangeDeclare(selectorExchangeName, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, null);
-                    this.durableTopicSelectorExchange = selectorExchangeName;
-                }
-            } else {
-                if (this.nonDurableTopicSelectorExchange == null) {
-                    selectorExchangeName = Util.generateUUID("jms-top-slx-");
-                    this.channel.exchangeDeclare(selectorExchangeName, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, null);
-                    this.nonDurableTopicSelectorExchange = selectorExchangeName;
-                }
-            }
-        } catch (IOException _) {
-            // Ignore exceptions and return null
-            selectorExchangeName = null;
+    private String getSelectionExchange(boolean durableSubscriber) throws IOException {
+        if (durableSubscriber) {
+            return this.getDurableTopicSelectorExchange();
+        } else {
+            return this.getNonDurableTopicSelectorExchange();
         }
-        return selectorExchangeName;
+    }
+
+    private String getDurableTopicSelectorExchange() throws IOException {
+        if (this.durableTopicSelectorExchange==null) {
+            this.durableTopicSelectorExchange = Util.generateUUID("jms-top-slx-");
+            this.channel.exchangeDeclare(this.durableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, true, true, null);
+        }
+        return this.durableTopicSelectorExchange;
+    }
+
+    private String getNonDurableTopicSelectorExchange() throws IOException {
+        if (this.nonDurableTopicSelectorExchange==null) {
+            this.nonDurableTopicSelectorExchange = Util.generateUUID("jms-top-slx-");
+            this.channel.exchangeDeclare(this.nonDurableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, null);
+        }
+    return this.nonDurableTopicSelectorExchange;
     }
 
     /**
@@ -662,7 +664,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         illegalStateExceptionIfClosed();
         if (messageSelector!=null && messageSelector.trim().length()==0)
             messageSelector = null;
-        
+
         RMQDestination topicDest = (RMQDestination) topic;
         RMQMessageConsumer previousConsumer = this.subscriptions.get(name);
         if (previousConsumer!=null) {
