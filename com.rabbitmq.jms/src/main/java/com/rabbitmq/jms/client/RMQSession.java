@@ -646,33 +646,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name) throws JMSException {
         LOGGER.log("createDurableSubscriber");
-        illegalStateExceptionIfClosed();
-        RMQDestination topicDest = (RMQDestination) topic;
-        RMQMessageConsumer previousConsumer = this.subscriptions.get(name);
-        if (previousConsumer!=null) {
-            /*
-             * we are changing subscription, or not, if called with the same topic
-             */
-
-            if (previousConsumer.getDestination().equals(topicDest)) {
-                if (previousConsumer.isClosed()) {
-                    /*
-                     * They called TopicSubscriber.close but didn't unsubscribe
-                     * and they are simply resubscribing with a new one
-                     */
-                } else {
-                    throw new JMSException("Subscription with name["+name+"] and topic["+topicDest+"] already exists");
-                }
-            } else {
-                //change in subscription
-                unsubscribe(name);
-            }
-        }
-
-        /*
-         * Create the new subscription
-         */
-        RMQMessageConsumer result = (RMQMessageConsumer)createConsumerInternal(topicDest, name, true, null);
+        RMQMessageConsumer result = (RMQMessageConsumer)createDurableSubscriber(topic, name, null, false);
         result.setDurable(true);
         this.subscriptions.put(name, result);
         return result;
@@ -686,13 +660,30 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
         LOGGER.log("createDurableSubscriber");
         illegalStateExceptionIfClosed();
-        if (messageSelector==null || messageSelector.trim().length()==0) {
-            RMQMessageConsumer consumer = (RMQMessageConsumer) createDurableSubscriber(topic, name);
-            consumer.setNoLocal(noLocal);
-            return consumer;
-        } else {
-            throw new UnsupportedOperationException();
+        if (messageSelector!=null && messageSelector.trim().length()==0)
+            messageSelector = null;
+        
+        RMQDestination topicDest = (RMQDestination) topic;
+        RMQMessageConsumer previousConsumer = this.subscriptions.get(name);
+        if (previousConsumer!=null) {
+            // we are changing subscription, or not, if called with the same topic
+            if (previousConsumer.getDestination().equals(topicDest)) {
+                if (previousConsumer.isClosed()) {
+                    // They called TopicSubscriber.close but didn't unsubscribe
+                    // and they are simply resubscribing with a new one
+                } else {
+                    throw new JMSException("Subscription with name["+name+"] and topic["+topicDest+"] already exists");
+                }
+            } else {
+                unsubscribe(name);
+            }
         }
+        // Create a new subscription
+        RMQMessageConsumer consumer = (RMQMessageConsumer)createConsumerInternal(topicDest, name, true, messageSelector);
+        consumer.setDurable(true);
+        consumer.setNoLocal(noLocal);
+        this.subscriptions.put(name, consumer);
+        return consumer;
     }
 
     /**
