@@ -45,6 +45,7 @@ import com.rabbitmq.jms.client.message.RMQStreamMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.util.RJMSLogger;
 import com.rabbitmq.jms.util.RMQJMSException;
+import com.rabbitmq.jms.util.RMQJMSSelectorException;
 import com.rabbitmq.jms.util.Util;
 
 /**
@@ -463,9 +464,15 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                     String selectionExchange = this.getSelectionExchange(durableSubscriber);
                     // bind it to the topic exchange with the topic routing key
                     this.channel.exchangeBind(selectionExchange, dest.getExchangeInfo().name(), dest.getRoutingKey());
-                    // bind the queue to the topic selector exchange with the jmsSelector expression as argument
-                    Map<String, Object> args = Collections.singletonMap(RJMS_SELECTOR_ARG, (Object)jmsSelector);
-                    this.channel.queueBind(queueName, selectionExchange, dest.getRoutingKey(), args);
+                    try {
+                        // bind the queue to the topic selector exchange with the jmsSelector expression as argument
+                        Map<String, Object> args = Collections.singletonMap(RJMS_SELECTOR_ARG, (Object)jmsSelector);
+                        this.channel.queueBind(queueName, selectionExchange, dest.getRoutingKey(), args);
+                    } catch (IOException ioe) {
+                        // Channel will have been closed; the session needs to be re-opened.
+                        this.resetSessionAfterException();
+                        throw new RMQJMSSelectorException(ioe);
+                    }
                 }
             } catch (IOException x) {
                 throw new RMQJMSException(x);
@@ -475,6 +482,17 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.consumers.add(consumer);
         return consumer;
     }
+
+
+    /**
+     * After certain exceptions the channel is closed, so the session will need to be reset.
+     * The existing session state is used to determine how this is to be done.
+     */
+    private void resetSessionAfterException() {
+        //TODO: reset the session
+        this.getConnection().recreateSession();
+    }
+
 
     /**
      * The topic selector exchange may be created for this session (there are at most two per session).
@@ -492,7 +510,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private String getDurableTopicSelectorExchange() throws IOException {
         if (this.durableTopicSelectorExchange==null) {
-            this.durableTopicSelectorExchange = Util.generateUUID("jms-top-slx-");
+            this.durableTopicSelectorExchange = Util.generateUUID("jms-dutop-slx-");
             this.channel.exchangeDeclare(this.durableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, true, true, null);
         }
         return this.durableTopicSelectorExchange;
@@ -500,7 +518,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private String getNonDurableTopicSelectorExchange() throws IOException {
         if (this.nonDurableTopicSelectorExchange==null) {
-            this.nonDurableTopicSelectorExchange = Util.generateUUID("jms-top-slx-");
+            this.nonDurableTopicSelectorExchange = Util.generateUUID("jms-ndtop-slx-");
             this.channel.exchangeDeclare(this.nonDurableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, null);
         }
     return this.nonDurableTopicSelectorExchange;

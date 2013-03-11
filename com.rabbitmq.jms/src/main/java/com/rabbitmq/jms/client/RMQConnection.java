@@ -100,6 +100,15 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         return session;
     }
 
+
+    void recreateSession(Session) throws JMSException {
+        LOGGER.log("recreateSession");
+        illegalStateExceptionIfClosed();
+        freezeClientID();
+        RMQSession session = new RMQSession(this, transacted, acknowledgeMode, subscriptions);
+        this.sessions.add(session);
+    }
+
     private void freezeClientID() {
         this.canSetClientID = false;
     }
