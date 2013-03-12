@@ -12,6 +12,7 @@ import java.util.TreeSet;
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
 import javax.jms.IllegalStateException;
+import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
@@ -464,18 +465,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                     String selectionExchange = this.getSelectionExchange(durableSubscriber);
                     // bind it to the topic exchange with the topic routing key
                     this.channel.exchangeBind(selectionExchange, dest.getExchangeInfo().name(), dest.getRoutingKey());
-                    try {
-                        // bind the queue to the topic selector exchange with the jmsSelector expression as argument
-                        Map<String, Object> args = Collections.singletonMap(RJMS_SELECTOR_ARG, (Object)jmsSelector);
-                        this.channel.queueBind(queueName, selectionExchange, dest.getRoutingKey(), args);
-                    } catch (IOException ioe) {
-                        // Channel will have been closed; the session needs to be re-opened.
-                        this.resetSessionAfterException();
-                        throw new RMQJMSSelectorException(ioe);
-                    }
+                    this.bindSelectorQueue(dest, jmsSelector, queueName, selectionExchange);
                 }
             } catch (IOException x) {
-                throw new RMQJMSException(x);
+                throw new RMQJMSException("RabbitMQ Exception creating Consumer", x);
             }
         }
         RMQMessageConsumer consumer = new RMQMessageConsumer(this, dest, consumerTag, getConnection().isStopped(), jmsSelector);
@@ -483,16 +476,20 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         return consumer;
     }
 
-
-    /**
-     * After certain exceptions the channel is closed, so the session will need to be reset.
-     * The existing session state is used to determine how this is to be done.
-     */
-    private void resetSessionAfterException() {
-        //TODO: reset the session
-        this.getConnection().recreateSession();
+    private void bindSelectorQueue(RMQDestination dest, String jmsSelector, String queueName, String selectionExchange)
+            throws InvalidSelectorException {
+        try {
+            // create a channel specifically to bind the selector queue
+            Channel channel = this.getConnection().createRabbitChannel();
+            // bind the queue to the topic selector exchange with the jmsSelector expression as argument
+            Map<String, Object> args = Collections.singletonMap(RJMS_SELECTOR_ARG, (Object)jmsSelector);
+            channel.queueBind(queueName, selectionExchange, dest.getRoutingKey(), args);
+            channel.close();
+        } catch (IOException ioe) {
+            // Channel was closed early; the selector is presumed to be bad.
+            throw new RMQJMSSelectorException(ioe);
+        }
     }
-
 
     /**
      * The topic selector exchange may be created for this session (there are at most two per session).
