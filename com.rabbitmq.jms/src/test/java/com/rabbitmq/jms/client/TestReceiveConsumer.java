@@ -13,8 +13,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import net.jcip.annotations.GuardedBy;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -176,8 +174,8 @@ public class TestReceiveConsumer {
         private final ReceiveConsumer consumer;
         private final CountDownLatch latch = new CountDownLatch(1);
         private Object lock = new Object();
-        @GuardedBy("lock") private boolean success = false;
-        @GuardedBy("lock") private Exception exception = null;
+          private boolean success = false;     // @GuardedBy("lock")
+          private Exception exception = null;  // @GuardedBy("lock")
 
         public DriveConsumerThread(Envelope envelope, ReceiveConsumer consumer) {
             this.env = envelope;
@@ -237,8 +235,8 @@ public class TestReceiveConsumer {
         private final Envelope env;
         private final CountDownLatch latch = new CountDownLatch(1);
         private Object lock = new Object();
-        @GuardedBy("lock") private boolean success = false;
-        @GuardedBy("lock") private Exception exception = null;
+          private boolean success = false;      // @GuardedBy("lock")
+          private Exception exception = null;   // @GuardedBy("lock")
 
         public ReceiverThread(BlockingQueue<GetResponse> blockingQueue, Envelope envelope) {
             this.blockingQueue = blockingQueue;

@@ -29,7 +29,6 @@
     <mockito-core.version>1.9.0</mockito-core.version>
     <junit.version>4.10</junit.version>
     <amqp-client.version>${rabbitmq.version}</amqp-client.version>
-    <jcip-annotations.version>1.0</jcip-annotations.version>
 
     <!-- plugin versions -->
     <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
@@ -72,11 +71,6 @@
         <groupId>com.rabbitmq</groupId>
         <artifactId>amqp-client</artifactId>
         <version>${amqp-client.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>net.jcip</groupId>
-        <artifactId>jcip-annotations</artifactId>
-        <version>${jcip-annotations.version}</version>
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>

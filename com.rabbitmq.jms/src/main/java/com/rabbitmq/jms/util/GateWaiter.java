@@ -2,8 +2,6 @@ package com.rabbitmq.jms.util;
 
 import java.util.concurrent.TimeUnit;
 
-import net.jcip.annotations.GuardedBy;
-
 /**
  * Hand-crafted gate for pausing multiple threads on entry to a region. Allows waiting threads to be aborted (return
  * with {@link AbortedException}) without using interrupts.
@@ -33,8 +31,8 @@ abstract class GateWaiter {
     private enum GateState { OPENED, CLOSED, ABORTED };
 
     private Object lock = new Object();
-    @GuardedBy("lock")  private GateState state;
-    @GuardedBy("lock")  private long generation;
+      private GateState state; // @GuardedBy("lock")
+      private long generation; // @GuardedBy("lock")
 
     /**
      * Create a gate, either <code>OPENED</code> or <code>CLOSED</code>. It cannot be created <code>ABORTED</code>.

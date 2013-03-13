@@ -8,8 +8,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.MessageConsumer;
 
-import net.jcip.annotations.GuardedBy;
-
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
@@ -51,7 +49,7 @@ class ReceiveConsumer implements Consumer, Abortable {
     private final String consTag;
 
     private final Object lock = new Object(); // synchronising lock
-    @GuardedBy("lock") private boolean aborted = false;
+      private boolean aborted = false; // @GuardedBy("lock")
 
     private final AtomicBoolean isCancelled = new AtomicBoolean(false);
 

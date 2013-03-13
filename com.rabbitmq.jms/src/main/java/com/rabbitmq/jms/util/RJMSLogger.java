@@ -2,11 +2,9 @@ package com.rabbitmq.jms.util;
 
 import java.util.Calendar;
 
-import net.jcip.annotations.GuardedBy;
-
 public final class RJMSLogger {
     private static Object lock = new Object();
-    @GuardedBy("lock") private static boolean LOGGING = false;
+      private static boolean LOGGING = false; // @GuardedBy("lock")
     private final LogTemplate logTemplate;
 
     public RJMSLogger(LogTemplate lt) {
