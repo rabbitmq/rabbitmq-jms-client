@@ -65,8 +65,11 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private final boolean transacted;
     /** The ack mode used when receiving message */
     private final int acknowledgeMode;
-    /** The RabbitMQ channel we use under the hood */
+    /** The main RabbitMQ channel we use under the hood */
     private final Channel channel;
+    /** A sacrificial channel we use for requests that might fail */
+    private Channel sacrificialChannel = null; // @GuardedBy(sc_lock)
+    private Object scLock = new Object();
     /** Set to true if close() has been called and completed */
     private volatile boolean closed = false;
     /** The message listener for this session. */
@@ -325,7 +328,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                     this.commit();
                 }
 
-                this.closeRabbitChannel(); //close the main channel
+                this.closeRabbitChannels();
 
             } finally {
                 this.closed = true;
@@ -333,10 +336,11 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
     }
 
-    private void closeRabbitChannel() throws JMSException {
+    private void closeRabbitChannels() throws JMSException {
+        LOGGER.log("closeRabbitChannels", "close:", this.channel);
+        this.unsetSacrificialChannel(); // does not throw exceptions
         if (this.channel==null) return;
         try {
-            LOGGER.log("closeRabbitChannel", "close:", this.channel);
             this.channel.close();
         } catch (ShutdownSignalException x) {
             // nothing to do
@@ -483,12 +487,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             throws InvalidSelectorException, IOException {
         Map<String, Object> args = Collections.singletonMap(RJMS_SELECTOR_ARG, (Object)jmsSelector);
         try {
-            // create a channel specifically to bind the selector queue
-            Channel channel = this.getConnection().createRabbitChannel();
+            // get a channel specifically to bind the selector queue
+            Channel channel = this.getSacrificialChannel();
             // bind the queue to the topic selector exchange with the jmsSelector expression as argument
             channel.queueBind(queueName, selectionExchange, dest.getRoutingKey(), args);
-            channel.close();
         } catch (IOException ioe) {
+            this.unsetSacrificialChannel();
             // Channel was closed early; check what sort of error this is
             if (this.checkPreconditionFailure(ioe)) {
                 this.unbindFailedSelectorQueue(dest, jmsSelector, queueName, selectionExchange, args);
@@ -499,12 +503,34 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
     }
 
+    private Channel getSacrificialChannel() throws IOException {
+        synchronized (this.scLock) {
+            if (this.sacrificialChannel == null) {
+                this.sacrificialChannel = this.getConnection().createRabbitChannel();
+            }
+            return this.sacrificialChannel;
+        }
+    }
+
+    private void unsetSacrificialChannel() {
+        synchronized (this.scLock) {
+            if (this.sacrificialChannel != null) {
+                try {
+                    if (this.sacrificialChannel.isOpen())
+                        this.sacrificialChannel.close();
+                } catch (IOException e) {
+                    // ignore any failures
+                }
+            }
+            this.sacrificialChannel = null;
+        }
+    }
+
     private void unbindFailedSelectorQueue(RMQDestination dest, String jmsSelector, String queueName, String selectionExchange, Map<String, Object> args) {
         try {
-            // create a channel specifically to unbind the selector queue
-            Channel channel = this.getConnection().createRabbitChannel();
+            // get a channel specifically to unbind the selector queue
+            Channel channel = this.getSacrificialChannel();
             channel.queueUnbind(queueName, selectionExchange, dest.getRoutingKey(), args);
-            channel.close();
         } catch (IOException ioe) {
             // ignore
         }
