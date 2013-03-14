@@ -481,20 +481,32 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private void bindSelectorQueue(RMQDestination dest, String jmsSelector, String queueName, String selectionExchange)
             throws InvalidSelectorException, IOException {
+        Map<String, Object> args = Collections.singletonMap(RJMS_SELECTOR_ARG, (Object)jmsSelector);
         try {
             // create a channel specifically to bind the selector queue
             Channel channel = this.getConnection().createRabbitChannel();
             // bind the queue to the topic selector exchange with the jmsSelector expression as argument
-            Map<String, Object> args = Collections.singletonMap(RJMS_SELECTOR_ARG, (Object)jmsSelector);
             channel.queueBind(queueName, selectionExchange, dest.getRoutingKey(), args);
             channel.close();
         } catch (IOException ioe) {
             // Channel was closed early; check what sort of error this is
             if (this.checkPreconditionFailure(ioe)) {
+                this.unbindFailedSelectorQueue(dest, jmsSelector, queueName, selectionExchange, args);
                 throw new RMQJMSSelectorException(ioe);
             } else {
                 throw ioe;
             }
+        }
+    }
+
+    private void unbindFailedSelectorQueue(RMQDestination dest, String jmsSelector, String queueName, String selectionExchange, Map<String, Object> args) {
+        try {
+            // create a channel specifically to unbind the selector queue
+            Channel channel = this.getConnection().createRabbitChannel();
+            channel.queueUnbind(queueName, selectionExchange, dest.getRoutingKey(), args);
+            channel.close();
+        } catch (IOException ioe) {
+            // ignore
         }
     }
 
