@@ -37,6 +37,9 @@ import javax.jms.TopicSubscriber;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ShutdownSignalException;
+import com.rabbitmq.client.impl.AMQCommand;
+import com.rabbitmq.client.impl.AMQImpl;
+import com.rabbitmq.client.impl.Method;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.admin.RMQExchangeInfo;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
@@ -477,7 +480,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     private void bindSelectorQueue(RMQDestination dest, String jmsSelector, String queueName, String selectionExchange)
-            throws InvalidSelectorException {
+            throws InvalidSelectorException, IOException {
         try {
             // create a channel specifically to bind the selector queue
             Channel channel = this.getConnection().createRabbitChannel();
@@ -486,9 +489,30 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             channel.queueBind(queueName, selectionExchange, dest.getRoutingKey(), args);
             channel.close();
         } catch (IOException ioe) {
-            // Channel was closed early; the selector is presumed to be bad.
-            throw new RMQJMSSelectorException(ioe);
+            // Channel was closed early; check what sort of error this is
+            if (this.checkPreconditionFailure(ioe)) {
+                throw new RMQJMSSelectorException(ioe);
+            } else {
+                throw ioe;
+            }
         }
+    }
+
+    private boolean checkPreconditionFailure(IOException ioe) {
+        Throwable cause = ioe.getCause();
+        if (cause instanceof ShutdownSignalException) {
+            ShutdownSignalException sse = (ShutdownSignalException) cause;
+            Object reason = sse.getReason();
+            if (reason instanceof AMQCommand) {
+                Method meth = ((AMQCommand) reason).getMethod();
+                if (meth instanceof AMQImpl.Channel.Close) {
+                    AMQImpl.Channel.Close close = (AMQImpl.Channel.Close) meth;
+                    if (close.getReplyCode() == AMQImpl.PRECONDITION_FAILED)
+                        return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -508,17 +532,17 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private String getDurableTopicSelectorExchange() throws IOException {
         if (this.durableTopicSelectorExchange==null) {
             this.durableTopicSelectorExchange = Util.generateUUID("jms-dutop-slx-");
-            this.channel.exchangeDeclare(this.durableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, true, true, null);
         }
+        this.channel.exchangeDeclare(this.durableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, true, true, null);
         return this.durableTopicSelectorExchange;
     }
 
     private String getNonDurableTopicSelectorExchange() throws IOException {
         if (this.nonDurableTopicSelectorExchange==null) {
             this.nonDurableTopicSelectorExchange = Util.generateUUID("jms-ndtop-slx-");
-            this.channel.exchangeDeclare(this.nonDurableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, null);
         }
-    return this.nonDurableTopicSelectorExchange;
+        this.channel.exchangeDeclare(this.nonDurableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, null);
+        return this.nonDurableTopicSelectorExchange;
     }
 
     /**
