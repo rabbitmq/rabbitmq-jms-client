@@ -819,6 +819,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         hdrs.put("JMSDeliveryMode", (msg.getJMSDeliveryMode()==DeliveryMode.PERSISTENT ? "PERSISTENT": "NON_PERSISTENT"));
         putIfNotNull(hdrs, "JMSMessageID", msg.getJMSMessageID());
         hdrs.put("JMSTimestamp", msg.getJMSTimestamp());
+        hdrs.put("JMSPriority", msg.getJMSPriority());
         putIfNotNull(hdrs, "JMSCorrelationID", msg.getJMSCorrelationID());
         putIfNotNull(hdrs, "JMSType", msg.getJMSType());
 
