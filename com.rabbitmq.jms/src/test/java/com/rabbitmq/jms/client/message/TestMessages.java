@@ -17,12 +17,9 @@ import javax.jms.StreamMessage;
 
 import org.junit.Test;
 
-import com.rabbitmq.jms.client.message.RMQBytesMessage;
-import com.rabbitmq.jms.client.message.RMQMapMessage;
-import com.rabbitmq.jms.client.message.RMQObjectMessage;
-import com.rabbitmq.jms.client.message.RMQStreamMessage;
-
 public class TestMessages {
+
+    private static final byte[] BYTE_ARRAY = { (byte) -2, (byte) -3 };
 
     @Test
     public void testBytesMessageDebug() throws Exception {
@@ -81,7 +78,6 @@ public class TestMessages {
     }
 
     public static void writeMapMessage(MapMessage message) throws JMSException {
-        byte[] buf = { (byte) -2, (byte) -3 };
         message.setBoolean("boolean", true);
         message.setObject("string.boolean", "true");
 
@@ -106,14 +102,12 @@ public class TestMessages {
         message.setString("string", "string");
         message.setObject("string.string", "string");
 
-        message.setBytes("bytes", buf);
-        message.setObject("string.bytes", buf);
+        message.setBytes("bytes", BYTE_ARRAY);
+        message.setObject("string.bytes", BYTE_ARRAY);
 
     }
 
     public static void readMapMessage(MapMessage message) throws JMSException {
-        byte[] buf = { (byte) -2, (byte) -3 };
-
         assertTrue(message.getBoolean("boolean"));
         assertTrue(message.getBoolean("string.boolean"));
 
@@ -145,22 +139,21 @@ public class TestMessages {
         assertEquals(Double.MAX_VALUE, message.getDouble("double"));
         assertEquals(Double.MAX_VALUE, message.getDouble("string.double"));
 
-        assertTrue(Arrays.equals(buf, message.getBytes("bytes")));
-        assertTrue(Arrays.equals(buf, message.getBytes("string.bytes")));
+        assertTrue(Arrays.equals(BYTE_ARRAY, message.getBytes("bytes")));
+        assertTrue(Arrays.equals(BYTE_ARRAY, message.getBytes("string.bytes")));
 
     }
 
     public static void readBytesMessage(BytesMessage message) throws JMSException {
-        byte[] buf = { (byte) -2, (byte) -3 };
         assertTrue(message.readBoolean());
         assertEquals(-1, message.readByte());
         assertEquals(255, message.readUnsignedByte());
         byte[] b1 = new byte[1];
         byte[] b2 = new byte[2];
         message.readBytes(b2);
-        assertTrue(Arrays.equals(buf, b2));
+        assertTrue(Arrays.equals(BYTE_ARRAY, b2));
         message.readBytes(b1, 1);
-        assertEquals(buf[1], b1[0]);
+        assertEquals(BYTE_ARRAY[1], b1[0]);
         assertEquals('X', message.readChar());
         assertEquals(2.35d, message.readDouble());
         assertEquals(1.54f, message.readFloat());
@@ -172,12 +165,11 @@ public class TestMessages {
     }
 
     public static void writeBytesMessage(BytesMessage message) throws JMSException {
-        byte[] buf = { (byte) -2, (byte) -3 };
         message.writeBoolean(true);
         message.writeByte((byte) -1); // signed
         message.writeByte((byte) (255 & 0xFF)); // unsigned
-        message.writeBytes(buf);
-        message.writeBytes(buf, 1, 1);
+        message.writeBytes(BYTE_ARRAY);
+        message.writeBytes(BYTE_ARRAY, 1, 1);
         message.writeChar('X');
         message.writeDouble(2.35d);
         message.writeFloat(1.54f);
@@ -189,12 +181,11 @@ public class TestMessages {
     }
 
     public static void writeStreamMessage(StreamMessage message) throws JMSException {
-        byte[] buf = { (byte) -2, (byte) -3 };
         message.writeBoolean(true);
         message.writeByte((byte) -1); // signed
         message.writeByte((byte) (255 & 0xFF)); // unsigned
-        message.writeBytes(buf);
-        message.writeBytes(buf, 1, 1);
+        message.writeBytes(BYTE_ARRAY);
+        message.writeBytes(BYTE_ARRAY, 1, 1);
         message.writeChar('X');
         message.writeDouble(2.35d);
         message.writeFloat(1.54f);
@@ -212,7 +203,6 @@ public class TestMessages {
     }
 
     public static void readStreamMessage(StreamMessage message) throws JMSException {
-        byte[] buf = { (byte) -2, (byte) -3 };
         assertTrue(message.readBoolean());
         assertEquals(-1, message.readByte());
         assertEquals(255, message.readByte() & 0xFF);
@@ -222,13 +212,13 @@ public class TestMessages {
         if (count==b2.length) {
             assertEquals(-1, message.readBytes(new byte[1024]));
         }
-        assertTrue(Arrays.equals(buf, b2));
+        assertTrue(Arrays.equals(BYTE_ARRAY, b2));
 
         count = message.readBytes(b1);
         if (count==b1.length) {
             assertEquals(-1, message.readBytes(new byte[1024]));
         }
-        assertEquals(buf[1], b1[0]);
+        assertEquals(BYTE_ARRAY[1], b1[0]);
         assertEquals('X', message.readChar());
         assertEquals(2.35d, message.readDouble());
         assertEquals(1.54f, message.readFloat());

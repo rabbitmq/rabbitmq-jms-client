@@ -21,7 +21,8 @@ import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.RMQJMSSecurityException;
 
 /**
- * RabbitMQ Implementation of JMS {@link ConnectionFactory} TODO - implement socket and SSL options
+ * RabbitMQ Implementation of JMS {@link ConnectionFactory}
+ * TODO - implement socket and SSL options
  */
 public class RMQConnectionFactory implements ConnectionFactory, Referenceable, Serializable, QueueConnectionFactory,
                                  TopicConnectionFactory {
