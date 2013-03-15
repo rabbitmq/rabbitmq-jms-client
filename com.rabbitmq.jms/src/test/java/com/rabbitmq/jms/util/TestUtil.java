@@ -1,3 +1,4 @@
+/* Copyright © 2013 VMware, Inc. All rights reserved. */
 package com.rabbitmq.jms.util;
 
 import static org.junit.Assert.assertEquals;
@@ -24,14 +25,14 @@ public class TestUtil {
     }
 
     private static final int REPEAT_COUNT = 1000;
-    
+
     /**
      * Test generateUUID doesn't repeat quickly.
      */
     @Test
     public void generateUUIDMultiple() throws Exception {
         List<String> uuidList = new LinkedList<String>();
-        
+
         for(int i=0; i<REPEAT_COUNT; ++i) {
             uuidList.add(Util.generateUUID(""));
         }

@@ -1,3 +1,4 @@
+/* Copyright © 2013 VMware, Inc. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
 import java.io.IOException;
@@ -81,7 +82,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
                 } else {
                     throw new RMQJMSException(x);
                 }
-                
+
             } else {
                 throw new RMQJMSException(x);
             }

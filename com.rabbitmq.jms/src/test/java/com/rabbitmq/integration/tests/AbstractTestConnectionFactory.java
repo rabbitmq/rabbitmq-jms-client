@@ -1,3 +1,4 @@
+/* Copyright © 2013 VMware, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
 public abstract class AbstractTestConnectionFactory {
