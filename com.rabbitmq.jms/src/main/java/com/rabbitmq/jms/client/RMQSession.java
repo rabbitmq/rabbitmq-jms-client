@@ -69,7 +69,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     /** The main RabbitMQ channel we use under the hood */
     private final Channel channel;
     /** A sacrificial channel we use for requests that might fail */
-    private Channel sacrificialChannel = null; // @GuardedBy(sc_lock)
+    private Channel sacrificialChannel = null; // @GuardedBy(scLock)
     private Object scLock = new Object();
     /** Set to true if close() has been called and completed */
     private volatile boolean closed = false;
