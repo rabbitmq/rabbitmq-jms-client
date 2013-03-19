@@ -15,7 +15,7 @@
   <properties>
 
     <!-- overridable parameter -->
-    <rabbitmq.version>3.0.2</rabbitmq.version>
+    <rabbitmq.version>3.0.4</rabbitmq.version>
 
     <!-- pervasive properties -->
     <java-compile-version>1.6</java-compile-version>
