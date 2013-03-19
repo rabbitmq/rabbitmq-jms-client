@@ -9,7 +9,7 @@
   <parent>
     <groupId>com.rabbitmq.jms</groupId>
     <artifactId>rabbitmq-jms-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version> <!-- Release -->
   </parent>
 
   <dependencies>
