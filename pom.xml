@@ -10,7 +10,7 @@
 
   <packaging>pom</packaging>
 
-  <version>1.0.0</version> <!-- Release -->
+  <version>1.0.1-SNAPSHOT</version>
 
   <properties>
 
