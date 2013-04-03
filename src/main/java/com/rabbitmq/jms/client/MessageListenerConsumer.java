@@ -119,7 +119,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
                     }
                 }
                 // Create a javax.jms.Message object and deliver it to the listener
-                this.messageListener.onMessage(messageConsumer.processMessage(response, acked));
+                this.messageConsumer.getSession().deliverMessage(this.messageConsumer.processMessage(response, acked), this.messageListener);
             } else {
                 try {
                     // We are unable to deliver the message, nack it
@@ -132,8 +132,11 @@ class MessageListenerConsumer implements Consumer, Abortable {
                 }
             }
         } catch (JMSException x) {
-            x.printStackTrace(); //TODO logging implementation
+            x.printStackTrace();
             throw new IOException(x);
+        } catch (InterruptedException ie) {
+            ie.printStackTrace();
+            throw new IOException("Interrupted while delivering message", ie);
         }
     }
 

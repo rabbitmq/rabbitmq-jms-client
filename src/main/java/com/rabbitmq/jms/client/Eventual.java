@@ -2,8 +2,6 @@ package com.rabbitmq.jms.client;
 
 import java.util.concurrent.TimeoutException;
 
-import net.jcip.annotations.GuardedBy;
-
 import com.rabbitmq.jms.util.TimeTracker;
 
 /**
@@ -16,9 +14,9 @@ import com.rabbitmq.jms.util.TimeTracker;
 public class Eventual<E extends Exception, V> {
 
     private final Object lock = new Object();
-    @GuardedBy("lock")    private boolean completed = false;
-    @GuardedBy("lock")    private V value;
-    @GuardedBy("lock")    private E exception = null;
+      private boolean completed = false;  //  @GuardedBy("lock")
+      private V value;                    //  @GuardedBy("lock")
+      private E exception = null;         //  @GuardedBy("lock")
 
     /**
      * Wait (forever) until value or exception is set. Returns normally if value or exception is set before

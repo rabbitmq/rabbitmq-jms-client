@@ -98,6 +98,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     /** Selector exchange arg key for selector expression */
     private static final String RJMS_SELECTOR_ARG = "rjms_selector";
 
+    private final DeliveryExecutor deliveryExecutor = new DeliveryExecutor();
+
     /**
      * Creates a session object associated with a connection
      * @param connection the connection that we will send data on
@@ -318,6 +320,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 }
                 this.consumers.clear();
 
+                //clear up potential executor
+                this.deliveryExecutor.close();
+
                 //close all producers created by this session
                 for (RMQMessageProducer producer : this.producers) {
                     producer.internalClose();
@@ -335,6 +340,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 this.closed = true;
             }
         }
+    }
+
+    void deliverMessage(RMQMessage rmqMessage, MessageListener messageListener) throws JMSException, InterruptedException {
+        this.deliveryExecutor.deliverMessageWithProtection(rmqMessage, messageListener);
     }
 
     private void closeRabbitChannels() throws JMSException {
