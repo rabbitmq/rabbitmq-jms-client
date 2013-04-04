@@ -1,6 +1,8 @@
 /* Copyright © 2013 VMware, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -10,7 +12,6 @@ import javax.jms.JMSException;
 import javax.jms.MessageListener;
 
 import com.rabbitmq.jms.util.RMQJMSException;
-import com.rabbitmq.jms.util.TimeTracker;
 
 /**
  * Class to deliver messages to the <code>onMessage()</code> callback. Handles execution on a different thread, timeout
@@ -19,8 +20,23 @@ import com.rabbitmq.jms.util.TimeTracker;
  */
 public class DeliveryExecutor {
 
+    private final class CallOnMessage implements Callable<Boolean> {
+        private final RMQMessage rmqMessage;
+        private final MessageListener messageListener;
+
+        private CallOnMessage(RMQMessage rmqMessage, MessageListener messageListener) {
+            this.rmqMessage = rmqMessage;
+            this.messageListener = messageListener;
+        }
+
+        public Boolean call() throws Exception {
+            this.messageListener.onMessage(this.rmqMessage);
+            return true;
+        }
+    }
+
     /** Timeout for onMessage executions */
-    private final long onMessageTimeoutMs; // 3 seconds
+    private final long onMessageTimeoutMs;
 
     /** Executor allocated if/when onMessage calls are made; used to isolate us from potential hangs. */
     public ExecutorService onMessageExecutorService = null;
@@ -39,29 +55,23 @@ public class DeliveryExecutor {
      * @param rmqMessage the message to deliver
      * @throws JMSException if the delivery takes too long and is aborted
      */
-    public void deliverMessageWithProtection(final RMQMessage rmqMessage, final MessageListener messageListener) throws JMSException, InterruptedException {
-        ExecutorService es = this.getExecutorService();
-        final Eventual<JMSException, Boolean> arCompleted = new Eventual<JMSException, Boolean>();
-        es.execute(new Runnable(){
-            public void run() {
-                try {
-                    messageListener.onMessage(rmqMessage);
-                    arCompleted.setValue(true);
-                } catch (Exception e) {
-                    arCompleted.setException(new RMQJMSException("Exception thrown on delivery", e));
-                }
-            };
-        });
+    public void deliverMessageWithProtection(RMQMessage rmqMessage, MessageListener messageListener) throws JMSException, InterruptedException {
         try {
-            arCompleted.get(new TimeTracker(this.onMessageTimeoutMs, TimeUnit.MILLISECONDS));
+            this.getExecutorService().submit(new CallOnMessage(rmqMessage, messageListener)).get(this.onMessageTimeoutMs, TimeUnit.MILLISECONDS);
         } catch (TimeoutException _) {
-            closeExecutorService(es);
+            this.closeAbruptly();
             throw new RMQJMSException("onMessage took too long and was interrupted", null);
+        } catch (ExecutionException e) {
+            throw new RMQJMSException("onMessage threw exception", e.getCause());
         }
     }
 
     public void close() {
         closeExecutorService(this.takeExecutorService());
+    }
+
+    private void closeAbruptly() {
+        this.takeExecutorService().shutdownNow();
     }
 
     private void closeExecutorService(ExecutorService executorService) {
