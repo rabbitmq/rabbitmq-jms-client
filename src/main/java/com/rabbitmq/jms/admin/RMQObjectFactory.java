@@ -150,7 +150,7 @@ public class RMQObjectFactory implements ObjectFactory {
         String username = getStringProperty(ref, "username", true, "guest");
         String password = getStringProperty(ref, "password", true, "guest");
         String virtualHost = getStringProperty(ref, "virtualHost", true, "/");
-        String host = getStringProperty(ref, "localhost", true, "127.0.0.1");
+        String host = getStringProperty(ref, "host", true, "127.0.0.1");
 
         int port = getIntProperty(ref, "port", true, 5672);
         int threadsPerConnection = getIntProperty(ref, "threadPerConnection", true, 2);
