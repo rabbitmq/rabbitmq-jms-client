@@ -98,7 +98,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     /** Selector exchange arg key for selector expression */
     private static final String RJMS_SELECTOR_ARG = "rjms_selector";
 
-    private final DeliveryExecutor deliveryExecutor = new DeliveryExecutor();
+    private static final long ON_MESSAGE_EXECUTOR_TIMEOUT_MS = 2000; // 2 seconds
+    private final DeliveryExecutor deliveryExecutor = new DeliveryExecutor(ON_MESSAGE_EXECUTOR_TIMEOUT_MS);
 
     /**
      * Creates a session object associated with a connection

@@ -14,17 +14,21 @@ import com.rabbitmq.jms.util.TimeTracker;
 
 /**
  * Class to deliver messages to the <code>onMessage()</code> callback. Handles execution on a different thread, timeout
- * if execution takes too long (3 seconds set as limit), and interrupts execution on closure or timeout. Also serialises
+ * if execution takes too long (set on instantiation), and interrupts execution on closure or timeout. Also serialises
  * calls. There is one instance of this executor per session.
  */
 public class DeliveryExecutor {
 
     /** Timeout for onMessage executions */
-    private static final long ON_MESSAGE_TIMEOUT_MS = 3000; // 3 seconds
+    private final long onMessageTimeoutMs; // 3 seconds
 
     /** Executor allocated if/when onMessage calls are made; used to isolate us from potential hangs. */
     public ExecutorService onMessageExecutorService = null;
     public final Object lockOnMessageExecutorService = new Object();
+
+    public DeliveryExecutor(long onMessageTimeoutMs) {
+        this.onMessageTimeoutMs = onMessageTimeoutMs;
+    }
 
     /**
      * Method to deliver message to the client, on a separate executor thread so we can abort this if it takes too long.
@@ -49,7 +53,7 @@ public class DeliveryExecutor {
             };
         });
         try {
-            arCompleted.get(new TimeTracker(ON_MESSAGE_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+            arCompleted.get(new TimeTracker(this.onMessageTimeoutMs, TimeUnit.MILLISECONDS));
         } catch (TimeoutException _) {
             closeExecutorService(es);
             throw new RMQJMSException("onMessage took too long and was interrupted", null);
@@ -60,10 +64,10 @@ public class DeliveryExecutor {
         closeExecutorService(this.takeExecutorService());
     }
 
-    private static void closeExecutorService(ExecutorService executorService) {
+    private void closeExecutorService(ExecutorService executorService) {
         if (executorService != null) {
             executorService.shutdown();
-            if (!waitForTerminatedExecutorService(executorService)) {
+            if (!this.waitForTerminatedExecutorService(executorService)) {
                 executorService.shutdownNow();
             }
         }
@@ -86,9 +90,9 @@ public class DeliveryExecutor {
         }
     }
 
-    private static boolean waitForTerminatedExecutorService(ExecutorService executorService) {
+    private boolean waitForTerminatedExecutorService(ExecutorService executorService) {
         try {
-            return executorService.awaitTermination(ON_MESSAGE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            return executorService.awaitTermination(this.onMessageTimeoutMs, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             return false;
         }
