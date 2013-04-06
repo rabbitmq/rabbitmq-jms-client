@@ -289,13 +289,12 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     private RMQMessage receive(TimeTracker tt)  throws JMSException {
-    // Pseudocode:
-    //   poll msg-buffer(0)
-    //   if msg-buffer had a message return it
-    //   else {
-    //     initiate async-get // we must try *not* to start more than one at a time
-    //     poll msg-buffer(timeout)
-    //   }
+    /* Pseudocode:
+     *  get (synchronous read)
+     *  if something return it;
+     *  if nothing, then poll (intervals up to time limit given)
+     *  if still nothing return nothing.
+     */
         try {
             if (!this.receiveManager.enter(tt))  // stopped?
                 return null; // timed out while stopped
@@ -303,7 +302,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             try {
                 GetResponse resp = this.receiveBuffer.get(tt);
                 if (resp == null) return null; // nothing received in time or aborted
-                boolean aa = isAutoAck();
+                boolean aa = this.isAutoAck();
                 if (aa)
                     this.acknowledgeMessage(resp);
                 return this.processMessage(resp, aa);
@@ -420,7 +419,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         this.receiveManager.closeGate(); // stop any more entering receive region
         this.receiveManager.abortWaiters(); // abort any that arrive now
 
-        this.receiveBuffer.closeBuffer(); // close the synchronous receive, if any
+        this.receiveBuffer.close(); // close the synchronous receive, if any
 
         /* stop and remove any active subscription - waits for onMessage processing to finish */
         this.removeListenerConsumer();
@@ -534,5 +533,15 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     void setNoLocal(boolean noLocal) {
         this.noLocal = noLocal;
+    }
+
+    GetResponse getFromRabbitQueue() {
+        try {
+            return getSession().getChannel().basicGet(rmqQueueName(), isAutoAck());
+        } catch (IOException e) {
+            e.printStackTrace();
+            // TODO: mark consumer broken, with error reason
+            return null;
+        }
     }
 }

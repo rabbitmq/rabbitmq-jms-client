@@ -99,8 +99,9 @@ public class TimeTracker {
 
     @Override
     public String toString() {
-        return new StringBuilder("TimeTracker(")
-            .append(TimeUnit.NANOSECONDS.toMillis(timeoutNanos)).append("ms set, ")
-            .append(TimeUnit.NANOSECONDS.toMillis(this.internalRemaining())).append("ms rem)").toString();
+        return (new StringBuilder("TimeTracker(")
+               .append(TimeUnit.NANOSECONDS.toMillis(timeoutNanos))            .append("ms set, ")
+               .append(TimeUnit.NANOSECONDS.toMillis(this.internalRemaining())).append("ms rem)")
+               ).toString();
     }
 }

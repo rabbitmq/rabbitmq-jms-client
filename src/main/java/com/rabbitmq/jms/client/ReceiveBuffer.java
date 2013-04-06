@@ -1,13 +1,10 @@
 /* Copyright © 2013 VMware, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
-import com.rabbitmq.jms.util.AbortableHolder;
 import com.rabbitmq.jms.util.RJMSLogger;
 import com.rabbitmq.jms.util.TimeTracker;
 
@@ -36,10 +33,12 @@ class ReceiveBuffer {
 
     private static final RJMSLogger LOGGER = new RJMSLogger("ReceiveBuffer");
 
-    private final BlockingDeque<GetResponse> buffer = new LinkedBlockingDeque<GetResponse>();
+    @SuppressWarnings("unused")
     private final int batchingSize;
     private final RMQMessageConsumer rmqMessageConsumer;
-    private final AbortableHolder abortables = new AbortableHolder();
+
+    private final Object responseLock = new Object();
+    private boolean aborted = false; // @GuardedBy(responseLock)
 
     /**
      * @param batchingSize - the intended limit of messages that can remain in the buffer.
@@ -57,69 +56,36 @@ class ReceiveBuffer {
      */
     public GetResponse get(TimeTracker tt) {
         LOGGER.log("get", tt);
-        GetResponse resp = this.buffer.poll();
-        if (ReceiveConsumer.isEOFMessage(resp)) { // we've aborted
-            return null;
-        }
-        if (null!=resp)
-            return resp;
-        // Nothing of import on the queue, let's try to get some more.
-        // We must do this even if we have timed out, in case we never fetch any.
-        ReceiveConsumer rc = this.getSomeMore();
-        this.abortables.add(rc);
+
         try {
-            resp = this.buffer.poll(tt.remainingNanos(), TimeUnit.NANOSECONDS);
-            if (resp==null                          // we timed out
-             || ReceiveConsumer.isEOFMessage(resp)) // Consumer aborted before we timed out
-                return null;
+            synchronized (this.responseLock) {
+                GetResponse resp = null;
+                while (!this.aborted && !tt.timedOut()) {
+                    resp = this.rmqMessageConsumer.getFromRabbitQueue();
+                    if (resp != null)
+                        break;
+                    new TimeTracker(100, TimeUnit.MILLISECONDS).timedWait(this.responseLock);
+                }
+                return resp;
+            }
+
         } catch (InterruptedException e) {
             LOGGER.log("get", e, "interrupted while buffer.poll-ing");
             Thread.currentThread().interrupt();
-        } finally {
-            this.abortables.remove(rc);
-            LOGGER.log("get","about to cancel+wait");
-            rc.cancel(); // ensure consumer is cancelled (eventually; may block).
-            LOGGER.log("get", "returned from cancel+wait");
+            return null;
         }
-        // real messages (or interruptions) drop through to here
-        return resp;
     }
 
-    /**
-     * Push a message back on the (head of the) buffer.
-     * @param resp - the message to put back
-     */
-    public void push(GetResponse resp) {
-        this.buffer.offerFirst(resp);
-    }
-
-    private ReceiveConsumer getSomeMore() {
-        LOGGER.log("getSomeMore");
-        // set up a Consumer to put messages in the buffer, and die after first message.
-        ReceiveConsumer receiveConsumer = new ReceiveConsumer(this.rmqMessageConsumer.getSession().getChannel(), this.rmqMessageConsumer.rmqQueueName(), this.rmqMessageConsumer.getNoLocalNoException(), this.buffer, this.batchingSize);
-        receiveConsumer.register(); // with RabbitMQ server
-        return receiveConsumer;
-    }
-
-    public void closeBuffer() {
-        LOGGER.log("closeBuffer");
-        this.nackAllBuffer();
-        this.abortables.abort();
-    }
-
-    private void nackAllBuffer() {
-        LOGGER.log("nackAllBuffer", this.buffer.size());
-        for (GetResponse resp : this.buffer) {
-            if (!ReceiveConsumer.isEOFMessage(resp)) {
-                try {
-                    this.rmqMessageConsumer.getSession().getChannel().basicNack(resp.getEnvelope().getDeliveryTag(), false, true);
-                    LOGGER.log("nackAllBuffer", "basicNack", resp.getEnvelope());
-                } catch (Exception e) {
-                    LOGGER.log("nackAllBuffer",e,"basicNack");
-                    break;
-                }
-            }
+    public void abort() {
+        synchronized(this.responseLock) {
+            this.aborted = true;
+            this.responseLock.notifyAll();
         }
-        this.buffer.clear();
     }
+
+    public void close() {
+        LOGGER.log("close");
+        this.abort();
+    }
+
 }
