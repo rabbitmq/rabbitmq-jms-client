@@ -3,35 +3,20 @@ package com.rabbitmq.jms.client;
 
 import java.util.concurrent.TimeUnit;
 
-import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.util.RJMSLogger;
 import com.rabbitmq.jms.util.TimeTracker;
 
 /**
- * Intermediate buffer between RabbitMQ queue and JMS client.
+ * Receive messages from RMQ Queue with delay (timer).
  * <p>
- * The buffer offers a blocking get, with timeout, where the buffer is populated by
- * an asynchronous RabbitMQ {@link Consumer}.  The buffer fills with messages from
- * a RabbitMQ queue, up to a certain size, prompted to do so whenever the buffer is empty.
- * A new Consumer is constructed whenever needed to populate the buffer.
- * </p>
- * <p>
- * The buffer is dedicated to a particular queue, and has a fixed 'fill size' when created.
- * If more messages than the 'fill size' try to get put in the buffer the excess messages
- * are NACKed back to RabbitMQ.
- * </p>
- * <p>
- * The blocking method <code>get()</code> only returns with <code>null</code> when either the buffer is closed,
+ * The blocking method <code>get()</code> only returns with <code>null</code> when either the Receiver is closed,
  * or the timeout expires.
  * </p>
- * <p>
- * When the buffer is <code>close()</code>d, the messages remaining in the buffer are NACKed.
- * </p>
  */
-class ReceiveBuffer {
+class DelayedReceiver {
 
-    private static final RJMSLogger LOGGER = new RJMSLogger("ReceiveBuffer");
+    private static final RJMSLogger LOGGER = new RJMSLogger("DelayedReceiver");
 
     @SuppressWarnings("unused")
     private final int batchingSize;
@@ -41,10 +26,10 @@ class ReceiveBuffer {
     private boolean aborted = false; // @GuardedBy(responseLock)
 
     /**
-     * @param batchingSize - the intended limit of messages that can remain in the buffer.
+     * @param batchingSize - the intended limit of messages that can be pre-fetched.
      * @param rmqMessageConsumer - the JMS MessageConsumer we are serving.
      */
-    public ReceiveBuffer(int batchingSize, RMQMessageConsumer rmqMessageConsumer) {
+    public DelayedReceiver(int batchingSize, RMQMessageConsumer rmqMessageConsumer) {
         this.batchingSize = batchingSize;
         this.rmqMessageConsumer = rmqMessageConsumer;
     }
@@ -76,7 +61,7 @@ class ReceiveBuffer {
         }
     }
 
-    public void abort() {
+    private void abort() {
         synchronized(this.responseLock) {
             this.aborted = true;
             this.responseLock.notifyAll();
