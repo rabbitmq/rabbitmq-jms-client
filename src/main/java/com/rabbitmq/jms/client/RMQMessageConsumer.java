@@ -302,10 +302,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             try {
                 GetResponse resp = this.receiveBuffer.get(tt);
                 if (resp == null) return null; // nothing received in time or aborted
-                boolean aa = this.isAutoAck();
-                if (aa)
-                    this.acknowledgeMessage(resp);
-                return this.processMessage(resp, aa);
+                return this.processMessage(resp, this.isAutoAck());
             } finally {
                 this.receiveManager.exit();
             }
