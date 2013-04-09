@@ -307,19 +307,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
         synchronized (this.closeLock) {
             try {
-                //start by rolling back anything not committed already
+                // close consumers first (to prevent requeues being consumed)
+                closeAllConsumers();
+
+                // rollback anything not committed already
                 if (this.getTransactedNoException()) {
                     this.rollback();
                 }
-                //close all consumers created by this session
-                for (RMQMessageConsumer consumer : this.consumers) {
-                    try {
-                        consumer.internalClose();
-                    } catch (JMSException x) {
-                        x.printStackTrace(); //TODO logging implementation
-                    }
-                }
-                this.consumers.clear();
 
                 //clear up potential executor
                 this.deliveryExecutor.close();
@@ -341,6 +335,18 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 this.closed = true;
             }
         }
+    }
+
+    private void closeAllConsumers() {
+        //close all consumers created by this session
+        for (RMQMessageConsumer consumer : this.consumers) {
+            try {
+                consumer.internalClose();
+            } catch (JMSException x) {
+                x.printStackTrace(); //TODO logging implementation
+            }
+        }
+        this.consumers.clear();
     }
 
     void deliverMessage(RMQMessage rmqMessage, MessageListener messageListener) throws JMSException, InterruptedException {
