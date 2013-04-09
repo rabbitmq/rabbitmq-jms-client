@@ -98,6 +98,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     /** Selector exchange arg key for selector expression */
     private static final String RJMS_SELECTOR_ARG = "rjms_selector";
 
+    private static final long ON_MESSAGE_EXECUTOR_TIMEOUT_MS = 2000; // 2 seconds
+    private final DeliveryExecutor deliveryExecutor = new DeliveryExecutor(ON_MESSAGE_EXECUTOR_TIMEOUT_MS);
+
     /**
      * Creates a session object associated with a connection
      * @param connection the connection that we will send data on
@@ -304,19 +307,16 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
         synchronized (this.closeLock) {
             try {
-                //start by rolling back anything not committed already
+                // close consumers first (to prevent requeues being consumed)
+                closeAllConsumers();
+
+                // rollback anything not committed already
                 if (this.getTransactedNoException()) {
                     this.rollback();
                 }
-                //close all consumers created by this session
-                for (RMQMessageConsumer consumer : this.consumers) {
-                    try {
-                        consumer.internalClose();
-                    } catch (JMSException x) {
-                        x.printStackTrace(); //TODO logging implementation
-                    }
-                }
-                this.consumers.clear();
+
+                //clear up potential executor
+                this.deliveryExecutor.close();
 
                 //close all producers created by this session
                 for (RMQMessageProducer producer : this.producers) {
@@ -335,6 +335,22 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 this.closed = true;
             }
         }
+    }
+
+    private void closeAllConsumers() {
+        //close all consumers created by this session
+        for (RMQMessageConsumer consumer : this.consumers) {
+            try {
+                consumer.internalClose();
+            } catch (JMSException x) {
+                x.printStackTrace(); //TODO logging implementation
+            }
+        }
+        this.consumers.clear();
+    }
+
+    void deliverMessage(RMQMessage rmqMessage, MessageListener messageListener) throws JMSException, InterruptedException {
+        this.deliveryExecutor.deliverMessageWithProtection(rmqMessage, messageListener);
     }
 
     private void closeRabbitChannels() throws JMSException {

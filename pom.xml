@@ -2,193 +2,196 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.rabbitmq.jms</groupId>
-  <artifactId>rabbitmq-jms-parent</artifactId>
+  <artifactId>rabbitmq-jms</artifactId>
 
-  <name>rabbitmq-jms-parent</name>
-  <description>RJMS Parent Project</description>
+  <name>rabbitmq-jms</name>
+  <description>RabbitMQ JMS Client API</description>
 
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
 
-  <version>1.0.1-SNAPSHOT</version>
+  <parent>
+    <groupId>com.rabbitmq.jms</groupId>
+    <artifactId>rabbitmq-jms-parent</artifactId>
+    <version>1.0.1-SNAPSHOT</version>
+  </parent>
 
-  <properties>
+  <dependencies>
 
-    <!-- overridable parameter -->
-    <rabbitmq.version>3.0.4</rabbitmq.version>
+    <!-- compile scope -->
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-jms_1.1_spec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.rabbitmq</groupId>
+      <artifactId>amqp-client</artifactId>
+    </dependency>
 
-    <!-- pervasive properties -->
-    <java-compile-version>1.6</java-compile-version>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- test scope -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
 
-    <!-- JMS Implementation dependencies -->
-    <rjms-topic-selector.version>${project.version}</rjms-topic-selector.version>
+    <!-- test scope -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>rjms-topic-selector</artifactId>
+      <scope>test</scope>
+      <type>ez</type>
+    </dependency>
 
-    <!-- code dependency versions -->
-    <geronimo-spec.version>1.1.1</geronimo-spec.version>
-    <mockito-core.version>1.9.0</mockito-core.version>
-    <junit.version>4.10</junit.version>
-    <amqp-client.version>${rabbitmq.version}</amqp-client.version>
-
-    <!-- plugin versions -->
-    <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
-    <build-helper-maven-plugin.version>1.7</build-helper-maven-plugin.version>
-    <exec-maven-plugin.version>1.2.1</exec-maven-plugin.version>
-    <maven-surefire-plugin.version>2.12.4</maven-surefire-plugin.version>
-    <maven-failsafe-plugin.version>2.12.4</maven-failsafe-plugin.version>
-    <maven-jar-plugin.version>2.4</maven-jar-plugin.version>
-    <maven-dependency-plugin.version>2.6</maven-dependency-plugin.version>
-    <maven-antrun-plugin.version>1.7</maven-antrun-plugin.version>
-      <ant-junit.version>1.8.4</ant-junit.version>
-      <ant.version>1.8.4</ant.version>
-
-  </properties>
-
-  <!-- Built from parent -->
-  <modules>
-    <module>com.rabbitmq.jms</module>
-  </modules>
-
-  <dependencyManagement>
-
-    <dependencies>
-      <dependency>
-        <groupId>org.apache.geronimo.specs</groupId>
-        <artifactId>geronimo-jms_1.1_spec</artifactId>
-        <version>${geronimo-spec.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-core</artifactId>
-        <version>${mockito-core.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>${junit.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.rabbitmq</groupId>
-        <artifactId>amqp-client</artifactId>
-        <version>${amqp-client.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>rabbitmq-jms</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>rjms-topic-selector</artifactId>
-        <version>${rjms-topic-selector.version}</version>
-        <type>ez</type>
-      </dependency>
-    </dependencies>
-
-  </dependencyManagement>
+  </dependencies>
 
   <build>
-    <extensions>
-      <extension>
-        <groupId>org.springframework.build</groupId>
-        <artifactId>aws-maven</artifactId>
-        <version>4.4.0.RELEASE</version>
-      </extension>
-    </extensions>
+    <plugins>
 
-    <pluginManagement>
-      <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
 
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <version>${maven-dependency-plugin.version}</version>
-        </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <forkMode>always</forkMode>
+        </configuration>
+      </plugin>
 
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>${maven-compiler-plugin.version}</version>
-          <configuration>
-            <source>${java-compile-version}</source>
-            <target>${java-compile-version}</target>
-          </configuration>
-        </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <forkMode>always</forkMode>
+          <argLine>-Xms1024m -Xmx4096m</argLine>
+        </configuration>
 
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>${maven-surefire-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>integration-test</id>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>verify</id>
+            <goals>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
 
-          <configuration>
-            <encoding>UTF-8</encoding>
-          </configuration>
-        </plugin>
+      </plugin>
 
-        <plugin>
-          <artifactId>maven-failsafe-plugin</artifactId>
-          <version>${maven-failsafe-plugin.version}</version>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
 
-          <configuration>
-            <encoding>UTF-8</encoding>
-          </configuration>
-        </plugin>
+        <executions>
+          <execution>
+            <id>test-unit-reports</id>
+            <phase>test</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <junitreport todir="target/surefire-reports">
+                  <fileset dir="target/surefire-reports">
+                    <include name="**/*.xml" />
+                  </fileset>
+                  <report format="noframes" todir="target/surefire-reports" />
+                </junitreport>
+              </target>
+            </configuration>
+          </execution>
 
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-antrun-plugin</artifactId>
-          <version>${maven-antrun-plugin.version}</version>
+          <execution>
+            <id>test-integration-reports</id>
+            <phase>integration-test</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <junitreport todir="target/failsafe-reports">
+                  <fileset dir="target/failsafe-reports">
+                    <include name="**/*.xml" />
+                  </fileset>
+                  <report format="noframes" todir="target/failsafe-reports" />
+                </junitreport>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
 
-          <dependencies>
-            <dependency>
-              <groupId>org.apache.ant</groupId>
-              <artifactId>ant-junit</artifactId>
-              <version>${ant-junit.version}</version>
-            </dependency>
-            <dependency>
-              <groupId>org.apache.ant</groupId>
-              <artifactId>ant</artifactId>
-              <version>${ant.version}</version>
-            </dependency>
-          </dependencies>
-        </plugin>
+      </plugin>
 
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>${maven-jar-plugin.version}</version>
-        </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
 
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>exec-maven-plugin</artifactId>
-          <version>${exec-maven-plugin.version}</version>
-        </plugin>
+        <executions>
+          <execution>
+            <id>get-rabbitmq-plugin</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>rjms-topic-selector</artifactId>
+                  <type>ez</type>
+                  <outputDirectory>${project.build.directory}/plugins</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
 
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>build-helper-maven-plugin</artifactId>
-          <version>${build-helper-maven-plugin.version}</version>
-        </plugin>
+      </plugin>
 
-      </plugins>
-    </pluginManagement>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+
+        <executions>
+          <execution>
+            <id>set-up-rabbit</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>bin/setUpIntegrationTests</executable>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>tear-down-rabbit</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>bin/tearDownIntegrationTests</executable>
+            </configuration>
+          </execution>
+        </executions>
+
+      </plugin>
+
+    </plugins>
   </build>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <id>unto.net</id>
-      <url>http://repository.unto.net/maven/</url>
-      <releases>
-        <updatePolicy>daily</updatePolicy>
-        <checksumPolicy>warn</checksumPolicy>
-      </releases>
-      <snapshots>
-        <updatePolicy>daily</updatePolicy>
-        <checksumPolicy>warn</checksumPolicy>
-      </snapshots>
-    </pluginRepository>
-  </pluginRepositories>
 
   <repositories>
     <repository>
@@ -208,16 +211,4 @@
     </repository>
   </repositories>
 
-  <distributionManagement>
-    <repository>
-      <id>vmware-release</id>
-      <name>VMware Release Repository</name>
-      <url>s3://private.maven.vmware.com/release</url>
-    </repository>
-    <snapshotRepository>
-      <id>vmware-snapshot</id>
-      <name>VMware Snapshot Repository</name>
-      <url>s3://private.maven.vmware.com/snapshot</url>
-    </snapshotRepository>
-  </distributionManagement>
 </project>

@@ -2,6 +2,3 @@ target/
 .classpath
 .project
 .settings
-erl_crash.dump
-rabbitmq-public-umbrella/
-rabbitmq-public-umbrella.co

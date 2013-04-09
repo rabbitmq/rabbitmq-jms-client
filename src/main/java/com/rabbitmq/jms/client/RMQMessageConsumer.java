@@ -31,7 +31,7 @@ import com.rabbitmq.jms.util.Util;
 /**
  * The implementation of {@link MessageConsumer} in the RabbitMQ JMS Client.
  * <p>
- * Single message {@link #receive receive()}s are implemented with a special buffer and {@link Consumer}.
+ * Single message {@link #receive receive()}s are implemented by abortable polling in {@link DelayedReceiver}.
  * </p>
  * <p>
  * {@link MessageListener#onMessage} calls are implemented with a more conventional {@link Consumer}.
@@ -76,8 +76,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private volatile boolean durable = false;
     /** Flag to check if we have noLocal set */
     private volatile boolean noLocal = false;
-    /** Buffer for messages on {@link #receive} queues, but not yet handed to application. */
-    private final ReceiveBuffer receiveBuffer;
+    /** For getting messages from {@link #receive} queues. */
+    private final DelayedReceiver delayedReceiver;
 
     /**
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
@@ -92,7 +92,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         this.session = session;
         this.destination = destination;
         this.uuidTag = uuidTag;
-        this.receiveBuffer = new ReceiveBuffer(DEFAULT_BATCHING_SIZE, this);
+        this.delayedReceiver = new DelayedReceiver(DEFAULT_BATCHING_SIZE, this);
         this.messageSelector = messageSelector;
         if (!paused)
             this.receiveManager.openGate();
@@ -259,7 +259,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                        false, /* autoack is ALWAYS false, otherwise we risk acking messages that are received
                                * to the client but the client listener(onMessage) has not yet been invoked */
                        consTag, /* the consumer tag to use */
-                       this.getNoLocalNoException(), /* RabbitMQ supports the noLocal flag for subscriptions */
+                       this.noLocal, /* RabbitMQ supports the noLocal flag for subscriptions */
                        false, /* exclusive will always be false: exclusive consumer access true means only this
                                * consumer can access the queue. */
                        null, /* there are no custom arguments for the subscription */
@@ -289,24 +289,20 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     private RMQMessage receive(TimeTracker tt)  throws JMSException {
-    // Pseudocode:
-    //   poll msg-buffer(0)
-    //   if msg-buffer had a message return it
-    //   else {
-    //     initiate async-get // we must try *not* to start more than one at a time
-    //     poll msg-buffer(timeout)
-    //   }
+    /* Pseudocode:
+     *  get (synchronous read)
+     *  if something return it;
+     *  if nothing, then poll (intervals up to time limit given)
+     *  if still nothing return nothing.
+     */
         try {
             if (!this.receiveManager.enter(tt))  // stopped?
                 return null; // timed out while stopped
             /* Try to receive a message, there's some time left! */
             try {
-                GetResponse resp = this.receiveBuffer.get(tt);
+                GetResponse resp = this.delayedReceiver.get(tt);
                 if (resp == null) return null; // nothing received in time or aborted
-                boolean aa = isAutoAck();
-                if (aa)
-                    this.acknowledgeMessage(resp);
-                return this.processMessage(resp, aa);
+                return this.processMessage(resp, this.isAutoAck());
             } finally {
                 this.receiveManager.exit();
             }
@@ -317,15 +313,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             /* Someone interrupted us -- we ought to terminate */
             Thread.currentThread().interrupt(); // reset interrupt status
             return null;
-        }
-    }
-
-    private void acknowledgeMessage(GetResponse resp) {
-        // acknowledge just this one RabbitMQ message
-        try {
-            this.getSession().getChannel().basicAck(resp.getEnvelope().getDeliveryTag(), false);
-        } catch (Exception e) {
-            LOGGER.log("acknowledgeMessage", e, resp);
         }
     }
 
@@ -420,7 +407,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         this.receiveManager.closeGate(); // stop any more entering receive region
         this.receiveManager.abortWaiters(); // abort any that arrive now
 
-        this.receiveBuffer.closeBuffer(); // close the synchronous receive, if any
+        this.delayedReceiver.close(); // close the synchronous receive, if any
 
         /* stop and remove any active subscription - waits for onMessage processing to finish */
         this.removeListenerConsumer();
@@ -534,5 +521,15 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     void setNoLocal(boolean noLocal) {
         this.noLocal = noLocal;
+    }
+
+    GetResponse getFromRabbitQueue() {
+        try {
+            return getSession().getChannel().basicGet(rmqQueueName(), isAutoAck());
+        } catch (IOException e) {
+            e.printStackTrace();
+            // TODO: mark consumer broken, with error reason
+            return null;
+        }
     }
 }
