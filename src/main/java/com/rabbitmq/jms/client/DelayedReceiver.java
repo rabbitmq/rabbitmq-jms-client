@@ -18,6 +18,8 @@ class DelayedReceiver {
 
     private static final RJMSLogger LOGGER = new RJMSLogger("DelayedReceiver");
 
+    private static final TimeTracker POLLING_INTERVAL = new TimeTracker(100, TimeUnit.MILLISECONDS); // one tenth of a second
+
     @SuppressWarnings("unused")
     private final int batchingSize;
     private final RMQMessageConsumer rmqMessageConsumer;
@@ -49,7 +51,7 @@ class DelayedReceiver {
                     resp = this.rmqMessageConsumer.getFromRabbitQueue();
                     if (resp != null)
                         break;
-                    new TimeTracker(100, TimeUnit.MILLISECONDS).timedWait(this.responseLock);
+                    new TimeTracker(POLLING_INTERVAL).timedWait(this.responseLock);
                 }
                 return resp;
             }

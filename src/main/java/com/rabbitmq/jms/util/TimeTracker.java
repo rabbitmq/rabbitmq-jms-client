@@ -24,6 +24,14 @@ public class TimeTracker {
     }
 
     /**
+     * Initialise tracker with duration of old tracker (regardless that the old one has timed out).
+     * @param timeTracker - a TimeTracker instance
+     */
+    public TimeTracker(TimeTracker timeTracker) {
+        this(timeTracker.timeoutNanos());
+    }
+
+    /**
      * Initialise tracker with maximum duration -- effectively an infinite time.
      */
     public TimeTracker() {
@@ -31,7 +39,7 @@ public class TimeTracker {
     }
 
     /**
-     * Accessor for unit testing
+     * Accessor for resurrecting a TimeTracker
      * @return time originally set in nanoseconds
      */
     long timeoutNanos() {
