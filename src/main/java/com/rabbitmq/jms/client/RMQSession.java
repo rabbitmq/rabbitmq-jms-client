@@ -97,6 +97,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private volatile String nonDurableTopicSelectorExchange;
     /** Selector exchange arg key for selector expression */
     private static final String RJMS_SELECTOR_ARG = "rjms_selector";
+    /** Name of argument on exchange create; used to specify identifier types */
+    private static final String RJMS_TYPE_INFO_ARG = "rjms_type_info";
 
     private static final long ON_MESSAGE_EXECUTOR_TIMEOUT_MS = 2000; // 2 seconds
     private final DeliveryExecutor deliveryExecutor = new DeliveryExecutor(ON_MESSAGE_EXECUTOR_TIMEOUT_MS);
@@ -476,7 +478,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
         if (!dest.isQueue()) {
             // This is a topic, we need to define a queue, and bind to it.
-            // The queue name is a unique ID for each consumer.
+            // The queue name is distinct for each consumer.
             String queueName = consumerTag;
             try {
                 // we never set auto delete; exclusive queues (used for topics and temporaries) are deleted on close anyway.
@@ -584,11 +586,34 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
     }
 
+    private static final Map<String, Object> JMS_TYPE_INFO_ARGUMENTS = generateJMSTypeInfoMap();
+
+    private static final Map<String, Object> RJMS_SELECTOR_EXCHANGE_ARGUMENTS = Collections.singletonMap(RJMS_TYPE_INFO_ARG, (Object) JMS_TYPE_INFO_ARGUMENTS);
+
+    private static Map<String, Object> generateJMSTypeInfoMap() {
+        Map<String, Object> map = new HashMap<String, Object>();
+        // [ {<<"JMSDeliveryMode">>,  [<<"PERSISTENT">>, <<"NON_PERSISTENT">>]}
+        // , {<<"JMSPriority">>,      number}
+        // , {<<"JMSMessageID">>,     string}
+        // , {<<"JMSTimestamp">>,     number}
+        // , {<<"JMSCorrelationID">>, string}
+        // , {<<"JMSType">>,          string}
+        // ]
+        map.put("JMSDeliveryMode",  new String[]{"PERSISTENT","NON_PERSISTENT"});
+        map.put("JMSPriority",      "number");
+        map.put("JMSMessageID",     "string");
+        map.put("JMSTimestamp",     "number");
+        map.put("JMSCorrelationID", "string");
+        map.put("JMSType",          "string");
+
+        return Collections.unmodifiableMap(map);
+    }
+
     private String getDurableTopicSelectorExchange() throws IOException {
         if (this.durableTopicSelectorExchange==null) {
             this.durableTopicSelectorExchange = Util.generateUUID("jms-dutop-slx-");
         }
-        this.channel.exchangeDeclare(this.durableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, true, true, null);
+        this.channel.exchangeDeclare(this.durableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, true, true, RJMS_SELECTOR_EXCHANGE_ARGUMENTS);
         return this.durableTopicSelectorExchange;
     }
 
@@ -596,7 +621,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (this.nonDurableTopicSelectorExchange==null) {
             this.nonDurableTopicSelectorExchange = Util.generateUUID("jms-ndtop-slx-");
         }
-        this.channel.exchangeDeclare(this.nonDurableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, null);
+        this.channel.exchangeDeclare(this.nonDurableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, RJMS_SELECTOR_EXCHANGE_ARGUMENTS);
         return this.nonDurableTopicSelectorExchange;
     }
 
