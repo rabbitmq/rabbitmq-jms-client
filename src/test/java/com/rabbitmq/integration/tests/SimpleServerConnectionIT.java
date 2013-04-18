@@ -19,7 +19,6 @@ import com.rabbitmq.client.Envelope;
  */
 public class SimpleServerConnectionIT {
 
-
     private volatile String username = "guest";
     private volatile String password = "guest";
     private volatile String virtualHost = "/";

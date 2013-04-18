@@ -19,7 +19,7 @@ import org.junit.Test;
  */
 public class TemporaryQueueIT extends AbstractITQueue {
 
-    static final String MESSAGE = "Hello " + TemporaryQueueIT.class.getName();
+    private static final String MESSAGE = "Hello " + TemporaryQueueIT.class.getName();
 
     @Test
     public void testQueueSendAndReceiveSingleSession() throws Exception {

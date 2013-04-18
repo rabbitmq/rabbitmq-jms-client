@@ -24,8 +24,8 @@ import com.rabbitmq.jms.client.message.TestMessages;
  */
 public class SimpleQueueMessageIT extends AbstractITQueue {
 
-    static final String QUEUE_NAME = "test.queue."+SimpleQueueMessageIT.class.getCanonicalName();
-    static final String MESSAGE = "Hello " + SimpleQueueMessageIT.class.getName();
+    private static final String QUEUE_NAME = "test.queue."+SimpleQueueMessageIT.class.getCanonicalName();
+    private static final String MESSAGE = "Hello " + SimpleQueueMessageIT.class.getName();
 
     @Test
     public void testSendAndReceiveTextMessage() throws Exception {

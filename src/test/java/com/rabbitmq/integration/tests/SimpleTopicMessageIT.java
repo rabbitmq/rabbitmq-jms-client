@@ -17,7 +17,7 @@ import org.junit.Test;
  * Integration test
  */
 public class SimpleTopicMessageIT extends AbstractITTopic {
-    final String TOPIC_NAME = "test.topic." + SimpleTopicMessageIT.class.getCanonicalName();
+    private static final String TOPIC_NAME = "test.topic." + SimpleTopicMessageIT.class.getCanonicalName();
 
     @Test
     public void testSendAndReceiveTextMessage() throws Exception {

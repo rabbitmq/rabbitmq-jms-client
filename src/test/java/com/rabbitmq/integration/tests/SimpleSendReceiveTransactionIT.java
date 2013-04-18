@@ -18,8 +18,8 @@ import org.junit.Test;
  * Integration test
  */
 public class SimpleSendReceiveTransactionIT extends AbstractITQueue {
-    static final String QUEUE_NAME = "test.queue." + SimpleSendReceiveTransactionIT.class.getCanonicalName();
-    static final String MESSAGE = "Hello " + SimpleQueueMessageIT.class.getName();
+    private static final String QUEUE_NAME = "test.queue." + SimpleSendReceiveTransactionIT.class.getCanonicalName();
+    private static final String MESSAGE = "Hello " + SimpleQueueMessageIT.class.getName();
 
     @Test
     public void testQueueSendAndRollback() throws Exception {
