@@ -28,13 +28,13 @@ class MessageListenerConsumer implements Consumer, Abortable {
     private final RJMSLogger LOGGER = new RJMSLogger(new LogTemplate(){
         @Override
         public String template() {
-            return "MessageListenerConsumer(consumerTag="+MessageListenerConsumer.this.consTag+")";
+            return "MessageListenerConsumer(consumerTag="+MessageListenerConsumer.this.getConsTag()+")";
         }
     });
-    /**
-     * The consumer tag for this RabbitMQ consumer
-     */
-    private final String consTag;
+
+    private final Object tagLock = new Object();
+    /** The consumer tag for this RabbitMQ consumer */
+    private String consTag = null; // @GuardedBy(tagLock);
 
     private final RMQMessageConsumer messageConsumer;
     private final Channel channel;
@@ -59,7 +59,20 @@ class MessageListenerConsumer implements Consumer, Abortable {
         this.terminationTimeout = terminationTimeout;
         this.completion = new Completion();  // completed when cancelled.
         this.rejecting = this.messageConsumer.getSession().getConnection().isStopped();
-        this.consTag = RMQMessageConsumer.newConsumerTag();  // new 'unique' consumer tag
+    }
+
+    private String getConsTag() {
+        synchronized(tagLock) {
+            if (this.consTag == null)
+                this.consTag = RMQMessageConsumer.newConsumerTag();  // new consumer tag
+            return this.consTag;
+        }
+    }
+
+    private void clearConsTag() {
+        synchronized(tagLock) {
+            this.consTag = null;
+        }
     }
 
     /**
@@ -164,7 +177,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
         try {
             if (!this.completion.isComplete()) { // not yet cancelled
                 LOGGER.log("abort", "basicCancel:");
-                this.channel.basicCancel(this.consTag);
+                this.channel.basicCancel(this.getConsTag());
             }
         } catch (Exception e) {
             LOGGER.log("abort", e, "basicCancel");
@@ -181,8 +194,9 @@ class MessageListenerConsumer implements Consumer, Abortable {
         try {
             if (!this.completion.isComplete()) {
                 LOGGER.log("stop", "basicCancel:");
-                this.channel.basicCancel(this.consTag);
+                this.channel.basicCancel(this.getConsTag());
                 this.completion.waitUntilComplete(tt);
+                this.clearConsTag();
             }
         } catch (TimeoutException te) {
             Thread.currentThread().interrupt();
@@ -205,7 +219,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
         this.rejecting = false;
         this.completion = new Completion();  // need a new completion object
         try {
-            this.messageConsumer.basicConsume(this, this.consTag);
+            this.messageConsumer.basicConsume(this, this.getConsTag());
         } catch (Exception e) {
             this.completion.setComplete();  // just in case someone is waiting on it
             e.printStackTrace(); // diagnostics
