@@ -19,7 +19,7 @@ import org.junit.Test;
  */
 public class TemporaryTopicIT extends AbstractITTopic {
 
-    static final String MESSAGE = "Hello " + TemporaryTopicIT.class.getName();
+    private static final String MESSAGE = "Hello " + TemporaryTopicIT.class.getName();
 
     @Test
     public void testTopicSendAndReceiveSingleSession() throws Exception {

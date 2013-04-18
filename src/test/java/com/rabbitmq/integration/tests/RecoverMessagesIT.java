@@ -27,8 +27,8 @@ import org.junit.Test;
  */
 public class RecoverMessagesIT extends AbstractITQueue {
 
-    static final String QUEUE_NAME = "test.queue." + RecoverMessagesIT.class.getCanonicalName();
-    static final String MESSAGE = "Hello " + RecoverMessagesIT.class.getName();
+    private static final String QUEUE_NAME = "test.queue." + RecoverMessagesIT.class.getCanonicalName();
+    private static final String MESSAGE = "Hello " + RecoverMessagesIT.class.getName();
 
     @Test
     public void testRecoverTextMessageSync() throws Exception {

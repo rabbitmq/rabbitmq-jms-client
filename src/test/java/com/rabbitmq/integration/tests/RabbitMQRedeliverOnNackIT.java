@@ -20,8 +20,8 @@ import org.junit.Test;
  * Integration test for re-deliver on rollback.
  */
 public class RabbitMQRedeliverOnNackIT  extends AbstractITQueue {
-    static final String QUEUE_NAME = "test.queue."+RabbitMQRedeliverOnNackIT.class.getCanonicalName();
-    static final String MESSAGE = "Hello " + RabbitMQRedeliverOnNackIT.class.getName();
+    private static final String QUEUE_NAME = "test.queue."+RabbitMQRedeliverOnNackIT.class.getCanonicalName();
+    private static final String MESSAGE = "Hello " + RabbitMQRedeliverOnNackIT.class.getName();
 
     /**
      * Test that Rabbit re-delivers a received message which has been rolled-back.
