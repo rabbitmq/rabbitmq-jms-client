@@ -111,18 +111,17 @@ class MessageListenerConsumer implements Consumer, Abortable {
             return;
         }
         /* Wrap the incoming message in a GetResponse */
-        GetResponse response = new GetResponse(envelope, properties, body, 0);
+        GetResponse response = new GetResponse(envelope, properties, body, 0); // last parameter is remaining message count, which we don't know.
         try {
             if (this.messageListener != null) {
-                boolean acked = this.autoAck;
-                if (this.autoAck) {
+                if (this.autoAck) { // messages received under transactions are not explicitly acknowledged on JMS
+                                    // instead they are committed
                     try {
-                        /* Subscriptions we never auto ack with RabbitMQ, so we have to do this ourselves. */
+                        /* Subscriptions do not autoAck with RabbitMQ, so we have to do this ourselves. */
+                        /* Note: synchronous receives *do* autoAck. */
                         long dtag = envelope.getDeliveryTag();
                         LOGGER.log("handleDelivery", "basicAck:", dtag);
                         this.channel.basicAck(dtag, false);
-                        /* Mark message as acked */
-                        acked = true;
                     } catch (AlreadyClosedException x) {
                         //TODO logging impl warn message
                         //this is problematic, we have received a message, but we can't ACK it to the server
@@ -132,7 +131,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
                     }
                 }
                 // Create a javax.jms.Message object and deliver it to the listener
-                this.messageConsumer.getSession().deliverMessage(this.messageConsumer.processMessage(response, acked), this.messageListener);
+                this.messageConsumer.getSession().deliverMessage(this.messageConsumer.processMessage(response, this.autoAck), this.messageListener);
             } else {
                 try {
                     // We are unable to deliver the message, nack it

@@ -78,6 +78,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private volatile boolean noLocal = false;
     /** For getting messages from {@link #receive} queues. */
     private final DelayedReceiver delayedReceiver;
+    /** Record and preserve the need to acknowledge automatically */
+    private final boolean autoAck;
 
     /**
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
@@ -96,6 +98,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         this.messageSelector = messageSelector;
         if (!paused)
             this.receiveManager.openGate();
+        this.autoAck = determineAutoAck(session);
     }
 
     /**
@@ -229,14 +232,18 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     /**
-     * Returns true if messages should be auto acknowledged upon arrival
+     * Returns true if messages should be automatically acknowledged upon arrival
      *
      * @return true if {@link Session#getAcknowledgeMode()}=={@link Session#DUPS_OK_ACKNOWLEDGE} or
-     *         {@link Session#getAcknowledgeMode()}=={@link Session#AUTO_ACKNOWLEDGE}
+     *         {@link Session#getAcknowledgeMode()}=={@link Session#AUTO_ACKNOWLEDGE} or transacted.
      */
     boolean isAutoAck() {
-        int ackMode = getSession().getAcknowledgeModeNoException();
-        return (ackMode == Session.DUPS_OK_ACKNOWLEDGE || ackMode == Session.AUTO_ACKNOWLEDGE);
+        return this.autoAck;
+    }
+
+    private static boolean determineAutoAck(RMQSession session) {
+        int ackMode = session.getAcknowledgeModeNoException();
+        return (ackMode != Session.CLIENT_ACKNOWLEDGE);  // could be transacted or auto_ack
     }
 
     /**
@@ -300,7 +307,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 return null; // timed out while stopped
             /* Try to receive a message, there's some time left! */
             try {
-                GetResponse resp = this.delayedReceiver.get(tt);
+                GetResponse resp = this.delayedReceiver.get(tt); // uses autoAck
                 if (resp == null) return null; // nothing received in time or aborted
                 return this.processMessage(resp, this.isAutoAck());
             } finally {

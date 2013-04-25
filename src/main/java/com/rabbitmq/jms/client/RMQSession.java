@@ -267,9 +267,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (!this.transacted) throw new IllegalStateException("Session is not transacted");
 
         try {
-            //call commit on the channel
-            //this should ACK all messages
-            //TODO: This does not ACK all messages (received) -- correct this?
+            // Call commit on the channel.
+            // All messages ought already to have been acked.
             this.channel.txCommit();
         } catch (Exception x) {
             throw new RMQJMSException(x);
