@@ -111,38 +111,21 @@ class MessageListenerConsumer implements Consumer, Abortable {
             return;
         }
         /* Wrap the incoming message in a GetResponse */
-        GetResponse response = new GetResponse(envelope, properties, body, 0);
+        GetResponse response = new GetResponse(envelope, properties, body, 0); // last parameter is remaining message count, which we don't know.
         try {
+            long dtag = envelope.getDeliveryTag();
             if (this.messageListener != null) {
-                boolean acked = this.autoAck;
-                if (this.autoAck) {
-                    try {
-                        /* Subscriptions we never auto ack with RabbitMQ, so we have to do this ourselves. */
-                        long dtag = envelope.getDeliveryTag();
-                        LOGGER.log("handleDelivery", "basicAck:", dtag);
-                        this.channel.basicAck(dtag, false);
-                        /* Mark message as acked */
-                        acked = true;
-                    } catch (AlreadyClosedException x) {
-                        //TODO logging impl warn message
-                        //this is problematic, we have received a message, but we can't ACK it to the server
-                        x.printStackTrace();
-                        //TODO should we deliver the message at this time, knowing that we can't ack it?
-                        //My recommendation is that we bail out here and not proceed
-                    }
+                if (this.autoAck) { // we do the acknowledging
+                    /* Subscriptions do not autoAck with RabbitMQ, so we have to do this ourselves. */
+                    LOGGER.log("handleDelivery", "basicAck:", dtag);
+                    this.messageConsumer.explicitAck(dtag);
                 }
                 // Create a javax.jms.Message object and deliver it to the listener
-                this.messageConsumer.getSession().deliverMessage(this.messageConsumer.processMessage(response, acked), this.messageListener);
+                this.messageConsumer.getSession().deliverMessage(this.messageConsumer.processMessage(response, this.autoAck), this.messageListener);
             } else {
-                try {
-                    // We are unable to deliver the message, nack it
-                    long dtag = envelope.getDeliveryTag();
-                    LOGGER.log("handleDelivery", "basicNack:nullMessageListener", dtag);
-                    this.channel.basicNack(dtag, false, true);
-                } catch (AlreadyClosedException x) {
-                    //TODO logging impl debug message
-                    //this is fine. we didn't ack the message in the first place
-                }
+                // We are unable to deliver the message, nack it
+                LOGGER.log("handleDelivery", "basicNack:nullMessageListener", dtag);
+                this.messageConsumer.explicitNack(dtag);
             }
         } catch (JMSException x) {
             x.printStackTrace();

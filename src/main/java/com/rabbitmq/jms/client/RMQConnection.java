@@ -206,7 +206,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      * @return <code>true</code> if this connection is in a stopped state
      */
     public boolean isStopped() {
-        LOGGER.log("isStopped");
         return stopped.get();
     }
 
@@ -254,8 +253,12 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         }
     }
 
-    Channel createRabbitChannel() throws IOException {
-        return this.rabbitConnection.createChannel();
+    Channel createRabbitChannel(boolean transactional) throws IOException {
+        Channel channel = this.rabbitConnection.createChannel();
+        if (transactional) {
+            channel.txSelect();
+        }
+        return channel;
     }
 
     /**

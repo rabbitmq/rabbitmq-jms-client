@@ -118,11 +118,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.subscriptions = subscriptions;
         this.acknowledgeMode = transacted ? Session.SESSION_TRANSACTED : mode;
         try {
-            this.channel = connection.createRabbitChannel();
-            if (transacted) {
-                /* Make the channel (RabbitMQ) transactional: this cannot be undone */
-                this.channel.txSelect();
-            }
+            this.channel = connection.createRabbitChannel(transacted);
         } catch (IOException x) {
             throw new RMQJMSException(x);
         }
@@ -267,9 +263,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (!this.transacted) throw new IllegalStateException("Session is not transacted");
 
         try {
-            //call commit on the channel
-            //this should ACK all messages
-            //TODO: This does not ACK all messages (received) -- correct this?
+            // Call commit on the channel.
+            // All messages ought already to have been acked.
             this.channel.txCommit();
         } catch (Exception x) {
             throw new RMQJMSException(x);
@@ -525,7 +520,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private Channel getSacrificialChannel() throws IOException {
         synchronized (this.scLock) {
             if (this.sacrificialChannel == null) {
-                this.sacrificialChannel = this.getConnection().createRabbitChannel();
+                this.sacrificialChannel = this.getConnection().createRabbitChannel(false); // not transactional
             }
             return this.sacrificialChannel;
         }
@@ -970,9 +965,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
     }
 
-    public boolean isAutoAck() {
-        LOGGER.log("isAutoAck");
-        return (getAcknowledgeModeNoException()==Session.AUTO_ACKNOWLEDGE) || (getAcknowledgeModeNoException()==Session.DUPS_OK_ACKNOWLEDGE);
+    private boolean isAutoAck() {
+        return (getAcknowledgeModeNoException()!=Session.CLIENT_ACKNOWLEDGE);  // only case when auto ack not required
     }
 
     /**
@@ -1028,7 +1022,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         illegalStateExceptionIfClosed();
          // TODO: future functionality, allow group ack prior to the current tag
          // TODO: future functionality, allow ack of single message
-        if (!isAutoAck() && !getTransacted() && !this.unackedMessageTags.isEmpty()) {
+        if (!isAutoAck() && !this.unackedMessageTags.isEmpty()) {
             /*
              * Per JMS specification Message.acknowledge(), if we ack
              * the last message in a group, we will ack all the ones prior received.
@@ -1037,9 +1031,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
              * received on that message's session."
              */
             synchronized (this.unackedMessageTags) {
-                /*
-                 * ACK all messages unacknowledged (ACKed or NACKed) on this session.
-                 */
+                /* ACK all messages unacknowledged (ACKed or NACKed) on this session. */
                 try {
                     getChannel().basicAck(this.unackedMessageTags.last(), // we ack the highest tag
                                           true);                          // and everything prior to that
