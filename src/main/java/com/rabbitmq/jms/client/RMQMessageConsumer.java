@@ -56,13 +56,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     /** The selector used to filter messages consumed */
     private final String messageSelector;
     /** The {@link Consumer} that we use to subscribe to Rabbit messages which drives {@link MessageListener#onMessage}. */
-    private final AtomicReference<MessageListenerConsumer> listenerConsumer =
-                                                                              new AtomicReference<MessageListenerConsumer>();
-    /**
-     * Entry and exit of application threads calling {@link #receive} are managed by this.
-     * @see javax.jms.Connection#start()
-     * @see javax.jms.Connection#stop()
-     */
+    private final AtomicReference<MessageListenerConsumer> listenerConsumer = new AtomicReference<MessageListenerConsumer>();
+    /** Entry and exit of application threads calling {@link #receive} are managed by an {@link EntryExitManager}. */
     private final EntryExitManager receiveManager = new EntryExitManager();
     /** We track things that need to be aborted (for a Connection.close()). Typically these are waits. */
     private final AbortableHolder abortables = new AbortableHolder();
