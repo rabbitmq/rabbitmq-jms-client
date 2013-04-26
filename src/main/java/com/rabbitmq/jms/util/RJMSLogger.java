@@ -5,7 +5,7 @@ import java.util.Calendar;
 
 public final class RJMSLogger {
     private static Object lock = new Object();
-      private static boolean LOGGING = true; // @GuardedBy("lock")
+      private static boolean LOGGING = false; // @GuardedBy("lock")
     private final LogTemplate logTemplate;
 
     public RJMSLogger(LogTemplate lt) {
