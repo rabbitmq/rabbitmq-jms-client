@@ -16,6 +16,7 @@ import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
+import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
@@ -302,9 +303,12 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 return null; // timed out while stopped
             /* Try to receive a message, there's some time left! */
             try {
-                GetResponse resp = this.delayedReceiver.get(tt); // uses autoAck
+                GetResponse resp = this.delayedReceiver.get(tt);
                 if (resp == null) return null; // nothing received in time or aborted
-                return this.processMessage(resp, this.isAutoAck());
+                if (this.autoAck) this.explicitAck(resp.getEnvelope().getDeliveryTag());
+                return this.processMessage(resp, this.autoAck);
+            } catch (IOException ioe) {
+                throw new RMQJMSException("Cannot ACK message.", ioe);
             } finally {
                 this.receiveManager.exit();
             }
@@ -527,11 +531,33 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
     GetResponse getFromRabbitQueue() {
         try {
-            return getSession().getChannel().basicGet(rmqQueueName(), isAutoAck());
+            return getSession().getChannel().basicGet(rmqQueueName(), false);
         } catch (IOException e) {
             e.printStackTrace();
             // TODO: mark consumer broken, with error reason
             return null;
         }
     }
+
+    void explicitNack(long deliveryTag) throws IOException {
+        try {
+            this.session.getChannel().basicNack(deliveryTag, false, true);
+        } catch (AlreadyClosedException x) {
+            //TODO logging impl debug message
+            //this is fine. we didn't ack the message in the first place
+        }
+    }
+
+    void explicitAck(long deliveryTag) throws IOException {
+        try {
+            this.session.getChannel().basicAck(deliveryTag, false);
+        } catch (AlreadyClosedException x) {
+            //TODO logging impl warn message
+            //this is problematic, we have received a message, but we can't ACK it to the server
+            x.printStackTrace();
+            //TODO should we deliver the message at this time, knowing that we can't ack it?
+            //My recommendation is that we bail out here and not proceed
+        }
+    }
+
 }
