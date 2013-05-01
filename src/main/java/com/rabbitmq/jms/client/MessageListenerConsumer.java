@@ -107,7 +107,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
         if (this.rejecting) {
             long dtag = envelope.getDeliveryTag();
             LOGGER.log("handleDelivery", "basicNack:rejecting", dtag);
-            this.channel.basicNack(dtag, false, true);
+            this.messageConsumer.explicitNack(dtag);
             return;
         }
         /* Wrap the incoming message in a GetResponse */

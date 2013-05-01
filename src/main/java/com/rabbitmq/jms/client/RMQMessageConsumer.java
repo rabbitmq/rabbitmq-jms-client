@@ -16,7 +16,6 @@ import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
-import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
@@ -305,10 +304,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             try {
                 GetResponse resp = this.delayedReceiver.get(tt);
                 if (resp == null) return null; // nothing received in time or aborted
-                if (this.autoAck) this.explicitAck(resp.getEnvelope().getDeliveryTag());
+                if (this.autoAck) this.session.explicitAck(resp.getEnvelope().getDeliveryTag());
                 return this.processMessage(resp, this.autoAck);
-            } catch (IOException ioe) {
-                throw new RMQJMSException("Cannot ACK message.", ioe);
             } finally {
                 this.receiveManager.exit();
             }
@@ -539,25 +536,11 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         }
     }
 
-    void explicitNack(long deliveryTag) throws IOException {
-        try {
-            this.session.getChannel().basicNack(deliveryTag, false, true);
-        } catch (AlreadyClosedException x) {
-            //TODO logging impl debug message
-            //this is fine. we didn't ack the message in the first place
-        }
+    void explicitNack(long deliveryTag) {
+        this.session.explicitNack(deliveryTag);
     }
 
-    void explicitAck(long deliveryTag) throws IOException {
-        try {
-            this.session.getChannel().basicAck(deliveryTag, false);
-        } catch (AlreadyClosedException x) {
-            //TODO logging impl warn message
-            //this is problematic, we have received a message, but we can't ACK it to the server
-            x.printStackTrace();
-            //TODO should we deliver the message at this time, knowing that we can't ack it?
-            //My recommendation is that we bail out here and not proceed
-        }
+    void explicitAck(long deliveryTag) {
+        this.session.explicitAck(deliveryTag);
     }
-
 }
