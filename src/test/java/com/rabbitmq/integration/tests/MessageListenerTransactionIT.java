@@ -12,6 +12,8 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import org.junit.Test;
+
 /**
  * Integration test for transaction commits in the presence of message listeners.
  */
@@ -27,8 +29,7 @@ public class MessageListenerTransactionIT extends AbstractITQueue {
     private final int sendCount = 2;
     private final int expectedTotalCount = sendCount * DESTINATIONS.length;
 
-    /**
-     */
+    @Test
     public void testSerialInvocation() throws Exception {
         final long sleep = 100;
 
