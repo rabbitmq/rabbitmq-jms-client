@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
@@ -89,7 +90,11 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     /** List of all our durable subscriptions so we can track them */
     private final Map<String, RMQMessageConsumer> subscriptions;
 
+    /** Lock for waiting for close */
     private final Object closeLock = new Object();
+
+    /** Explicit lock for commit and rollback blocking of other commands */
+    private final ReentrantLock commitLock = new ReentrantLock();
 
     /** Selector exchange for topic selection */
     private volatile String durableTopicSelectorExchange;
@@ -261,13 +266,15 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         LOGGER.log("commit");
         illegalStateExceptionIfClosed();
         if (!this.transacted) throw new IllegalStateException("Session is not transacted");
-
+        this.commitLock.lock();
         try {
             // Call commit on the channel.
             // All messages ought already to have been acked.
             this.channel.txCommit();
         } catch (Exception x) {
             throw new RMQJMSException(x);
+        } finally {
+            this.commitLock.unlock();
         }
     }
 
@@ -279,6 +286,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         LOGGER.log("rollback");
         illegalStateExceptionIfClosed();
         if (!this.transacted) throw new IllegalStateException("Session is not transacted");
+        this.commitLock.lock();
         try {
             // rollback the RabbitMQ transaction which may cause some messages to become unacknowledged
             this.channel.txRollback();
@@ -286,6 +294,35 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             this.channel.basicRecover(true); // requeue
         } catch (IOException x) {
             throw new RMQJMSException(x);
+        } finally {
+            this.commitLock.unlock();
+        }
+    }
+
+    void explicitAck(long deliveryTag) {
+        this.commitLock.lock();
+        try {
+            this.channel.basicAck(deliveryTag, false);
+        } catch (Exception x) {
+            // TODO logging impl warn message
+            // this is problematic, we have received a message, but we can't ACK it to the server
+            x.printStackTrace();
+            // TODO should we deliver the message at this time, knowing that we can't ack it?
+            // My recommendation is that we bail out here and not proceed
+        } finally {
+            this.commitLock.unlock();
+        }
+    }
+
+    void explicitNack(long deliveryTag) {
+        this.commitLock.lock();
+        try {
+            this.channel.basicNack(deliveryTag, false, true);
+        } catch (Exception x) {
+            // TODO logging impl debug message
+            // this is fine. we didn't ack the message in the first place
+        } finally {
+            this.commitLock.lock();
         }
     }
 
@@ -1020,8 +1057,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     void acknowledgeMessages() throws JMSException {
         illegalStateExceptionIfClosed();
-         // TODO: future functionality, allow group ack prior to the current tag
-         // TODO: future functionality, allow ack of single message
         if (!isAutoAck() && !this.unackedMessageTags.isEmpty()) {
             /*
              * Per JMS specification Message.acknowledge(), if we ack
