@@ -56,13 +56,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     /** The selector used to filter messages consumed */
     private final String messageSelector;
     /** The {@link Consumer} that we use to subscribe to Rabbit messages which drives {@link MessageListener#onMessage}. */
-    private final AtomicReference<MessageListenerConsumer> listenerConsumer =
-                                                                              new AtomicReference<MessageListenerConsumer>();
-    /**
-     * Entry and exit of application threads calling {@link #receive} are managed by this.
-     * @see javax.jms.Connection#start()
-     * @see javax.jms.Connection#stop()
-     */
+    private final AtomicReference<MessageListenerConsumer> listenerConsumer = new AtomicReference<MessageListenerConsumer>();
+    /** Entry and exit of application threads calling {@link #receive} are managed by an {@link EntryExitManager}. */
     private final EntryExitManager receiveManager = new EntryExitManager();
     /** We track things that need to be aborted (for a Connection.close()). Typically these are waits. */
     private final AbortableHolder abortables = new AbortableHolder();
@@ -78,6 +73,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private volatile boolean noLocal = false;
     /** For getting messages from {@link #receive} queues. */
     private final DelayedReceiver delayedReceiver;
+    /** Record and preserve the need to acknowledge automatically */
+    private final boolean autoAck;
 
     /**
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
@@ -96,6 +93,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         this.messageSelector = messageSelector;
         if (!paused)
             this.receiveManager.openGate();
+        this.autoAck = determineAutoAck(session);
     }
 
     /**
@@ -229,14 +227,18 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     /**
-     * Returns true if messages should be auto acknowledged upon arrival
+     * Returns true if messages should be automatically acknowledged upon arrival
      *
      * @return true if {@link Session#getAcknowledgeMode()}=={@link Session#DUPS_OK_ACKNOWLEDGE} or
-     *         {@link Session#getAcknowledgeMode()}=={@link Session#AUTO_ACKNOWLEDGE}
+     *         {@link Session#getAcknowledgeMode()}=={@link Session#AUTO_ACKNOWLEDGE} or transacted.
      */
     boolean isAutoAck() {
-        int ackMode = getSession().getAcknowledgeModeNoException();
-        return (ackMode == Session.DUPS_OK_ACKNOWLEDGE || ackMode == Session.AUTO_ACKNOWLEDGE);
+        return this.autoAck;
+    }
+
+    private static boolean determineAutoAck(RMQSession session) {
+        int ackMode = session.getAcknowledgeModeNoException();
+        return (ackMode != Session.CLIENT_ACKNOWLEDGE);  // could be transacted or auto_ack
     }
 
     /**
@@ -302,7 +304,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             try {
                 GetResponse resp = this.delayedReceiver.get(tt);
                 if (resp == null) return null; // nothing received in time or aborted
-                return this.processMessage(resp, this.isAutoAck());
+                if (this.autoAck) this.session.explicitAck(resp.getEnvelope().getDeliveryTag());
+                return this.processMessage(resp, this.autoAck);
             } finally {
                 this.receiveManager.exit();
             }
@@ -525,11 +528,19 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
 
     GetResponse getFromRabbitQueue() {
         try {
-            return getSession().getChannel().basicGet(rmqQueueName(), isAutoAck());
+            return getSession().getChannel().basicGet(rmqQueueName(), false);
         } catch (IOException e) {
             e.printStackTrace();
             // TODO: mark consumer broken, with error reason
             return null;
         }
+    }
+
+    void explicitNack(long deliveryTag) {
+        this.session.explicitNack(deliveryTag);
+    }
+
+    void explicitAck(long deliveryTag) {
+        this.session.explicitAck(deliveryTag);
     }
 }
