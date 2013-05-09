@@ -26,6 +26,10 @@
       <groupId>com.rabbitmq</groupId>
       <artifactId>amqp-client</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
 
     <!-- test scope -->
     <dependency>
@@ -38,8 +42,12 @@
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <scope>test</scope>
+    </dependency>
 
-    <!-- test scope -->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>rjms-topic-selector</artifactId>
