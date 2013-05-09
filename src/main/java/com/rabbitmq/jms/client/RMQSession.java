@@ -258,6 +258,31 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         return this.acknowledgeMode;
     }
 
+    private final static long COMMIT_WAIT_MAX = 2000L; // 2 seconds
+    private boolean committing = false; // GuardedBy("commitLock");
+
+    private boolean enterCommittingBlock() {
+        synchronized(this.commitLock){
+            try {
+                while(this.committing) {
+                    this.commitLock.wait(COMMIT_WAIT_MAX);
+                }
+                this.committing = true;
+                return true;
+            } catch(InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
+        }
+    }
+
+    private void leaveCommittingBlock() {
+        synchronized(this.commitLock){
+            this.committing = false;
+            this.commitLock.notifyAll();
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
