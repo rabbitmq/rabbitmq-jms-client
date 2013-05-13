@@ -8,6 +8,9 @@ import java.util.concurrent.TimeoutException;
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.Channel;
@@ -16,8 +19,6 @@ import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.util.Abortable;
-import com.rabbitmq.jms.util.RJMSLogger;
-import com.rabbitmq.jms.util.RJMSLogger.LogTemplate;
 import com.rabbitmq.jms.util.TimeTracker;
 
 /**
@@ -25,12 +26,7 @@ import com.rabbitmq.jms.util.TimeTracker;
  * messages and propagate them to the calling client.
  */
 class MessageListenerConsumer implements Consumer, Abortable {
-    private final RJMSLogger LOGGER = new RJMSLogger(new LogTemplate(){
-        @Override
-        public String template() {
-            return "MessageListenerConsumer(consumerTag="+MessageListenerConsumer.this.getConsTag()+")";
-        }
-    });
+    private final Logger logger = LoggerFactory.getLogger(MessageListenerConsumer.class);
 
     private final Object tagLock = new Object();
     /** The consumer tag for this RabbitMQ consumer */
@@ -80,7 +76,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
      */
     @Override
     public void handleConsumeOk(String consumerTag) {
-        LOGGER.log("handleConsumeOK");
+        logger.trace("consumerTag='{}'", consumerTag);
     }
 
     /**
@@ -88,7 +84,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
      */
     @Override
     public void handleCancelOk(String consumerTag) {
-        LOGGER.log("handleCancelOK");
+        logger.trace("consumerTag='{}'", consumerTag);
         this.completion.setComplete();
     }
 
@@ -97,16 +93,16 @@ class MessageListenerConsumer implements Consumer, Abortable {
      */
     @Override
     public void handleCancel(String consumerTag) throws IOException {
-        LOGGER.log("handleCancel");
+        logger.trace("consumerTag='{}'", consumerTag);
         this.completion.setComplete();
     }
 
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
-        LOGGER.log("handleDelivery", envelope);
+        logger.trace("consumerTag='{}' envelope='{}'", consumerTag, envelope);
         if (this.rejecting) {
             long dtag = envelope.getDeliveryTag();
-            LOGGER.log("handleDelivery", "basicNack:rejecting", dtag);
+            logger.debug("basicNack: dtag='{}'", dtag);
             this.messageConsumer.explicitNack(dtag);
             return;
         }
@@ -117,14 +113,14 @@ class MessageListenerConsumer implements Consumer, Abortable {
             if (this.messageListener != null) {
                 if (this.autoAck) { // we do the acknowledging
                     /* Subscriptions do not autoAck with RabbitMQ, so we have to do this ourselves. */
-                    LOGGER.log("handleDelivery", "basicAck:", dtag);
+                    logger.debug("basicAck: dtag='{}'", dtag);
                     this.messageConsumer.explicitAck(dtag);
                 }
                 // Create a javax.jms.Message object and deliver it to the listener
                 this.messageConsumer.getSession().deliverMessage(this.messageConsumer.processMessage(response, this.autoAck), this.messageListener);
             } else {
                 // We are unable to deliver the message, nack it
-                LOGGER.log("handleDelivery", "basicNack:nullMessageListener", dtag);
+                logger.debug("basicNack: dtag='{}' (null MessageListener)", dtag);
                 this.messageConsumer.explicitNack(dtag);
             }
         } catch (JMSException x) {
@@ -141,7 +137,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
      */
     @Override
     public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
-        LOGGER.log("handleShutdownSignal");
+        logger.trace("consumerTag='{}'", consumerTag, sig);
         // noop
     }
 
@@ -150,21 +146,20 @@ class MessageListenerConsumer implements Consumer, Abortable {
      */
     @Override
     public void handleRecoverOk(String consumerTag) {
-        LOGGER.log("handleRecoverOk");
+        logger.trace("consumerTag='{}'", consumerTag);
         // noop
     }
 
     @Override
     public void abort() {
-        LOGGER.log("abort");
         try {
             if (!this.completion.isComplete()) { // not yet cancelled
-                LOGGER.log("abort", "basicCancel:");
-                this.channel.basicCancel(this.getConsTag());
+                String cT = this.getConsTag();
+                logger.debug("basicCancel: consumerTag='{}'", cT);
+                this.channel.basicCancel(cT);
             }
         } catch (Exception e) {
-            LOGGER.log("abort", e, "basicCancel");
-            e.printStackTrace(); // for diagnostics
+            logger.debug("basicCancel threw exception", e);
         }
         this.rejecting = true;
         this.completion.setComplete();
@@ -172,19 +167,20 @@ class MessageListenerConsumer implements Consumer, Abortable {
 
     @Override
     public void stop() {
-        LOGGER.log("stop");
+        String cT = this.getConsTag();
+        logger.trace("consumerTag='{}'", cT);
         TimeTracker tt = new TimeTracker(this.terminationTimeout, TimeUnit.NANOSECONDS);
         try {
             if (!this.completion.isComplete()) {
-                LOGGER.log("stop", "basicCancel:");
-                this.channel.basicCancel(this.getConsTag());
+                logger.debug("consumerTag='{}' basicCancel:", cT);
+                this.channel.basicCancel(cT);
                 this.completion.waitUntilComplete(tt);
                 this.clearConsTag();
             }
         } catch (TimeoutException te) {
             Thread.currentThread().interrupt();
         } catch (AlreadyClosedException acx) {
-            LOGGER.log("stop", acx, "basicCancel");
+            logger.error("basicCancel (consumerTag='{}') threw exception", cT, acx);
             // TODO check if basicCancel really necessary in this case.
             if (!acx.isInitiatedByApplication()) {
                 throw acx;
@@ -192,20 +188,21 @@ class MessageListenerConsumer implements Consumer, Abortable {
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
         } catch (Exception e) {
-            LOGGER.log("stop", e, "basicCancel");
+            logger.error("basicCancel (consumerTag='{}') threw exception", cT, e);
         }
     }
 
     @Override
     public void start() {
-        LOGGER.log("start");
+        String cT = this.getConsTag();
+        logger.trace("consumerTag='{}'", cT);
         this.rejecting = false;
         this.completion = new Completion();  // need a new completion object
         try {
-            this.messageConsumer.basicConsume(this, this.getConsTag());
+            this.messageConsumer.basicConsume(this, cT);
         } catch (Exception e) {
             this.completion.setComplete();  // just in case someone is waiting on it
-            e.printStackTrace(); // diagnostics
+            logger.error("basicConsume (consumerTag='{}') threw exception", cT, e);
         }
     }
 

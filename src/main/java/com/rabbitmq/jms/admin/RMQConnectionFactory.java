@@ -15,8 +15,10 @@ import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.rabbitmq.jms.client.RMQConnection;
-import com.rabbitmq.jms.util.RJMSLogger;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.RMQJMSSecurityException;
 
@@ -26,7 +28,7 @@ import com.rabbitmq.jms.util.RMQJMSSecurityException;
  */
 public class RMQConnectionFactory implements ConnectionFactory, Referenceable, Serializable, QueueConnectionFactory,
                                  TopicConnectionFactory {
-    private static final RJMSLogger LOGGER = new RJMSLogger("RMQConnectionFactory");
+    private final Logger logger = LoggerFactory.getLogger(RMQConnectionFactory.class);
 
     private static final long serialVersionUID = -4953157213762979615L;
 
@@ -63,7 +65,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     @Override
     public Connection createConnection(String userName, String password) throws JMSException {
-        LOGGER.log("createConnection", userName, password);
+        logger.trace("Creating a connection for username '{}', password 'xxxxxxxx'.", userName);
         // Create a new factory and set the properties
         com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
         factory.setUsername(userName);
@@ -95,7 +97,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         // es.setServiceId("Rabbit JMS Connection["+rabbitConnection.getAddress()+"]-");
         // }
         RMQConnection conn = new RMQConnection(rabbitConnection, getTerminationTimeout());
-        LOGGER.log("<--createConnection", conn);
+        logger.debug("Connection {} created.", conn);
         return conn;
     }
 

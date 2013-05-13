@@ -13,9 +13,11 @@ import javax.jms.QueueSender;
 import javax.jms.Topic;
 import javax.jms.TopicPublisher;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.jms.admin.RMQDestination;
-import com.rabbitmq.jms.util.RJMSLogger;
 import com.rabbitmq.jms.util.RMQJMSException;
 
 /**
@@ -23,12 +25,7 @@ import com.rabbitmq.jms.util.RMQJMSException;
  */
 public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPublisher {
 
-    private final RJMSLogger LOGGER = new RJMSLogger(new RJMSLogger.LogTemplate(){
-        @Override
-        public String template() {
-            return "RMQMessageProducer("+RMQMessageProducer.this.destination+")";
-        }
-    });
+    private final Logger logger = LoggerFactory.getLogger(RMQMessageProducer.class);
 
     /**
      * The destination that we send our message to
@@ -80,7 +77,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void setDisableMessageID(boolean value) throws JMSException {
-        LOGGER.log("setDisableMessageID", value);
         this.disableMessageID = value;
     }
 
@@ -97,7 +93,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void setDisableMessageTimestamp(boolean value) throws JMSException {
-        LOGGER.log("setDisableMessageTimestamp", value);
         this.disableMessageTimestamp = value;
     }
 
@@ -114,7 +109,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void setDeliveryMode(int deliveryMode) throws JMSException {
-        LOGGER.log("setDeliveryMode", deliveryMode);
         this.deliveryMode = deliveryMode;
     }
 
@@ -131,7 +125,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void setPriority(int defaultPriority) throws JMSException {
-        LOGGER.log("setPriority", defaultPriority);
         this.priority = defaultPriority;
     }
 
@@ -148,7 +141,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void setTimeToLive(long timeToLive) throws JMSException {
-        LOGGER.log("setTimeToLive", timeToLive);
         this.ttl = timeToLive;
     }
 
@@ -173,7 +165,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void close() throws JMSException {
-        LOGGER.log("close");
+        logger.trace("close producer for destination '{}'", this.destination);
         this.session.removeProducer(this);
     }
 
@@ -189,7 +181,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void send(Message message) throws JMSException {
-        LOGGER.log("send", message);
         this.internalSend(this.destination, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
     }
 
@@ -198,7 +189,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void send(Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        LOGGER.log("send", message, deliveryMode, priority, timeToLive);
         this.internalSend(this.destination, message, deliveryMode, priority, timeToLive);
     }
 
@@ -207,7 +197,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void send(Destination destination, Message message) throws JMSException {
-        LOGGER.log("send", destination, message);
         this.checkUnidentifiedMessageProducer(destination);
         this.internalSend(destination, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
     }
@@ -222,12 +211,12 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        LOGGER.log("send", destination, message, deliveryMode, priority, timeToLive);
         this.checkUnidentifiedMessageProducer(destination);
         this.internalSend(destination, message, deliveryMode, priority, timeToLive);
     }
 
     private void internalSend(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+        logger.trace("send/publish message({}) to destination({}) with properties deliveryMode({}), priority({}), timeToLive({})", message, destination, deliveryMode, priority, timeToLive);
         if (destination == null && this.destination == null)
             throw new InvalidDestinationException("No destination supplied, or implied.");
         try {
@@ -278,7 +267,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     /**
      * Convert long time-to-live to String time-to-live for amqp protocol.
-     * Also constrain to limits: <code>0 <= ttl <= MAX_TTL</code>.
+     * Constrain to limits: <code>0 &LT;= ttl &LT;= MAX_TTL</code>.
      * @param ttl JMS time-to-live long integer
      * @return RabbitMQ message expiration setting (null if expiration==0L)
      */
@@ -312,7 +301,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void send(Queue queue, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        LOGGER.log("send", queue, message, deliveryMode, priority, timeToLive);
         this.internalSend((Destination) queue, message, deliveryMode, priority, timeToLive);
     }
 
@@ -321,7 +309,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void send(Queue queue, Message message) throws JMSException {
-        LOGGER.log("send", queue, message);
         this.internalSend((Destination) queue, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
     }
 
@@ -338,7 +325,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void publish(Message message) throws JMSException {
-        LOGGER.log("publish", message);
         this.internalSend(this.getTopic(), message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
     }
 
@@ -347,7 +333,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void publish(Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        LOGGER.log("publish", message, deliveryMode, priority, timeToLive);
         this.internalSend(this.getTopic(), message, deliveryMode, priority, timeToLive);
     }
 
@@ -356,7 +341,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void publish(Topic topic, Message message) throws JMSException {
-        LOGGER.log("publish", topic, message);
         this.internalSend(topic, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
     }
 
@@ -365,7 +349,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void publish(Topic topic, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        LOGGER.log("publish", topic, message, deliveryMode, priority, timeToLive);
         this.internalSend(topic, message, deliveryMode, priority, timeToLive);
     }
 
