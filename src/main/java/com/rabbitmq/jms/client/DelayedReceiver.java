@@ -3,8 +3,10 @@ package com.rabbitmq.jms.client;
 
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.rabbitmq.client.GetResponse;
-import com.rabbitmq.jms.util.RJMSLogger;
 import com.rabbitmq.jms.util.TimeTracker;
 
 /**
@@ -16,7 +18,7 @@ import com.rabbitmq.jms.util.TimeTracker;
  */
 class DelayedReceiver {
 
-    private static final RJMSLogger LOGGER = new RJMSLogger("DelayedReceiver");
+    private final Logger logger = LoggerFactory.getLogger(DelayedReceiver.class);
 
     private static final TimeTracker POLLING_INTERVAL = new TimeTracker(100, TimeUnit.MILLISECONDS); // one tenth of a second
 
@@ -42,8 +44,6 @@ class DelayedReceiver {
      * @return message gotten, or <code>null</code> if timeout or connection closed.
      */
     public GetResponse get(TimeTracker tt) {
-        LOGGER.log("get", tt);
-
         try {
             synchronized (this.responseLock) {
                 GetResponse resp = null;
@@ -57,7 +57,7 @@ class DelayedReceiver {
             }
 
         } catch (InterruptedException e) {
-            LOGGER.log("get", e, "interrupted while buffer.poll-ing");
+            logger.warn("Get interrupted while buffer.poll-ing.", e);
             Thread.currentThread().interrupt();
             return null;
         }
@@ -71,7 +71,6 @@ class DelayedReceiver {
     }
 
     public void close() {
-        LOGGER.log("close");
         this.abort();
     }
 

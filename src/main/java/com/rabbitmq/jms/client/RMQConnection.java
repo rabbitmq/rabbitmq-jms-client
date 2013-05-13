@@ -26,9 +26,11 @@ import javax.jms.Topic;
 import javax.jms.TopicConnection;
 import javax.jms.TopicSession;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ShutdownSignalException;
-import com.rabbitmq.jms.util.RJMSLogger;
 import com.rabbitmq.jms.util.RMQJMSException;
 
 /**
@@ -41,7 +43,7 @@ import com.rabbitmq.jms.util.RMQJMSException;
  */
 public class RMQConnection implements Connection, QueueConnection, TopicConnection {
 
-    private static final RJMSLogger LOGGER = new RJMSLogger("RMQConnection");
+    private final Logger logger = LoggerFactory.getLogger(RMQConnection.class);;
 
     /** the TCP connection wrapper to the RabbitMQ broker */
     private final com.rabbitmq.client.Connection rabbitConnection;
@@ -93,7 +95,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
-        LOGGER.log("createSession");
+        logger.trace("transacted={}, acknowledgeMode={}", transacted, acknowledgeMode);
         illegalStateExceptionIfClosed();
         freezeClientID();
         RMQSession session = new RMQSession(this, transacted, acknowledgeMode, subscriptions);
@@ -114,7 +116,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public String getClientID() throws JMSException {
-        LOGGER.log("getClientID");
         illegalStateExceptionIfClosed();
         return this.clientID;
     }
@@ -124,7 +125,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void setClientID(String clientID) throws JMSException {
-        LOGGER.log("setClientID");
+        logger.trace("set ClientID to '{}'", clientID);
         illegalStateExceptionIfClosed();
         if (!canSetClientID) throw new IllegalStateException("Client ID can only be set right after connection creation");
         if (this.clientID==null) {
@@ -144,7 +145,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public ConnectionMetaData getMetaData() throws JMSException {
-        LOGGER.log("getMetaData");
         illegalStateExceptionIfClosed();
         freezeClientID();
         return connectionMetaData;
@@ -155,7 +155,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public ExceptionListener getExceptionListener() throws JMSException {
-        LOGGER.log("getExceptionListener");
         illegalStateExceptionIfClosed();
         freezeClientID();
         return this.exceptionListener;
@@ -166,7 +165,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void setExceptionListener(ExceptionListener listener) throws JMSException {
-        LOGGER.log("setExceptionListener");
+        logger.trace("set ExceptionListener ({})", listener);
         illegalStateExceptionIfClosed();
         freezeClientID();
         this.exceptionListener = listener;
@@ -177,13 +176,15 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void start() throws JMSException {
-        LOGGER.log("start");
+        logger.trace("starting connection ({})", this);
         illegalStateExceptionIfClosed();
         freezeClientID();
         if (stopped.compareAndSet(true, false)) {
             for (RMQSession session : this.sessions) {
                 session.resume();
             }
+        } else {
+            logger.warn("connection ({}) not stopped", this);
         }
     }
 
@@ -192,13 +193,15 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void stop() throws JMSException {
-        LOGGER.log("stop");
+        logger.trace("stopping connection ({})", this);
         illegalStateExceptionIfClosed();
         freezeClientID();
         if (stopped.compareAndSet(false, true)) {
             for (RMQSession session : this.sessions) {
                 session.pause();
             }
+        } else {
+            logger.warn("connection ({}) not started", this);
         }
     }
 
@@ -220,7 +223,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void close() throws JMSException {
-        LOGGER.log("close");
+        logger.trace("closing connection ({})", this);
         if (this.closed) return;
 
         String cID = getClientID();
@@ -236,7 +239,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             } catch (Exception e) {
                 if (null==sessionException) {
                     sessionException = e;
-                    e.printStackTrace(); // diagnostics
+                    logger.error("exception closing session ({})", session, e);
                 }
             }
         }
@@ -266,7 +269,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public TopicSession createTopicSession(boolean transacted, int acknowledgeMode) throws JMSException {
-        LOGGER.log("createTopicSession");
         return (TopicSession) this.createSession(transacted, acknowledgeMode);
     }
 
@@ -284,7 +286,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public QueueSession createQueueSession(boolean transacted, int acknowledgeMode) throws JMSException {
-        LOGGER.log("createQueueSession");
         return (QueueSession) this.createSession(transacted, acknowledgeMode);
     }
 
@@ -332,14 +333,13 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      * @param session - the session that is being closed
      */
     void sessionClose(RMQSession session) throws JMSException {
-        LOGGER.log("internal:sessionClose");
+        logger.trace("internal:sessionClose({})", session);
         if (this.sessions.remove(session)) {
             session.internalClose();
         }
     }
 
     long getTerminationTimeout() {
-        LOGGER.log("internal:getTerminationTimeout");
         return this.terminationTimeout;
     }
 
