@@ -151,7 +151,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     @Override
     public void setMessageListener(MessageListener messageListener) throws JMSException {
         if (messageListener == this.messageListener) { // no change, so do nothing
-            logger.info("MessageListener({}) already set - ignored", messageListener);
+            logger.info("MessageListener({}) already set", messageListener);
             return;
         }
         logger.trace("setting MessageListener({})", messageListener);
