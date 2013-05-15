@@ -180,15 +180,17 @@ class MessageListenerConsumer implements Consumer, Abortable {
         } catch (TimeoutException te) {
             Thread.currentThread().interrupt();
         } catch (AlreadyClosedException acx) {
-            logger.error("basicCancel (consumerTag='{}') threw exception", cT, acx);
             // TODO check if basicCancel really necessary in this case.
             if (!acx.isInitiatedByApplication()) {
+                logger.error("basicCancel (consumerTag='{}') threw exception", cT, acx);
                 throw acx;
             }
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
-        } catch (Exception e) {
-            logger.error("basicCancel (consumerTag='{}') threw exception", cT, e);
+        } catch (IOException e) {
+            if (! e.getMessage().equals("Unknown consumerTag")) {
+                logger.error("basicCancel (consumerTag='{}') threw unexpected exception", cT, e);
+            }
         }
     }
 
