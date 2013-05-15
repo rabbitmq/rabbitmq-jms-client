@@ -482,6 +482,25 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         return createConsumerInternal((RMQDestination) destination, null, false, null);
     }
 
+    private volatile boolean syncConsumer = false;
+    private volatile boolean aSyncConsumer = false;
+    boolean isSyncConsumer() {
+        return this.syncConsumer;
+    }
+    boolean isAsyncConsumer() {
+        return this.aSyncConsumer;
+    }
+    boolean setSyncConsumer(boolean sync) {
+        if (isAsyncConsumer()) return false; // cannot change sync state when aSync
+        this.syncConsumer = sync;
+        return true;
+    }
+    boolean setAsyncConsumer(boolean aSync) {
+        if (isSyncConsumer()) return false; // cannot change aSync state when sync
+        this.aSyncConsumer = aSync;
+        return true;
+    }
+
     /**
      * Creates a consumer for a destination. If this is a topic, we can specify the autoDelete flag.
      * @param dest internal destination object
