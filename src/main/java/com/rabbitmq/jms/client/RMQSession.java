@@ -482,8 +482,17 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         return createConsumerInternal((RMQDestination) destination, null, false, null);
     }
 
+    private boolean syncConsumer = false;
+    private boolean aSyncConsumer = false;
+    boolean isSyncConsumer() {
+        return this.syncConsumer;
+    }
+    boolean isAsyncConsumer() {
+        return this.aSyncConsumer;
+    }
+
     /**
-     * Creates a consumer for a destination. If this is a topic, we can specify the autoDelete flag.
+     * Creates a consumer for a destination.
      * @param dest internal destination object
      * @param uuidTag only used for topics, if null, one is generated as the queue name for this topic
      * @param durableSubscriber true if this is a durable topic subscription
