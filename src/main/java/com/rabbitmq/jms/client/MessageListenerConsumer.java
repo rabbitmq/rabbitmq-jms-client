@@ -190,8 +190,8 @@ class MessageListenerConsumer implements Consumer, Abortable {
         } catch (IOException e) {
             if (! e.getMessage().equals("Unknown consumerTag")) {
                 logger.error("basicCancel (consumerTag='{}') threw unexpected exception", cT, e);
-            }
         }
+    }
     }
 
     @Override

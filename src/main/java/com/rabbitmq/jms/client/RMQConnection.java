@@ -183,6 +183,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             for (RMQSession session : this.sessions) {
                 session.resume();
             }
+        } else {
+            logger.warn("connection ({}) not stopped", this);
         }
     }
 
@@ -198,6 +200,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             for (RMQSession session : this.sessions) {
                 session.pause();
             }
+        } else {
+            logger.warn("connection ({}) not started", this);
         }
     }
 
