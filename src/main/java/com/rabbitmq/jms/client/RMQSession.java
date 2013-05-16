@@ -81,7 +81,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     /** A list of all the producers created by this session.
      * When a producer is closed, it will be removed from this list */
     private final ArrayList<RMQMessageProducer> producers = new ArrayList<RMQMessageProducer>();
-    /** A list of all the consumer created by this session.
+    /** A list of all the consumers created by this session.
      * When a consumer is closed, it will be removed from this list */
     private final ArrayList<RMQMessageConsumer> consumers = new ArrayList<RMQMessageConsumer>();
     /** We keep an ordered set of the message tags (acknowledgement tags) for all messages received and unacknowledged.
@@ -482,22 +482,19 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         return createConsumerInternal((RMQDestination) destination, null, false, null);
     }
 
-    private volatile boolean syncConsumer = false;
-    private volatile boolean aSyncConsumer = false;
-    boolean isSyncConsumer() {
-        return this.syncConsumer;
-    }
-    boolean isAsyncConsumer() {
-        return this.aSyncConsumer;
-    }
-    boolean setSyncConsumer(boolean sync) {
-        if (isAsyncConsumer()) return false; // cannot change sync state when aSync
-        this.syncConsumer = sync;
+    /** All consumers on a session must be used all synchronously or all asynchronously */
+    boolean syncAllowed() {
+        // Return (None of the MessageConsumers have a (non-null) MessageListener set).
+        for (RMQMessageConsumer mc : consumers) {
+            if (mc.messageListenerIsSet()) return false;
+        }
         return true;
     }
-    boolean setAsyncConsumer(boolean aSync) {
-        if (isSyncConsumer()) return false; // cannot change aSync state when sync
-        this.aSyncConsumer = aSync;
+    boolean aSyncAllowed() {
+        // TODO: return (Number of receives is zero for all MessageConsumers.)
+        for (RMQMessageConsumer mc : consumers) {
+            if (0 != mc.getNumberOfReceives()) return false;
+        }
         return true;
     }
 

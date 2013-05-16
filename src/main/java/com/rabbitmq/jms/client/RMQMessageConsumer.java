@@ -3,6 +3,7 @@ package com.rabbitmq.jms.client;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.IllegalStateException;
@@ -73,6 +74,9 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     /** Record and preserve the need to acknowledge automatically */
     private final boolean autoAck;
 
+    /** Track how this consumer if being used. */
+    private final AtomicInteger numberOfReceives = new AtomicInteger(0);
+
     /**
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
      *
@@ -118,6 +122,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     /**
+     * @return whether this Consumer is being used asynchronously
+     */
+    boolean messageListenerIsSet() {
+        return (null != this.messageListener);
+    }
+
+    /**
      * Dispose of any Rabbit Consumer that may be active and tracked.
      */
     private void removeListenerConsumer() {
@@ -153,6 +164,9 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         if (messageListener == this.messageListener) { // no change, so do nothing
             logger.info("MessageListener({}) already set - ignored", messageListener);
             return;
+        }
+        if (!this.session.aSyncAllowed()) {
+            throw new IllegalStateException("A MessageListener cannot be set if receive() is outstanding on a session. (See JMS 1.1 §4.4.6.)");
         }
         logger.trace("setting MessageListener({})", messageListener);
         this.removeListenerConsumer();  // if there is any
@@ -288,6 +302,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         }
     }
 
+    int getNumberOfReceives() {
+        return this.numberOfReceives.get();
+    }
+
     private RMQMessage receive(TimeTracker tt)  throws JMSException {
     /* Pseudocode:
      *  get (synchronous read)
@@ -295,6 +313,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      *  if nothing, then poll (intervals up to time limit given)
      *  if still nothing return nothing.
      */
+        if (!this.session.syncAllowed()) {
+            throw new IllegalStateException("A session may not receive() when a MessageListener is set. (See JMS 1.1 §4.4.6.)");
+        }
+        this.numberOfReceives.incrementAndGet();
         try {
             if (!this.receiveManager.enter(tt))  // stopped?
                 return null; // timed out while stopped
@@ -314,6 +336,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             /* Someone interrupted us -- we ought to terminate */
             Thread.currentThread().interrupt(); // reset interrupt status
             return null;
+        } finally {
+            this.numberOfReceives.decrementAndGet();
         }
     }
 
