@@ -1,6 +1,0 @@
-open_source_licenses.txt
-
-Rabbit JMS Adapter v1.0.1 GA
-
-THE CONTENTS OF THIS FILE ARE TO BE SUPPLIED
-============================================
