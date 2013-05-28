@@ -15,7 +15,8 @@ import javax.naming.RefAddr;
 import javax.naming.Reference;
 import javax.naming.spi.ObjectFactory;
 
-import com.rabbitmq.jms.util.RJMSLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * JNDI Factory to create resources in containers such as <a href="http://tomcat.apache.org">Tomcat</a>.
@@ -85,7 +86,7 @@ import com.rabbitmq.jms.util.RJMSLogger;
  */
 public class RMQObjectFactory implements ObjectFactory {
 
-    private static final RJMSLogger LOGGER = new RJMSLogger("RMQObjectFactory");
+    private final Logger logger = LoggerFactory.getLogger(RMQObjectFactory.class);
 
     /**
      * {@inheritDoc}
@@ -145,6 +146,7 @@ public class RMQObjectFactory implements ObjectFactory {
      * @throws NamingException if a required property is missing
      */
     public Object createConnectionFactory(Reference ref, Name name) throws NamingException {
+        this.logger.trace("Creating connection factory ref '{}', name '{}'.", ref, name);
         RMQConnectionFactory f = new RMQConnectionFactory();
 
         String username = getStringProperty(ref, "username", true, "guest");
@@ -178,6 +180,7 @@ public class RMQObjectFactory implements ObjectFactory {
      * @throws NamingException if the <code>destinationName</code> property is missing
      */
     public Object createDestination(Reference ref, Name name, boolean topic) throws NamingException {
+        this.logger.trace("Creating destination ref '{}', name '{}' (topic={}).", ref, name, topic);
         String dname = getStringProperty(ref, "destinationName", false, null);
         RMQDestination d = new RMQDestination(dname, !topic, false);
         return d;
@@ -208,7 +211,6 @@ public class RMQObjectFactory implements ObjectFactory {
         if (content == null && mayBeNull) {
             content = defaultValue;
         }
-        LOGGER.log("getStringProperty", propertyName, content);
         return content;
     }
 
