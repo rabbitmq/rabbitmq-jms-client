@@ -32,23 +32,23 @@ public abstract class RMQMessage implements Message, Cloneable {
     /**
      * Error message used when throwing {@link javax.jms.MessageFormatException}
      */
-    public static final String UNABLE_TO_CAST = "Unable to cast the object, %s, into the specified type %s";
+    protected static final String UNABLE_TO_CAST = "Unable to cast the object, %s, into the specified type %s";
 
     /**
      * Properties inside of a JMS message can NOT be named any of these reserved words
      */
-    public static final String[] RESERVED_NAMES = {"NULL", "TRUE", "FALSE", "NOT", "AND", "OR", "BETWEEN", "LIKE", "IN",
-                                                   "IS", "ESCAPE"};
+    private static final String[] RESERVED_NAMES = {"NULL", "TRUE", "FALSE", "NOT", "AND", "OR", "BETWEEN", "LIKE", "IN",
+                                                    "IS", "ESCAPE"};
 
     /**
      * Properties inside of a JMS message can NOT start with any of the following characters in the name
      */
-    public static final char[] INVALID_STARTS_WITH = {'0','1','2','3','4','5','6','7','8','9','-','+', '\'','"'};
+    private static final char[] INVALID_STARTS_WITH = {'0','1','2','3','4','5','6','7','8','9','-','+', '\'','"'};
 
     /**
      * Properties inside of a JMS may not contain these characters in the name
      */
-    public static final char[] MAY_NOT_CONTAIN = {'.','\'','"'};
+    private static final char[] MAY_NOT_CONTAIN = {'.','\'','"'};
 
     /**
      * When we create a message that has a byte[] as the underlying
