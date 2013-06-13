@@ -41,14 +41,14 @@ public abstract class RMQMessage implements Message, Cloneable {
                                                     "IS", "ESCAPE"};
 
     /**
-     * Properties inside of a JMS message can NOT start with any of the following characters in the name
+     * Properties inside of a JMS message can NOT start with any of the following characters (added period)
      */
-    private static final char[] INVALID_STARTS_WITH = {'0','1','2','3','4','5','6','7','8','9','-','+', '\'','"'};
+    private static final char[] INVALID_STARTS_WITH = {'0','1','2','3','4','5','6','7','8','9','-','+','\'','"','.'};
 
     /**
-     * Properties inside of a JMS may not contain these characters in the name
+     * Properties inside of a JMS may not contain these characters in the name (removed period)
      */
-    private static final char[] MAY_NOT_CONTAIN = {'.','\'','"'};
+    private static final char[] MAY_NOT_CONTAIN = {'\'','"'};
 
     /**
      * When we create a message that has a byte[] as the underlying
@@ -640,19 +640,19 @@ public abstract class RMQMessage implements Message, Cloneable {
             char c = name.charAt(0);
             for (int i=0; i<INVALID_STARTS_WITH.length; i++) {
                 if (c == INVALID_STARTS_WITH[i]) {
-                    throw new JMSException("Identifier may not start with:"+c);
+                    throw new JMSException("Identifier may not start with: '"+c+"'");
                 }
             }
             //check funky chars inside the string
             for (int i=0; i<MAY_NOT_CONTAIN.length; i++) {
                 if (name.indexOf(MAY_NOT_CONTAIN[i])>=0) {
-                    throw new JMSException("Identifier may not contain:"+MAY_NOT_CONTAIN[i]);
+                    throw new JMSException("Identifier may not contain: '"+MAY_NOT_CONTAIN[i]+"'");
                 }
             }
             //check reserverd names
             for (int i=0; i<RESERVED_NAMES.length; i++) {
                 if (name.equalsIgnoreCase(RESERVED_NAMES[i])) {
-                    throw new JMSException("Invalid identifier:"+RESERVED_NAMES[i]);
+                    throw new JMSException("Invalid identifier: '"+RESERVED_NAMES[i]+"'");
                 }
             }
 
