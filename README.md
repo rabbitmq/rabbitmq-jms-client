@@ -1,5 +1,7 @@
 ## Java JMS Client based on RabbitMQ
 
+(#1.0.1-PATCH-2013-06-13)
+
 ### Overview
 
 This Java code (forming a single `jar`) is the heart of the RabbitMQ JMS Client.  It is a Maven project, with parent `rabbitmq-jms-parent` whose source is in the repository named `rabbit-jms-parent`.
