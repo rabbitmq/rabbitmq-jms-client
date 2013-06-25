@@ -32,6 +32,9 @@ import com.rabbitmq.jms.util.Util;
  * Base class for RMQ*Message classes. This is abstract and cannot be instantiated independently.
  */
 public abstract class RMQMessage implements Message, Cloneable {
+    /** Logger shared with derived classes */
+    protected final Logger logger = LoggerFactory.getLogger(RMQMessage.class);
+
     /**
      * Error message used when throwing {@link javax.jms.MessageFormatException}
      */
@@ -49,7 +52,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     private static final char[] INVALID_STARTS_WITH = {'0','1','2','3','4','5','6','7','8','9','-','+','\'','"','.'};
 
     /**
-     * Properties inside of a JMS may not contain these characters in the name (removed period)
+     * Properties inside of a JMS may not contain these characters in the name (removed period 2013-06-13)
      */
     private static final char[] MAY_NOT_CONTAIN = {'\'','"'};
 
@@ -106,7 +109,6 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     private volatile boolean readonlyProperties=false;
     private volatile boolean readonlyBody=false;
-
 
     /**
      * Returns true if this message body is read only
