@@ -21,6 +21,9 @@ import javax.jms.Message;
 import javax.jms.MessageFormatException;
 import javax.jms.MessageNotWriteableException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.rabbitmq.jms.util.IteratorEnum;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.Util;
@@ -75,10 +78,12 @@ public abstract class RMQMessage implements Message, Cloneable {
     private static final String JMS_MESSAGE_PRIORITY = PREFIX + "jms.message.priority";
 
     /**
-     * For turning Strings into byte[] and back we use this charset
-     * This is used for {@link RMQMessage#getJMSCorrelationIDAsBytes()}
+     * For turning {@link String}s into <code>byte[]</code> and back we use this {@link Charset} instance.
+     * This is used for {@link RMQMessage#getJMSCorrelationIDAsBytes()}.
      */
-    private static final Charset charset = Charset.forName("UTF-8");
+    private static final Charset CHARSET = Charset.forName("UTF-8");
+
+    protected final Logger logger = LoggerFactory.getLogger(RMQMessage.class);
 
     /**
      * Here we store the JMS_ properties that would have been fields
@@ -228,7 +233,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     public byte[] getJMSCorrelationIDAsBytes() throws JMSException {
         String id = this.getStringProperty(JMS_MESSAGE_CORR_ID);
         if (id != null)
-            return id.getBytes(charset);
+            return id.getBytes(CHARSET);
         else
             return null;
     }
@@ -238,7 +243,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public void setJMSCorrelationIDAsBytes(byte[] correlationID) throws JMSException {
-        String id = correlationID != null ? new String(correlationID, charset) : null;
+        String id = correlationID != null ? new String(correlationID, CHARSET) : null;
         this.setStringProperty(JMS_MESSAGE_CORR_ID, id);
     }
 
@@ -749,7 +754,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      *@return the charset used to convert a TextMessage to byte[]
      */
     public Charset getCharset() {
-        return charset;
+        return CHARSET;
     }
 
     /**
@@ -831,7 +836,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
 
     /**
-     * Serializes a {@link RMQMessage} to a byte array.
+     * Serializes the body of a {@link RMQMessage} to a byte array.
      * This method invokes the {@link #writeBody(ObjectOutput)} method
      * on the class that is being serialized
      * @param msg - the message to serialize
