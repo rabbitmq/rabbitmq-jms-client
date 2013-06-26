@@ -86,8 +86,6 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     private static final Charset CHARSET = Charset.forName("UTF-8");
 
-    protected final Logger logger = LoggerFactory.getLogger(RMQMessage.class);
-
     /**
      * Here we store the JMS_ properties that would have been fields
      */
