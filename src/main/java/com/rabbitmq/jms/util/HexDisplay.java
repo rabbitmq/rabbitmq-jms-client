@@ -5,27 +5,6 @@ public class HexDisplay {
     private static final String LineTemplate = "                                         |                 ";
     private static final int IndexFirstChar = 43; //                                       |
 
-    public static final void decodeByteArrayIntoStringBuilder(byte[] buf, StringBuilder bufferOutput) {
-        int bufPos = 0;
-        StringBuilder lineBuf = new StringBuilder();
-        int noLines = (buf.length + 15)/16;
-        for (int line=0; line<noLines; ++line) {
-            int startOfLine = 16*line;
-            int lineExtent = min(buf.length, 16*line + 16);
-            lineBuf.append(LineTemplate);
-            while (bufPos < lineExtent) {
-                int posHH = posOfHiHex(bufPos-startOfLine);
-                lineBuf.setCharAt(posHH,   hiHex(buf[bufPos]));
-                lineBuf.setCharAt(1+posHH, loHex(buf[bufPos]));
-                lineBuf.setCharAt(IndexFirstChar + (bufPos-startOfLine), safeChar(buf[bufPos]));
-                ++bufPos;
-            }
-            lineBuf.append('\n');
-            bufferOutput.append(lineBuf);
-            lineBuf.setLength(0);
-        }
-    }
-
     private static final char[] HEXCHARS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
     private static final char[] SAFECHARS = {'.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.',
                                              '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.',
@@ -36,17 +15,31 @@ public class HexDisplay {
                                              '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
                                              'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~', '.'};
 
-    private static final char hiHex(byte b) {
-        return HEXCHARS[(b>>4) & 0x0F];
+    public static final void decodeByteArrayIntoStringBuilder(byte[] buf, StringBuilder bufferOutput) {
+        StringBuilder lineBuf = new StringBuilder();
+        for (int startOfLine=0; startOfLine<buf.length; startOfLine+=16) {
+            int lineLength = min(buf.length - startOfLine, 16);
+            lineBuf.setLength(0);
+            lineBuf.append(LineTemplate);
+            for (int linePos=0; linePos<lineLength; ++linePos) {
+                byte b = buf[startOfLine+linePos];
+                setHexInStringBuilder(lineBuf, displayPosOfHiHex(linePos), b);
+                lineBuf.setCharAt(IndexFirstChar + linePos, safeChar(b));
+            }
+            bufferOutput.append(lineBuf).append('\n');
+        }
     }
-    private static final char loHex(byte b) {
-        return HEXCHARS[b & 0x0F];
+
+    private static final void setHexInStringBuilder(StringBuilder lineBuf, int pos, byte b) {
+        lineBuf.setCharAt(pos++, HEXCHARS[(b>>4) & 0x0F]);
+        lineBuf.setCharAt(pos,   HEXCHARS[     b & 0x0F]);
     }
+
     private static final char safeChar(byte b) {
         return SAFECHARS[b<0 ? 0 : b];
     }
 
-    private static final int posOfHiHex(int i) {
+    private static final int displayPosOfHiHex(int i) {
         return (i/2)*5 + (i%2 == 0 ? 1 : 3);
     }
 
