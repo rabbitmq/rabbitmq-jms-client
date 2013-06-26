@@ -15,7 +15,6 @@ import javax.jms.MessageNotWriteableException;
 import javax.jms.ObjectMessage;
 
 import com.rabbitmq.jms.client.RMQMessage;
-import com.rabbitmq.jms.util.HexDisplay;
 import com.rabbitmq.jms.util.RMQJMSException;
 
 /**
@@ -54,11 +53,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         if (buf==null) {
             return null;
         } else {
-            if (logger.isDebugEnabled()) {
-                StringBuilder bufferOutput = new StringBuilder("length ").append(buf.length).append('\n');
-                HexDisplay.decodeByteArrayIntoStringBuilder(buf, bufferOutput);
-                logger.debug("Deserialising object from buffer {}", bufferOutput);
-            }
+            this.loggerDebugByteArray("Deserialising object from buffer {} for {}", this.buf, "RMQObjectMessage");
             ByteArrayInputStream bin = new ByteArrayInputStream(buf);
             try {
                 ObjectInputStream in = new ObjectInputStream(bin);

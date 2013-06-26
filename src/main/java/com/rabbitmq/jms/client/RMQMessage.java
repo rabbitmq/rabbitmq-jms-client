@@ -24,6 +24,7 @@ import javax.jms.MessageNotWriteableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.rabbitmq.jms.util.HexDisplay;
 import com.rabbitmq.jms.util.IteratorEnum;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.Util;
@@ -34,6 +35,14 @@ import com.rabbitmq.jms.util.Util;
 public abstract class RMQMessage implements Message, Cloneable {
     /** Logger shared with derived classes */
     protected final Logger logger = LoggerFactory.getLogger(RMQMessage.class);
+
+    protected void loggerDebugByteArray(String format, byte[] buffer, Object arg) {
+        if (logger.isDebugEnabled()) {
+            StringBuilder bufferOutput = new StringBuilder("Byte array, length ").append(buffer.length).append(" :\n");
+            HexDisplay.decodeByteArrayIntoStringBuilder(buffer, bufferOutput);
+            logger.debug(format, bufferOutput.append("end of byte array, length ").append(buffer.length).append('.'), arg);
+        }
+    }
 
     /**
      * Error message used when throwing {@link javax.jms.MessageFormatException}
