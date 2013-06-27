@@ -1,6 +1,6 @@
 ## Java JMS Client based on RabbitMQ
 
-(#1.0.1-PATCH-2013-06-13)
+(#1.0.1-PATCH-2013-06-27)
 
 ### Overview
 
