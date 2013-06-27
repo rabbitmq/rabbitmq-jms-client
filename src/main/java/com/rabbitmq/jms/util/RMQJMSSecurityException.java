@@ -1,4 +1,4 @@
-/* Copyright © 2013 VMware, Inc. All rights reserved. */
+/* Copyright (c) 2013 GoPivotal, Inc. All rights reserved. */
 package com.rabbitmq.jms.util;
 
 import javax.jms.JMSSecurityException;
