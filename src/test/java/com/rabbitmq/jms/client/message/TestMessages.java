@@ -3,6 +3,7 @@ package com.rabbitmq.jms.client.message;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -70,11 +71,11 @@ public class TestMessages {
     }
 
     public static void writeObjectMessage(ObjectMessage message) throws JMSException {
-        message.setObject(new TestSerializable(8));
+        message.setObject(new TestSerializable(8, "Test object"));
     }
 
     public static void readObjectMessage(ObjectMessage message) throws JMSException {
-        assertEquals(new TestSerializable(8), message.getObject());
+        assertEquals(new TestSerializable(8, "Test object"), message.getObject());
     }
 
     public static void writeMapMessage(MapMessage message) throws JMSException {
@@ -196,7 +197,7 @@ public class TestMessages {
         message.writeString("TEST");
         try {
             message.writeObject(new TestNonSerializable());
-            assertTrue(false);
+            fail("Did not throw exception trying to send non serializable object");
         } catch (Exception x) {
 
         }
@@ -233,10 +234,12 @@ public class TestMessages {
     private static class TestSerializable implements Serializable {
         /** TODO */
         private static final long serialVersionUID = 3725702565209476472L;
-        int i;
+        private int i;
+        private Object object;
 
-        public TestSerializable(int i) {
+        public TestSerializable(int i, Object object) {
             this.i = i;
+            this.object = object;
         }
 
         @Override
@@ -257,6 +260,12 @@ public class TestMessages {
                 return false;
             TestSerializable other = (TestSerializable) obj;
             if (this.i != other.i)
+                return false;
+            if (this.object == other.object)
+                return true;
+            if (this.object == null)
+                return false;
+            if (! this.object.equals(other.object))
                 return false;
             return true;
         }

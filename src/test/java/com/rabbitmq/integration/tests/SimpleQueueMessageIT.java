@@ -1,6 +1,10 @@
 /* Copyright © 2013 VMware, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.Serializable;
+
 import javax.jms.BytesMessage;
 import javax.jms.DeliveryMode;
 import javax.jms.MapMessage;
@@ -130,7 +134,9 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
             QueueSender queueSender = queueSession.createSender(queue);
             queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
             ObjectMessage message = queueSession.createObjectMessage();
-            TestMessages.writeObjectMessage(message);
+            message.setObjectProperty("objectProp", "This is an object property"); // try setting an object property, too
+            //TestMessages.writeObjectMessage(message);
+            message.setObject((Serializable)queue);
             queueSender.send(message);
         } finally {
             reconnect();
@@ -141,6 +147,6 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
         Queue queue = queueSession.createQueue(QUEUE_NAME);
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
         ObjectMessage message = (ObjectMessage) queueReceiver.receive();
-        TestMessages.readObjectMessage(message);
+        assertEquals("Object not read correctly;", queue.getQueueName(), ((Queue) message.getObject()).getQueueName());
     }
 }
