@@ -1,6 +1,8 @@
 #!/bin/bash
 
-echo 'Start RabbitMQ server for Integration Tests'
+source bin/set-vars
+
+echo "Start RabbitMQ server (version ${RMQ_VERSION}) for Integration Tests"
 
 if [ -z "${RJMS_RABBITMQ_BASE}" ] ; then
   echo "Couldn't find the RJMS_RABBITMQ_BASE directory"
@@ -8,6 +10,13 @@ if [ -z "${RJMS_RABBITMQ_BASE}" ] ; then
 fi
 
 sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmqctl -n ${RJMS_RABBITMQ_NODENAME} stop || echo 'not stopped'
+
+echo 'Delete previous logs:'
+sudo rm -rf ${RJMS_RABBITMQ_BASE}/var/log/rabbitmq/*
+echo '-------------------------'
+echo 'Delete previous mnesia db:'
+sudo rm -rf ${RJMS_RABBITMQ_BASE}/var/lib/mnesia/*
+echo '-------------------------'
 
 sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmq-plugins disable rabbitmq_jms_topic_exchange
 sudo rm ${RJMS_RABBITMQ_PLUGINS}/rjms-topic-selector-*.ez

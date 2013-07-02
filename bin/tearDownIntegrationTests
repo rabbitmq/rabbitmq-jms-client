@@ -1,6 +1,8 @@
 #!/bin/bash
 
-echo 'Stop RabbitMQ server after Integration Tests'
+source bin/set-vars
+
+echo "Stop RabbitMQ server (version ${RMQ_VERSION}) after Integration Tests"
 
 if [ -z "${RJMS_RABBITMQ_BASE}" ] ; then
   echo "Couldn't find the RJMS_RABBITMQ_BASE directory"
