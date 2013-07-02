@@ -84,9 +84,18 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         // to deserialize the object
         boolean isnull = inputStream.readBoolean();
         if (!isnull) {
-            int len = inputStream.readInt();
-            buf = new byte[len];
-            inputStream.read(buf);
+            readWholeBuffer(inputStream.readInt(), inputStream);
+        }
+    }
+
+    private void readWholeBuffer(int len, ObjectInput inputStream) throws IOException {
+        buf = new byte[len];
+        int totalBytesRead = inputStream.read(buf, 0, len);
+        if (totalBytesRead == -1) throw new IOException("ObjectMessage body too small!");
+        while (totalBytesRead < len) {
+            int bytesRead = inputStream.read(buf, totalBytesRead, len-totalBytesRead);
+            if (bytesRead == -1) throw new IOException("ObjectMessage body too small!");
+            totalBytesRead += bytesRead;
         }
     }
 
