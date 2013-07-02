@@ -186,6 +186,9 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
 
+        <configuration>
+          <commandlineArgs>${rabbitmq.version}</commandlineArgs>
+        </configuration>
         <executions>
           <execution>
             <id>set-up-rabbit</id>
