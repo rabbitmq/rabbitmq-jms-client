@@ -26,9 +26,9 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     private volatile String name;
     private volatile RMQExchangeInfo exchangeInfo;
     private volatile String routingKey;
-    private volatile boolean queue;
-    private volatile boolean declared;
-    private volatile boolean temporary;
+    private volatile boolean isQueue;
+    private volatile boolean isDeclared;
+    private volatile boolean isTemporary;
 
     /**
      * Constructor used when object is deserialized using Java serialization
@@ -38,25 +38,25 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     /**
      * Creates a destination in RabbitMQ
-     * @param name the name of the topic or queue
-     * @param queue true if this represent a queue
-     * @param temporary true if this is a temporary destination
+     * @param destName the name of the topic or queue
+     * @param isQueue true if this represent a queue
+     * @param isTemporary true if this is a temporary destination
      */
-    public RMQDestination(String name, boolean queue, boolean temporary) {
-        this(name, queueOrTopicExchangeName(queue, temporary, name), queueOrTopicExchangeType(queue, name), name, queue, false, temporary);
+    public RMQDestination(String destName, boolean isQueue, boolean isTemporary) {
+        this(destName, queueOrTopicExchangeName(isQueue, isTemporary, destName), queueOrTopicExchangeType(isQueue, destName), destName, isQueue, false, isTemporary);
     }
 
-    private static final String queueOrTopicExchangeName(boolean queue, boolean temporary, String name) {
-        if (queue)
+    private static final String queueOrTopicExchangeName(boolean isQueue, boolean isTemporary, String destName) {
+        if (isQueue)
             return ""; // default exchange in RabbitMQ (direct)
-        else if (temporary)
+        else if (isTemporary)
             return RMQExchangeInfo.JMS_TEMP_TOPIC_EXCHANGE_NAME; // fixed topic exchange in RabbitMQ for jms traffic
         else
             return RMQExchangeInfo.JMS_DURABLE_TOPIC_EXCHANGE_NAME; // fixed topic exchange in RabbitMQ for jms traffic
     }
 
-    private static final String queueOrTopicExchangeType(boolean queue, String name) {
-        if (queue)
+    private static final String queueOrTopicExchangeType(boolean isQueue, String destName) {
+        if (isQueue)
             return ""; // default exchange type in RabbitMQ (direct)
         else
             return "topic"; // standard topic exchange type in RabbitMQ
@@ -66,28 +66,28 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * Creates a destination, either a queue or a topic, initialising
      * all the values appropriately.
      *
-     * @param name - the name of the topic or the queue
+     * @param destName - the name of the topic or the queue
      * @param exchangeName - the RabbitMQ exchange name we will publish to and bind queues to.
      * @param exchangeType - the RabbitMQ type of exchange used (only used if it needs to be declared)
      * @param routingKey - the routing key used for this destination. the
      *            routingKey should be the same value as the name parameter.
-     * @param queue - true if this is a queue, false if this is a topic
-     * @param declared - <code>true</code> if we have called
+     * @param isQueue - true if this is a queue, false if this is a topic
+     * @param isDeclared - <code>true</code> if we have called
      *            {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)}
      *            or
      *            {@link Channel#exchangeDeclare(String, String, boolean, boolean, boolean, java.util.Map)}
      *            to represent this queue/topic in the RabbitMQ broker. If
      *            creating a topic/queue to bind in JNDI, this value must be set
      *            to <code>false</code>.
-     * @param temporary true if this is a temporary destination
+     * @param isTemporary true if this is a temporary destination
      */
-    private RMQDestination(String name, String exchangeName, String exchangeType, String routingKey, boolean queue, boolean declared, boolean temporary) {
-        this.name = name;
+    private RMQDestination(String destName, String exchangeName, String exchangeType, String routingKey, boolean isQueue, boolean isDeclared, boolean isTemporary) {
+        this.name = destName;
         this.exchangeInfo = new RMQExchangeInfo(exchangeName, exchangeType);
         this.routingKey = routingKey;
-        this.queue = queue;
-        this.declared = declared;
-        this.temporary = temporary;
+        this.isQueue = isQueue;
+        this.isDeclared = isDeclared;
+        this.isTemporary = isTemporary;
     }
 
     /**
@@ -115,7 +115,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @return true if this is a queue, false if it is a topic
      */
     public boolean isQueue() {
-        return this.queue;
+        return this.isQueue;
     }
 
     /**
@@ -164,14 +164,14 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * Set to true if this is a queue, false if this is a topic - should only be
      * used when binding into JNDI
      *
-     * @param queue <code>true</code> if this is a queue, <code>false</code> otherwise
+     * @param isQueue <code>true</code> if this is a queue, <code>false</code> otherwise
      * @throws IllegalStateException if the queue has already been declared
      *             {@link RMQDestination#isDeclared()} return true
      */
-    public void setQueue(boolean queue) {
+    public void setQueue(boolean isQueue) {
         if (isDeclared())
             throw new IllegalStateException();
-        this.queue = queue;
+        this.isQueue = isQueue;
     }
 
     @Override
@@ -199,27 +199,27 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      *         until the queue/topic has been setup in the RabbitMQ broker
      */
     public boolean isDeclared() {
-        return declared;
+        return isDeclared;
     }
 
     /**
      * Should only be used internally by {@link RMQSession}
      *
-     * @param declared - set to true if the queue/topic has been defined in the
+     * @param isDeclared - set to true if the queue/topic has been defined in the
      *            RabbitMQ broker
      * @throws IllegalStateException if the queue has already been declared
      *             {@link RMQDestination#isDeclared()} return true
      * @see #isDeclared()
      */
-    public void setDeclared(boolean declared) {
-        this.declared = declared;
+    public void setDeclared(boolean isDeclared) {
+        this.isDeclared = isDeclared;
     }
 
     /**
      * @return <code>true</code> if this is a temporary destination, <code>false</code> otherwise
      */
     public boolean isTemporary() {
-        return temporary;
+        return isTemporary;
     }
 
     @Override
