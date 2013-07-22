@@ -22,6 +22,7 @@ import org.junit.Test;
 public class RabbitMQRedeliverOnNackIT  extends AbstractITQueue {
     private static final String QUEUE_NAME = "test.queue."+RabbitMQRedeliverOnNackIT.class.getCanonicalName();
     private static final String MESSAGE = "Hello " + RabbitMQRedeliverOnNackIT.class.getName();
+    private static final long TEST_RECEIVE_TIMEOUT = 1000; // one second
 
     /**
      * Test that Rabbit re-delivers a received message which has been rolled-back.
@@ -47,13 +48,13 @@ public class RabbitMQRedeliverOnNackIT  extends AbstractITQueue {
                                                                 , Session.DUPS_OK_ACKNOWLEDGE);
         Queue queue = queueSession.createQueue(QUEUE_NAME);
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-        TextMessage message = (TextMessage) queueReceiver.receive();
+        TextMessage message = (TextMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
         assertNotNull("No message delivered initially", message);
         assertEquals("Wrong message delivered initially", MESSAGE, message.getText());
 
         queueSession.rollback();
 
-        message = (TextMessage) queueReceiver.receive();
+        message = (TextMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
 
         assertNotNull("No message delivered after rollback", message);
         assertEquals("Wrong message redelivered", MESSAGE, message.getText());
