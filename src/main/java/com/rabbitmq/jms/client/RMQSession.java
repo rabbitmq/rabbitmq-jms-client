@@ -107,6 +107,39 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private static final String RJMS_SELECTOR_ARG = "rjms_selector";
     /** Name of argument on exchange create; used to specify identifier types */
     private static final String RJMS_TYPE_INFO_ARG = "rjms_type_info";
+    /** Name of argument on exchange create; used to determine selection policy */
+    private static final String RJMS_POLICY_ARG = "rjms_selection_policy";
+
+    private static final Map<String, Object> JMS_TYPE_INFO_ARGUMENTS = generateJMSTypeInfoMap();
+
+    private static final Map<String, Object> RJMS_TOPIC_SELECTOR_EXCHANGE_ARGUMENTS = generateJMSExchangeArgs("jms-topic");
+    private static final Map<String, Object> RJMS_QUEUE_SELECTOR_EXCHANGE_ARGUMENTS = generateJMSExchangeArgs("jms-queue");
+
+    private static Map<String, Object> generateJMSExchangeArgs(String policy) {
+        Map<String, Object> map = new HashMap<String, Object>(2);  // pair of elements only
+        map.put(RJMS_TYPE_INFO_ARG, (Object) JMS_TYPE_INFO_ARGUMENTS);
+        map.put(RJMS_POLICY_ARG, (Object) policy);
+        return Collections.unmodifiableMap(map);
+    }
+
+    private static Map<String, Object> generateJMSTypeInfoMap() {
+        Map<String, Object> map = new HashMap<String, Object>(6);  // six elements only
+        // [ {<<"JMSDeliveryMode">>,  [<<"PERSISTENT">>, <<"NON_PERSISTENT">>]}
+        // , {<<"JMSPriority">>,      number}
+        // , {<<"JMSMessageID">>,     string}
+        // , {<<"JMSTimestamp">>,     number}
+        // , {<<"JMSCorrelationID">>, string}
+        // , {<<"JMSType">>,          string}
+        // ]
+        map.put("JMSDeliveryMode",  new String[]{"PERSISTENT","NON_PERSISTENT"});
+        map.put("JMSPriority",      "number");
+        map.put("JMSMessageID",     "string");
+        map.put("JMSTimestamp",     "number");
+        map.put("JMSCorrelationID", "string");
+        map.put("JMSType",          "string");
+
+        return Collections.unmodifiableMap(map);
+    }
 
     private static final long ON_MESSAGE_EXECUTOR_TIMEOUT_MS = 2000; // 2 seconds
     private final DeliveryExecutor deliveryExecutor = new DeliveryExecutor(ON_MESSAGE_EXECUTOR_TIMEOUT_MS);
@@ -494,7 +527,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     void declareDestinationIfNecessary(RMQDestination destination) throws JMSException {
         if (destination != null && !destination.isDeclared()) {
             if (destination.isQueue()) {
-                declareQueue(destination, null, false);
+                declareRMQQueue(destination, null, false);
             } else {
                 declareTopic(destination);
             }
@@ -545,10 +578,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (!dest.isQueue()) {
             // This is a topic, we need to define a queue, and bind to it.
             // The queue name is distinct for each consumer.
-            String queueName = consumerTag;
             try {
-                // we never set auto delete; exclusive queues (used for topics and temporaries) are deleted on close anyway.
-                this.declareQueue(dest, queueName, durableSubscriber);
+                String queueName = consumerTag;
+                this.declareRMQQueue(dest, queueName, durableSubscriber);
                 if (jmsSelector==null) {
                     // bind the queue to the exchange with the correct routing key
                     this.channel.queueBind(queueName, dest.getExchangeInfo().name(), dest.getRoutingKey());
@@ -653,34 +685,11 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
     }
 
-    private static final Map<String, Object> JMS_TYPE_INFO_ARGUMENTS = generateJMSTypeInfoMap();
-
-    private static final Map<String, Object> RJMS_SELECTOR_EXCHANGE_ARGUMENTS = Collections.singletonMap(RJMS_TYPE_INFO_ARG, (Object) JMS_TYPE_INFO_ARGUMENTS);
-
-    private static Map<String, Object> generateJMSTypeInfoMap() {
-        Map<String, Object> map = new HashMap<String, Object>();
-        // [ {<<"JMSDeliveryMode">>,  [<<"PERSISTENT">>, <<"NON_PERSISTENT">>]}
-        // , {<<"JMSPriority">>,      number}
-        // , {<<"JMSMessageID">>,     string}
-        // , {<<"JMSTimestamp">>,     number}
-        // , {<<"JMSCorrelationID">>, string}
-        // , {<<"JMSType">>,          string}
-        // ]
-        map.put("JMSDeliveryMode",  new String[]{"PERSISTENT","NON_PERSISTENT"});
-        map.put("JMSPriority",      "number");
-        map.put("JMSMessageID",     "string");
-        map.put("JMSTimestamp",     "number");
-        map.put("JMSCorrelationID", "string");
-        map.put("JMSType",          "string");
-
-        return Collections.unmodifiableMap(map);
-    }
-
     private String getDurableTopicSelectorExchange() throws IOException {
         if (this.durableTopicSelectorExchange==null) {
             this.durableTopicSelectorExchange = Util.generateUUID("jms-dutop-slx-");
         }
-        this.channel.exchangeDeclare(this.durableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, true, true, RJMS_SELECTOR_EXCHANGE_ARGUMENTS);
+        this.channel.exchangeDeclare(this.durableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, true, true, RJMS_TOPIC_SELECTOR_EXCHANGE_ARGUMENTS);
         return this.durableTopicSelectorExchange;
     }
 
@@ -688,7 +697,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (this.nonDurableTopicSelectorExchange==null) {
             this.nonDurableTopicSelectorExchange = Util.generateUUID("jms-ndtop-slx-");
         }
-        this.channel.exchangeDeclare(this.nonDurableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, RJMS_SELECTOR_EXCHANGE_ARGUMENTS);
+        this.channel.exchangeDeclare(this.nonDurableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, RJMS_TOPIC_SELECTOR_EXCHANGE_ARGUMENTS);
         return this.nonDurableTopicSelectorExchange;
     }
 
@@ -731,20 +740,24 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public Queue createQueue(String queueName) throws JMSException {
         illegalStateExceptionIfClosed();
         RMQDestination dest = new RMQDestination(queueName, true, false);
-        declareQueue(dest, null, false);
+        declareRMQQueue(dest, null, false);
         return dest;
     }
 
     /**
      * Invokes {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)} to define a queue on the RabbitMQ broker
      * this method invokes {@link RMQDestination#setDeclared(boolean)} with a true value
-     * @param dest - the Queue object
-     * @param temporary true if the queue is temporary
+     * @param dest - the Queue Destination object
+     * @param queueNameOverride name of queue to declare (if different from destination name)
+     * @param durableSubscriber - true if the subscriber ius
      * @throws JMSException if an IOException occurs in the {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)} call
      */
-    private void declareQueue(RMQDestination dest, String queueNameOverride, boolean durableSubscriber) throws JMSException {
+    private void declareRMQQueue(RMQDestination dest, String queueNameOverride, boolean durableSubscriber) throws JMSException {
         logger.trace("declare RabbitMQ queue for destination '{}', explicitName '{}', durableSubscriber={}", dest, queueNameOverride, durableSubscriber);
         String queueName = queueNameOverride!=null ? queueNameOverride : dest.getQueueName();
+
+        String exchangeName = dest.getExchangeInfo().name();
+        String exchangeType = dest.getExchangeInfo().type();
 
         /*
          * We only want destinations to survive server restarts if
@@ -761,21 +774,33 @@ public class RMQSession implements Session, QueueSession, TopicSession {
          */
         boolean exclusive = dest.isTemporary() || ((!dest.isQueue()) && (!durableSubscriber));
 
-        HashMap<String,Object> options = null; //new HashMap<String,Object>();
+        Map<String,Object> options = null; //new HashMap<String,Object>();
 
-        try {
+        if (dest.isQueue()) {
+        if (RMQExchangeInfo.RABBITMQ_AMQ_DIRECT_EXCHANGE_NAME.equals(dest.getExchangeInfo().name())) {
+            logger.warn("no need to declare built-in exchange for queue destination '{}'", dest);
+        }
+        else {
+            logger.trace("declare RabbitMQ exchange for queue destinations '{}'", dest);
+            try {
+                this.channel.exchangeDeclare(exchangeName, exchangeType, durable,
+                                             false, // autoDelete
+                                             false, // internal
+                                             null); // object properties
+            } catch (Exception x) {
+                throw new RMQJMSException(x);
+            }
+        }
+        }
+
+        try { /* Declare the queue to RabbitMQ -- this creates it if it doesn't already exist */
             this.logger.debug("declare RabbitMQ queue name({}), durable({}), exclusive({}), auto-delete({}), properties({})",
                               queueName, durable, exclusive, false, options);
-            this.channel.queueDeclare(
-            /* name of the queue */   queueName,
-            /* temporary destinations are not durable will not survive a server restart all JMS queues except temp
-             * survive restarts only durable topic queues */
+            this.channel.queueDeclare(queueName,
                                       durable,
-            /* exclusive flag */      exclusive,
-            /* We don't set auto delete to true ever that is cause exclusive(rabbit)==true automatically get deleted
-             * when a Connection is closed */
-                                      false,
-            /* Queue properties */    options);
+                                      exclusive,
+                                      false,    // autoDelete - exclusive takes care of this
+                                      options); // object properties
 
             /* Temporary or 'topic queues' are exclusive and therefore get deleted by RabbitMQ on close */
         } catch (Exception x) {
@@ -783,8 +808,21 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                               queueName, durable, exclusive, false, options, x);
             throw new RMQJMSException(x);
         }
+
+        try { /* Bind the queue to our exchange -- this allows publications to succeed. */
+            this.logger.debug("bind queue name({}), to exchange({}), with r-key({}), no arguments",
+                              queueName, exchangeName, queueName);
+            this.channel.queueBind(queueName, exchangeName,
+                                   queueName, // routing key
+                                   null); // arguments
+        } catch (Exception x) {
+            this.logger.error("RabbitMQ exception on queue declare name({}), durable({}), exclusive({}), auto-delete({}), properties({})",
+                              queueName, durable, exclusive, false, options, x);
+            throw new RMQJMSException(x);
+        }
         dest.setDeclared(true);
     }
+
 
     /**
      * {@inheritDoc}
@@ -798,7 +836,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     /**
-     * Declares the topic exchange (and queue) in RabbitMQ.
+     * Declares a topic exchange in RabbitMQ.
      * @param dest the topic destination
      * @throws JMSException
      */
@@ -806,7 +844,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (RMQExchangeInfo.RABBITMQ_AMQ_TOPIC_EXCHANGE_NAME.equals(dest.getExchangeInfo().name())) {
             logger.warn("no need to declare built-in exchange for topic destination '{}'", dest);
         }
-        else
+        else {
             logger.trace("declare RabbitMQ exchange for topic destination '{}'", dest);
             try {
                 this.channel.exchangeDeclare(/* the name of the exchange */
@@ -825,6 +863,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             } catch (IOException x) {
                 throw new RMQJMSException(x);
             }
+        }
         dest.setDeclared(true);
     }
 

@@ -13,6 +13,12 @@ public class RMQExchangeInfo implements Serializable {
     public static final String JMS_TEMP_TOPIC_EXCHANGE_NAME = "jms.temp.topic";
     public static final String JMS_TOPIC_SELECTOR_EXCHANGE_TYPE = "x-jms-topic";
 
+    public static final String RABBITMQ_AMQ_DIRECT_EXCHANGE_NAME = "amq.direct";
+    public static final String JMS_DURABLE_QUEUE_EXCHANGE_NAME = "jms.durable.queues";
+    public static final String JMS_TEMP_QUEUE_EXCHANGE_NAME = "jms.temp.queues";
+    public static final String JMS_SELECTOR_QUEUE_EXCHANGE_NAME = "jms.selector.queues";
+    public static final String JMS_QUEUE_SELECTOR_EXCHANGE_TYPE = "x-jms-topic";
+
     /** TODO */
     private static final long serialVersionUID = 1L;
     private final String name;

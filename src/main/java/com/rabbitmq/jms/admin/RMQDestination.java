@@ -47,17 +47,19 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     private static final String queueOrTopicExchangeName(boolean isQueue, boolean isTemporary, String destName) {
-        if (isQueue)
-            return ""; // default exchange in RabbitMQ (direct)
-        else if (isTemporary)
+        if (isQueue & isTemporary)
+            return RMQExchangeInfo.JMS_TEMP_QUEUE_EXCHANGE_NAME; // fixed queue exchange in RabbitMQ for jms traffic
+        else if (isQueue & !isTemporary)
+            return RMQExchangeInfo.JMS_DURABLE_QUEUE_EXCHANGE_NAME; // fixed queue exchange in RabbitMQ for jms traffic
+        else if (!isQueue & isTemporary)
             return RMQExchangeInfo.JMS_TEMP_TOPIC_EXCHANGE_NAME; // fixed topic exchange in RabbitMQ for jms traffic
-        else
+        else // if (!isQueue & !isTemporary)
             return RMQExchangeInfo.JMS_DURABLE_TOPIC_EXCHANGE_NAME; // fixed topic exchange in RabbitMQ for jms traffic
     }
 
     private static final String queueOrTopicExchangeType(boolean isQueue, String destName) {
         if (isQueue)
-            return ""; // default exchange type in RabbitMQ (direct)
+            return "direct"; // standard direct exchange type in RabbitMQ
         else
             return "topic"; // standard topic exchange type in RabbitMQ
     }
@@ -67,7 +69,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * all the values appropriately.
      *
      * @param destName - the name of the topic or the queue
-     * @param exchangeName - the RabbitMQ exchange name we will publish to and bind queues to.
+     * @param exchangeName - the RabbitMQ exchange name we will publish to and bind to.
      * @param exchangeType - the RabbitMQ type of exchange used (only used if it needs to be declared)
      * @param routingKey - the routing key used for this destination. the
      *            routingKey should be the same value as the name parameter.
