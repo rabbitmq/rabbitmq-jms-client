@@ -30,6 +30,7 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
 
     private static final String QUEUE_NAME = "test.queue."+SimpleQueueMessageIT.class.getCanonicalName();
     private static final String MESSAGE = "Hello " + SimpleQueueMessageIT.class.getName();
+    private static final long TEST_RECEIVE_TIMEOUT = 1000; // one second
 
     @Test
     public void testSendAndReceiveTextMessage() throws Exception {
@@ -50,7 +51,7 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         Queue queue = queueSession.createQueue(QUEUE_NAME);
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-        TextMessage message = (TextMessage) queueReceiver.receive();
+        TextMessage message = (TextMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
         Assert.assertEquals(MESSAGE, message.getText());
     }
 
@@ -74,7 +75,7 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         Queue queue = queueSession.createQueue(QUEUE_NAME);
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-        BytesMessage message = (BytesMessage) queueReceiver.receive();
+        BytesMessage message = (BytesMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
         TestMessages.readBytesMessage(message);
     }
 
@@ -98,7 +99,7 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         Queue queue = queueSession.createQueue(QUEUE_NAME);
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-        MapMessage message = (MapMessage) queueReceiver.receive();
+        MapMessage message = (MapMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
         TestMessages.readMapMessage(message);
     }
 
@@ -121,7 +122,7 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         Queue queue = queueSession.createQueue(QUEUE_NAME);
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-        StreamMessage message = (StreamMessage) queueReceiver.receive();
+        StreamMessage message = (StreamMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
         TestMessages.readStreamMessage(message);
     }
 
@@ -146,7 +147,7 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         Queue queue = queueSession.createQueue(QUEUE_NAME);
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-        ObjectMessage message = (ObjectMessage) queueReceiver.receive();
+        ObjectMessage message = (ObjectMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
         assertEquals("Object not read correctly;", queue.getQueueName(), ((Queue) message.getObject()).getQueueName());
     }
 }
