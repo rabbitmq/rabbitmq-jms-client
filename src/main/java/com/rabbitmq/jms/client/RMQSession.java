@@ -570,7 +570,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @see #createConsumer(Destination)
      */
     private RMQMessageConsumer createConsumerInternal(RMQDestination dest, String uuidTag, boolean durableSubscriber, String jmsSelector) throws JMSException {
-        String consumerTag = uuidTag != null ? uuidTag : Util.generateUUID("jms-topic-");
+        String consumerTag = uuidTag != null ? uuidTag : Util.generateUUID("jms-cons-");
         logger.trace("create consumer for destination '{}' with consumerTag '{}' and selector '{}'", dest, consumerTag, jmsSelector);
 
         declareDestinationIfNecessary(dest);
@@ -777,20 +777,20 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         Map<String,Object> options = null; //new HashMap<String,Object>();
 
         if (dest.isQueue()) {
-        if (RMQExchangeInfo.RABBITMQ_AMQ_DIRECT_EXCHANGE_NAME.equals(dest.getExchangeInfo().name())) {
-            logger.warn("no need to declare built-in exchange for queue destination '{}'", dest);
-        }
-        else {
-            logger.trace("declare RabbitMQ exchange for queue destinations '{}'", dest);
-            try {
-                this.channel.exchangeDeclare(exchangeName, exchangeType, durable,
-                                             false, // autoDelete
-                                             false, // internal
-                                             null); // object properties
-            } catch (Exception x) {
-                throw new RMQJMSException(x);
+            if (RMQExchangeInfo.RABBITMQ_AMQ_DIRECT_EXCHANGE_NAME.equals(dest.getExchangeInfo().name())) {
+                logger.warn("no need to declare built-in exchange for queue destination '{}'", dest);
             }
-        }
+            else {
+                logger.trace("declare RabbitMQ exchange for queue destinations '{}'", dest);
+                try {
+                    this.channel.exchangeDeclare(exchangeName, exchangeType, durable,
+                                                 false, // autoDelete
+                                                 false, // internal
+                                                 null); // object properties
+                } catch (Exception x) {
+                    throw new RMQJMSException(x);
+                }
+            }
         }
 
         try { /* Declare the queue to RabbitMQ -- this creates it if it doesn't already exist */
