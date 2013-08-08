@@ -90,12 +90,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
                 throw new RMQJMSException(x);
             }
         }
-        // TODO: make sure the threads have a identifiable name
-        // if (getThreadPrefix()!=null) {
-        // es.setServiceId(getThreadPrefix());
-        // } else {
-        // es.setServiceId("Rabbit JMS Connection["+rabbitConnection.getAddress()+"]-");
-        // }
+
         RMQConnection conn = new RMQConnection(rabbitConnection, getTerminationTimeout());
         logger.debug("Connection {} created.", conn);
         return conn;
