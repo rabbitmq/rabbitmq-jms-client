@@ -113,7 +113,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private static final Map<String, Object> JMS_TYPE_INFO_ARGUMENTS = generateJMSTypeInfoMap();
 
     private static final Map<String, Object> RJMS_TOPIC_SELECTOR_EXCHANGE_ARGUMENTS = generateJMSExchangeArgs("jms-topic");
-    private static final Map<String, Object> RJMS_QUEUE_SELECTOR_EXCHANGE_ARGUMENTS = generateJMSExchangeArgs("jms-queue");
+//    private static final Map<String, Object> RJMS_QUEUE_SELECTOR_EXCHANGE_ARGUMENTS = generateJMSExchangeArgs("jms-queue");
 
     private static Map<String, Object> generateJMSExchangeArgs(String policy) {
         Map<String, Object> map = new HashMap<String, Object>(2);  // pair of elements only
