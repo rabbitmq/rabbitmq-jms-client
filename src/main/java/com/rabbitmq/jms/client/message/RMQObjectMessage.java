@@ -22,6 +22,7 @@ import com.rabbitmq.jms.util.RMQJMSException;
  */
 public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
 
+    /** Buffer to hold serialised object */
     private volatile byte[] buf = null;
     /**
      * {@inheritDoc}
@@ -34,8 +35,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
                 buf = null;
             } else {
                 /*
-                 * We have to take a copy of the object at this point in time
-                 * according to the spec
+                 * We have to serialise the object now
                  */
                 ByteArrayOutputStream bout = new ByteArrayOutputStream();
                 ObjectOutputStream out = new ObjectOutputStream(bout);
@@ -43,7 +43,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
                 out.flush();
                 buf = bout.toByteArray();
             }
-        }catch (IOException x) {
+        } catch (IOException x) {
             throw new RMQJMSException(x);
         }
 
@@ -53,6 +53,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         if (buf==null) {
             return null;
         } else {
+            this.loggerDebugByteArray("Deserialising object from buffer {} for {}", this.buf, "RMQObjectMessage");
             ByteArrayInputStream bin = new ByteArrayInputStream(buf);
             try {
                 ObjectInputStream in = new ObjectInputStream(bin);
@@ -78,10 +79,8 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
     }
 
     protected void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
-        // the body here is just a byte[] and we delay creating the object
-        // until getObject() is called so that
-        // we have access to the Thread Context Classloader
-        // to deserialize the object
+        // the body here is just a byte[] and we delay deserialising the object
+        // until getObject() is called so that we have access to the Thread Context Classloader
         boolean isnull = inputStream.readBoolean();
         if (!isnull) {
             readWholeBuffer(inputStream.readInt(), inputStream);

@@ -19,7 +19,6 @@ public class RMQExchangeInfo implements Serializable {
     public static final String JMS_SELECTOR_QUEUE_EXCHANGE_NAME = "jms.selector.queues";
     public static final String JMS_QUEUE_SELECTOR_EXCHANGE_TYPE = "x-jms-topic";
 
-    /** TODO */
     private static final long serialVersionUID = 1L;
     private final String name;
     private final String type;

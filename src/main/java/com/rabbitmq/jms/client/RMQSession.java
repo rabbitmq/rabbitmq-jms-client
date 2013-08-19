@@ -315,17 +315,17 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         illegalStateExceptionIfClosed();
         if (!this.transacted) throw new IllegalStateException("Session is not transacted");
         if (this.enterCommittingBlock()) {
-            try {
-                // Call commit on the channel.
-                // All messages ought already to have been acked.
-                this.channel.txCommit();
-            } catch (Exception x) {
-                this.logger.error("RabbitMQ exception on channel.txCommit() in session {}", this, x);
-                throw new RMQJMSException(x);
-            } finally {
+        try {
+            // Call commit on the channel.
+            // All messages ought already to have been acked.
+            this.channel.txCommit();
+        } catch (Exception x) {
+            this.logger.error("RabbitMQ exception on channel.txCommit() in session {}", this, x);
+            throw new RMQJMSException(x);
+        } finally {
                 this.leaveCommittingBlock();
-            }
         }
+    }
     }
 
     /**
@@ -337,48 +337,48 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         illegalStateExceptionIfClosed();
         if (!this.transacted) throw new IllegalStateException("Session is not transacted");
         if (this.enterCommittingBlock()) {
-            try {
-                // rollback the RabbitMQ transaction which may cause some messages to become unacknowledged
-                this.channel.txRollback();
-                // requeue all unacknowledged messages (not automatically done by RabbitMQ)
-                this.channel.basicRecover(true); // requeue
-            } catch (IOException x) {
+        try {
+            // rollback the RabbitMQ transaction which may cause some messages to become unacknowledged
+            this.channel.txRollback();
+            // requeue all unacknowledged messages (not automatically done by RabbitMQ)
+            this.channel.basicRecover(true); // requeue
+        } catch (IOException x) {
                 this.logger.error("RabbitMQ exception on channel.txRollback() or channel.basicRecover(true) in session {}",
                                   this, x);
-                throw new RMQJMSException(x);
-            } finally {
+            throw new RMQJMSException(x);
+        } finally {
                 this.leaveCommittingBlock();
-            }
         }
+    }
     }
 
     void explicitAck(long deliveryTag) {
         if (this.enterCommittingBlock()) {
-            try {
-                this.channel.basicAck(deliveryTag, false);
-            } catch (Exception x) {
-                // this is problematic, we have received a message, but we can't ACK it to the server
-                this.logger.error("Cannot acknowledge message received (dTag={})", deliveryTag, x);
-                // TODO should we deliver the message at this time, knowing that we can't ack it?
-                // My recommendation is that we bail out here and not proceed -- but how?
-            } finally {
+        try {
+            this.channel.basicAck(deliveryTag, false);
+        } catch (Exception x) {
+            // this is problematic, we have received a message, but we can't ACK it to the server
+            this.logger.error("Cannot acknowledge message received (dTag={})", deliveryTag, x);
+            // TODO should we deliver the message at this time, knowing that we can't ack it?
+            // My recommendation is that we bail out here and not proceed -- but how?
+        } finally {
                 this.leaveCommittingBlock();
-            }
         }
+    }
     }
 
     void explicitNack(long deliveryTag) {
         if (this.enterCommittingBlock()) {
-            try {
-                this.channel.basicNack(deliveryTag, false, true);
-            } catch (Exception x) {
-                // TODO logging impl debug message
-                this.logger.warn("Cannot reject/requeue message received (dTag={})", deliveryTag, x);
-                // this is fine. we didn't ack the message in the first place
-            } finally {
+        try {
+            this.channel.basicNack(deliveryTag, false, true);
+        } catch (Exception x) {
+            // TODO logging impl debug message
+            this.logger.warn("Cannot reject/requeue message received (dTag={})", deliveryTag, x);
+            // this is fine. we didn't ack the message in the first place
+        } finally {
                 this.leaveCommittingBlock();
-            }
         }
+    }
     }
 
     /**

@@ -21,6 +21,10 @@ import javax.jms.Message;
 import javax.jms.MessageFormatException;
 import javax.jms.MessageNotWriteableException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.rabbitmq.jms.util.HexDisplay;
 import com.rabbitmq.jms.util.IteratorEnum;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.Util;
@@ -29,6 +33,17 @@ import com.rabbitmq.jms.util.Util;
  * Base class for RMQ*Message classes. This is abstract and cannot be instantiated independently.
  */
 public abstract class RMQMessage implements Message, Cloneable {
+    /** Logger shared with derived classes */
+    protected final Logger logger = LoggerFactory.getLogger(RMQMessage.class);
+
+    protected void loggerDebugByteArray(String format, byte[] buffer, Object arg) {
+        if (logger.isDebugEnabled()) {
+            StringBuilder bufferOutput = new StringBuilder("Byte array, length ").append(buffer.length).append(" :\n");
+            HexDisplay.decodeByteArrayIntoStringBuilder(buffer, bufferOutput);
+            logger.debug(format, bufferOutput.append("end of byte array, length ").append(buffer.length).append('.'), arg);
+        }
+    }
+
     /**
      * Error message used when throwing {@link javax.jms.MessageFormatException}
      */
@@ -46,7 +61,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     private static final char[] INVALID_STARTS_WITH = {'0','1','2','3','4','5','6','7','8','9','-','+','\'','"','.'};
 
     /**
-     * Properties inside of a JMS may not contain these characters in the name (removed period)
+     * Properties inside of a JMS may not contain these characters in the name (removed period 2013-06-13)
      */
     private static final char[] MAY_NOT_CONTAIN = {'\'','"'};
 
@@ -75,10 +90,10 @@ public abstract class RMQMessage implements Message, Cloneable {
     private static final String JMS_MESSAGE_PRIORITY = PREFIX + "jms.message.priority";
 
     /**
-     * For turning Strings into byte[] and back we use this charset
-     * This is used for {@link RMQMessage#getJMSCorrelationIDAsBytes()}
+     * For turning {@link String}s into <code>byte[]</code> and back we use this {@link Charset} instance.
+     * This is used for {@link RMQMessage#getJMSCorrelationIDAsBytes()}.
      */
-    private static final Charset charset = Charset.forName("UTF-8");
+    private static final Charset CHARSET = Charset.forName("UTF-8");
 
     /**
      * Here we store the JMS_ properties that would have been fields
@@ -101,7 +116,6 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     private volatile boolean readonlyProperties=false;
     private volatile boolean readonlyBody=false;
-
 
     /**
      * Returns true if this message body is read only
@@ -228,7 +242,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     public byte[] getJMSCorrelationIDAsBytes() throws JMSException {
         String id = this.getStringProperty(JMS_MESSAGE_CORR_ID);
         if (id != null)
-            return id.getBytes(charset);
+            return id.getBytes(CHARSET);
         else
             return null;
     }
@@ -238,7 +252,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public void setJMSCorrelationIDAsBytes(byte[] correlationID) throws JMSException {
-        String id = correlationID != null ? new String(correlationID, charset) : null;
+        String id = correlationID != null ? new String(correlationID, CHARSET) : null;
         this.setStringProperty(JMS_MESSAGE_CORR_ID, id);
     }
 
@@ -749,7 +763,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      *@return the charset used to convert a TextMessage to byte[]
      */
     public Charset getCharset() {
-        return charset;
+        return CHARSET;
     }
 
     /**
@@ -831,7 +845,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
 
     /**
-     * Serializes a {@link RMQMessage} to a byte array.
+     * Serializes the body of a {@link RMQMessage} to a byte array.
      * This method invokes the {@link #writeBody(ObjectOutput)} method
      * on the class that is being serialized
      * @param msg - the message to serialize
