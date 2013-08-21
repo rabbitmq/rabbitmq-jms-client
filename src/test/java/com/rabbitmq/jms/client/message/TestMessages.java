@@ -1,9 +1,9 @@
 /* Copyright (c) 2013 GoPivotal, Inc. All rights reserved. */
 package com.rabbitmq.jms.client.message;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
-import static junit.framework.Assert.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -130,15 +130,15 @@ public class TestMessages {
         assertEquals(Long.MAX_VALUE, message.getLong("long"));
         assertEquals(Long.MAX_VALUE, message.getLong("string.long"));
 
-        assertEquals(Float.MAX_VALUE, message.getFloat("float"));
+        assertEquals(Float.MAX_VALUE, message.getFloat("float"), 1e-20D);
 
         // we must cast to get the same precision error -
         // http://en.wikipedia.org/wiki/Floating_point
-        assertEquals((double) Float.MAX_VALUE, message.getDouble("float"));
-        assertEquals(Float.MAX_VALUE, message.getFloat("string.float"));
+        assertEquals((double) Float.MAX_VALUE, message.getDouble("float"), 1e-20D);
+        assertEquals(Float.MAX_VALUE, message.getFloat("string.float"), 1e-20D);
 
-        assertEquals(Double.MAX_VALUE, message.getDouble("double"));
-        assertEquals(Double.MAX_VALUE, message.getDouble("string.double"));
+        assertEquals(Double.MAX_VALUE, message.getDouble("double"), 1e-20D);
+        assertEquals(Double.MAX_VALUE, message.getDouble("string.double"), 1e-20D);
 
         assertTrue(Arrays.equals(BYTE_ARRAY, message.getBytes("bytes")));
         assertTrue(Arrays.equals(BYTE_ARRAY, message.getBytes("string.bytes")));
@@ -156,8 +156,8 @@ public class TestMessages {
         message.readBytes(b1, 1);
         assertEquals(BYTE_ARRAY[1], b1[0]);
         assertEquals('X', message.readChar());
-        assertEquals(2.35d, message.readDouble());
-        assertEquals(1.54f, message.readFloat());
+        assertEquals(2.35d, message.readDouble(), 1e-20D);
+        assertEquals(1.54f, message.readFloat(), 1e-20D);
         assertEquals(Integer.MAX_VALUE, message.readInt());
         assertEquals(Long.MAX_VALUE, message.readLong());
         assertEquals(Short.MAX_VALUE, message.readShort());
@@ -221,8 +221,8 @@ public class TestMessages {
         }
         assertEquals(BYTE_ARRAY[1], b1[0]);
         assertEquals('X', message.readChar());
-        assertEquals(2.35d, message.readDouble());
-        assertEquals(1.54f, message.readFloat());
+        assertEquals(2.35d, message.readDouble(), 1e-20D);
+        assertEquals(1.54f, message.readFloat(), 1e-20D);
         assertEquals(Integer.MAX_VALUE, message.readInt());
         assertEquals(Long.MAX_VALUE, message.readLong());
         assertEquals(Short.MAX_VALUE, message.readShort());

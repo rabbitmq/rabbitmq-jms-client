@@ -1,6 +1,8 @@
 /* Copyright (c) 2013 GoPivotal, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
+import static org.junit.Assert.assertEquals;
+
 import javax.jms.DeliveryMode;
 import javax.jms.Session;
 import javax.jms.TextMessage;
@@ -8,8 +10,6 @@ import javax.jms.Topic;
 import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
-
-import junit.framework.Assert;
 
 import org.junit.Test;
 
@@ -33,7 +33,7 @@ public class SimpleTopicMessageIT extends AbstractITTopic {
         TextMessage message = topicSession.createTextMessage(MESSAGE2);
         sender.send(message);
 
-        Assert.assertEquals(MESSAGE2, ((TextMessage) receiver1.receive()).getText());
-        Assert.assertEquals(MESSAGE2, ((TextMessage) receiver2.receive()).getText());
+        assertEquals(MESSAGE2, ((TextMessage) receiver1.receive()).getText());
+        assertEquals(MESSAGE2, ((TextMessage) receiver2.receive()).getText());
     }
 }

@@ -1,6 +1,8 @@
 /* Copyright (c) 2013 GoPivotal, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
+import static org.junit.Assert.assertEquals;
+
 import javax.jms.DeliveryMode;
 import javax.jms.Session;
 import javax.jms.TextMessage;
@@ -8,8 +10,6 @@ import javax.jms.Topic;
 import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
-
-import junit.framework.Assert;
 
 import org.junit.Test;
 
@@ -48,7 +48,7 @@ public class SelectedTopicMessageIdentifierIT extends AbstractITTopic {
 
         String t1 = tmsg1.getText();
         String t2 = tmsg2.getText();
-        Assert.assertEquals(MESSAGE1, t1);
-        Assert.assertEquals(MESSAGE2, t2);
+        assertEquals(MESSAGE1, t1);
+        assertEquals(MESSAGE2, t2);
     }
 }

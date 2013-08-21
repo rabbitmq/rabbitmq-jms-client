@@ -17,8 +17,6 @@ import javax.jms.Session;
 import javax.jms.StreamMessage;
 import javax.jms.TextMessage;
 
-import junit.framework.Assert;
-
 import org.junit.Test;
 
 import com.rabbitmq.jms.client.message.TestMessages;
@@ -52,7 +50,7 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
         Queue queue = queueSession.createQueue(QUEUE_NAME);
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
         TextMessage message = (TextMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
-        Assert.assertEquals(MESSAGE, message.getText());
+        assertEquals(MESSAGE, message.getText());
     }
 
     @Test

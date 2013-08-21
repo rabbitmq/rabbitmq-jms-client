@@ -1,6 +1,9 @@
 /* Copyright (c) 2013 GoPivotal, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import javax.jms.DeliveryMode;
 import javax.jms.Queue;
 import javax.jms.QueueReceiver;
@@ -8,8 +11,6 @@ import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-
-import junit.framework.Assert;
 
 import org.junit.Test;
 
@@ -40,7 +41,7 @@ public class SimpleSendReceiveTransactionIT extends AbstractITQueue {
         Queue queue = queueSession.createQueue(QUEUE_NAME);
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
         TextMessage message = (TextMessage) queueReceiver.receiveNoWait();
-        Assert.assertNull(message);
+        assertNull(message);
     }
 
     @Test
@@ -62,6 +63,6 @@ public class SimpleSendReceiveTransactionIT extends AbstractITQueue {
         Queue queue = queueSession.createQueue(QUEUE_NAME);
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
         TextMessage message = (TextMessage) queueReceiver.receive();
-        Assert.assertEquals(MESSAGE, message.getText());
+        assertEquals(MESSAGE, message.getText());
     }
 }
