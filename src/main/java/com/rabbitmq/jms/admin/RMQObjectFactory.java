@@ -29,8 +29,7 @@ import org.slf4j.LoggerFactory;
  *           username=&quot;guest&quot;
  *           password=&quot;guest&quot;
  *           virtualHost=&quot;/&quot;
- *           host=&quot;localhost&quot;
- *           threadsPerConnection=&quot;2&quot;/&gt;
+ *           host=&quot;localhost&quot;/&gt;
  * </pre>
  * <p>
  * the type attribute can be {@link javax.jms.ConnectionFactory}, {@link javax.jms.QueueConnectionFactory},
@@ -72,8 +71,6 @@ import org.slf4j.LoggerFactory;
  * <li>virtualHost</li>
  * <li>host</li>
  * <li>port</li>
- * <li>threadsPerConnection</li>
- * <li>threadPrefix</li>
  * <li>terminationTimeout</li>
  * </ul>
  * <p>
@@ -155,8 +152,6 @@ public class RMQObjectFactory implements ObjectFactory {
         String host = getStringProperty(ref, "host", true, "127.0.0.1");
 
         int port = getIntProperty(ref, "port", true, 5672);
-        int threadsPerConnection = getIntProperty(ref, "threadPerConnection", true, 2);
-        String threadPrefix = getStringProperty(ref, "threadPrefix", true, "Rabbit JMS Thread #");
         int terminationTimeout = getIntProperty(ref, "terminationTimeout", true, 15000);
 
         f.setUsername(username);
@@ -164,8 +159,6 @@ public class RMQObjectFactory implements ObjectFactory {
         f.setVirtualHost(virtualHost);
         f.setHost(host);
         f.setPort(port);
-        f.setThreadsPerConnection(threadsPerConnection);
-        f.setThreadPrefix(threadPrefix);
         f.setTerminationTimeout(terminationTimeout);
 
         return f;

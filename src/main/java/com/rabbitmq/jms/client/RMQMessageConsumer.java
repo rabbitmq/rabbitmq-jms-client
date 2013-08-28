@@ -182,12 +182,11 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private void setNewListenerConsumer(MessageListener messageListener) throws IllegalStateException {
         if (messageListener != null) {
             MessageListenerConsumer mlConsumer =
-                                                 new MessageListenerConsumer(
-                                                                             this,
-                                                                             getSession().getChannel(),
-                                                                             messageListener,
-                                                                             TimeUnit.MILLISECONDS.toNanos(this.session.getConnection()
-                                                                                                                       .getTerminationTimeout()));
+              new MessageListenerConsumer(this,
+                                          getSession().getChannel(),
+                                          messageListener,
+                                          TimeUnit.MILLISECONDS.toNanos(this.session.getConnection()
+                                                                                    .getTerminationTimeout()));
             if (this.listenerConsumer.compareAndSet(null, mlConsumer)) {
                 this.abortables.add(mlConsumer);
                 if (!this.getSession().getConnection().isStopped()) {

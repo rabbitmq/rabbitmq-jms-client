@@ -42,15 +42,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private String host = "localhost";
     /** Default port to RabbitMQ broker */
     private int port = 5672;
-    /** Number of threads each connection executor will have */
-    private int threadsPerConnection = 2;
     /** The time to wait for threads/messages to terminate during {@link Connection#close()} */
     private volatile long terminationTimeout = Long.getLong("rabbit.jms.terminationTimeout", 15000);
-    /**
-     * The thread prefix for threads created by the executor If this is null, the value
-     * <code>&quot;Rabbit JMS Connection[&quot;+rabbitConnection.getAddress()+&quot;]-&quot;</code> will be used
-     */
-    private String threadPrefix = null;
 
     /**
      * {@inheritDoc}
@@ -227,43 +220,6 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     public void setPort(int port) {
         this.port = port;
-    }
-
-    /**
-     * Returns the number of threads that are configured for each connection.
-     *
-     * @return the number of threads that are used for each connection, default is 2
-     */
-    public int getThreadsPerConnection() {
-        return threadsPerConnection;
-    }
-
-    /**
-     * Configures how many threads should be used to receive messages for each TCP connection that is established.
-     *
-     * @param threadsPerConnection the number of threads for each executor service to handle a TCP connection
-     */
-    public void setThreadsPerConnection(int threadsPerConnection) {
-        this.threadsPerConnection = threadsPerConnection;
-    }
-
-    /**
-     * Returns the thread prefix used when creating threads in the executor
-     *
-     * @return the thread prefix used
-     */
-    public String getThreadPrefix() {
-        return threadPrefix;
-    }
-
-    /**
-     * Sets the thread prefix to be used when threads are created in this system. If this is null, a default prefix will
-     * be created
-     *
-     * @param threadPrefix the prefix such as &quot;Rabbit JMS Thread #&quot;
-     */
-    public void setThreadPrefix(String threadPrefix) {
-        this.threadPrefix = threadPrefix;
     }
 
     /**
