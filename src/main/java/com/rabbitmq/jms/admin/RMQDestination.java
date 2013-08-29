@@ -10,8 +10,10 @@ import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 import javax.jms.Topic;
 import javax.naming.NamingException;
+import javax.naming.RefAddr;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
+import javax.naming.StringRefAddr;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.jms.client.RMQSession;
@@ -23,9 +25,11 @@ import com.rabbitmq.jms.client.RMQSession;
 public class RMQDestination implements Queue, Topic, Destination, Referenceable, Serializable, TemporaryQueue, TemporaryTopic {
 
     private static final long serialVersionUID = 596966152753718825L;
+    private volatile boolean amqp;
     private volatile String name;
     private volatile RMQExchangeInfo exchangeInfo;
     private volatile String routingKey;
+    private volatile String amqpQueueName;
     private volatile boolean isQueue;
     private volatile boolean isDeclared;
     private volatile boolean isTemporary;
@@ -37,7 +41,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     /**
-     * Creates a destination in RabbitMQ
+     * Creates a destination for RJMS
      * @param destName the name of the topic or queue
      * @param isQueue true if this represent a queue
      * @param isTemporary true if this is a temporary destination
@@ -65,14 +69,12 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     /**
-     * Creates a destination, either a queue or a topic, initialising
-     * all the values appropriately.
+     * Creates a destination, either a queue or a topic, either mapped to a real amqp resource or not.
      *
      * @param destName - the name of the topic or the queue
-     * @param exchangeName - the RabbitMQ exchange name we will publish to and bind to.
-     * @param exchangeType - the RabbitMQ type of exchange used (only used if it needs to be declared)
-     * @param routingKey - the routing key used for this destination. the
-     *            routingKey should be the same value as the name parameter.
+     * @param exchangeName - the RabbitMQ exchange name we will publish to and bind to (which may be an amqp resource exchange)
+     * @param exchangeType - the RabbitMQ type of exchange used (only used if it needs to be declared),
+     * @param routingKey - the routing key used for this destination.
      * @param isQueue - true if this is a queue, false if this is a topic
      * @param isDeclared - <code>true</code> if we have called
      *            {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)}
@@ -85,11 +87,35 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      */
     private RMQDestination(String destName, String exchangeName, String exchangeType, String routingKey, boolean isQueue, boolean isDeclared, boolean isTemporary) {
         this.name = destName;
+        this.amqp = false;
         this.exchangeInfo = new RMQExchangeInfo(exchangeName, exchangeType);
         this.routingKey = routingKey;
         this.isQueue = isQueue;
         this.isDeclared = isDeclared;
         this.isTemporary = isTemporary;
+    }
+
+    /**
+     * Creates a destination for RJMS mapped onto an AMQP queue/destination.
+     * <p>
+     * <code>amqpExchangeName</code> and <code>amqpRoutingKey</code> must both be <code>null</code> if either is <code>null</code>, and <code>amqpQueueName</code> may be <code>null</code>, but at
+     * least one of these three parameters must be non-<code>null</code>.
+     * </p>
+     *
+     * @param destName the name of the topic or queue
+     * @param amqpExchangeName - the exchange name for the mapped resource
+     * @param amqpRoutingKey - the routing key for the mapped resource
+     * @param amqpQueueName - the queue name of the mapped resource
+     */
+    public RMQDestination(String destName, String amqpExchangeName, String amqpRoutingKey, String amqpQueueName) {
+        this.name = destName;
+        this.amqp = true;
+        this.exchangeInfo = new RMQExchangeInfo(amqpExchangeName, null);
+        this.amqpQueueName = amqpQueueName;
+        this.routingKey = amqpRoutingKey;
+        this.isQueue = true;
+        this.isDeclared = false;
+        this.isTemporary = false;
     }
 
     /**
@@ -188,7 +214,42 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     @Override
     public Reference getReference() throws NamingException {
-        return new Reference(this.getClass().getCanonicalName());
+        Reference ref = new Reference(this.getClass().getCanonicalName());
+        addStringProperty(ref, "destinationName", this.name);
+        addBooleanProperty(ref, "amqp", this.amqp);
+        if (this.amqp) {
+            addStringProperty(ref, "amqpExchangeName", this.exchangeInfo.name());
+            addStringProperty(ref, "amqpRoutingKey", this.routingKey);
+            addStringProperty(ref, "amqpQueueName", this.amqpQueueName);
+        }
+        return ref;
+    }
+    /**
+     * Adds a String valued property to a Reference (as a RefAddr)
+     * @param ref - the reference to contain the value
+     * @param propertyName - the name of the property
+     * @param value - the value to store with the property
+     */
+    private static final void addStringProperty(Reference ref,
+                                                String propertyName,
+                                                String value) {
+        if (value==null || propertyName==null) return;
+        RefAddr ra = new StringRefAddr(propertyName, value);
+        ref.add(ra);
+    }
+
+    /**
+     * Adds a boolean valued property to a Reference (as a RefAddr)
+     * @param ref - the reference to contain the value
+     * @param propertyName - the name of the property
+     * @param value - the value to store with the property
+     */
+    private static final void addBooleanProperty(Reference ref,
+                                                 String propertyName,
+                                                 boolean value) {
+        if (propertyName==null) return;
+        RefAddr ra = new StringRefAddr(propertyName, String.valueOf(value));
+        ref.add(ra);
     }
 
     /**

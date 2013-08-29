@@ -5,9 +5,7 @@ import java.util.Hashtable;
 
 import javax.jms.ConnectionFactory;
 import javax.jms.Queue;
-import javax.jms.QueueConnectionFactory;
 import javax.jms.Topic;
-import javax.jms.TopicConnectionFactory;
 import javax.naming.Context;
 import javax.naming.Name;
 import javax.naming.NamingException;
@@ -91,7 +89,7 @@ public class RMQObjectFactory implements ObjectFactory {
     @Override
     public Object getObjectInstance(Object obj, Name name, Context ctx, Hashtable<?, ?> environment) throws Exception {
         // We only know how to deal with <code>javax.naming.Reference</code>s
-        if ((obj == null) || !(obj instanceof Reference)) {
+        if ((obj == null) || !(obj instanceof javax.naming.Reference)) {
             return null;
         }
         Reference ref = (Reference) obj;
@@ -111,26 +109,23 @@ public class RMQObjectFactory implements ObjectFactory {
          *
          */
         boolean topic = false;
-        if (QueueConnectionFactory.class.getName().equals(className)) {
-            className = RMQConnectionFactory.class.getName();
-        } else if (TopicConnectionFactory.class.getName().equals(className)) {
-            className = RMQConnectionFactory.class.getName();
+        boolean connectionFactory = false;
+        if (  javax.jms.QueueConnectionFactory.class.getName().equals(className)
+           || javax.jms.TopicConnectionFactory.class.getName().equals(className)
+           || javax.jms.ConnectionFactory.class.getName().equals(className)
+           ) {
+            connectionFactory = true;
+        } else if (javax.jms.Topic.class.getName().equals(className)) {
             topic = true;
-        } else if (ConnectionFactory.class.getName().equals(className)) {
-            className = RMQConnectionFactory.class.getName();
-        } else if (Topic.class.getName().equals(className)) {
-            className = RMQDestination.class.getName();
-            topic = true;
-        } else if (Queue.class.getName().equals(className)) {
-            className = RMQDestination.class.getName();
-        }
-
-        if (className.equals(RMQConnectionFactory.class.getName())) {
-            return createConnectionFactory(ref, name);
-        } else if (className.equals(RMQDestination.class.getName())) {
-            return createDestination(ref, name, topic);
+        } else if (javax.jms.Queue.class.getName().equals(className)) {
         } else {
             throw new NamingException("Unknown class:" + className);
+        }
+
+        if (connectionFactory) {
+            return createConnectionFactory(ref, name);
+        } else {
+            return createDestination(ref, name, topic);
         }
 
     }
@@ -165,18 +160,25 @@ public class RMQObjectFactory implements ObjectFactory {
     }
 
     /**
-     * Creates a {@link RMQDestination} from a reference
+     * Create a {@link RMQDestination} from a reference
      * @param ref the reference containing the required properties
      * @param name the name
-     * @param topic true if this is a topic, false if it is a queue
+     * @param topic true if this is a topic, false if it is a queue (ignored if this is amqp-mapped)
      * @return a {@link RMQDestination} object with the destinationName configured
      * @throws NamingException if the <code>destinationName</code> property is missing
      */
     public Object createDestination(Reference ref, Name name, boolean topic) throws NamingException {
         this.logger.trace("Creating destination ref '{}', name '{}' (topic={}).", ref, name, topic);
         String dname = getStringProperty(ref, "destinationName", false, null);
-        RMQDestination d = new RMQDestination(dname, !topic, false);
-        return d;
+        boolean amqp = getBooleanProperty(ref, "amqp", true, false);
+        if (amqp) {
+            String amqpExchangeName = getStringProperty(ref, "amqpExchangeName", false, null);
+            String amqpRoutingKey = getStringProperty(ref, "amqpRoutingKey", false, null);
+            String amqpQueueName = getStringProperty(ref, "amqpQueueName", false, null);
+            return new RMQDestination(dname, amqpExchangeName, amqpRoutingKey, amqpQueueName);
+        } else {
+            return new RMQDestination(dname, !topic, false);
+        }
     }
 
     /**
@@ -205,6 +207,34 @@ public class RMQObjectFactory implements ObjectFactory {
             content = defaultValue;
         }
         return content;
+    }
+
+    /**
+     * Reads a property from the reference and returns the boolean value it represents
+     * @param ref the reference containing the value
+     * @param propertyName the name of the property
+     * @param mayBeNull true if the property may be missing or contain a null value, in this case <code>defaultValue</code> will be returned
+     * @param defaultValue the defaultValue to return if the property is null and <code>mayBeNull==true</code>
+     * @return the boolean value of the property
+     * @throws NamingException if the property is missing and <code>mayBeNull==false</code>
+     */
+    private boolean getBooleanProperty(Reference ref,
+                                       String propertyName,
+                                       boolean mayBeNull,
+                                       boolean defaultValue) throws NamingException {
+        RefAddr ra = ref.get(propertyName);
+        if (!mayBeNull && (ra == null || ra.getContent()==null)) {
+            throw new NamingException("Property [" + propertyName + "] may not be null.");
+        }
+        String content = ra == null ? null : ra.getContent() == null ? null : ra.getContent().toString();
+        if (!mayBeNull && (content == null)) {
+            throw new NamingException("Property [" + propertyName + "] is present but is lacking a value.");
+        }
+
+        if (content == null && mayBeNull) {
+            return defaultValue;
+        }
+        return Boolean.valueOf(content);
     }
 
     /**
