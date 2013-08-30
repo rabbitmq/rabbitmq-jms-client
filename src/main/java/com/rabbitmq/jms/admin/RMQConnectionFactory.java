@@ -118,20 +118,6 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         ref.add(ra);
     }
 
-//    /**
-//     * Adds a boolean valued property to a Reference (as a RefAddr)
-//     * @param ref - the reference to contain the value
-//     * @param propertyName - the name of the property
-//     * @param value - the value to store with the property
-//     */
-//    private static final void addBooleanProperty(Reference ref,
-//                                                 String propertyName,
-//                                                 boolean value) {
-//        if (propertyName==null) return;
-//        RefAddr ra = new StringRefAddr(propertyName, String.valueOf(value));
-//        ref.add(ra);
-//    }
-
     /**
      * {@inheritDoc}
      */

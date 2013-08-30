@@ -293,7 +293,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         if (this.destination.isQueue()) {
             /* javax.jms.Queue we share a single AMQP queue among all consumers hence the name will the the name of the
              * destination */
-            return this.destination.getName();
+            return this.destination.getAmqpQueueName();
         } else {
             /* javax.jms.Topic we created a unique AMQP queue for each consumer and that name is unique for this
              * consumer alone */

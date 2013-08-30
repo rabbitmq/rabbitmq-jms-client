@@ -254,7 +254,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             /*
              * Send the message
              */
-            this.session.getChannel().basicPublish(dest.getExchangeInfo().name(), dest.getRoutingKey(), bob.build(), data);
+            this.session.getChannel().basicPublish(dest.getAmqpExchangeName(), dest.getAmqpRoutingKey(), bob.build(), data);
         } catch (IOException x) {
             throw new RMQJMSException(x);
         }

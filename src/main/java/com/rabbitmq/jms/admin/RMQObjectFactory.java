@@ -162,8 +162,8 @@ public class RMQObjectFactory implements ObjectFactory {
     /**
      * Create a {@link RMQDestination} from a reference
      * @param ref the reference containing the required properties
-     * @param name the name
-     * @param topic true if this is a topic, false if it is a queue (ignored if this is amqp-mapped)
+     * @param name - the name
+     * @param topic - true if this is a topic, false if it is a queue (ignored if this is amqp-mapped)
      * @return a {@link RMQDestination} object with the destinationName configured
      * @throws NamingException if the <code>destinationName</code> property is missing
      */
