@@ -12,8 +12,10 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
 import javax.naming.NamingException;
+import javax.naming.RefAddr;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
+import javax.naming.StringRefAddr;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,8 +96,41 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     @Override
     public Reference getReference() throws NamingException {
-        return new Reference(RMQConnectionFactory.class.getName());
+        Reference ref = new Reference(RMQConnectionFactory.class.getName());
+        addStringProperty(ref, "username", this.username);
+        addStringProperty(ref, "password", this.password);
+        addStringProperty(ref, "virtualHost", this.virtualHost);
+        addStringProperty(ref, "host", this.host);
+        return ref;
     }
+
+    /**
+     * Adds a String valued property to a Reference (as a RefAddr)
+     * @param ref - the reference to contain the value
+     * @param propertyName - the name of the property
+     * @param value - the value to store with the property
+     */
+    private static final void addStringProperty(Reference ref,
+                                                String propertyName,
+                                                String value) {
+        if (value==null || propertyName==null) return;
+        RefAddr ra = new StringRefAddr(propertyName, value);
+        ref.add(ra);
+    }
+
+//    /**
+//     * Adds a boolean valued property to a Reference (as a RefAddr)
+//     * @param ref - the reference to contain the value
+//     * @param propertyName - the name of the property
+//     * @param value - the value to store with the property
+//     */
+//    private static final void addBooleanProperty(Reference ref,
+//                                                 String propertyName,
+//                                                 boolean value) {
+//        if (propertyName==null) return;
+//        RefAddr ra = new StringRefAddr(propertyName, String.valueOf(value));
+//        ref.add(ra);
+//    }
 
     /**
      * {@inheritDoc}

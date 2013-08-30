@@ -777,7 +777,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         Map<String,Object> options = null; //new HashMap<String,Object>();
 
         if (dest.isQueue()) {
-            if (RMQExchangeInfo.RABBITMQ_AMQ_DIRECT_EXCHANGE_NAME.equals(dest.getExchangeInfo().name())) {
+            if (RMQExchangeInfo.RABBITMQ_AMQ_DIRECT_EXCHANGE_NAME.equals(exchangeName)) {
                 logger.warn("no need to declare built-in exchange for queue destination '{}'", dest);
             }
             else {
