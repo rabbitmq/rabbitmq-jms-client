@@ -30,6 +30,13 @@ import org.slf4j.LoggerFactory;
  *           virtualHost=&quot;/&quot;
  *           host=&quot;localhost&quot;/&gt;
  * </pre>
+ * <p>Alternatively, a <a href="http://www.rabbitmq.com/uri-spec.html">AMQP uri</a> can be used:
+ * </p>
+ * <pre>
+ * &lt;Resource name=&quot;jms/ConnectionFactory&quot; type=&quot;javax.jms.ConnectionFactory&quot;
+ *           factory=&quot;com.rabbitmq.jms.admin.RMQObjectFactory&quot;
+ *           uri=&quot;amqp://guest:guest@127.0.0.1&quot;
+ * </pre>
  * <p>
  * the type attribute can be {@link javax.jms.ConnectionFactory}, {@link javax.jms.QueueConnectionFactory},
  * {@link javax.jms.TopicConnectionFactory} or the actual classname of the implementation,
@@ -62,7 +69,7 @@ import org.slf4j.LoggerFactory;
  * javax.jms.Queue
  * </pre>
  * <p>
- * Properties for a {@link ConnectionFactory} are:
+ * Valid properties for a {@link ConnectionFactory} are:
  * </p>
  * <ul>
  * <li>username</li>
@@ -70,6 +77,8 @@ import org.slf4j.LoggerFactory;
  * <li>virtualHost</li>
  * <li>host</li>
  * <li>port</li>
+ * <li>ssl</li>
+ * <li>uri</li>
  * <li>terminationTimeout</li>
  * </ul>
  * <p>
@@ -78,7 +87,7 @@ import org.slf4j.LoggerFactory;
  * <ul>
  * <li>destinationName</li>
  * </ul>
- * TODO Implement SSL and socket options.
+ * TODO Implement socket options.
  */
 public class RMQObjectFactory implements ObjectFactory {
 
@@ -142,14 +151,14 @@ public class RMQObjectFactory implements ObjectFactory {
         this.logger.trace("Creating connection factory ref '{}', name '{}'.", ref, name);
         RMQConnectionFactory f = new RMQConnectionFactory();
 
-        String uri = getStringProperty(ref, "uri", true, "amqp://guest:guest@127.0.0.1");
+        String uri = getStringProperty(ref, "uri", true, "amqp://guest:guest@127.0.0.1"); // default uri string is supplied
 
         int terminationTimeout = getIntProperty(ref, "terminationTimeout", true, 15000);
 
         try {
             f.setUri(uri);
         } catch (JMSException e) {
-            this.logger.warn("Cannot set RMQConnectionFactory properties by URI--defaults taken.", e);
+            this.logger.warn("Failed to set RMQConnectionFactory properties by URI--defaults taken.", e);
         }
         f.setTerminationTimeout(terminationTimeout);
 
