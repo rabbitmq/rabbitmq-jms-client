@@ -1,3 +1,4 @@
+/* Copyright (c) 2013 GoPivotal, Inc. All rights reserved. */
 package com.rabbitmq.jms.util;
 
 public class HexDisplay {

@@ -3,6 +3,8 @@ package com.rabbitmq.jms.admin;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -26,7 +28,7 @@ import com.rabbitmq.jms.util.RMQJMSSecurityException;
 
 /**
  * RabbitMQ Implementation of JMS {@link ConnectionFactory}
- * TODO - implement socket and SSL options
+ * TODO - implement SslContext option
  */
 public class RMQConnectionFactory implements ConnectionFactory, Referenceable, Serializable, QueueConnectionFactory,
                                  TopicConnectionFactory {
@@ -34,6 +36,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     private static final long serialVersionUID = -4953157213762979615L;
 
+    /** Default not to use ssl */
+    private boolean ssl = false;
     /** Default username to RabbitMQ broker */
     private String username = "guest";
     /** Default password to RabbitMQ broker */
@@ -59,24 +63,30 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * {@inheritDoc}
      */
     @Override
-    public Connection createConnection(String userName, String password) throws JMSException {
-        logger.trace("Creating a connection for username '{}', password 'xxxxxxxx'.", userName);
+    public Connection createConnection(String username, String password) throws JMSException {
+        logger.trace("Creating a connection for username '{}', password 'xxxxxxxx'.", username);
+        this.username = username;
+        this.password = password;
         // Create a new factory and set the properties
         com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
-        factory.setUsername(userName);
-        factory.setPassword(password);
-        factory.setVirtualHost(getVirtualHost());
-        factory.setHost(getHost());
-        factory.setPort(getPort());
-        com.rabbitmq.client.Connection rabbitConnection = null;
+        resetSsl(factory);
+        setRabbitUri(factory, this.getUri());
+        com.rabbitmq.client.Connection rabbitConnection = getRabbitConnection(factory);
+
+        RMQConnection conn = new RMQConnection(rabbitConnection, getTerminationTimeout());
+        logger.debug("Connection {} created.", conn);
+        return conn;
+    }
+
+    private com.rabbitmq.client.Connection getRabbitConnection(com.rabbitmq.client.ConnectionFactory factory) throws JMSException {
         try {
-            rabbitConnection = factory.newConnection();
+            return factory.newConnection();
         } catch (IOException x) {
             if (x.getMessage() != null) {
                 if (x.getMessage().contains("authentication failure")) {
                     throw new RMQJMSSecurityException(x);
                 } else if (x.getMessage().contains("Connection refused")) {
-                    throw new RMQJMSException("Attempted to connect to RabbitMQ broker, but connection was refused. Is RabbitMQ running?", x);
+                    throw new RMQJMSException("Attempted to connect to RabbitMQ broker, but connection was refused. RabbitMQ broker may not be available.", x);
                 } else {
                     throw new RMQJMSException(x);
                 }
@@ -85,10 +95,97 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
                 throw new RMQJMSException(x);
             }
         }
+    }
 
-        RMQConnection conn = new RMQConnection(rabbitConnection, getTerminationTimeout());
-        logger.debug("Connection {} created.", conn);
-        return conn;
+    public URI getUri() {
+        try {
+            return new URI(scheme(isSsl()), uriUInfoEscape(this.username, this.password), this.host, this.port, uriEncodeVirtualHost(this.virtualHost), null, null);
+        } catch (URISyntaxException use) {
+            this.logger.error("Exception creating URI from {}", this, use);
+        }
+        return null;
+    }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder("RMQConnectionFactory{");
+        return (this.isSsl() ? sb.append("SSL, ") : sb)
+        .append("user='").append(this.username)
+        .append("', password").append(this.password!=null ? "=xxxxxxxx" : " not set")
+        .append(", host='").append(this.host)
+        .append("', port=").append(this.port)
+        .append(", virtualHost='").append(this.virtualHost)
+        .append("'}").toString();
+    }
+
+    public void setUri(String uriString) throws JMSException {
+        logger.trace("Set connection factory parameters by URI '{}'", uriString);
+        // Create a temp factory and set the properties by uri
+        com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
+        setRabbitUri(factory, createAmqpUri(uriString));
+        // Now extract our properties from this factory, leaving the rest unchanged.
+        this.host = factory.getHost();
+        this.password = factory.getPassword();
+        this.port = factory.getPort();
+        this.ssl = factory.isSSL();
+        this.username = factory.getUsername();
+        this.virtualHost = factory.getVirtualHost();
+    }
+
+    private void setRabbitUri(com.rabbitmq.client.ConnectionFactory factory, URI uri) throws RMQJMSException {
+        if (uri != null) { // we get the defaults if the uri is null
+            try {
+                factory.setUri(uri);
+            } catch (Exception e) {
+                this.logger.error("Could not set URI on {}", this, e);
+                throw new RMQJMSException("Could not set URI on RabbitMQ connection factory.", e);
+            }
+        }
+    }
+
+    private void resetSsl(com.rabbitmq.client.ConnectionFactory factory) {
+        if (this.ssl)
+        try {
+            factory.useSslProtocol();
+        } catch (Exception e1) {
+            this.logger.warn("Could not set SSL protocol on connection factory, {}. SSL set off.", this, e1);
+            this.ssl=false;
+        }
+    }
+
+    public boolean isSsl() {
+        return this.ssl;
+    }
+
+    public void setSsl(boolean ssl) {
+        this.ssl = ssl;
+    }
+
+    private final URI createAmqpUri(String uriString) {
+        try {
+            return new URI(uriString);
+        } catch (URISyntaxException use) {
+            this.logger.debug("Failed creating URI for RabbitMQ ConnectionFactory with string '{}'", uriString);
+        }
+        return null;
+    }
+
+    private static final String scheme(boolean isSsl) {
+        return (isSsl ? "amqps" : "amqp");
+    }
+
+    private static final String uriEncodeVirtualHost(String virtualHost) {
+        if (virtualHost==null) return null;
+        return "/" + virtualHost.replace("/", "%2F"); // avoid embedded slashes
+    }
+
+    private static final String uriUInfoEscape(String user, String pass) {
+        if (null==user) return null;
+        if (null==pass) return uriStrEscape(user);
+        return uriStrEscape(user) + ":" + uriStrEscape(pass);
+    }
+
+    private static final String uriStrEscape(String str) {
+        return str.replace(":", "%3A"); // quoted colon
     }
 
     /**
@@ -97,10 +194,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     @Override
     public Reference getReference() throws NamingException {
         Reference ref = new Reference(RMQConnectionFactory.class.getName());
-        addStringProperty(ref, "username", this.username);
-        addStringProperty(ref, "password", this.password);
-        addStringProperty(ref, "virtualHost", this.virtualHost);
-        addStringProperty(ref, "host", this.host);
+        addStringProperty(ref, "uri", this.getUri().toString());
         return ref;
     }
 
