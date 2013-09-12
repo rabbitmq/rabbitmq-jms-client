@@ -3,8 +3,6 @@ package com.rabbitmq.jms.admin;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -18,6 +16,7 @@ import javax.naming.RefAddr;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
 import javax.naming.StringRefAddr;
+import javax.net.ssl.SSLException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.rabbitmq.jms.client.RMQConnection;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.RMQJMSSecurityException;
+import com.rabbitmq.jms.util.URICodec;
 
 /**
  * RabbitMQ Implementation of JMS {@link ConnectionFactory}
@@ -36,6 +36,10 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     private static final long serialVersionUID = -4953157213762979615L;
 
+    private static final int DEFAULT_RABBITMQ_SSL_PORT = com.rabbitmq.client.ConnectionFactory.DEFAULT_AMQP_OVER_SSL_PORT;
+
+    private static final int DEFAULT_RABBITMQ_PORT = com.rabbitmq.client.ConnectionFactory.DEFAULT_AMQP_PORT;
+
     /** Default not to use ssl */
     private boolean ssl = false;
     /** Default username to RabbitMQ broker */
@@ -46,8 +50,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private String virtualHost = "/";
     /** Default host to RabbitMQ broker */
     private String host = "localhost";
-    /** Default port to RabbitMQ broker */
-    private int port = 5672;
+    /** Default port NOT SET - determined by the type of connection (ssl or non-ssl) */
+    private int port = -1;
     /** The time to wait for threads/messages to terminate during {@link Connection#close()} */
     private volatile long terminationTimeout = Long.getLong("rabbit.jms.terminationTimeout", 15000);
 
@@ -81,29 +85,31 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private com.rabbitmq.client.Connection getRabbitConnection(com.rabbitmq.client.ConnectionFactory factory) throws JMSException {
         try {
             return factory.newConnection();
+        } catch (SSLException ssle) {
+            throw new RMQJMSSecurityException("SSL Exception establishing RabbitMQ Connection", ssle);
         } catch (IOException x) {
-            if (x.getMessage() != null) {
-                if (x.getMessage().contains("authentication failure")) {
+            String msg = x.getMessage();
+            if (msg!=null) {
+                if (msg.contains("authentication failure"))
                     throw new RMQJMSSecurityException(x);
-                } else if (x.getMessage().contains("Connection refused")) {
-                    throw new RMQJMSException("Attempted to connect to RabbitMQ broker, but connection was refused. RabbitMQ broker may not be available.", x);
-                } else {
-                    throw new RMQJMSException(x);
-                }
-
-            } else {
-                throw new RMQJMSException(x);
+                else if (msg.contains("Connection refused"))
+                    throw new RMQJMSException("RabbitMQ connection was refused. RabbitMQ broker may not be available.", x);
             }
+            throw new RMQJMSException(x);
         }
     }
 
-    public URI getUri() {
-        try {
-            return new URI(scheme(isSsl()), uriUInfoEscape(this.username, this.password), this.host, this.port, uriEncodeVirtualHost(this.virtualHost), null, null);
-        } catch (URISyntaxException use) {
-            this.logger.error("Exception creating URI from {}", this, use);
-        }
-        return null;
+    /**
+     * Returns the current factory connection parameters in a URI String.
+     * @return URI for RabbitMQ connection (as a coded String)
+     */
+    public String getUri() {
+        StringBuilder sb = new StringBuilder(scheme(isSsl())).append("://");
+        sb.append(uriUInfoEscape(this.username, this.password)).append('@');
+        sb.append(uriHostEscape(this.host)).append(':').append(this.getPort()).append("/");
+        sb.append(uriVirtualHostEscape(this.virtualHost));
+
+        return sb.toString();
     }
 
     public String toString() {
@@ -112,16 +118,21 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         .append("user='").append(this.username)
         .append("', password").append(this.password!=null ? "=xxxxxxxx" : " not set")
         .append(", host='").append(this.host)
-        .append("', port=").append(this.port)
+        .append("', port=").append(this.getPort())
         .append(", virtualHost='").append(this.virtualHost)
         .append("'}").toString();
     }
 
+    /**
+     * Set connection factory parameters by URI String.
+     * @param uriString
+     * @throws JMSException
+     */
     public void setUri(String uriString) throws JMSException {
         logger.trace("Set connection factory parameters by URI '{}'", uriString);
         // Create a temp factory and set the properties by uri
         com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
-        setRabbitUri(factory, createAmqpUri(uriString));
+        setRabbitUri(factory, uriString);
         // Now extract our properties from this factory, leaving the rest unchanged.
         this.host = factory.getHost();
         this.password = factory.getPassword();
@@ -131,10 +142,10 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.virtualHost = factory.getVirtualHost();
     }
 
-    private void setRabbitUri(com.rabbitmq.client.ConnectionFactory factory, URI uri) throws RMQJMSException {
-        if (uri != null) { // we get the defaults if the uri is null
+    private void setRabbitUri(com.rabbitmq.client.ConnectionFactory factory, String uriString) throws RMQJMSException {
+        if (uriString != null) { // we get the defaults if the uri is null
             try {
-                factory.setUri(uri);
+                factory.setUri(uriString);
             } catch (Exception e) {
                 this.logger.error("Could not set URI on {}", this, e);
                 throw new RMQJMSException("Could not set URI on RabbitMQ connection factory.", e);
@@ -160,32 +171,22 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.ssl = ssl;
     }
 
-    private final URI createAmqpUri(String uriString) {
-        try {
-            return new URI(uriString);
-        } catch (URISyntaxException use) {
-            this.logger.debug("Failed creating URI for RabbitMQ ConnectionFactory with string '{}'", uriString);
-        }
-        return null;
-    }
-
     private static final String scheme(boolean isSsl) {
         return (isSsl ? "amqps" : "amqp");
     }
 
-    private static final String uriEncodeVirtualHost(String virtualHost) {
-        if (virtualHost==null) return null;
-        return "/" + virtualHost.replace("/", "%2F"); // avoid embedded slashes
-    }
-
     private static final String uriUInfoEscape(String user, String pass) {
         if (null==user) return null;
-        if (null==pass) return uriStrEscape(user);
-        return uriStrEscape(user) + ":" + uriStrEscape(pass);
+        if (null==pass) return URICodec.encUserinfo(user, "UTF-8");
+        return URICodec.encUserinfo(user + ":" + pass, "UTF-8");
     }
 
-    private static final String uriStrEscape(String str) {
-        return str.replace(":", "%3A"); // quoted colon
+    private static final String uriHostEscape(String host) {
+        return URICodec.encHost(host, "UTF-8");
+    }
+
+    private static final String uriVirtualHostEscape(String vHost) {
+        return URICodec.encSegment(vHost, "UTF-8");
     }
 
     /**
@@ -194,7 +195,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     @Override
     public Reference getReference() throws NamingException {
         Reference ref = new Reference(RMQConnectionFactory.class.getName());
-        addStringProperty(ref, "uri", this.getUri().toString());
+        addStringProperty(ref, "uri", this.getUri());
         return ref;
     }
 
@@ -262,19 +263,21 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * Returns the configured username used when creating a connection If
      * {@link RMQConnectionFactory#setUsername(String)} has not been called the default value of 'guest' is returned.
      *
-     * @return a string representing the username for a Rabbit connection
+     * @return a string representing the username for a RabbitMQ connection
      */
     public String getUsername() {
         return username;
     }
 
     /**
-     * Sets the username to be used when creating a connection to the RabbitMQ broker
+     * Sets the <i>username</i> to be used when creating a connection to the RabbitMQ broker.
+     * If the parameter is <code>null</code> the current <i>username</i> is not changed.
      *
      * @param username - username to be used when creating a connection to the RabbitMQ broker
      */
     public void setUsername(String username) {
-        this.username = username;
+        if (username != null) this.username = username;
+        else this.logger.warn("Cannot set username to null (on {})", this);
     }
 
     /**
@@ -297,26 +300,28 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * Returns the configured virtual host used when creating a connection If
+     * Returns the virtual host used when creating a connection.  If
      * {@link RMQConnectionFactory#setVirtualHost(String)} has not been called the default value of '/' is returned.
      *
-     * @return a string representing the virtual host for a Rabbit connection
+     * @return a String representing the virtual host for a RabbitMQ connection
      */
     public String getVirtualHost() {
         return virtualHost;
     }
 
     /**
-     * Sets the virtual host to be used when creating a connection to the RabbitMQ broker
+     * Sets the virtual host to be used when creating a connection to the RabbitMQ broker.
+     * If the parameter is <code>null</code> the current <i>virtualHost</i> is not changed.
      *
      * @param virtualHost - virtual host to be used when creating a connection to the RabbitMQ broker
      */
     public void setVirtualHost(String virtualHost) {
-        this.virtualHost = virtualHost;
+        if (virtualHost != null) this.virtualHost = virtualHost;
+        else this.logger.warn("Cannot set virtualHost to null (on {})", this);
     }
 
     /**
-     * Returns the host name of the RabbitMQ broker Host name can be in form of an IP address or a host name
+     * Returns the host name to be used when creating a connection to the RabbitMQ broker.
      *
      * @return the host name of the RabbitMQ broker
      */
@@ -325,27 +330,33 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * Sets the host name of the RabbitMQ broker The host name can be an IP address or a host name
+     * Sets the host name of the RabbitMQ broker. The host name can be an IP address or a host name.
+     * If the parameter is <code>null</code> the current <i>host name</i> is not changed.
      *
-     * @param host ip address or a host name of the RabbitMQ broker
+     * @param host - IP address or a host name of the RabbitMQ broker, in String form
      */
     public void setHost(String host) {
-        this.host = host;
+        if (host != null) this.host = host;
+        else this.logger.warn("Cannot set host to null (on {})", this);
     }
 
     /**
      * Returns the port the RabbitMQ broker listens to; this port is used to connect to the broker.
+     * If the port has not been set (defaults to -1) then the default port for this type of connection is returned.
      *
      * @return the port the RabbitMQ broker listens to
      */
     public int getPort() {
-        return port;
+        return this.port!=-1 ? this.port
+             : isSsl() ? DEFAULT_RABBITMQ_SSL_PORT
+             : DEFAULT_RABBITMQ_PORT;
     }
 
     /**
-     * Set the port that the RabbitMQ broker listens to; this port is used to connect to the broker.
+     * Set the port to be used when making a connection to the RabbitMQ broker.  This is the port number the broker will listen on.
+     * Setting this to -1 means take the RabbitMQ default (which depends on the type of connection).
      *
-     * @param port a TCP port of the RabbitMQ broker
+     * @param port - a TCP port number
      */
     public void setPort(int port) {
         this.port = port;
@@ -355,7 +366,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * The time to wait in milliseconds when {@link Connection#close()} has been called for listeners and threads to
      * complete.
      *
-     * @return the time in milliseconds the {@link Connection#close()} waits before continuing shutdown sequence
+     * @return the duration in milliseconds for which the {@link Connection#close()} waits before continuing shutdown sequence
      */
     public long getTerminationTimeout() {
         return terminationTimeout;
@@ -364,7 +375,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     /**
      * Sets the time in milliseconds a {@link Connection#close()} should wait for threads/tasks/listeners to complete
      *
-     * @param terminationTimeout time in milliseconds
+     * @param terminationTimeout - duration in milliseconds
      */
     public void setTerminationTimeout(long terminationTimeout) {
         this.terminationTimeout = terminationTimeout;
