@@ -12,16 +12,22 @@ import com.rabbitmq.jms.admin.RMQConnectionFactory;
  */
 public class RabbitAPIConnectionFactory extends AbstractTestConnectionFactory {
 
+    private static final int RABBIT_PORT = 5672; // 5672 default; 5673 Tracer.
+    private final boolean testssl;
+
+    public RabbitAPIConnectionFactory() { this(false); }
+
+    public RabbitAPIConnectionFactory(boolean testssl) { this.testssl = testssl; }
     @Override
     public ConnectionFactory getConnectionFactory() {
         return new RMQConnectionFactory() {
 
             private static final long serialVersionUID = 1L;
-            private static final int RABBIT_PORT = 5672; // 5672 default; 5673 Tracer.
 
             @Override
             public Connection createConnection(String userName, String password) throws JMSException {
-                this.setPort(RABBIT_PORT);
+                super.setSsl(testssl);
+                if (!testssl) this.setPort(RABBIT_PORT);
                 return super.createConnection(userName, password);
             }
 
