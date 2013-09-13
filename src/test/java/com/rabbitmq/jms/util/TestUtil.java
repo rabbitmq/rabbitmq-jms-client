@@ -20,7 +20,7 @@ public class TestUtil {
      */
     @Test
     public void generateUUIDPrefix() throws Exception {
-        assertTrue("Prefix "+PREFIX+" not added correctly", Util.generateUUID(PREFIX).startsWith(PREFIX));
+        assertTrue("Prefix '"+PREFIX+"' not added correctly", Util.generateUUID(PREFIX).startsWith(PREFIX));
         assertTrue("Null case doesn't start with null", Util.generateUUID(null).startsWith("null")); // special case
     }
 

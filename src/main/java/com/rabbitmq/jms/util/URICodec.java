@@ -6,16 +6,30 @@ import java.util.Arrays;
 
 
 /**
- * Helper class to build/deconstruct URIs
+ * Helper class to encode/decode (pieces of) URI strings
  * <p>
- * Static methods are provided to code and decode parts of a URI. Works only with UTF-8 and US_ASCII.
+ * Static methods are provided to encode and decode parts of a URI. Works only with UTF-8 and US-ASCII character encodings.
+ * The results are undefined for all other encodings.
+ * </p>
+ * <p>
+ * Encoding a string involves encoding each character not allowed in that part of the URI string. Non-allowed characters are
+ * converted to a sequence of ‘percent-encoded’ bytes (octets). A percent-encoded octet is ‘<code>%</code><i>xx</i>’
+ * where <i>xx</i> are two hexadecimal digits. The octets percent-encoded for a character depend upon the <i>character</i>
+ * encoding used: in the case of UTF-8 this might be up to four octets, but for US-ASCII encoding this would be only one octet.
+ * Decoding reconstructs the characters from the percent-encoded octets.
+ * </p>
+ * <p>
+ * The character encoding used to decode a string must be that used encode it, or the results are undefined.
  * </p>
  * <p>
  * Coding and decoding a URI depends which part of the URI you are accessing. Notice, for example, that in the
- * <code>userinfo</code> part, colons are allowed asis, but that in relative segments they are not. Useful as this is,
- * we probably don’t want to have more than one colon in the <code>userinfo</code> part as it is conventionally used to
- * separate a <code>username</code> from a <code>password</code>. Modern passwords are likely to have a lot of special
- * characters in them, including colons, so we provide special functions which handle this, without violating the rules.
+ * <code>userinfo</code> part, colons are allowed asis, but that in the first relative path segment they are not.
+ * </p>
+ * <p>
+ * This class only provides string-to-string encoding and decoding methods for (some) parts of a URI string.
+ * It does <i>not</i> syntactically validate the encoded or decoded strings for each part. So, for example,
+ * it will encode a scheme part which contains colons (replacing them with percent-encoded octets), even though
+ * percent-encoded octets are not allowed in schemes.
  * </p>
  * <p>
  * [<b>NB</b>: The algorithmic assumption is made throughout that all <i>valid</i> characters are represented by a single byte
@@ -37,7 +51,9 @@ import java.util.Arrays;
  * non-terminals are defined: <code>ALPHA</code> (letters), <code>DIGIT</code> (decimal digits), and
  * <code>HEXDIG</code> (hexadecimal digits).
  * </p>
- * <p>[<b>NB</b>: I have replaced the ‘<code>/</code>’ (alternative) operator by the graphically more pleasing ‘<code>|</code>’.]
+ * <p>[<b>NB</b>: ‘<code><b>;</b></code>’ indicates a line comment, as in the original, but I have replaced the
+ * solidus ‘<code><b>/</b></code>’ (alternative) operator by the graphemically more pleasing vertical
+ * bar ‘<code><b>|</b></code>’.]
  * </p>
  * <pre>
  *    URI           = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
@@ -93,20 +109,19 @@ import java.util.Arrays;
  *
  *    path          = path-abempty    ; begins with "/" or is empty
  *                  | path-absolute   ; begins with "/" but not "//"
- *                  | path-noscheme   ; begins with a non-colon segment
+ *                  | path-noscheme   ; begins with a no-colon non-empty segment
  *                  | path-rootless   ; begins with a segment
  *                  | path-empty      ; zero characters
  *
- *    path-abempty  = *( "/" segment )
- *    path-absolute = "/" [ segment-nz *( "/" segment ) ]
- *    path-noscheme = segment-nz-nc *( "/" segment )
- *    path-rootless = segment-nz *( "/" segment )
- *    path-empty    = 0<pchar>
+ *    path-abempty  = *( "/" segment )                      ; begins with "/" or is empty
+ *    path-absolute = "/" [ segment-nz *( "/" segment ) ]   ; begins with "/" but not "//"
+ *    path-noscheme = segment-nz-nc *( "/" segment )        ; begins with a no-colon non-empty segment
+ *    path-rootless = segment-nz *( "/" segment )           ; begins with a segment
+ *    path-empty    = 0<pchar>                              ; zero characters
  *
  *    segment       = *pchar
  *    segment-nz    = 1*pchar
- *    segment-nz-nc = 1*( unreserved | pct-encoded | sub-delims | "@" )
- *                  ; non-zero-length segment without any colon ":"
+ *    segment-nz-nc = 1*( unreserved | pct-encoded | sub-delims | "@" ) ; no-colon non-empty segment
  *
  *    pchar         = unreserved | pct-encoded | sub-delims | ":" | "@"
  *
@@ -119,64 +134,138 @@ import java.util.Arrays;
  *    unreserved    = ALPHA | DIGIT | "-" | "." | "_" | "~"
  *    reserved      = gen-delims | sub-delims
  *    gen-delims    = ":" | "/" | "?" | "#" | "[" | "]" | "@"
- *    sub-delims    = "!" | "$" | "&" | "'" | "(" | ")"
- *                  | "*" | "+" | "," | ";" | "="
+ *    sub-delims    = "!" | "$" | "&" | "'" | "(" | ")" | "*" | "+" | "," | ";" | "="
  *
  * </pre>
  */
-public abstract class URICodec {
+public abstract class UriCodec {  // Prevent me declaring instances.
+    private UriCodec() {}         // Prevent anyone else declaring instances; also prohibits extensions.
 
+    /**
+     * Encode a string for the userinfo part of a URI string.
+     * @param ui - uncoded input
+     * @param encodingScheme - must be one of "UTF-8" or "US-ASCII"
+     * @return ui encoded (with % encodings if necessary)
+     */
     public static final String encUserinfo(String ui, String encodingScheme) {
         return genericEncode(USERINFO_C_BA, ui, encodingScheme);
     }
 
+    /**
+     * @param rawui - encoded userinfo part
+     * @param encodingScheme - must be one of "UTF-8" of "US-ASCII"
+     * @return rawui decoded (with % encodings replaced by characters they represent)
+     */
     public static final String decUserinfo(String rawui, String encodingScheme) {
         return genericDecode(rawui, encodingScheme);
     }
 
+    /**
+     * Encode a string for the scheme part of a URI string.
+     * @param ui - uncoded input
+     * @param encodingScheme - must be one of "UTF-8" or "US-ASCII"
+     * @return ui encoded (with % encodings if necessary)
+     */
     public static final String encScheme(String ui, String encodingScheme) {
         return genericEncode(SCHEME_C_BA, ui, encodingScheme);
     }
 
+    /**
+     * @param rawui - encoded scheme part
+     * @param encodingScheme - must be one of "UTF-8" of "US-ASCII"
+     * @return rawui decoded (with % encodings replaced by characters they represent)
+     */
     public static final String decScheme(String rawui, String encodingScheme) {
         return genericDecode(rawui, encodingScheme);
     }
 
+    /**
+     * Encode a string for a segment part of a URI string.
+     * @param ui - uncoded input
+     * @param encodingScheme - must be one of "UTF-8" or "US-ASCII"
+     * @return ui encoded (with % encodings if necessary)
+     */
     public static final String encSegment(String ui, String encodingScheme) {
         return genericEncode(SEGMENT_C_BA, ui, encodingScheme);
     }
 
+    /**
+     * @param rawui - encoded segment part
+     * @param encodingScheme - must be one of "UTF-8" of "US-ASCII"
+     * @return rawui decoded (with % encodings replaced by characters they represent)
+     */
     public static final String decSegment(String rawui, String encodingScheme) {
         return genericDecode(rawui, encodingScheme);
     }
 
+    /**
+     * Encode a string for the host part of a URI string.
+     * @param ui - uncoded input
+     * @param encodingScheme - must be one of "UTF-8" or "US-ASCII"
+     * @return ui encoded (with % encodings if necessary)
+     */
     public static final String encHost(String ui, String encodingScheme) {
         return genericEncode(HOST_C_BA, ui, encodingScheme);
     }
 
+    /**
+     * @param rawui - encoded host part
+     * @param encodingScheme - must be one of "UTF-8" of "US-ASCII"
+     * @return rawui decoded (with % encodings replaced by characters they represent)
+     */
     public static final String decHost(String rawui, String encodingScheme) {
+        return genericDecode(rawui, encodingScheme);
+    }
+
+    /**
+     * Encode a string for the path part of a URI string.
+     * @param ui - uncoded input
+     * @param encodingScheme - must be one of "UTF-8" or "US-ASCII"
+     * @return ui encoded (with % encodings if necessary)
+     */
+    public static final String encPath(String ui, String encodingScheme) {
+        return genericEncode(PATH_C_BA, ui, encodingScheme);
+    }
+
+    /**
+     * @param rawui - encoded path part
+     * @param encodingScheme - must be one of "UTF-8" of "US-ASCII"
+     * @return rawui decoded (with % encodings replaced by characters they represent)
+     */
+    public static final String decPath(String rawui, String encodingScheme) {
         return genericDecode(rawui, encodingScheme);
     }
 
     private static final String genericDecode(String rawstr, String encodingScheme) {
         try {
             int starState = 0;
-            int n=0; byte hiHex = 0;
-            byte[] bytes = new byte[rawstr.length()]; // n bytes are set
+            int n=0; int hiHex = 0;
+            byte[] bytes = new byte[rawstr.length()]; // invariant: n bytes are set
             for (byte b : rawstr.getBytes(encodingScheme)) {
                 switch (starState) {
                 case 0 : if (b!='%') bytes[n++] = b;
-                             else   { starState = 1; } break;
-                case 1 : starState = 2; hiHex = b;     break;
-                case 2 : starState = 0; bytes[n++] = (byte) (hiHex*16 + b); break;
+                         else { starState = 1; }        break;
+                case 1 : starState = 2; hiHex = hex(b); break;
+                case 2 : starState = 0; bytes[n++] = (byte) (hiHex*16 + hex(b)); break;
                 default : break;
                 }
-            }
-            return new String(bytes, encodingScheme);
+            } // n is length of 'set' byte array
+            return new String(bytes, 0, n, encodingScheme);
         } catch (UnsupportedEncodingException e) {
             return rawstr;
         }
     }
+
+    private static final int hex(int b) {
+        return  (b < 48)  ? 0
+               :(b < 58)  ? (b-48)  // 48..57  ->  0..9
+               :(b < 65)  ? 0
+               :(b < 71)  ? (b-55)  // 65..70  -> 10..15
+               :(b < 97)  ? 0
+               :(b < 103) ? (b-87)  // 97..102 -> 10..15
+               :            0;
+    }
+
     private static final String genericEncode(byte[] charClass, String str, String encodingScheme) {
         try {
             StringBuilder sb = new StringBuilder();
@@ -190,8 +279,9 @@ public abstract class URICodec {
             return str;
         }
     }
+
     private static final void addEscaped(StringBuilder sb, int b) {
-        int ind = (b>=0 ? b : b+256); // to range 0<=b<=255
+        int ind = (b+256)%256; // to range 0<=ind<=255
         sb.append('%').append(HIHEX[ind]).append(LOHEX[ind]);
     }
 
@@ -199,37 +289,39 @@ public abstract class URICodec {
         return Arrays.binarySearch(sortedBytes, b) >= 0;
     }
 
-    private URICodec() {}  // no instantiation
+    private static final String DIGIT  = "0123456789";
+//    private static final String HEXDIG = DIGIT + "abcdefABCDEF";
+    private static final String ALPHA  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    private static final String DIGIT = "0123456789";
-    private static final String HEXDIG = DIGIT + "abcdefABCDEF";
-    private static final String ALPHA = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+//    private static final String GEN_DELIMS = ":/?#[]@";                         // gen-delims
+    private static final String SUB_DELIMS = "!$&'()*+,;=";                     // sub-delims
 
-    private static final String GEN_DELIMS = ":/?#[]@";
-    private static final String SUB_DELIMS = "!$&'()*+,;=";
+    private static final String UNRESERVED = ALPHA + DIGIT + "-._~";            // unreserved
+//    private static final String RESERVED   = GEN_DELIMS + SUB_DELIMS;           // reserved
 
-    private static final String UNRESERVED = ALPHA + DIGIT + "-._~";
-    private static final String RESERVED = GEN_DELIMS + SUB_DELIMS;
+    private static final String SCHEME_C = ALPHA + DIGIT + "+-.";               // scheme
 
-    private static final String SCHEME_C = ALPHA + DIGIT + "+-.";
+    private static final String PCHAR_C = UNRESERVED + SUB_DELIMS + ":@";       // pchar
 
-    private static final String PATHCHAR_C = UNRESERVED + SUB_DELIMS + ":@";
-    private static final String QUERY_C = PATHCHAR_C + "/?";
-    private static final String FRAGMENT_C = PATHCHAR_C + "/?";
-    private static final String SEGMENT_C = PATHCHAR_C;
+//    private static final String QUERY_C    = PCHAR_C + "/?";                    // query
+//    private static final String FRAGMENT_C = PCHAR_C + "/?";                    // fragment
+    private static final String SEGMENT_C  = PCHAR_C;                           // segment
+    private static final String PATH_C     = SEGMENT_C + "/";                   // path
 
-    private static final String USERINFO_C = UNRESERVED + SUB_DELIMS + ":";
-    private static final String HOST_C = UNRESERVED + SUB_DELIMS + ":[].";
+    private static final String USERINFO_C = UNRESERVED + SUB_DELIMS + ":";     // userinfo
+    private static final String HOST_C     = UNRESERVED + SUB_DELIMS + ":[].";  // host
 
-    private static final byte[] DIGIT_BA = bytesOf(DIGIT);
-    private static final byte[] HEXDIG_BA = bytesOf(HEXDIG);
-    private static final byte[] ALPHA_BA = bytesOf(ALPHA);
-    private static final byte[] UNRESERVED_BA = bytesOf(UNRESERVED);
-    private static final byte[] SCHEME_C_BA = bytesOf(SCHEME_C);
+    // sorted array optimisations
+//    private static final byte[] DIGIT_BA      = bytesOf(DIGIT);
+//    private static final byte[] HEXDIG_BA     = bytesOf(HEXDIG);
+//    private static final byte[] ALPHA_BA      = bytesOf(ALPHA);
+//    private static final byte[] UNRESERVED_BA = bytesOf(UNRESERVED);
+    private static final byte[] SCHEME_C_BA   = bytesOf(SCHEME_C);
     private static final byte[] USERINFO_C_BA = bytesOf(USERINFO_C);
-    private static final byte[] HOST_C_BA = bytesOf(HOST_C);
-    private static final byte[] PATHCHAR_C_BA = bytesOf(PATHCHAR_C);
-    private static final byte[] SEGMENT_C_BA = PATHCHAR_C_BA;
+    private static final byte[] HOST_C_BA     = bytesOf(HOST_C);
+    private static final byte[] PCHAR_C_BA    = bytesOf(PCHAR_C);
+    private static final byte[] SEGMENT_C_BA  = PCHAR_C_BA;
+    private static final byte[] PATH_C_BA     = bytesOf(PATH_C);
 
     private static final char[] LOHEX = new char[] { '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
                                                    , '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'

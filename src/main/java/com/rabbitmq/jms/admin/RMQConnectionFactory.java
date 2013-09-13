@@ -1,6 +1,10 @@
 /* Copyright (c) 2013 GoPivotal, Inc. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
+import static com.rabbitmq.jms.util.UriCodec.encHost;
+import static com.rabbitmq.jms.util.UriCodec.encSegment;
+import static com.rabbitmq.jms.util.UriCodec.encUserinfo;
+
 import java.io.IOException;
 import java.io.Serializable;
 
@@ -24,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import com.rabbitmq.jms.client.RMQConnection;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.RMQJMSSecurityException;
-import com.rabbitmq.jms.util.URICodec;
 
 /**
  * RabbitMQ Implementation of JMS {@link ConnectionFactory}
@@ -177,16 +180,16 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     private static final String uriUInfoEscape(String user, String pass) {
         if (null==user) return null;
-        if (null==pass) return URICodec.encUserinfo(user, "UTF-8");
-        return URICodec.encUserinfo(user + ":" + pass, "UTF-8");
+        if (null==pass) return encUserinfo(user, "UTF-8");
+        return encUserinfo(user + ":" + pass, "UTF-8");
     }
 
     private static final String uriHostEscape(String host) {
-        return URICodec.encHost(host, "UTF-8");
+        return encHost(host, "UTF-8");
     }
 
     private static final String uriVirtualHostEscape(String vHost) {
-        return URICodec.encSegment(vHost, "UTF-8");
+        return encSegment(vHost, "UTF-8");
     }
 
     /**
