@@ -7,4 +7,8 @@ public abstract class AbstractTestConnectionFactory {
     public static AbstractTestConnectionFactory getTestConnectionFactory() throws Exception {
         return new RabbitAPIConnectionFactory();
     }
+
+    public static AbstractTestConnectionFactory getSslTestConnectionFactory() throws Exception {
+        return new RabbitAPIConnectionFactory(true);
+    }
 }
