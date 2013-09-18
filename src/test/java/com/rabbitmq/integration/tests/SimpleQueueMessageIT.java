@@ -32,10 +32,43 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
     private static final String MESSAGE = "Hello " + SimpleQueueMessageIT.class.getName();
     private static final long TEST_RECEIVE_TIMEOUT = 1000; // one second
 
+    private static final char[] CHAR = new char[]{' ', ';', '…', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+    private static final int CHARLEN = CHAR.length;
+    private static final String LONG_TEXT_BODY = generateLongString(65535);
+
+    private final static String generateLongString(int len) {
+        StringBuilder sb = new StringBuilder("Long String length>="+len);
+        for (int i=0; i<len; ++i) {
+            sb.append(CHAR[i % CHARLEN]);
+        }
+        return sb.toString();
+    }
+
+    @Test
+    public void testSendAndReceiveLongTextMessage() throws Exception {
+        try {
+            queueConn.start();
+            QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+            Queue queue = queueSession.createQueue(QUEUE_NAME);
+            QueueSender queueSender = queueSession.createSender(queue);
+            queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+            TextMessage message = queueSession.createTextMessage(LONG_TEXT_BODY);
+            queueSender.send(message);
+        } finally {
+            reconnect();
+        }
+
+        queueConn.start();
+        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        Queue queue = queueSession.createQueue(QUEUE_NAME);
+        QueueReceiver queueReceiver = queueSession.createReceiver(queue);
+        TextMessage message = (TextMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
+        assertEquals(LONG_TEXT_BODY, message.getText());
+    }
+
     @Test
     public void testSendAndReceiveTextMessage() throws Exception {
         try {
-            queueConn.start();
             queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             Queue queue = queueSession.createQueue(QUEUE_NAME);

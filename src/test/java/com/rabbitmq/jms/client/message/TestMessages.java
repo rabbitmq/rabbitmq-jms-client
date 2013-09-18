@@ -15,6 +15,7 @@ import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.ObjectMessage;
 import javax.jms.StreamMessage;
+import javax.jms.TextMessage;
 
 import org.junit.Test;
 
@@ -68,6 +69,33 @@ public class TestMessages {
         RMQObjectMessage message = new RMQObjectMessage();
         writeObjectMessage(message);
         readObjectMessage(message);
+    }
+
+    @Test
+    public void testTextMessage() throws Exception {
+        RMQTextMessage message = new RMQTextMessage();
+        writeTextMessage(message);
+        readTextMessage(message);
+    }
+
+    private static final char[] CHAR = new char[]{' ', ';', '…', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+    private static final int CHARLEN = CHAR.length;
+    private static final String LONG_STRING_BODY = generateLongString(65535);
+
+    private final static String generateLongString(int len) {
+        StringBuilder sb = new StringBuilder("Long String length>="+len);
+        for (int i=0; i<len; ++i) {
+            sb.append(CHAR[i % CHARLEN]);
+        }
+        return sb.toString();
+    }
+
+    private static void writeTextMessage(TextMessage message) throws JMSException {
+        message.setText(LONG_STRING_BODY);
+    }
+
+    private static void readTextMessage(TextMessage message) throws JMSException {
+        assertEquals(LONG_STRING_BODY, message.getText());
     }
 
     public static void writeObjectMessage(ObjectMessage message) throws JMSException {
@@ -197,7 +225,7 @@ public class TestMessages {
         message.writeString("TEST");
         try {
             message.writeObject(new TestNonSerializable());
-            fail("Did not throw exception trying to send non serializable object");
+            fail("Did not throw exception trying to send non-serializable object");
         } catch (Exception x) {
 
         }
