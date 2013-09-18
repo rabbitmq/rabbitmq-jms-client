@@ -40,6 +40,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     private static final String JMS_TEMP_QUEUE_EXCHANGE_NAME = "jms.temp.queues";       // fixed queue exchange in RabbitMQ for jms traffic
 
     private volatile String destinationName;
+    /** <code>true</code> if maps JMS destination to AMQP resource in RabbitMQ server */
     private volatile boolean amqp;
     private volatile String amqpExchangeName;
     private volatile String amqpExchangeType;
@@ -299,10 +300,13 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
         return isTemporary;
     }
 
+    /**
+     * This method is for {@link TemporaryQueue}s only — deletion currently occurs automatically on {@link RMQSession#close}.
+     * <p/>{@inheritDoc}
+     */
     @Override
     public void delete() throws JMSException {
-        /**delete is for {@link TemporaryQueue}s only - currently deferred until Session.close */
-        //TODO implement Channel.queueDelete
+        //TODO implement delete by Channel.queueDelete for TemporaryQueues only
         //See RMQSession.close how we call Channel.queueDelete
     }
 
