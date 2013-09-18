@@ -51,7 +51,11 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
     public void writeBody(ObjectOutput out) throws IOException {
         String text = this.text;
         out.writeBoolean(text == null);
-        if (text!=null) out.writeUTF(text);
+        if (text!=null) {
+            byte[] ba = text.getBytes("UTF-8");
+            out.writeInt(ba.length);
+            out.write(ba);
+        }
     }
 
     /**
@@ -61,7 +65,10 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
     protected void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
         boolean isnull = inputStream.readBoolean();
         if (!isnull) {
-            this.text = inputStream.readUTF();
+            int len = inputStream.readInt();
+            byte[] ba = new byte[len];
+            inputStream.readFully(ba, 0, len);
+            this.text = new String(ba, "UTF-8");
         }
     }
 
