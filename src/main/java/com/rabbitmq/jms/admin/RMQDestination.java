@@ -293,6 +293,58 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (amqp ? 1231 : 1237);
+        result = prime * result + ((amqpQueueName == null) ? 0 : amqpQueueName.hashCode());
+        result = prime * result + ((exchangeInfo == null) ? 0 : exchangeInfo.hashCode());
+        result = prime * result + (isQueue ? 1231 : 1237);
+        result = prime * result + (isTemporary ? 1231 : 1237);
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((routingKey == null) ? 0 : routingKey.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        RMQDestination other = (RMQDestination) obj;
+        if (amqp != other.amqp)
+            return false;
+        if (amqpQueueName == null) {
+            if (other.amqpQueueName != null)
+                return false;
+        } else if (!amqpQueueName.equals(other.amqpQueueName))
+            return false;
+        if (exchangeInfo == null) {
+            if (other.exchangeInfo != null)
+                return false;
+        } else if (!exchangeInfo.equals(other.exchangeInfo))
+            return false;
+        if (isQueue != other.isQueue)
+            return false;
+        if (isTemporary != other.isTemporary)
+            return false;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        if (routingKey == null) {
+            if (other.routingKey != null)
+                return false;
+        } else if (!routingKey.equals(other.routingKey))
+            return false;
+        return true;
+    }
+
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("RMQDestination{");
         sb.append("name='").append(name)
