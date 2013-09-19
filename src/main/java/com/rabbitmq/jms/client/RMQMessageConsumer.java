@@ -365,23 +365,14 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             return null;
 
         try {
-            /* Deserialize the message from the byte[] */
-            RMQMessage message = RMQMessage.fromMessage(response.getBody());
-            /* Received messages contain a reference to their delivery tag this is used in Message.acknowledge */
-            message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());
-            /* Set a reference to this session this is used in Message.acknowledge */
-            message.setSession(getSession());
-            /* Set the destination this message was received from */
-            message.setJMSDestination(getDestination());
-            /* Initially the message is readOnly properties == true until clearProperties has been called readOnly body
-             * == true until clearBody has been called */
-            message.setReadonly(true);
-            /* Set the redelivered flag. we inherit this from the RabbitMQ broker */
-            message.setJMSRedelivered(response.getEnvelope().isRedeliver());
-            if (!acknowledged) {
-                /* If the message has not been acknowledged automatically let the session know so that it can track
-                 * unacknowledged messages */
-                getSession().unackedMessageReceived(message);
+            RMQMessage message = RMQMessage.fromMessage(response.getBody());        // Deserialize the message from the byte[]
+            message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());  // Insert delivery tag in received message for Message.acknowledge
+            message.setSession(getSession());                                       // Insert session in received message for Message.acknowledge
+            // message.setJMSDestination(getDestination());                         // DO NOT set the destination bug#57214768
+            message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
+            message.setJMSRedelivered(response.getEnvelope().isRedeliver());        // Set the redelivered flag
+            if (!acknowledged) {                                // not already acknowledged
+                getSession().unackedMessageReceived(message);   // track unacknowledged messages
             }
             return message;
         } catch (IOException x) {

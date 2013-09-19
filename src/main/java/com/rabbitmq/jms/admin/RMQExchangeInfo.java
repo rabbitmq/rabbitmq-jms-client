@@ -8,6 +8,37 @@ import java.io.Serializable;
  */
 public class RMQExchangeInfo implements Serializable {
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        RMQExchangeInfo other = (RMQExchangeInfo) obj;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        if (type == null) {
+            if (other.type != null)
+                return false;
+        } else if (!type.equals(other.type))
+            return false;
+        return true;
+    }
+
     public static final String RABBITMQ_AMQ_TOPIC_EXCHANGE_NAME = "amq.topic";
     public static final String JMS_DURABLE_TOPIC_EXCHANGE_NAME = "jms.durable.topic";
     public static final String JMS_TEMP_TOPIC_EXCHANGE_NAME = "jms.temp.topic";
