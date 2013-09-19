@@ -311,6 +311,64 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (amqp ? 1231 : 1237);
+        result = prime * result + ((amqpExchangeName == null) ? 0 : amqpExchangeName.hashCode());
+        result = prime * result + ((amqpExchangeType == null) ? 0 : amqpExchangeType.hashCode());
+        result = prime * result + ((amqpQueueName == null) ? 0 : amqpQueueName.hashCode());
+        result = prime * result + ((amqpRoutingKey == null) ? 0 : amqpRoutingKey.hashCode());
+        result = prime * result + ((destinationName == null) ? 0 : destinationName.hashCode());
+        result = prime * result + (isQueue ? 1231 : 1237);
+        result = prime * result + (isTemporary ? 1231 : 1237);
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (!(obj instanceof RMQDestination))
+            return false;
+        RMQDestination other = (RMQDestination) obj;
+        if (amqp != other.amqp)
+            return false;
+        if (amqpExchangeName == null) {
+            if (other.amqpExchangeName != null)
+                return false;
+        } else if (!amqpExchangeName.equals(other.amqpExchangeName))
+            return false;
+        if (amqpExchangeType == null) {
+            if (other.amqpExchangeType != null)
+                return false;
+        } else if (!amqpExchangeType.equals(other.amqpExchangeType))
+            return false;
+        if (amqpQueueName == null) {
+            if (other.amqpQueueName != null)
+                return false;
+        } else if (!amqpQueueName.equals(other.amqpQueueName))
+            return false;
+        if (amqpRoutingKey == null) {
+            if (other.amqpRoutingKey != null)
+                return false;
+        } else if (!amqpRoutingKey.equals(other.amqpRoutingKey))
+            return false;
+        if (destinationName == null) {
+            if (other.destinationName != null)
+                return false;
+        } else if (!destinationName.equals(other.destinationName))
+            return false;
+        if (isQueue != other.isQueue)
+            return false;
+        if (isTemporary != other.isTemporary)
+            return false;
+        return true;
+    }
+
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("RMQDestination{");
         sb.append("destinationName='").append(destinationName)
