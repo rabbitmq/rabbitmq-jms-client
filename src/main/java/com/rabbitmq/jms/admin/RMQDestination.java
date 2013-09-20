@@ -42,7 +42,6 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     /** <code>true</code> if maps JMS destination to AMQP resource in RabbitMQ server */
     private boolean amqp;
     private String amqpExchangeName;
-    private String amqpExchangeType;
     private String amqpRoutingKey;
     private String amqpQueueName;
 
@@ -65,7 +64,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @param isTemporary true if this is a temporary destination
      */
     public RMQDestination(String destName, boolean isQueue, boolean isTemporary) {
-        this(destName, false, queueOrTopicExchangeName(isQueue, isTemporary, destName), queueOrTopicExchangeType(isQueue, destName), destName, destName, isQueue, isTemporary);
+        this(destName, false, queueOrTopicExchangeName(isQueue, isTemporary, destName), destName, destName, isQueue, isTemporary);
     }
 
     private static final String queueOrTopicExchangeName(boolean isQueue, boolean isTemporary, String destName) {
@@ -93,7 +92,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @param amqpQueueName - the queue name of the mapped resource
      */
     public RMQDestination(String destName, String amqpExchangeName, String amqpRoutingKey, String amqpQueueName) {
-        this(destName, true, amqpExchangeName, null, amqpRoutingKey, amqpQueueName, true, false);
+        this(destName, true, amqpExchangeName, amqpRoutingKey, amqpQueueName, true, false);
     }
 
     /**
@@ -102,17 +101,15 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @param destinationName - the name of the topic or the queue
      * @param amqp - <code>true</code> if this is bound to an amqp resource, <code>false</code> if it is a RJMS resource
      * @param exchangeName - the RabbitMQ exchange name we will publish to and bind to (which may be an amqp resource exchange)
-     * @param exchangeType - the RabbitMQ type of exchange used (only used if it needs to be declared),
      * @param routingKey - the routing key used for this destination (if it is a topic)
      * @param isQueue - <code>true</code> if this is a queue, <code>false</code> if this is a topic
      * @param isTemporary true if this is a temporary destination
      */
-    private RMQDestination(String destName, boolean amqp, String exchangeName, String exchangeType, String routingKey, String queueName, boolean isQueue, boolean isTemporary) {
+    private RMQDestination(String destName, boolean amqp, String exchangeName, String routingKey, String queueName, boolean isQueue, boolean isTemporary) {
         this.destinationName = destName;
 
         this.amqp = amqp;
         this.amqpExchangeName = exchangeName;
-        this.amqpExchangeType = exchangeType;
         this.amqpRoutingKey = routingKey;
         this.amqpQueueName = queueName;
         this.isQueue = isQueue;
@@ -148,15 +145,6 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
             throw new IllegalStateException();
         this.amqpExchangeName = amqpExchangeName;
     }
-    public String getAmqpExchangeType() {
-        return this.amqpExchangeType;
-    }
-    /** For JNDI binding and Spring beans */
-    public void setAmqpExchangeType(String amqpExchangeType) {
-        if (this.isDeclared())
-            throw new IllegalStateException();
-        this.amqpExchangeType = amqpExchangeType;
-    }
     public String getDestinationName() {
         return this.destinationName;
     }
@@ -174,6 +162,11 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
         if (isDeclared())
             throw new IllegalStateException();
         this.amqpRoutingKey = routingKey;
+    }
+
+    /** Internal use only */
+    public String amqpExchangeType() {
+        return queueOrTopicExchangeType(this.isQueue, this.destinationName);
     }
 
     /** Internal use only */
@@ -300,7 +293,6 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
         int result = 1;
         result = prime * result + (amqp ? 1231 : 1237);
         result = prime * result + ((amqpExchangeName == null) ? 0 : amqpExchangeName.hashCode());
-        result = prime * result + ((amqpExchangeType == null) ? 0 : amqpExchangeType.hashCode());
         result = prime * result + ((amqpQueueName == null) ? 0 : amqpQueueName.hashCode());
         result = prime * result + ((amqpRoutingKey == null) ? 0 : amqpRoutingKey.hashCode());
         result = prime * result + ((destinationName == null) ? 0 : destinationName.hashCode());
@@ -324,11 +316,6 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
             if (other.amqpExchangeName != null)
                 return false;
         } else if (!amqpExchangeName.equals(other.amqpExchangeName))
-            return false;
-        if (amqpExchangeType == null) {
-            if (other.amqpExchangeType != null)
-                return false;
-        } else if (!amqpExchangeType.equals(other.amqpExchangeType))
             return false;
         if (amqpQueueName == null) {
             if (other.amqpQueueName != null)
@@ -354,10 +341,15 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("RMQDestination{");
-        sb.append("destinationName='").append(destinationName)
-//          .append("', amqpRoutingKey='").append(amqpRoutingKey)
+        return new StringBuilder("RMQDestination{")
+          .append("destinationName='").append(destinationName)
+          .append(this.isQueue ? "', queue(" : "', topic(")
+          .append(this.isTemporary ? "temporary" : "permanent")
+          .append(this.amqp ? ", amqp)" : ")")
+          .append("', amqpExchangeName='").append(amqpExchangeName)
+          .append("', amqpRoutingKey='").append(amqpRoutingKey)
+          .append("', amqpQueueName='").append(amqpQueueName)
+          .append("'}").toString()
           ;
-        return sb.append("'}").toString();
     }
 }
