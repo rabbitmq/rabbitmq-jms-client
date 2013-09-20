@@ -15,9 +15,6 @@ import javax.naming.Reference;
 import javax.naming.Referenceable;
 import javax.naming.StringRefAddr;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.jms.client.RMQSession;
-
 /**
  * Implementation of a {@link Topic} and {@link Queue} {@link Destination}.
  * <p>
@@ -270,20 +267,15 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     /**
-     * @return true if we have called
-     *         {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)}
-     *         or
-     *         {@link Channel#exchangeDeclare(String, String, boolean, boolean, boolean, java.util.Map)}
-     *         to represent this queue/topic in the RabbitMQ broker. If creating
-     *         a topic/queue to bind in JNDI, this value will be set to false
-     *         until the queue/topic has been setup in the RabbitMQ broker
+     * For internal use only.
+     * @return true if we have declared RabbitMQ resources to back this destination
      */
     public boolean isDeclared() {
         return isDeclared;
     }
 
     /**
-     * Should only be used internally by {@link RMQSession}
+     * For internal use only.
      *
      * @param isDeclared - set to true if the queue/topic has been defined in the
      *            RabbitMQ broker
@@ -301,7 +293,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     /**
-     * This method is for {@link TemporaryQueue}s only — deletion currently occurs automatically on {@link RMQSession#close}.
+     * This method is for {@link TemporaryQueue}s only — deletion currently occurs automatically on session close.
      * <p/>{@inheritDoc}
      */
     @Override
