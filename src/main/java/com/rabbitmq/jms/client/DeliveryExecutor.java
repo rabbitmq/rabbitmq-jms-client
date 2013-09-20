@@ -39,8 +39,8 @@ public class DeliveryExecutor {
     private final long onMessageTimeoutMs;
 
     /** Executor allocated if/when onMessage calls are made; used to isolate us from potential hangs. */
-    public ExecutorService onMessageExecutorService = null;
-    public final Object lockOnMessageExecutorService = new Object();
+    private ExecutorService onMessageExecutorService = null;
+    private final Object lockOnMessageExecutorService = new Object();
 
     public DeliveryExecutor(long onMessageTimeoutMs) {
         this.onMessageTimeoutMs = onMessageTimeoutMs;
