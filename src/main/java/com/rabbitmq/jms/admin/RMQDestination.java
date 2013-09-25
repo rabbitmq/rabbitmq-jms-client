@@ -118,6 +118,9 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
         this.isDeclared = false;
     }
 
+    /**
+     * @return <code>true</code> if this is an AMQP mapped resource, <code>false</code> otherwise
+     */
     public boolean isAmqp() {
         return this.amqp;
     }

@@ -12,9 +12,11 @@ import javax.jms.JMSException;
 public class RMQConnectionMetaData implements ConnectionMetaData {
 
     private static final String JMS_PROVIDER_NAME = "RabbitMQ";
+
     private static final String RABBITMQ_VERSION = System.getProperty("RABBITMQ_VERSION","2.8.6");
-    private static final int RABBITMQ_MINOR_VERSION = 8;
     private static final int RABBITMQ_MAJOR_VERSION = 2;
+    private static final int RABBITMQ_MINOR_VERSION = 8;
+
     private static final String JMS_VERSION = "1.1";
     private static final int JMS_MAJOR_VERSION = 1;
     private static final int JMS_MINOR_VERSION = 1;
@@ -23,9 +25,7 @@ public class RMQConnectionMetaData implements ConnectionMetaData {
      * These two are currently not used, they are needed for a JMSCTS test
      * We need to make sure these properties get into the messages
      */
-    public static final String JMSX_GROUP_ID_LABEL = "JMSXGroupID"; // value
-                                                                    // should be
-                                                                    // VMW
+    public static final String JMSX_GROUP_ID_LABEL = "JMSXGroupID"; // value should be VMW
     public static final String JMSX_GROUP_SEQ_LABEL = "JMSXGroupSeq";
 
     /**

@@ -50,18 +50,18 @@ public abstract class RMQMessage implements Message, Cloneable {
     protected static final String UNABLE_TO_CAST = "Unable to cast the object, %s, into the specified type %s";
 
     /**
-     * Properties inside of a JMS message can NOT be named any of these reserved words
+     * Properties in a JMS message can NOT be named any of these reserved words
      */
     private static final String[] RESERVED_NAMES = {"NULL", "TRUE", "FALSE", "NOT", "AND", "OR", "BETWEEN", "LIKE", "IN",
                                                     "IS", "ESCAPE"};
 
     /**
-     * Properties inside of a JMS message can NOT start with any of the following characters (added period)
+     * A property in a JMS message must NOT have a name starting with any of the following characters (added period 2013-06-13)
      */
     private static final char[] INVALID_STARTS_WITH = {'0','1','2','3','4','5','6','7','8','9','-','+','\'','"','.'};
 
     /**
-     * Properties inside of a JMS may not contain these characters in the name (removed period 2013-06-13)
+     * A property in a JMS message must NOT contain these characters in its name (removed period 2013-06-13)
      */
     private static final char[] MAY_NOT_CONTAIN = {'\'','"'};
 
