@@ -100,7 +100,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     private final Map<String, Serializable> rmqProperties = new HashMap<String, Serializable>();
     /**
-     * Here we store the users custom JMS properties
+     * Here we store the user’s custom JMS properties
      */
     private final Map<String, Serializable> userJmsProperties = new HashMap<String, Serializable>();
     /**
@@ -883,7 +883,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * This method invokes the {@link #readBody(ObjectInput)} method
      * on the deserialized class
      * @param b - the message bytes
-     * @return a subclass to a RMQMessage
+     * @return a RMQMessage object
      * @throws ClassNotFoundException - if the class to be deserialized wasn't found
      * @throws IOException if an exception occurs during deserialization
      * @throws IllegalAccessException if an exception occurs during class instantiation

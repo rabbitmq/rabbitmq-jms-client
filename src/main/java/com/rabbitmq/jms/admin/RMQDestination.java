@@ -118,6 +118,14 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
         this.isDeclared = false;
     }
 
+    public boolean amqpWritable() {
+        return (this.amqp && null != this.amqpExchangeName && null != this.amqpRoutingKey);
+    }
+
+    public boolean amqpReadable() {
+        return (this.amqp && null != this.amqpQueueName);
+    }
+
     /**
      * @return <code>true</code> if this is an AMQP mapped resource, <code>false</code> otherwise
      */

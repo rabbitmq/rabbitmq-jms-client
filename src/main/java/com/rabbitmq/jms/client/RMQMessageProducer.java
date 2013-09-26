@@ -198,7 +198,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     @Override
     public void send(Destination destination, Message message) throws JMSException {
         this.checkUnidentifiedMessageProducer(destination);
-        this.internalSend(destination, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
+        this.internalSend((RMQDestination)destination, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
     }
 
     private void checkUnidentifiedMessageProducer(Destination destination) {
@@ -212,34 +212,51 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         this.checkUnidentifiedMessageProducer(destination);
-        this.internalSend(destination, message, deliveryMode, priority, timeToLive);
+        this.internalSend((RMQDestination)destination, message, deliveryMode, priority, timeToLive);
     }
 
-    private void internalSend(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+    private void internalSend(RMQDestination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         logger.trace("send/publish message({}) to destination({}) with properties deliveryMode({}), priority({}), timeToLive({})", message, destination, deliveryMode, priority, timeToLive);
-        if (destination == null && this.destination == null)
+
+        if (destination == null)
+            destination = this.destination;
+        if (destination == null)
             throw new InvalidDestinationException("No destination supplied, or implied.");
+        if (deliveryMode != javax.jms.DeliveryMode.PERSISTENT)
+            deliveryMode = javax.jms.DeliveryMode.NON_PERSISTENT;
+
+        /*
+         * Set known JMS message properties that need to be set during this call
+         */
+        long currentTime = System.currentTimeMillis();
+        long expiration = timeToLive == 0L ? 0L : currentTime + timeToLive;
+
+        RMQMessage msg = (RMQMessage) message;
+        msg.setJMSDeliveryMode(deliveryMode);
+        msg.setJMSPriority(priority);
+        msg.setJMSExpiration(expiration);
+        msg.setJMSDestination(destination);
+        msg.setJMSTimestamp(currentTime);
+        msg.generateInternalID();
+
+        if (destination.isAmqp()) {
+            sendAMQPMessage(destination, msg, deliveryMode, priority, timeToLive);
+        } else {
+            sendJMSMessage(destination, msg, deliveryMode, priority, timeToLive);
+        }
+    }
+
+    private void sendAMQPMessage(RMQDestination destination, RMQMessage msg, int deliveryMode, int priority, long timeToLive) throws JMSException {
+        if (!destination.amqpWritable()) {
+            this.logger.error("Cannot write to AMQP destination {}", destination);
+            throw new RMQJMSException("Cannot write to AMQP destination", new UnsupportedOperationException("MessageProducer.send to undefined AMQP resource"));
+        }
+        throw new UnsupportedOperationException("AMQP send not yet supported");
+    }
+
+    private void sendJMSMessage(RMQDestination dest, RMQMessage msg, int deliveryMode, int priority, long timeToLive) throws JMSException {
+        this.session.declareDestinationIfNecessary(dest);
         try {
-            if (deliveryMode != javax.jms.DeliveryMode.PERSISTENT) {
-                deliveryMode = javax.jms.DeliveryMode.NON_PERSISTENT;
-            }
-            /*
-             * Set known JMS message properties that need to be set during this call
-             */
-            long currentTime = System.currentTimeMillis();
-            long expiration = timeToLive == 0L ? 0L : currentTime + timeToLive;
-
-            RMQMessage msg = (RMQMessage) message;
-            msg.setJMSDeliveryMode(deliveryMode);
-            msg.setJMSPriority(priority);
-            msg.setJMSExpiration(expiration);
-            msg.setJMSDestination(destination);
-            msg.setJMSTimestamp(currentTime);
-            msg.generateInternalID();
-
-            RMQDestination dest = (RMQDestination) destination;
-            this.session.declareDestinationIfNecessary(dest);
-
             /*
              * Configure the send settings
              */
@@ -301,7 +318,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void send(Queue queue, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        this.internalSend((Destination) queue, message, deliveryMode, priority, timeToLive);
+        this.internalSend((RMQDestination) queue, message, deliveryMode, priority, timeToLive);
     }
 
     /**
@@ -309,7 +326,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void send(Queue queue, Message message) throws JMSException {
-        this.internalSend((Destination) queue, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
+        this.internalSend((RMQDestination) queue, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
     }
 
     /**
@@ -325,7 +342,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void publish(Message message) throws JMSException {
-        this.internalSend(this.getTopic(), message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
+        this.internalSend((RMQDestination) this.getTopic(), message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
     }
 
     /**
@@ -333,7 +350,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void publish(Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        this.internalSend(this.getTopic(), message, deliveryMode, priority, timeToLive);
+        this.internalSend((RMQDestination) this.getTopic(), message, deliveryMode, priority, timeToLive);
     }
 
     /**
@@ -341,7 +358,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void publish(Topic topic, Message message) throws JMSException {
-        this.internalSend(topic, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
+        this.internalSend((RMQDestination) topic, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
     }
 
     /**
@@ -349,7 +366,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void publish(Topic topic, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        this.internalSend(topic, message, deliveryMode, priority, timeToLive);
+        this.internalSend((RMQDestination) topic, message, deliveryMode, priority, timeToLive);
     }
 
 }

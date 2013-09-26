@@ -527,8 +527,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     void declareDestinationIfNecessary(RMQDestination destination) throws JMSException {
         if (destination != null && !destination.isDeclared()) {
-            if (destination.isAmqp()) { // no-op
-            } else if (destination.isQueue()) {
+            if (destination.isQueue()) {
                 declareRMQQueue(destination, null, false);
             } else {
                 declareTopic(destination);
