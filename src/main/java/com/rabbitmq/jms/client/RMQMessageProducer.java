@@ -18,6 +18,8 @@ import org.slf4j.LoggerFactory;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.jms.admin.RMQDestination;
+import com.rabbitmq.jms.client.message.RMQBytesMessage;
+import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.util.RMQJMSException;
 
 /**
@@ -251,15 +253,32 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             this.logger.error("Cannot write to AMQP destination {}", destination);
             throw new RMQJMSException("Cannot write to AMQP destination", new UnsupportedOperationException("MessageProducer.send to undefined AMQP resource"));
         }
-        throw new UnsupportedOperationException("AMQP send not yet supported");
+//        throw new UnsupportedOperationException("AMQP send not yet supported");
+
+        if (msg instanceof RMQBytesMessage || msg instanceof RMQTextMessage) {
+            try {
+                AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
+                bob.contentType("application/octet-stream");
+                bob.deliveryMode(rmqDeliveryMode(deliveryMode));
+                bob.priority(priority);
+                bob.expiration(rmqExpiration(timeToLive));
+                bob.headers(RMQMessage.toAmqpHeaders(msg));
+
+                byte[] data = RMQMessage.toAmqpMessage(msg);
+
+                this.session.getChannel().basicPublish(destination.getAmqpExchangeName(), destination.getAmqpRoutingKey(), bob.build(), data);
+            } catch (IOException x) {
+                throw new RMQJMSException(x);
+            }
+        } else {
+            this.logger.error("Unsupported message type {} for AMQP destination {}", msg.getClass().getName(), destination);
+            throw new RMQJMSException("Unsupported message type for AMQP destination", new UnsupportedOperationException("MessageProducer.send to AMQP resource: Message not Text or Bytes"));
+        }
     }
 
     private void sendJMSMessage(RMQDestination dest, RMQMessage msg, int deliveryMode, int priority, long timeToLive) throws JMSException {
         this.session.declareDestinationIfNecessary(dest);
         try {
-            /*
-             * Configure the send settings
-             */
             AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
             bob.contentType("application/octet-stream");
             bob.deliveryMode(rmqDeliveryMode(deliveryMode));
@@ -268,9 +287,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             bob.headers(RMQMessage.toHeaders(msg));
 
             byte[] data = RMQMessage.toMessage(msg);
-            /*
-             * Send the message
-             */
+
             this.session.getChannel().basicPublish(dest.getAmqpExchangeName(), dest.getAmqpRoutingKey(), bob.build(), data);
         } catch (IOException x) {
             throw new RMQJMSException(x);

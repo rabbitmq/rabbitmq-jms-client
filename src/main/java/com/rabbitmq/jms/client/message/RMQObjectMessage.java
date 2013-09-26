@@ -98,4 +98,8 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         }
     }
 
+    @Override
+    protected void writeAmqpBody(ByteArrayOutputStream out) throws IOException {
+        throw new UnsupportedOperationException();
+    }
 }

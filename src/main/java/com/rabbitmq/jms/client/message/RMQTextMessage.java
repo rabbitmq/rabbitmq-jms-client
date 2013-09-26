@@ -1,6 +1,7 @@
 /* Copyright (c) 2013 GoPivotal, Inc. All rights reserved. */
 package com.rabbitmq.jms.client.message;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -72,4 +73,8 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
         }
     }
 
+    @Override
+    protected void writeAmqpBody(ByteArrayOutputStream out) throws IOException {
+        throw new UnsupportedOperationException();
+    }
 }

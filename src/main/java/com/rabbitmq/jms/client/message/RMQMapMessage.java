@@ -1,6 +1,7 @@
 /* Copyright (c) 2013 GoPivotal, Inc. All rights reserved. */
 package com.rabbitmq.jms.client.message;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -330,5 +331,10 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
     private void checkNotReadonlyBody() throws JMSException {
         if (isReadonlyBody())
             throw new MessageNotWriteableException("Message not writeable");
+    }
+
+    @Override
+    protected void writeAmqpBody(ByteArrayOutputStream out) throws IOException {
+        throw new UnsupportedOperationException();
     }
 }

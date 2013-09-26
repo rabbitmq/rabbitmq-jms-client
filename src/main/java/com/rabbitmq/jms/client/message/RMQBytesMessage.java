@@ -637,4 +637,9 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         } else
             throw new MessageFormatException(s + " is not a recognized writable type.");
     }
+
+    @Override
+    protected void writeAmqpBody(ByteArrayOutputStream out) throws IOException {
+        throw new UnsupportedOperationException();
+    }
 }

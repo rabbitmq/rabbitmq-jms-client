@@ -519,5 +519,8 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
 
     }
 
-
+    @Override
+    protected void writeAmqpBody(ByteArrayOutputStream out) throws IOException {
+        throw new UnsupportedOperationException();
+    }
 }

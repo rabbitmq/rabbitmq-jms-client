@@ -777,6 +777,15 @@ public abstract class RMQMessage implements Message, Cloneable {
     protected abstract void writeBody(ObjectOutput out) throws IOException;
 
     /**
+     * Invoked when {@link #toAmqpMessage(RMQMessage)} is called to create
+     * a byte[] from a message. Each subclass must implement this, but ONLY
+     * write its specific body.
+     * @param out - the output which to write the message body to.
+     * @throws IOException you may throw an IOException if the body can not be written
+     */
+    protected abstract void writeAmqpBody(ByteArrayOutputStream out) throws IOException;
+
+    /**
      * Invoked when a message is being deserialized to read and decode the message body.
      * The implementing class should <i>only</i> read its body from this stream.
      * If any exception is thrown, the message will not have been delivered.
@@ -840,8 +849,86 @@ public abstract class RMQMessage implements Message, Cloneable {
         return hdrs;
     }
 
+    /**
+     * Generate the headers for an AMQP message.
+     * <p>
+     * We attach <i>some</i> JMS properties as headers on the message. This is so the client can see them at the other end.
+     * </p>
+     * <p>
+     * The headers we code are:
+     * </p>
+     *
+     * <pre>
+     * <b>Header Field</b>        <b>Set By</b>
+     * JMSDeliveryMode     send or publish method
+     * JMSExpiration       send or publish method
+     * JMSPriority         send or publish method
+     * JMSMessageID        send or publish method
+     * JMSTimestamp        send or publish method
+     * JMSType             send or publish method (not client, as we aren't the client).
+     * </pre>
+     * <p>
+     * But (<i>from the JMS 1.1 spec</i>):<br/>
+     * <blockquote> Message header field references are restricted to <code>JMSDeliveryMode</code>,
+     * <code>JMSPriority</code>, <code>JMSMessageID</code>, <code>JMSTimestamp</code>, <code>JMSCorrelationID</code>,
+     * and <code>JMSType</code>.
+     * <p>
+     * <code>JMSMessageID</code>, <code>JMSCorrelationID</code>, and <code>JMSType</code> values may be
+     * <code>null</code> and if so are treated as a NULL value.
+     * </p>
+     * </blockquote>
+     */
+    static Map<String, Object> toAmqpHeaders(RMQMessage msg) throws IOException, JMSException {
+        Map<String, Object> hdrs = new HashMap<String, Object>();
+
+        // set non-null user properties
+        for (Map.Entry<String, Serializable> e : msg.userJmsProperties.entrySet()) {
+            putIfNotNullAndAmqpType(hdrs, e.getKey(), e.getValue());
+        }
+
+        // set (overwrite?) selectable JMS properties
+        hdrs.put("JMSDeliveryMode", (msg.getJMSDeliveryMode()==DeliveryMode.PERSISTENT ? "PERSISTENT": "NON_PERSISTENT"));
+        putIfNotNull(hdrs, "JMSMessageID", msg.getJMSMessageID());
+        hdrs.put("JMSTimestamp", msg.getJMSTimestamp());
+        hdrs.put("JMSPriority", msg.getJMSPriority());
+        putIfNotNull(hdrs, "JMSCorrelationID", msg.getJMSCorrelationID());
+        putIfNotNull(hdrs, "JMSType", msg.getJMSType());
+
+        return hdrs;
+    }
+
+    private static void putIfNotNullAndAmqpType(Map<String, Object> hdrs, String key, Object val) {
+        if (val!=null)
+            if (  val instanceof String
+               || val instanceof Integer
+               || val instanceof Float
+               || val instanceof Double
+               || val instanceof Long
+               || val instanceof Short
+               || val instanceof Byte
+               )
+                hdrs.put(key, val);
+    }
+
     private static void putIfNotNull(Map<String, Object> hdrs, String key, Object val) {
         if (val!=null) hdrs.put(key, val);
+    }
+
+    /**
+     * Writes the message to a byte array, suitable for an amqp destination.
+     * This method invokes the {@link #writeAmqpBody(ObjectOutput)} method
+     * on the message subclass.
+     * @param msg - the message to write
+     * @return the body in a byte array
+     * @throws IOException if conversion fails
+     */
+    static byte[] toAmqpMessage(RMQMessage msg) throws IOException, JMSException {
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
+        //invoke write body
+        msg.writeAmqpBody(bout);
+        //flush and return
+        bout.flush();
+        return bout.toByteArray();
     }
 
     /**
