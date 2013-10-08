@@ -23,5 +23,5 @@ echo "Installing into local Maven cache as amqp-client-${rmq_version} ..."
 ${MAVENEXE} install:install-file -Dfile=rabbitmq-java-client-bin-${rmq_version}/rabbitmq-client.jar -DgroupId=com.rabbitmq -DartifactId=amqp-client -Dversion=${rmq_version} -Dpackaging=jar || (echo "mvn install-file failed"; exit 1)
 
 echo ""
-echo "Removing tar file ..."
+echo "Removing tar file and contents ..."
 sudo rm -rf rabbitmq-java-client-bin-${rmq_version} rabbitmq-java-client-bin-${rmq_version}.tar.gz || (echo "tar file not removed"; exit 1)
