@@ -75,7 +75,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     /**
      * We store all the JMS hard coded values, such as {@link #setJMSMessageID(String)}, as properties instead of hard
      * coded fields. This way we can create a structure later on that the rabbit MQ broker can read by just changing the
-     * {@link #toMessage(RMQMessage)} and {@link #fromMessage(byte[])}.
+     * {@link #toByteArray(RMQMessage)} and {@link #fromMessage(byte[])}.
      */
     private static final String PREFIX = "rmq.";
     private static final String JMS_MESSAGE_ID = PREFIX + "jms.message.id";
@@ -767,7 +767,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
 
     /**
-     * Invoked when {@link #toMessage(RMQMessage)} is called to create
+     * Invoked when {@link #toByteArray(RMQMessage)} is called to create
      * a byte[] from a message. Each subclass must implement this, but ONLY
      * write its specific body. All the properties defined in {@link Message}
      * will be written by the parent class.
@@ -797,7 +797,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     protected abstract void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException;
 
     /**
-     * Generate the headers for a JMS message.
+     * Generate the headers for this JMS message.
      * <p>
      * We attach <i>some</i> JMS properties as headers on the message. This is so the broker can see them for the
      * purposes of message selection during routing.
@@ -830,21 +830,21 @@ public abstract class RMQMessage implements Message, Cloneable {
      * </p>
      * </blockquote>
      */
-    static Map<String, Object> toHeaders(RMQMessage msg) throws IOException, JMSException {
+    Map<String, Object> toHeaders() throws IOException, JMSException {
         Map<String, Object> hdrs = new HashMap<String, Object>();
 
         // set non-null user properties
-        for (Map.Entry<String, Serializable> e : msg.userJmsProperties.entrySet()) {
+        for (Map.Entry<String, Serializable> e : this.userJmsProperties.entrySet()) {
             putIfNotNull(hdrs, e.getKey(), e.getValue());
         }
 
         // set (overwrite?) selectable JMS properties
-        hdrs.put("JMSDeliveryMode", (msg.getJMSDeliveryMode()==DeliveryMode.PERSISTENT ? "PERSISTENT": "NON_PERSISTENT"));
-        putIfNotNull(hdrs, "JMSMessageID", msg.getJMSMessageID());
-        hdrs.put("JMSTimestamp", msg.getJMSTimestamp());
-        hdrs.put("JMSPriority", msg.getJMSPriority());
-        putIfNotNull(hdrs, "JMSCorrelationID", msg.getJMSCorrelationID());
-        putIfNotNull(hdrs, "JMSType", msg.getJMSType());
+        hdrs.put("JMSDeliveryMode", (this.getJMSDeliveryMode()==DeliveryMode.PERSISTENT ? "PERSISTENT": "NON_PERSISTENT"));
+        putIfNotNull(hdrs, "JMSMessageID", this.getJMSMessageID());
+        hdrs.put("JMSTimestamp", this.getJMSTimestamp());
+        hdrs.put("JMSPriority", this.getJMSPriority());
+        putIfNotNull(hdrs, "JMSCorrelationID", this.getJMSCorrelationID());
+        putIfNotNull(hdrs, "JMSType", this.getJMSType());
 
         return hdrs;
     }
@@ -878,21 +878,21 @@ public abstract class RMQMessage implements Message, Cloneable {
      * </p>
      * </blockquote>
      */
-    static Map<String, Object> toAmqpHeaders(RMQMessage msg) throws IOException, JMSException {
+    Map<String, Object> toAmqpHeaders() throws IOException, JMSException {
         Map<String, Object> hdrs = new HashMap<String, Object>();
 
         // set non-null user properties
-        for (Map.Entry<String, Serializable> e : msg.userJmsProperties.entrySet()) {
+        for (Map.Entry<String, Serializable> e : this.userJmsProperties.entrySet()) {
             putIfNotNullAndAmqpType(hdrs, e.getKey(), e.getValue());
         }
 
         // set (overwrite?) selectable JMS properties
-        hdrs.put("JMSDeliveryMode", (msg.getJMSDeliveryMode()==DeliveryMode.PERSISTENT ? "PERSISTENT": "NON_PERSISTENT"));
-        putIfNotNull(hdrs, "JMSMessageID", msg.getJMSMessageID());
-        hdrs.put("JMSTimestamp", msg.getJMSTimestamp());
-        hdrs.put("JMSPriority", msg.getJMSPriority());
-        putIfNotNull(hdrs, "JMSCorrelationID", msg.getJMSCorrelationID());
-        putIfNotNull(hdrs, "JMSType", msg.getJMSType());
+        hdrs.put("JMSDeliveryMode", (this.getJMSDeliveryMode()==DeliveryMode.PERSISTENT ? "PERSISTENT": "NON_PERSISTENT"));
+        putIfNotNull(hdrs, "JMSMessageID", this.getJMSMessageID());
+        hdrs.put("JMSTimestamp", this.getJMSTimestamp());
+        hdrs.put("JMSPriority", this.getJMSPriority());
+        putIfNotNull(hdrs, "JMSCorrelationID", this.getJMSCorrelationID());
+        putIfNotNull(hdrs, "JMSType", this.getJMSType());
 
         return hdrs;
     }
@@ -915,51 +915,49 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
 
     /**
-     * Writes the message to a byte array, suitable for an amqp destination.
+     * Generates an AMQP byte array body for this message.
      * This method invokes the {@link #writeAmqpBody(ObjectOutput)} method
      * on the message subclass.
-     * @param msg - the message to write
      * @return the body in a byte array
      * @throws IOException if conversion fails
      */
-    static byte[] toAmqpMessage(RMQMessage msg) throws IOException, JMSException {
+    byte[] toAmqpByteArray() throws IOException, JMSException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
         //invoke write body
-        msg.writeAmqpBody(bout);
+        this.writeAmqpBody(bout);
         //flush and return
         bout.flush();
         return bout.toByteArray();
     }
 
     /**
-     * Serializes the body of a {@link RMQMessage} to a byte array.
+     * Generates a JMS byte array body for this message.
      * This method invokes the {@link #writeBody(ObjectOutput)} method
      * on the class that is being serialized
-     * @param msg - the message to serialize
      * @return the body in a byte array
      * @throws IOException if serialization fails
      */
-    static byte[] toMessage(RMQMessage msg) throws IOException, JMSException {
+    byte[] toByteArray() throws IOException, JMSException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
         ObjectOutputStream out = new ObjectOutputStream(bout);
         //write the class of the message so we can instantiate on the other end
-        out.writeUTF(msg.getClass().getName());
+        out.writeUTF(this.getClass().getName());
         //write out message id
-        out.writeUTF(msg.internalMessageID);
+        out.writeUTF(this.internalMessageID);
         //write our JMS properties
-        out.writeInt(msg.rmqProperties.size());
-        for (Map.Entry<String, Serializable> entry : msg.rmqProperties.entrySet()) {
+        out.writeInt(this.rmqProperties.size());
+        for (Map.Entry<String, Serializable> entry : this.rmqProperties.entrySet()) {
             out.writeUTF(entry.getKey());
             writePrimitive(entry.getValue(), out, true);
         }
         //write custom properties
-        out.writeInt(msg.userJmsProperties.size());
-        for (Map.Entry<String, Serializable> entry : msg.userJmsProperties.entrySet()) {
+        out.writeInt(this.userJmsProperties.size());
+        for (Map.Entry<String, Serializable> entry : this.userJmsProperties.entrySet()) {
             out.writeUTF(entry.getKey());
             writePrimitive(entry.getValue(), out, true);
         }
         //invoke write body
-        msg.writeBody(out);
+        this.writeBody(out);
         //flush and return
         out.flush();
         return bout.toByteArray();
@@ -978,7 +976,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     static RMQMessage fromMessage(byte[] b) throws ClassNotFoundException, IOException, IllegalAccessException,
                                                   InstantiationException {
-        /* TODO If we don't recognise the message format then we need to create a generic BytesMessage */
+        /* If we don't recognise the message format this throws an exception */
         ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(b));
         //read the classname from the stream
         String clazz = in.readUTF();

@@ -253,7 +253,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             this.logger.error("Cannot write to AMQP destination {}", destination);
             throw new RMQJMSException("Cannot write to AMQP destination", new UnsupportedOperationException("MessageProducer.send to undefined AMQP resource"));
         }
-//        throw new UnsupportedOperationException("AMQP send not yet supported");
 
         if (msg instanceof RMQBytesMessage || msg instanceof RMQTextMessage) {
             try {
@@ -262,9 +261,9 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
                 bob.deliveryMode(rmqDeliveryMode(deliveryMode));
                 bob.priority(priority);
                 bob.expiration(rmqExpiration(timeToLive));
-                bob.headers(RMQMessage.toAmqpHeaders(msg));
+                bob.headers(msg.toAmqpHeaders());
 
-                byte[] data = RMQMessage.toAmqpMessage(msg);
+                byte[] data = msg.toAmqpByteArray();
 
                 this.session.getChannel().basicPublish(destination.getAmqpExchangeName(), destination.getAmqpRoutingKey(), bob.build(), data);
             } catch (IOException x) {
@@ -276,19 +275,19 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         }
     }
 
-    private void sendJMSMessage(RMQDestination dest, RMQMessage msg, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        this.session.declareDestinationIfNecessary(dest);
+    private void sendJMSMessage(RMQDestination destination, RMQMessage msg, int deliveryMode, int priority, long timeToLive) throws JMSException {
+        this.session.declareDestinationIfNecessary(destination);
         try {
             AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
             bob.contentType("application/octet-stream");
             bob.deliveryMode(rmqDeliveryMode(deliveryMode));
             bob.priority(priority);
             bob.expiration(rmqExpiration(timeToLive));
-            bob.headers(RMQMessage.toHeaders(msg));
+            bob.headers(msg.toHeaders());
 
-            byte[] data = RMQMessage.toMessage(msg);
+            byte[] data = msg.toByteArray();
 
-            this.session.getChannel().basicPublish(dest.getAmqpExchangeName(), dest.getAmqpRoutingKey(), bob.build(), data);
+            this.session.getChannel().basicPublish(destination.getAmqpExchangeName(), destination.getAmqpRoutingKey(), bob.build(), data);
         } catch (IOException x) {
             throw new RMQJMSException(x);
         }
