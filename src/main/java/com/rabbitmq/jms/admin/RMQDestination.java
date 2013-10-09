@@ -235,9 +235,8 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + (amqp ? 1231 : 1237);
-        result = prime * result + ((amqpQueueName == null) ? 0 : amqpQueueName.hashCode());
         result = prime * result + ((exchangeInfo == null) ? 0 : exchangeInfo.hashCode());
+        result = prime * result + (isDeclared ? 1231 : 1237);
         result = prime * result + (isQueue ? 1231 : 1237);
         result = prime * result + (isTemporary ? 1231 : 1237);
         result = prime * result + ((name == null) ? 0 : name.hashCode());
@@ -251,20 +250,15 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
             return true;
         if (obj == null)
             return false;
-        if (getClass() != obj.getClass())
+        if (!(obj instanceof RMQDestination))
             return false;
         RMQDestination other = (RMQDestination) obj;
-        if (amqp != other.amqp)
-            return false;
-        if (amqpQueueName == null) {
-            if (other.amqpQueueName != null)
-                return false;
-        } else if (!amqpQueueName.equals(other.amqpQueueName))
-            return false;
         if (exchangeInfo == null) {
             if (other.exchangeInfo != null)
                 return false;
         } else if (!exchangeInfo.equals(other.exchangeInfo))
+            return false;
+        if (isDeclared != other.isDeclared)
             return false;
         if (isQueue != other.isQueue)
             return false;
