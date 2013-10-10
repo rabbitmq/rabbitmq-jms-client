@@ -4,10 +4,10 @@
 
 echo "Get, unpack and install amqp-client version '$1' into local Maven cache"
 
-["$MAVENEXE" == ""] && MAVENEXE=`which mvn 2>/dev/null`
-["$MAVENEXE" == ""] && echo "Must define MAVENEXE as Maven executable" && exit 1
+[ "$MAVENEXE" == "" ] && MAVENEXE=`which mvn 2>/dev/null`
+[ "$MAVENEXE" == "" ] && echo "Must define MAVENEXE as Maven executable" && exit 1
 
-["$1" == ""] && echo "Must supply a version number parameter" && exit 1
+[ "$1" == "" ] && echo "Must supply a version number parameter" && exit 1
 
 rmq_version=$1
 
