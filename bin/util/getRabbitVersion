@@ -4,7 +4,7 @@
 
 echo "Get and unpack rabbit generic unix version '$1'"
 
-["$1" == ""] && echo "Must supply a version number" && exit 1
+[ "$1" == "" ] && echo "Must supply a version number" && exit 1
 
 rmq_version=$1
 
