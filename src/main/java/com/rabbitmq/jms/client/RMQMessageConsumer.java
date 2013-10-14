@@ -272,7 +272,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                        false, /* autoack is ALWAYS false, otherwise we risk acking messages that are received
                                * to the client but the client listener(onMessage) has not yet been invoked */
                        consTag, /* the consumer tag to use */
-                       this.noLocal, /* RabbitMQ supports the noLocal flag for subscriptions */
+                       this.noLocal, /* RabbitMQ accepts but does not support noLocal=true for subscriptions */
                        false, /* exclusive will always be false: exclusive consumer access true means only this
                                * consumer can access the queue. */
                        null, /* there are no custom arguments for the subscription */

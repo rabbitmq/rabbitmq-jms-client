@@ -708,7 +708,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector) throws JMSException {
         illegalStateExceptionIfClosed();
-        if (messageSelector==null || messageSelector.trim().length()==0) {
+        if (messageSelector==null || messageSelector.trim().isEmpty()) {
             return createConsumer(destination);
         } else {
             // we are not implementing this method yet
@@ -723,7 +723,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean noLocal) throws JMSException {
         illegalStateExceptionIfClosed();
-        if (messageSelector==null || messageSelector.trim().length()==0) {
+        if (messageSelector==null || messageSelector.trim().isEmpty()) {
             RMQMessageConsumer consumer = (RMQMessageConsumer)createConsumer(destination);
             consumer.setNoLocal(noLocal);
             return consumer;
@@ -872,10 +872,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name) throws JMSException {
-        RMQMessageConsumer result = (RMQMessageConsumer)createDurableSubscriber(topic, name, null, false);
-        result.setDurable(true);
-        this.subscriptions.put(name, result);
-        return result;
+        return createDurableSubscriber(topic, name, null, false);
     }
 
     /**
@@ -884,7 +881,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
         illegalStateExceptionIfClosed();
-        if (messageSelector!=null && messageSelector.trim().length()==0)
+        if (messageSelector!=null && messageSelector.trim().isEmpty())
             messageSelector = null;
 
         RMQDestination topicDest = (RMQDestination) topic;
@@ -1020,7 +1017,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public TopicSubscriber createSubscriber(Topic topic, String messageSelector, boolean noLocal) throws JMSException {
         illegalStateExceptionIfClosed();
 
-        if (messageSelector!=null && messageSelector.trim().length()==0) messageSelector = null;
+        if (messageSelector!=null && messageSelector.trim().isEmpty()) messageSelector = null;
 
         RMQMessageConsumer consumer = createConsumerInternal((RMQDestination) topic, null, false, messageSelector);
         consumer.setNoLocal(noLocal);

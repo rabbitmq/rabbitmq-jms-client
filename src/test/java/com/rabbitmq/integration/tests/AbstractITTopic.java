@@ -21,8 +21,14 @@ public abstract class AbstractITTopic {
 
     @After
     public void afterTests() throws Exception {
-        if (topicConn != null)
-            topicConn.close();
+        if (this.topicConn != null)
+            this.topicConn.close();
+    }
+
+    protected void reconnect() throws Exception {
+        if (this.topicConn != null)
+            this.topicConn.close();
+        this.topicConn = connFactory.createTopicConnection();
     }
 
 }
