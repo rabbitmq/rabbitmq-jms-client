@@ -52,6 +52,7 @@ public class SimpleDurableTopicMessageIT extends AbstractITTopic {
             TopicSession topicSession = topicConn.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             Topic topic = topicSession.createTopic(TOPIC_NAME);
             TopicPublisher sender = topicSession.createPublisher(topic);
+            topicSession.createDurableSubscriber(topic, DURABLE_SUBSCRIBER_NAME); // ignore receiver
 
             sender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
             TextMessage message = topicSession.createTextMessage(MESSAGE_TEXT_1);
@@ -60,6 +61,7 @@ public class SimpleDurableTopicMessageIT extends AbstractITTopic {
 
         reconnect();
 
+        topicConn.start();
         {
             TopicSession topicSession = topicConn.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             Topic topic = topicSession.createTopic(TOPIC_NAME);
