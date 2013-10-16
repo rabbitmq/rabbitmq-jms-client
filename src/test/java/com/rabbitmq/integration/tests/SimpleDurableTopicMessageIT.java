@@ -46,7 +46,7 @@ public class SimpleDurableTopicMessageIT extends AbstractITTopic {
     }
 
     @Test
-    public void testSendAndReceiveAcrossConnections() throws Exception {
+    public void testSendAndReceiveAfterReconnect() throws Exception {
         topicConn.start();
         {
             TopicSession topicSession = topicConn.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);
