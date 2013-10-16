@@ -66,7 +66,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private static ConcurrentHashMap<String, String> CLIENT_IDS = new ConcurrentHashMap<String, String>();
 
     /** List of all our durable subscriptions so we can track them on a per connection basis (maintained by sessions).*/
-    private static final Map<String, RMQMessageConsumer> subscriptions = new ConcurrentHashMap<String, RMQMessageConsumer>();
+    private final Map<String, RMQMessageConsumer> subscriptions = new ConcurrentHashMap<String, RMQMessageConsumer>();
 
     /** This is used for JMSCTS test cases, as ClientID should only be configurable right after the connection has been created */
     private volatile boolean canSetClientID = true;
@@ -98,7 +98,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         logger.trace("transacted={}, acknowledgeMode={}", transacted, acknowledgeMode);
         illegalStateExceptionIfClosed();
         freezeClientID();
-        RMQSession session = new RMQSession(this, transacted, acknowledgeMode, subscriptions);
+        RMQSession session = new RMQSession(this, transacted, acknowledgeMode, this.subscriptions);
         this.sessions.add(session);
         return session;
     }
