@@ -48,10 +48,10 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     private boolean isQueue;
     private boolean isTemporary;
 
-    private transient boolean isDeclared;   // not serialised and not recovered
+    private transient boolean isDeclared;   // field not serialised and not recovered
 
     /**
-     * Constructor used for Java serialisation
+     * Constructor used only for Java serialisation
      */
     public RMQDestination() {
         this.isDeclared = false;    // transient field reset on deserialisation
@@ -64,17 +64,17 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @param isTemporary true if this is a temporary destination
      */
     public RMQDestination(String destName, boolean isQueue, boolean isTemporary) {
-        this(destName, false, queueOrTopicExchangeName(isQueue, isTemporary, destName), destName, destName, isQueue, isTemporary);
+        this(destName, false, queueOrTopicExchangeName(isQueue, isTemporary), destName, destName, isQueue, isTemporary);
     }
 
-    private static final String queueOrTopicExchangeName(boolean isQueue, boolean isTemporary, String destName) {
+    private static final String queueOrTopicExchangeName(boolean isQueue, boolean isTemporary) {
         if (isQueue & isTemporary)              return JMS_TEMP_QUEUE_EXCHANGE_NAME;
         else if (isQueue & !isTemporary)        return JMS_DURABLE_QUEUE_EXCHANGE_NAME;
         else if (!isQueue & isTemporary)        return JMS_TEMP_TOPIC_EXCHANGE_NAME;
         else /* if (!isQueue & !isTemporary) */ return JMS_DURABLE_TOPIC_EXCHANGE_NAME;
     }
 
-    private static final String queueOrTopicExchangeType(boolean isQueue, String destName) {
+    private static final String queueOrTopicExchangeType(boolean isQueue) {
         if (isQueue) return RABBITMQ_AMQ_DIRECT_EXCHANGE_TYPE;
         else         return RABBITMQ_AMQ_TOPIC_EXCHANGE_TYPE;
     }
@@ -96,11 +96,17 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     /**
-     * Creates a destination, either a queue or a topic; not mapped to a real amqp resource.
+     * Creates a destination: either a queue or a topic; either mapped to a real AMQP resource or not.
+     * <p>
+     * If this is a mapped AMQP resource then if either <code>amqpExchangeName</code> or <code>amqpRoutingKey</code> is
+     * <code>null</code> then the other must be <code>null</code> too, and at least one of <code>amqpExchangeName</code>,
+     * <code>amqpRoutingKey</code> and <code>amqpQueueName</code> must be non-<code>null</code>.
+     * </p>
      *
      * @param destinationName - the name of the topic or the queue
-     * @param amqp - <code>true</code> if this is bound to an amqp resource, <code>false</code> if it is a RJMS resource
-     * @param exchangeName - the RabbitMQ exchange name we will publish to and bind to (which may be an amqp resource exchange)
+     * @param amqp - <code>true</code> if this is bound to an AMQP resource, <code>false</code> if it is a RJMS resource
+     * @param exchangeName - the RabbitMQ exchange name we will publish to and bind to (which may be an amqp resource
+     *            exchange)
      * @param routingKey - the routing key used for this destination (if it is a topic)
      * @param isQueue - <code>true</code> if this is a queue, <code>false</code> if this is a topic
      * @param isTemporary true if this is a temporary destination
@@ -108,6 +114,13 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     private RMQDestination(String destName, boolean amqp, String exchangeName, String routingKey, String queueName, boolean isQueue, boolean isTemporary) {
         this.destinationName = destName;
 
+        if (amqp) {
+            if ( (exchangeName==null) != (routingKey==null)
+              || (exchangeName==null && routingKey==null && queueName==null)
+               ) {
+                throw new IllegalArgumentException("Invalid AMQP resource settings (exchangeName='"+exchangeName+"', routingKey='"+routingKey+"', queueName='"+queueName+"').");
+            }
+        }
         this.amqp = amqp;
         this.amqpExchangeName = exchangeName;
         this.amqpRoutingKey = routingKey;
@@ -177,7 +190,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     /** Internal use only */
     public String amqpExchangeType() {
-        return queueOrTopicExchangeType(this.isQueue, this.destinationName);
+        return queueOrTopicExchangeType(this.isQueue);
     }
 
     /** Internal use only */
