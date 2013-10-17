@@ -75,6 +75,6 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
 
     @Override
     protected void writeAmqpBody(ByteArrayOutputStream out) throws IOException {
-        throw new UnsupportedOperationException();
+        out.write((this.text!=null ? this.text : "").getBytes("UTF-8"));
     }
 }
