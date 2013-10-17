@@ -4,6 +4,10 @@ package com.rabbitmq.integration.tests;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import javax.jms.DeliveryMode;
 import javax.jms.Queue;
 import javax.jms.QueueSender;
@@ -13,7 +17,6 @@ import javax.jms.TextMessage;
 
 import org.junit.Test;
 
-import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
 
@@ -28,7 +31,6 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
     @Test
     public void testSendAndReceiveTextMessage() throws Exception {
 
-        Channel channel = rabbitConn.createChannel();
         channel.queueDeclare(QUEUE_NAME,
                              false, // durable
                              true,  // exclusive
@@ -41,18 +43,28 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
         Queue queue = (Queue) new RMQDestination(QUEUE_NAME, "", QUEUE_NAME, null);  // write-only AMQP-mapped queue
         QueueSender queueSender = queueSession.createSender(queue);
         queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        queueSender.setPriority(9);
         TextMessage message = queueSession.createTextMessage(MESSAGE);
         queueSender.send(message);
         queueConn.close();
 
         GetResponse response = channel.basicGet(QUEUE_NAME, false);
-        assertNotNull(response);
+        assertNotNull("basicGet failed to retrieve a response", response);
 
         byte[] body = response.getBody();
-        assertNotNull(body);
+        assertNotNull("body of response is null", body);
+
+        Map<String, Object> hdrs = response.getProps().getHeaders();
+
+        String[] hdrKeyArr = new String[]{"JMSMessageID","JMSDeliveryMode","JMSPriority","JMSTimestamp"};
+        Set<String> hdrKeys = new HashSet<String>();
+        for (String s: hdrKeyArr) { hdrKeys.add(s); }
+        assertEquals("Some keys missing", hdrKeys,hdrs.keySet());
+
+        assertEquals("Priority wrong", 9, hdrs.get("JMSPriority"));
+        assertEquals("Delivery mode wrong", "NON_PERSISTENT", hdrs.get("JMSDeliveryMode").toString()); // toString is a bit wiffy
 
         String messageText = new String(body, "UTF-8");
-
         assertEquals("Message received not identical to message sent", MESSAGE,  messageText);
     }
 }
