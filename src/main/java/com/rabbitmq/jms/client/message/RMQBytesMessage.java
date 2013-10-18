@@ -640,6 +640,8 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
 
     @Override
     protected void writeAmqpBody(ByteArrayOutputStream out) throws IOException {
-        throw new UnsupportedOperationException();
+        this.out.flush();
+        byte[] buf = this.bout.toByteArray();
+        out.write(buf);
     }
 }
