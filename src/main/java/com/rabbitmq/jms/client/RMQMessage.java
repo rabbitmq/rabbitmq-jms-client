@@ -44,31 +44,29 @@ public abstract class RMQMessage implements Message, Cloneable {
         }
     }
 
-    /**
-     * Error message used when throwing {@link javax.jms.MessageFormatException}
-     */
+    /** Error message when the message is not readable */
+    protected static final String NOT_READABLE = "Message not readable";
+    /** Error message when the message is not writeable */
+    protected static final String NOT_WRITEABLE = "Message not writeable";
+    /** Error message used when throwing {@link javax.jms.MessageFormatException} */
     protected static final String UNABLE_TO_CAST = "Unable to cast the object, %s, into the specified type %s";
+    /** Error message when we get an EOF exception */
+    protected static final String MSG_EOF = "Message EOF";
 
-    /**
-     * Properties in a JMS message can NOT be named any of these reserved words
-     */
+    /** Properties in a JMS message can NOT be named any of these reserved words */
     private static final String[] RESERVED_NAMES = {"NULL", "TRUE", "FALSE", "NOT", "AND", "OR", "BETWEEN", "LIKE", "IN",
                                                     "IS", "ESCAPE"};
 
-    /**
-     * A property in a JMS message must NOT have a name starting with any of the following characters (added period 2013-06-13)
-     */
+    /** A property in a JMS message must NOT have a name starting with any of the following characters (added period 2013-06-13) */
     private static final char[] INVALID_STARTS_WITH = {'0','1','2','3','4','5','6','7','8','9','-','+','\'','"','.'};
 
-    /**
-     * A property in a JMS message must NOT contain these characters in its name (removed period 2013-06-13)
-     */
+    /** A property in a JMS message must NOT contain these characters in its name (removed period 2013-06-13) */
     private static final char[] MAY_NOT_CONTAIN = {'\'','"'};
 
     /**
      * When we create a message that has a byte[] as the underlying
-     * structure, BytesMessage and StreamMessage, this is the default size
-     * Can be changed with a system property
+     * structure, BytesMessage and StreamMessage, this is the default size.
+     * Can be changed with a system property.
      */
     protected static final int DEFAULT_MESSAGE_BODY_SIZE = Integer.getInteger("com.rabbitmq.jms.client.message.size", 512);
 
@@ -95,13 +93,9 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     private static final Charset CHARSET = Charset.forName("UTF-8");
 
-    /**
-     * Here we store the JMS_ properties that would have been fields
-     */
+    /** Here we store the JMS_ properties that would have been fields */
     private final Map<String, Serializable> rmqProperties = new HashMap<String, Serializable>();
-    /**
-     * Here we store the user’s custom JMS properties
-     */
+    /** Here we store the user’s custom JMS properties */
     private final Map<String, Serializable> userJmsProperties = new HashMap<String, Serializable>();
     /**
      * We generate a unique message ID each time we send a message
@@ -707,7 +701,7 @@ public abstract class RMQMessage implements Message, Cloneable {
                     this.rmqProperties.put(name, (Serializable) value);
                 }
             } else {
-                if (isReadOnlyProperties()) throw new MessageNotWriteableException("Message has been received and is read only.");
+                if (isReadOnlyProperties()) throw new MessageNotWriteableException(NOT_WRITEABLE);
                 checkName(name);
 
                 if (value==null) {

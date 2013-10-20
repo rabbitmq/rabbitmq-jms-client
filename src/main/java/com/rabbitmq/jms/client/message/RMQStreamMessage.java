@@ -32,9 +32,6 @@ import com.rabbitmq.jms.util.RMQMessageFormatException;
  */
 public class RMQStreamMessage extends RMQMessage implements StreamMessage {
 
-    private static final String NOT_READABLE = "Message not readable";
-    private static final String NOT_WRITEABLE = "Message not writeable";
-    private static final String MSG_EOF = "Message EOF";
     private static final byte[] EOF_ARRAY = new byte[0];
 
     private volatile boolean reading;

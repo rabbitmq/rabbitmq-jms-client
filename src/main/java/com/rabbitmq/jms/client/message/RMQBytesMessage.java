@@ -28,47 +28,21 @@ import com.rabbitmq.jms.util.RMQMessageFormatException;
  */
 public class RMQBytesMessage extends RMQMessage implements BytesMessage {
     /**
-     * Error message when the message is not readable
-     */
-    private static final String NOT_READABLE = "Message not readable";
-    /**
-     * Error message when the message is not writeable
-     */
-    private static final String NOT_WRITEABLE = "Message not writeable";
-    /**
-     * Error message when we get an EOF exception
-     */
-    private static final String MSG_EOF = "Message EOF";
-    /**
      * This variable is set true if we are reading, but not writing the message
      * and false if we are writing but can not read the message
      */
     private volatile boolean reading;
 
-    /**
-     * {@link ObjectInput} to read data
-     */
+    /** {@link ObjectInput} to read data */
     private transient ObjectInputStream in;
-    /**
-     * The object input is wrapping a
-     * {@link ByteArrayInputStream}
-     */
+    /** The object input is wrapping a {@link ByteArrayInputStream} */
     private transient ByteArrayInputStream bin;
-    /**
-     * The byte array input stream is reading
-     * from our body buffer
-     */
+    /** The byte array input stream is reading from our body buffer */
     private volatile transient byte[] buf;
 
-    /**
-     * The {@link ObjectOutput} we use
-     * to write data
-     */
+    /** The {@link ObjectOutput} we use to write data */
     private transient ObjectOutputStream out;
-    /**
-     * The object output is wrapping a
-     * {@link ByteArrayOutputStream}
-     */
+    /** The object output is wrapping a {@link ByteArrayOutputStream} */
     private transient ByteArrayOutputStream bout;
 
     public RMQBytesMessage() {
@@ -80,7 +54,16 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      * @param reading if this message is in a read state
      */
     public RMQBytesMessage(boolean reading) {
-        init(reading);
+        this.reading = reading;
+        if (!reading) {
+            /* If we are in Write state, then create the objects to support that state */
+            this.bout = new ByteArrayOutputStream(RMQMessage.DEFAULT_MESSAGE_BODY_SIZE);
+            try {
+                this.out = new ObjectOutputStream(this.bout);
+            } catch (IOException x) {
+                throw new RuntimeException(x);
+            }
+        }
     }
 
     protected void init(boolean reading) {
@@ -578,11 +561,11 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      * {@inheritDoc}
      */
     @Override
-    protected void writeBody(ObjectOutput out) throws IOException {
+    protected void writeBody(ObjectOutput oOut) throws IOException {
         this.out.flush();
         byte[] buf = this.bout.toByteArray();
-        out.writeInt(buf.length);
-        out.write(buf);
+        oOut.writeInt(buf.length);
+        oOut.write(buf);
     }
 
     /**
