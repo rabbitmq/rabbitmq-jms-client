@@ -45,7 +45,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
 
     /**
      * Instantiates a new RMQBytesMessage
-     * @param reading if this message is in a read state
+     * @param reading - <code>true</code> if this message is in a read state
      */
     public RMQBytesMessage(boolean reading) {
         this.reading = reading;
@@ -196,21 +196,22 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
     public String readUTF() throws JMSException {
         if (!this.reading)
             throw new MessageNotReadableException(NOT_READABLE);
-        int startOfItem = this.pos;
-        int lenUTF = readUnsignedShort(); // modifies pos
-        if (this.pos + lenUTF > this.buf.length)
-            throw new MessageFormatException("Not enough bytes in message body");
-        try {
-            int utfLen = this.pos + lenUTF - startOfItem;
-            byte[] utfBuf = new byte[utfLen];
-            System.arraycopy(this.buf, startOfItem, utfBuf, 0, utfLen);
-            DataInputStream dis = new DataInputStream(new ByteArrayInputStream(utfBuf));
+        int posOfUtfItem = this.pos;
+        int lenUtfBytes = readUnsignedShort(); // modifies pos if valid
+        this.pos = posOfUtfItem;               // reset in case of failure
 
-            String str = dis.readUTF();
-            this.pos += lenUTF;
+        int utfItemLen = Bits.NUM_BYTES_IN_SHORT + lenUtfBytes;
+        if (posOfUtfItem + utfItemLen > this.buf.length) {
+            throw new MessageFormatException("Not enough bytes in message body for UTF object");
+        }
+        byte[] utfBuf = new byte[utfItemLen];
+        System.arraycopy(this.buf, posOfUtfItem, utfBuf, 0, utfItemLen);
+
+        try {
+            String str = new DataInputStream(new ByteArrayInputStream(utfBuf)).readUTF();
+            this.pos += utfItemLen;
             return str;
         } catch (IOException ioe) {
-            this.pos = startOfItem;    // reset to start of object
             throw new RMQMessageFormatException("UTF String invalid format", ioe);
         }
     }
