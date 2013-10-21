@@ -3,11 +3,11 @@ package com.rabbitmq.jms.client.message;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
@@ -196,15 +196,22 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
     public String readUTF() throws JMSException {
         if (!this.reading)
             throw new MessageNotReadableException(NOT_READABLE);
+        int startOfItem = this.pos;
         int lenUTF = readUnsignedShort(); // modifies pos
         if (this.pos + lenUTF > this.buf.length)
             throw new MessageFormatException("Not enough bytes in message body");
         try {
-            String str = new String(this.buf, this.pos, lenUTF, "UTF-8");
+            int utfLen = this.pos + lenUTF - startOfItem;
+            byte[] utfBuf = new byte[utfLen];
+            System.arraycopy(this.buf, startOfItem, utfBuf, 0, utfLen);
+            DataInputStream dis = new DataInputStream(new ByteArrayInputStream(utfBuf));
+
+            String str = dis.readUTF();
             this.pos += lenUTF;
             return str;
-        } catch (UnsupportedEncodingException uee) {
-            throw new RMQMessageFormatException("Content of UTF String invalid", uee);
+        } catch (IOException ioe) {
+            this.pos = startOfItem;    // reset to start of object
+            throw new RMQMessageFormatException("UTF String invalid format", ioe);
         }
     }
 
