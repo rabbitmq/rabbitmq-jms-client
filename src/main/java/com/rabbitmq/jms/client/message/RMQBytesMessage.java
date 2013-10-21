@@ -19,6 +19,7 @@ import javax.jms.MessageNotWriteableException;
 import com.rabbitmq.jms.client.RMQMessage;
 import com.rabbitmq.jms.util.RMQByteArrayOutputStream;
 import com.rabbitmq.jms.util.RMQJMSException;
+import com.rabbitmq.jms.util.RMQMessageFormatException;
 
 /**
  * Implementation of {@link BytesMessage} interface.
@@ -195,15 +196,15 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
     public String readUTF() throws JMSException {
         if (!this.reading)
             throw new MessageNotReadableException(NOT_READABLE);
-        int lenUTF = readInt(); // modifies pos
+        int lenUTF = readUnsignedShort(); // modifies pos
         if (this.pos + lenUTF > this.buf.length)
-            throw new MessageEOFException(MSG_EOF);
+            throw new MessageFormatException("Not enough bytes in message body");
         try {
             String str = new String(this.buf, this.pos, lenUTF, "UTF-8");
             this.pos += lenUTF;
             return str;
         } catch (UnsupportedEncodingException uee) {
-            throw new RMQJMSException("Format of UTF not valid", uee);
+            throw new RMQMessageFormatException("Content of UTF String invalid", uee);
         }
     }
 

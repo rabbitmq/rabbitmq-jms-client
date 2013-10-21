@@ -59,7 +59,9 @@ public class RMQByteArrayOutputStream extends ByteArrayOutputStream {
     public void writeUTF(String value) throws JMSException {
         try {
             byte[] ba = value.getBytes("UTF-8");
-            this.writeInt(ba.length);
+            if (ba.length > 0xFFFF)
+                throw new MessageFormatException("UTF String too long");
+            this.writeShort((short)ba.length);
             this.write(ba);
         } catch (IOException x) {
             throw new RMQJMSException(x);
