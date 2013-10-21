@@ -27,7 +27,8 @@ public class TestMessages {
     public void testBytesMessageDebug() throws Exception {
         RMQBytesMessage message1 = new RMQBytesMessage();
         message1.writeInt(1);
-        message1.writeBody(new ObjectOutputStream(new ByteArrayOutputStream()));
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        message1.writeBody(new ObjectOutputStream(bout), bout);
         message1.writeInt(2);
         message1.reset();
         RMQBytesMessage message2 = new RMQBytesMessage();

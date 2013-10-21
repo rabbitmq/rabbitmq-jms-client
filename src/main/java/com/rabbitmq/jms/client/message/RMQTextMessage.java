@@ -1,6 +1,7 @@
 /* Copyright (c) 2013 GoPivotal, Inc. All rights reserved. */
 package com.rabbitmq.jms.client.message;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -49,7 +50,7 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
      * {@inheritDoc}
      */
     @Override
-    public void writeBody(ObjectOutput out) throws IOException {
+    public void writeBody(ObjectOutput out, ByteArrayOutputStream bout) throws IOException {
         String text = this.text;
         out.writeBoolean(text == null);
         if (text!=null) {
@@ -63,7 +64,7 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
      * {@inheritDoc}
      */
     @Override
-    protected void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
+    protected void readBody(ObjectInput inputStream, ByteArrayInputStream bin) throws IOException, ClassNotFoundException {
         boolean isnull = inputStream.readBoolean();
         if (!isnull) {
             int len = inputStream.readInt();

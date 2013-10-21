@@ -24,9 +24,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
 
     /** Buffer to hold serialised object */
     private volatile byte[] buf = null;
-    /**
-     * {@inheritDoc}
-     */
+
     @Override
     public void setObject(Serializable object) throws JMSException {
         if (isReadonlyBody()) throw new MessageNotWriteableException("Message not writeable");
@@ -49,6 +47,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
 
     }
 
+    @Override
     public Serializable getObject() throws JMSException {
         if (buf==null) {
             return null;
@@ -66,11 +65,13 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         }
     }
 
+    @Override
     public void clearBodyInternal() throws JMSException {
         this.buf = null;
     }
 
-    protected void writeBody(ObjectOutput out) throws IOException {
+    @Override
+    protected void writeBody(ObjectOutput out, ByteArrayOutputStream bout) throws IOException {
         out.writeBoolean(this.buf == null);
         if (this.buf != null) {
             out.writeInt(buf.length);
@@ -78,7 +79,8 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         }
     }
 
-    protected void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
+    @Override
+    protected void readBody(ObjectInput inputStream, ByteArrayInputStream bin) throws IOException, ClassNotFoundException {
         // the body here is just a byte[] and we delay deserialising the object
         // until getObject() is called so that we have access to the Thread Context Classloader
         boolean isnull = inputStream.readBoolean();

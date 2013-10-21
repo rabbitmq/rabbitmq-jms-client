@@ -765,10 +765,11 @@ public abstract class RMQMessage implements Message, Cloneable {
      * a byte[] from a message. Each subclass must implement this, but ONLY
      * write its specific body. All the properties defined in {@link Message}
      * will be written by the parent class.
-     * @param out - the output which to write the message body to.
+     * @param out - the output stream to write the structured part of message body
+     * @param bout - the output stream to write the un-structured part of message body (explicit bytes)
      * @throws IOException you may throw an IOException if the body can not be written
      */
-    protected abstract void writeBody(ObjectOutput out) throws IOException;
+    protected abstract void writeBody(ObjectOutput out, ByteArrayOutputStream bout) throws IOException;
 
     /**
      * Invoked when {@link #toAmqpMessage(RMQMessage)} is called to create
@@ -788,7 +789,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @throws IOException if a read error occurs on the input stream
      * @throws ClassNotFoundException if the object class cannot be found
      */
-    protected abstract void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException;
+    protected abstract void readBody(ObjectInput inputStream, ByteArrayInputStream bin) throws IOException, ClassNotFoundException;
 
     /**
      * Generate the headers for this JMS message.
@@ -950,10 +951,9 @@ public abstract class RMQMessage implements Message, Cloneable {
             out.writeUTF(entry.getKey());
             writePrimitive(entry.getValue(), out, true);
         }
-        //invoke write body
-        this.writeBody(out);
-        //flush and return
-        out.flush();
+        out.flush();  // ensure structured part written to byte stream
+        this.writeBody(out, bout);
+        out.flush();  // force any more structured data to byte stream
         return bout.toByteArray();
     }
 
@@ -971,7 +971,8 @@ public abstract class RMQMessage implements Message, Cloneable {
     static RMQMessage fromMessage(byte[] b) throws ClassNotFoundException, IOException, IllegalAccessException,
                                                   InstantiationException {
         /* If we don't recognise the message format this throws an exception */
-        ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(b));
+        ByteArrayInputStream bin = new ByteArrayInputStream(b);
+        ObjectInputStream in = new ObjectInputStream(bin);
         //read the classname from the stream
         String clazz = in.readUTF();
         //instantiate the message object with the thread context classloader
@@ -992,8 +993,8 @@ public abstract class RMQMessage implements Message, Cloneable {
             Object value = readPrimitive(in);
             msg.userJmsProperties.put(name, (Serializable) value);
         }
-        //invoke read body on the
-        msg.readBody(in);
+        // read the body of the message
+        msg.readBody(in, bin);
         return msg;
     }
 
