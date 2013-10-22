@@ -5,9 +5,9 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import javax.jms.BytesMessage;
 import javax.jms.DeliveryMode;
@@ -21,7 +21,6 @@ import org.junit.Test;
 
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
-import com.rabbitmq.jms.util.HexDisplay;
 
 /**
  * Integration test for simple point-to-point messaging with target AMQP queue.
@@ -34,7 +33,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
     private static final String STRING_PROP_VALUE = "the string property value";
 
     @Test
-    public void testSendAndReceiveTextMessage() throws Exception {
+    public void testSendToAmqpAndReceiveTextMessage() throws Exception {
 
         channel.queueDeclare(QUEUE_NAME,
                              false, // durable
@@ -63,24 +62,22 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
         byte[] body = response.getBody();
         assertNotNull("body of response is null", body);
 
-        Map<String, Object> hdrs = response.getProps().getHeaders();
+        { Map<String, Object> hdrs = response.getProps().getHeaders();
 
-        String[] hdrKeyArr = new String[]{"JMSMessageID","JMSDeliveryMode","JMSPriority","JMSTimestamp","StringProp"};
-        Set<String> hdrKeys = new HashSet<String>();
-        for (String s: hdrKeyArr) { hdrKeys.add(s); }
+          assertEquals("Some keys missing", new HashSet<String>(Arrays.asList("JMSMessageID","JMSDeliveryMode","JMSPriority","JMSTimestamp","StringProp"))
+                                          , hdrs.keySet()
+                      );
 
-        assertEquals("Some keys missing", hdrKeys, hdrs.keySet());
+          assertEquals("Priority wrong", 9, hdrs.get("JMSPriority"));
+          assertEquals("Delivery mode wrong", "NON_PERSISTENT", hdrs.get("JMSDeliveryMode").toString()); // toString is a bit wiffy
+          assertEquals("String property wrong", STRING_PROP_VALUE, hdrs.get("StringProp").toString());
+        }
 
-        assertEquals("Priority wrong", 9, hdrs.get("JMSPriority"));
-        assertEquals("Delivery mode wrong", "NON_PERSISTENT", hdrs.get("JMSDeliveryMode").toString()); // toString is a bit wiffy
-        assertEquals("String property wrong", STRING_PROP_VALUE, hdrs.get("StringProp").toString());
-
-        String messageText = new String(body, "UTF-8");
-        assertEquals("Message received not identical to message sent", MESSAGE,  messageText);
+        assertEquals("Message received not identical to message sent", MESSAGE,  new String(body, "UTF-8"));
     }
 
     @Test
-    public void testSendAndReceiveBytesMessage() throws Exception {
+    public void testSendToAmqpAndReceiveBytesMessage() throws Exception {
 
         channel.queueDeclare(QUEUE_NAME,
                              false, // durable
@@ -111,24 +108,17 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
         byte[] body = response.getBody();
         assertNotNull("body of response is null", body);
 
-        StringBuilder sb1 = new StringBuilder();
-        HexDisplay.decodeByteArrayIntoStringBuilder(body, sb1);
-        StringBuilder sb2 = new StringBuilder();
-        HexDisplay.decodeByteArrayIntoStringBuilder(BYTE_ARRAY, sb2);
-        assertEquals(sb2.toString(), sb1.toString());
+        { Map<String, Object> hdrs = response.getProps().getHeaders();
 
-        Map<String, Object> hdrs = response.getProps().getHeaders();
+          assertEquals("Some keys missing", new HashSet<String>(Arrays.asList("JMSMessageID","JMSDeliveryMode","JMSPriority","JMSTimestamp","StringProp"))
+                                          , hdrs.keySet()
+                      );
 
-        String[] hdrKeyArr = new String[]{"JMSMessageID","JMSDeliveryMode","JMSPriority","JMSTimestamp","StringProp"};
-        Set<String> hdrKeys = new HashSet<String>();
-        for (String s: hdrKeyArr) { hdrKeys.add(s); }
-
-        assertEquals("Some keys missing", hdrKeys,hdrs.keySet());
-
-        assertEquals("Priority wrong", 9, hdrs.get("JMSPriority"));
-        assertEquals("Delivery mode wrong", "NON_PERSISTENT", hdrs.get("JMSDeliveryMode").toString()); // toString is a bit wiffy
-        assertEquals("String property wrong", STRING_PROP_VALUE, hdrs.get("StringProp").toString());
-
+          assertEquals("Priority wrong", 9, hdrs.get("JMSPriority"));
+          assertEquals("Delivery mode wrong", "NON_PERSISTENT", hdrs.get("JMSDeliveryMode").toString()); // toString is a bit wiffy
+          assertEquals("String property wrong", STRING_PROP_VALUE, hdrs.get("StringProp").toString());
+        }
         assertArrayEquals("Message received not identical to message sent", BYTE_ARRAY,  body);
     }
+
 }
