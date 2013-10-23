@@ -318,6 +318,11 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         }
     }
 
+    @Override
+    protected void readAmqpBody(byte[] barr) {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * Utility method to write an object as a primitive or as an object
      * @param s the object to write

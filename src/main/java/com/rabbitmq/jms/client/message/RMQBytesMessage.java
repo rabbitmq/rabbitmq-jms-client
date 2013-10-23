@@ -441,6 +441,13 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         this.pos = 0;
     }
 
+    @Override
+    protected void readAmqpBody(byte[] barr) {
+        this.buf = barr;
+        this.reading = true;
+        this.pos = 0;
+    }
+
     /**
      * Utility method to write an object as a primitive or as an object
      * @param s the object to write
@@ -539,4 +546,5 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             return Double.longBitsToDouble(getLong(b, off));
         }
     }
+
 }

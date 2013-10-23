@@ -6,6 +6,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.UnsupportedEncodingException;
 
 import javax.jms.JMSException;
 import javax.jms.MessageNotWriteableException;
@@ -71,6 +72,15 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
             byte[] ba = new byte[len];
             inputStream.readFully(ba, 0, len);
             this.text = new String(ba, "UTF-8");
+        }
+    }
+
+    @Override
+    protected void readAmqpBody(byte[] barr) {
+        try {
+            this.text = new String(barr, "UTF-8");
+        } catch (UnsupportedEncodingException _) {
+            // Will not happen: UTF-8 is supported everywhere
         }
     }
 

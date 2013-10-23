@@ -89,6 +89,11 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         }
     }
 
+    @Override
+    protected void readAmqpBody(byte[] barr) {
+        throw new UnsupportedOperationException();
+    }
+
     private void readWholeBuffer(int len, ObjectInput inputStream) throws IOException {
         buf = new byte[len];
         int totalBytesRead = inputStream.read(buf, 0, len);

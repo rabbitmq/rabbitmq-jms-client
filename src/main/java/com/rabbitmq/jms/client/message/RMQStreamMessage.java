@@ -512,6 +512,11 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         this.in = new ObjectInputStream(this.bin);
     }
 
+    @Override
+    protected void readAmqpBody(byte[] barr) {
+        throw new UnsupportedOperationException();
+    }
+
     private static class ByteArray {
 
     }
