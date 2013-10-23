@@ -403,7 +403,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             message = RMQMessage.fromAmqpMessage(response.getBody(), message);      // Deserialize the message from the byte[]
             message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());  // Insert delivery tag in received message for Message.acknowledge
             message.setSession(getSession());                                       // Insert session in received message for Message.acknowledge
-            message.setJMSDestination(getDestination());                            // We do not know the destination
+            message.setJMSDestination(getDestination());                            // We do not know the original destination
             message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
             message.setJMSRedelivered(response.getEnvelope().isRedeliver());        // Set the redelivered flag
             if (!acknowledged) {                                // not already acknowledged
