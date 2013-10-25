@@ -258,7 +258,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             try {
                 AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
                 bob.contentType("application/octet-stream");
-                bob.deliveryMode(rmqDeliveryMode(deliveryMode));
+                bob.deliveryMode(RMQMessage.rmqDeliveryMode(deliveryMode));
                 bob.priority(priority);
                 bob.expiration(rmqExpiration(timeToLive));
                 bob.headers(msg.toAmqpHeaders());
@@ -280,7 +280,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         try {
             AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
             bob.contentType("application/octet-stream");
-            bob.deliveryMode(rmqDeliveryMode(deliveryMode));
+            bob.deliveryMode(RMQMessage.rmqDeliveryMode(deliveryMode));
             bob.priority(priority);
             bob.expiration(rmqExpiration(timeToLive));
             bob.headers(msg.toHeaders());
@@ -311,14 +311,6 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
                              : ttl > MAX_TTL ? MAX_TTL
                              :                 ttl
                              );
-    }
-
-    /**
-     * @param deliveryMode JMS delivery mode value
-     * @return RabbitMQ delivery mode value
-     */
-    private static final int rmqDeliveryMode(int deliveryMode) {
-        return (deliveryMode == javax.jms.DeliveryMode.PERSISTENT ? 2 : 1);
     }
 
     /**

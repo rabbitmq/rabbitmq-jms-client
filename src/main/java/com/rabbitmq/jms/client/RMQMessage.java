@@ -10,9 +10,11 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -24,6 +26,7 @@ import javax.jms.MessageNotWriteableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.rabbitmq.client.BasicProperties;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.util.HexDisplay;
 import com.rabbitmq.jms.util.IteratorEnum;
@@ -828,7 +831,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * But (<i>from the JMS 1.1 spec</i>):<br/>
      * <blockquote> Message header field references are restricted to <code>JMSDeliveryMode</code>,
      * <code>JMSPriority</code>, <code>JMSMessageID</code>, <code>JMSTimestamp</code>, <code>JMSCorrelationID</code>,
-     * and <code>JMSType</code>.
+     * and <code>JMSType</code>. (Why not <code>JMSExpiration</code> as well?)
      * <p>
      * <code>JMSMessageID</code>, <code>JMSCorrelationID</code>, and <code>JMSType</code> values may be
      * <code>null</code> and if so are treated as a NULL value.
@@ -860,13 +863,12 @@ public abstract class RMQMessage implements Message, Cloneable {
      * We attach <i>some</i> JMS properties as headers on the message. This is so the client can see them at the other end.
      * </p>
      * <p>
-     * The headers we code are:
+     * The headers we code are user headers (if they are type convertible) and:
      * </p>
      *
      * <pre>
      * <b>Header Field</b>        <b>Set By</b>
      * JMSDeliveryMode     send or publish method
-     * JMSExpiration       send or publish method
      * JMSPriority         send or publish method
      * JMSMessageID        send or publish method
      * JMSTimestamp        send or publish method
@@ -977,35 +979,45 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @throws IOException if an exception occurs during deserialization
      * @throws IllegalAccessException if an exception occurs during class instantiation
      * @throws InstantiationException if an exception occurs during class instantiation
+     * @throws RMQJMSException if RJMS class-related errors occur
      */
-    static RMQMessage fromMessage(byte[] b) throws ClassNotFoundException, IOException, IllegalAccessException,
-                                                  InstantiationException {
+    static RMQMessage fromMessage(byte[] b) throws RMQJMSException {
         /* If we don't recognise the message format this throws an exception */
-        ByteArrayInputStream bin = new ByteArrayInputStream(b);
-        ObjectInputStream in = new ObjectInputStream(bin);
-        //read the classname from the stream
-        String clazz = in.readUTF();
-        //instantiate the message object with the thread context classloader
-        RMQMessage msg = (RMQMessage) Class.forName(clazz, true, Thread.currentThread().getContextClassLoader()).newInstance();
-        //read the message id
-        msg.internalMessageID = in.readUTF();
-        //read JMS properties
-        int propsize = in.readInt();
-        for (int i = 0; i < propsize; i++) {
-            String name = in.readUTF();
-            Object value = readPrimitive(in);
-            msg.rmqProperties.put(name, (Serializable) value);
+        try {
+            ByteArrayInputStream bin = new ByteArrayInputStream(b);
+            ObjectInputStream in = new ObjectInputStream(bin);
+            //read the classname from the stream
+            String clazz = in.readUTF();
+            //instantiate the message object with the thread context classloader
+            RMQMessage msg = (RMQMessage) Class.forName(clazz, true, Thread.currentThread().getContextClassLoader()).newInstance();
+            //read the message id
+            msg.internalMessageID = in.readUTF();
+            //read JMS properties
+            int propsize = in.readInt();
+            for (int i = 0; i < propsize; i++) {
+                String name = in.readUTF();
+                Object value = readPrimitive(in);
+                msg.rmqProperties.put(name, (Serializable) value);
+            }
+            //read custom properties
+            propsize = in.readInt();
+            for (int i = 0; i < propsize; i++) {
+                String name = in.readUTF();
+                Object value = readPrimitive(in);
+                msg.userJmsProperties.put(name, (Serializable) value);
+            }
+            // read the body of the message
+            msg.readBody(in, bin);
+            return msg;
+        } catch (IOException x) {
+            throw new RMQJMSException(x);
+        } catch (ClassNotFoundException x) {
+            throw new RMQJMSException(x);
+        } catch (IllegalAccessException x) {
+            throw new RMQJMSException(x);
+        } catch (InstantiationException x) {
+            throw new RMQJMSException(x);
         }
-        //read custom properties
-        propsize = in.readInt();
-        for (int i = 0; i < propsize; i++) {
-            String name = in.readUTF();
-            Object value = readPrimitive(in);
-            msg.userJmsProperties.put(name, (Serializable) value);
-        }
-        // read the body of the message
-        msg.readBody(in, bin);
-        return msg;
     }
 
     /**
@@ -1022,6 +1034,40 @@ public abstract class RMQMessage implements Message, Cloneable {
     static RMQMessage fromAmqpMessage(byte[] b, RMQMessage msg) throws IOException {
         msg.readAmqpBody(b);
         return msg;
+    }
+
+    /**
+     * @param deliveryMode JMS delivery mode value
+     * @return RabbitMQ delivery mode value
+     */
+    static final int rmqDeliveryMode(int deliveryMode) {
+        return (deliveryMode == javax.jms.DeliveryMode.PERSISTENT ? 2 : 1);
+    }
+
+    /**
+     * @param rmqDeliveryMode rabbitmq delivery mode value
+     * @return JMS delivery mode String
+     */
+    static final int jmsDeliveryMode(Integer rmqDeliveryMode) {
+        return ( ( rmqDeliveryMode != null
+                && rmqDeliveryMode == 2
+                 ) ? javax.jms.DeliveryMode.PERSISTENT
+                   : javax.jms.DeliveryMode.NON_PERSISTENT);
+    }
+
+    /**
+     * @param rmqExpiration rabbitmq expiration value
+     * @return JMS expiration long value
+     */
+    static final long jmsExpiration(String rmqExpiration, Date da) {
+        if (null==da) da = new Date(); // assume now -- wrong nearly always
+        if (null==rmqExpiration)
+            return (0l);
+        try {
+            return da.getTime() + Long.valueOf(rmqExpiration);
+        } catch (NumberFormatException e) { // ignore it if conversion problems */ }
+            return (0l);
+        }
     }
 
     @Override
@@ -1181,4 +1227,64 @@ public abstract class RMQMessage implements Message, Cloneable {
         return super.clone();
     }
 
+    void setJMSPropertiesFromAmqpProperties(BasicProperties props) throws JMSException {
+        this.setJMSDeliveryMode(jmsDeliveryMode(props.getDeliveryMode())); // derive delivery mode from Rabbit delivery mode
+
+        Date da = props.getTimestamp();
+        if (null!=da)   this.setJMSTimestamp(da.getTime()/1000l);  // JMS timestamps are the number of *seconds* since jan 1 1900
+
+        String ex = props.getExpiration();  // this is a time-to-live period in milliseconds, as a Long.toString(long, 10)
+        if (null!=ex)   this.setJMSExpiration(RMQMessage.jmsExpiration(ex, da));
+
+        Integer pr = props.getPriority();
+        if (null!=pr)   this.setJMSPriority(pr);
+
+        String mi = props.getMessageId();  // This is AMQP's message ID
+        if (null!=mi)   this.setJMSMessageID(mi);
+
+        String ci = props.getCorrelationId();  // This is AMQP's correlation ID
+        if (null!=ci)   this.setJMSCorrelationID(ci);
+
+        this.setJMSType(isAmqpTextMessage(props.getHeaders()) ? "TextMessage" : "BytesMessage");
+
+        // now set properties from header: these may overwrite the ones that have already been set above
+        Map<String, Object> hdrs = props.getHeaders();
+        if (hdrs!=null) {
+            for (Entry<String, Object> e : hdrs.entrySet()) {
+                String key = e.getKey();
+                Object val = e.getValue();
+                if      (key.equals("JMSExpiration"))   { this.setJMSExpiration(objectToLong(val, 0l));}
+                else if (key.equals("JMSPriority"))     { this.setJMSPriority(objectToInt(val, 4));}
+                else if (key.equals("JMSTimestamp"))    { this.setJMSTimestamp(objectToLong(val, 0l));}
+                else if (key.equals("JMSMessageID"))    { this.setJMSMessageID(val.toString());}
+                else if (key.equals("JMSCorrelationID")){ this.setJMSCorrelationID(val.toString());}
+                else if (key.equals("JMSType"))         { this.setJMSType(val.toString());}
+                else if (key.startsWith(PREFIX))        {} // avoid setting this internal field
+                else if (key.startsWith("JMS"))         {} // avoid setting this field
+                else                                    { this.userJmsProperties.put(key, val.toString());}
+            }
+        }
+    }
+
+    static final boolean isAmqpTextMessage(Map<String, Object> hdrs) {
+        return (hdrs!=null && "TextMessage".equals(hdrs.get("JMSType").toString()));
+    }
+
+    private final static long objectToLong(Object val, long dft) {
+        if (val==null) return dft;
+        if (val instanceof Number) return ((Number) val).longValue();
+        try {
+            if (val instanceof CharSequence) return Long.valueOf(val.toString());
+        } catch (NumberFormatException _) { /*ignore*/ }
+        return dft;
+    }
+
+    private final static int objectToInt(Object val, int dft) {
+        if (val==null) return dft;
+        if (val instanceof Number) return ((Number) val).intValue();
+        try {
+            if (val instanceof CharSequence) return Integer.valueOf(val.toString());
+        } catch (NumberFormatException _) { /*ignore*/ }
+        return dft;
+    }
 }

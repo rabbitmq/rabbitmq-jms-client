@@ -20,6 +20,7 @@ import javax.jms.TopicSubscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.rabbitmq.client.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
@@ -372,40 +373,34 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         }
     }
 
-    private RMQMessage processJmsMessage(GetResponse response, boolean acknowledged) throws JMSException,
-                                                                                    RMQJMSException {
-        try {
-            RMQMessage message = RMQMessage.fromMessage(response.getBody());        // Deserialize the message from the byte[]
-            message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());  // Insert delivery tag in received message for Message.acknowledge
-            message.setSession(getSession());                                       // Insert session in received message for Message.acknowledge
-            // message.setJMSDestination(getDestination());                         // DO NOT set the destination bug#57214768
-            message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
-            message.setJMSRedelivered(response.getEnvelope().isRedeliver());        // Set the redelivered flag
-            if (!acknowledged) {                                // not already acknowledged
-                getSession().unackedMessageReceived(message);   // track unacknowledged messages
-            }
-            return message;
-        } catch (IOException x) {
-            throw new RMQJMSException(x);
-        } catch (ClassNotFoundException x) {
-            throw new RMQJMSException(x);
-        } catch (IllegalAccessException x) {
-            throw new RMQJMSException(x);
-        } catch (InstantiationException x) {
-            throw new RMQJMSException(x);
+    private RMQMessage processJmsMessage(GetResponse response, boolean acknowledged) throws JMSException {
+        RMQMessage message = RMQMessage.fromMessage(response.getBody());        // Deserialize the message payload from the byte[] body
+        message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());  // Insert delivery tag in received message for Message.acknowledge
+        message.setSession(getSession());                                       // Insert session in received message for Message.acknowledge
+        // message.setJMSDestination(getDestination());                         // DO NOT set the destination bug#57214768
+        message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
+        message.setJMSRedelivered(response.getEnvelope().isRedeliver());        // Set the redelivered flag
+        if (!acknowledged) {                                // not already acknowledged
+            getSession().unackedMessageReceived(message);   // track unacknowledged messages
         }
+        return message;
     }
 
     private RMQMessage processAmqpMessage(GetResponse response, boolean acknowledged) throws JMSException {
         try {
-            RMQMessage message = isAmqpTextMessage(response) ? new RMQTextMessage() : new RMQBytesMessage();
+            BasicProperties props = response.getProps();
 
-            message = RMQMessage.fromAmqpMessage(response.getBody(), message);      // Deserialize the message from the byte[]
-            message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());  // Insert delivery tag in received message for Message.acknowledge
+            RMQMessage message = RMQMessage.isAmqpTextMessage(props.getHeaders()) ? new RMQTextMessage() : new RMQBytesMessage();
+            message = RMQMessage.fromAmqpMessage(response.getBody(), message);      // Deserialize the message payload from the byte[] body
+
             message.setSession(getSession());                                       // Insert session in received message for Message.acknowledge
-            message.setJMSDestination(getDestination());                            // We do not know the original destination
-            message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
             message.setJMSRedelivered(response.getEnvelope().isRedeliver());        // Set the redelivered flag
+            message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());  // Insert delivery tag in received message for Message.acknowledge
+            message.setJMSDestination(getDestination());                            // We cannot know the original destination, so set local one
+
+            message.setJMSPropertiesFromAmqpProperties(props);
+
+            message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
             if (!acknowledged) {                                // not already acknowledged
                 getSession().unackedMessageReceived(message);   // track unacknowledged messages
             }
@@ -413,10 +408,6 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         } catch (IOException x) {
             throw new RMQJMSException(x);
         }
-}
-    private boolean isAmqpTextMessage(GetResponse response) {
-        // TODO Auto-generated method stub
-        return false;
     }
 
     /**

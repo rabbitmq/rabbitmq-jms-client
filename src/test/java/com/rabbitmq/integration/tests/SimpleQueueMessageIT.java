@@ -19,6 +19,7 @@ import javax.jms.TextMessage;
 
 import org.junit.Test;
 
+import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.TestMessages;
 
 /**
@@ -179,6 +180,8 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
         Queue queue = queueSession.createQueue(QUEUE_NAME);
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
         ObjectMessage message = (ObjectMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
-        assertEquals("Object not read correctly;", queue.getQueueName(), ((Queue) message.getObject()).getQueueName());
+        RMQDestination q = (RMQDestination) queue;
+        RMQDestination rq = (RMQDestination) message.getObject();
+        assertEquals("Object not read correctly;", q, rq);
     }
 }
