@@ -32,9 +32,6 @@ import com.rabbitmq.jms.util.RMQMessageFormatException;
  */
 public class RMQStreamMessage extends RMQMessage implements StreamMessage {
 
-    private static final String NOT_READABLE = "Message not readable";
-    private static final String NOT_WRITEABLE = "Message not writeable";
-    private static final String MSG_EOF = "Message EOF";
     private static final byte[] EOF_ARRAY = new byte[0];
 
     private volatile boolean reading;
@@ -319,12 +316,12 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         }
     }
 
-
     /**
      * reads an object from the stream that was used to serialize this message
      * @return the object read
      * @throws JMSException if a deserialization exception happens
      */
+    @Override
     public Object readObject() throws JMSException {
         return this.readPrimitiveType(Object.class);
     }
@@ -495,7 +492,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
      * {@inheritDoc}
      */
     @Override
-    protected void writeBody(ObjectOutput out) throws IOException {
+    protected void writeBody(ObjectOutput out, ByteArrayOutputStream bout) throws IOException {
         this.out.flush();
         byte[] buf = this.bout.toByteArray();
         out.writeInt(buf.length);
@@ -506,7 +503,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
      * {@inheritDoc}
      */
     @Override
-    protected void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
+    protected void readBody(ObjectInput inputStream, ByteArrayInputStream bin) throws IOException, ClassNotFoundException {
         int len = inputStream.readInt();
         buf = new byte[len];
         inputStream.read(buf);
@@ -515,9 +512,17 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         this.in = new ObjectInputStream(this.bin);
     }
 
+    @Override
+    protected void readAmqpBody(byte[] barr) {
+        throw new UnsupportedOperationException();
+    }
+
     private static class ByteArray {
 
     }
 
-
+    @Override
+    protected void writeAmqpBody(ByteArrayOutputStream out) throws IOException {
+        throw new UnsupportedOperationException();
+    }
 }

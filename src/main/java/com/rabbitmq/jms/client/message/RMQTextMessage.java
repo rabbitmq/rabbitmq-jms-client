@@ -1,9 +1,12 @@
 /* Copyright (c) 2013 GoPivotal, Inc. All rights reserved. */
 package com.rabbitmq.jms.client.message;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.UnsupportedEncodingException;
 
 import javax.jms.JMSException;
 import javax.jms.MessageNotWriteableException;
@@ -48,7 +51,7 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
      * {@inheritDoc}
      */
     @Override
-    public void writeBody(ObjectOutput out) throws IOException {
+    public void writeBody(ObjectOutput out, ByteArrayOutputStream bout) throws IOException {
         String text = this.text;
         out.writeBoolean(text == null);
         if (text!=null) {
@@ -62,7 +65,7 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
      * {@inheritDoc}
      */
     @Override
-    protected void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException {
+    protected void readBody(ObjectInput inputStream, ByteArrayInputStream bin) throws IOException, ClassNotFoundException {
         boolean isnull = inputStream.readBoolean();
         if (!isnull) {
             int len = inputStream.readInt();
@@ -72,4 +75,17 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
         }
     }
 
+    @Override
+    protected void readAmqpBody(byte[] barr) {
+        try {
+            this.text = new String(barr, "UTF-8");
+        } catch (UnsupportedEncodingException _) {
+            // Will not happen: UTF-8 is supported everywhere
+        }
+    }
+
+    @Override
+    protected void writeAmqpBody(ByteArrayOutputStream out) throws IOException {
+        out.write((this.text!=null ? this.text : "").getBytes("UTF-8"));
+    }
 }

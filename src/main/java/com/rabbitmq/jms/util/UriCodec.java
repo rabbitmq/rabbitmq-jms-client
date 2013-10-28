@@ -269,8 +269,7 @@ public abstract class UriCodec {  // Prevent me declaring instances.
     private static final String genericEncode(byte[] charClass, String str, String encodingScheme) {
         try {
             StringBuilder sb = new StringBuilder();
-            byte[] strBytes = str.getBytes(encodingScheme);
-            for (byte b : strBytes) {
+            for (byte b : str.getBytes(encodingScheme)) {
                 if (inClass(b,charClass)) sb.append(Character.toChars(b));
                 else addEscaped(sb, b);
             }

@@ -10,9 +10,11 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -24,6 +26,8 @@ import javax.jms.MessageNotWriteableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.rabbitmq.client.BasicProperties;
+import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.util.HexDisplay;
 import com.rabbitmq.jms.util.IteratorEnum;
 import com.rabbitmq.jms.util.RMQJMSException;
@@ -44,38 +48,36 @@ public abstract class RMQMessage implements Message, Cloneable {
         }
     }
 
-    /**
-     * Error message used when throwing {@link javax.jms.MessageFormatException}
-     */
+    /** Error message when the message is not readable */
+    protected static final String NOT_READABLE = "Message not readable";
+    /** Error message when the message is not writeable */
+    protected static final String NOT_WRITEABLE = "Message not writeable";
+    /** Error message used when throwing {@link javax.jms.MessageFormatException} */
     protected static final String UNABLE_TO_CAST = "Unable to cast the object, %s, into the specified type %s";
+    /** Error message when we get an EOF exception */
+    protected static final String MSG_EOF = "Message EOF";
 
-    /**
-     * Properties inside of a JMS message can NOT be named any of these reserved words
-     */
+    /** Properties in a JMS message can NOT be named any of these reserved words */
     private static final String[] RESERVED_NAMES = {"NULL", "TRUE", "FALSE", "NOT", "AND", "OR", "BETWEEN", "LIKE", "IN",
                                                     "IS", "ESCAPE"};
 
-    /**
-     * Properties inside of a JMS message can NOT start with any of the following characters (added period)
-     */
+    /** A property in a JMS message must NOT have a name starting with any of the following characters (added period 2013-06-13) */
     private static final char[] INVALID_STARTS_WITH = {'0','1','2','3','4','5','6','7','8','9','-','+','\'','"','.'};
 
-    /**
-     * Properties inside of a JMS may not contain these characters in the name (removed period 2013-06-13)
-     */
+    /** A property in a JMS message must NOT contain these characters in its name (removed period 2013-06-13) */
     private static final char[] MAY_NOT_CONTAIN = {'\'','"'};
 
     /**
      * When we create a message that has a byte[] as the underlying
-     * structure, BytesMessage and StreamMessage, this is the default size
-     * Can be changed with a system property
+     * structure, BytesMessage and StreamMessage, this is the default size.
+     * Can be changed with a system property.
      */
     protected static final int DEFAULT_MESSAGE_BODY_SIZE = Integer.getInteger("com.rabbitmq.jms.client.message.size", 512);
 
     /**
      * We store all the JMS hard coded values, such as {@link #setJMSMessageID(String)}, as properties instead of hard
      * coded fields. This way we can create a structure later on that the rabbit MQ broker can read by just changing the
-     * {@link #toMessage(RMQMessage)} and {@link #fromMessage(byte[])}.
+     * {@link #toByteArray(RMQMessage)} and {@link #fromMessage(byte[])}.
      */
     private static final String PREFIX = "rmq.";
     private static final String JMS_MESSAGE_ID = PREFIX + "jms.message.id";
@@ -95,13 +97,9 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     private static final Charset CHARSET = Charset.forName("UTF-8");
 
-    /**
-     * Here we store the JMS_ properties that would have been fields
-     */
+    /** Here we store the JMS_ properties that would have been fields */
     private final Map<String, Serializable> rmqProperties = new HashMap<String, Serializable>();
-    /**
-     * Here we store the users custom JMS properties
-     */
+    /** Here we store the user’s custom JMS properties */
     private final Map<String, Serializable> userJmsProperties = new HashMap<String, Serializable>();
     /**
      * We generate a unique message ID each time we send a message
@@ -707,7 +705,7 @@ public abstract class RMQMessage implements Message, Cloneable {
                     this.rmqProperties.put(name, (Serializable) value);
                 }
             } else {
-                if (isReadOnlyProperties()) throw new MessageNotWriteableException("Message has been received and is read only.");
+                if (isReadOnlyProperties()) throw new MessageNotWriteableException(NOT_WRITEABLE);
                 checkName(name);
 
                 if (value==null) {
@@ -767,28 +765,47 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
 
     /**
-     * Invoked when {@link #toMessage(RMQMessage)} is called to create
+     * Invoked when {@link #toByteArray(RMQMessage)} is called to create
      * a byte[] from a message. Each subclass must implement this, but ONLY
      * write its specific body. All the properties defined in {@link Message}
      * will be written by the parent class.
+     * @param out - the output stream to write the structured part of message body
+     * @param bout - the output stream to write the un-structured part of message body (explicit bytes)
+     * @throws IOException you may throw an IOException if the body can not be written
+     */
+    protected abstract void writeBody(ObjectOutput out, ByteArrayOutputStream bout) throws IOException;
+
+    /**
+     * Invoked when {@link #toAmqpMessage(RMQMessage)} is called to create
+     * a byte[] from a message. Each subclass must implement this, but ONLY
+     * write its specific body.
      * @param out - the output which to write the message body to.
      * @throws IOException you may throw an IOException if the body can not be written
      */
-    protected abstract void writeBody(ObjectOutput out) throws IOException;
+    protected abstract void writeAmqpBody(ByteArrayOutputStream out) throws IOException;
 
     /**
      * Invoked when a message is being deserialized to read and decode the message body.
      * The implementing class should <i>only</i> read its body from this stream.
      * If any exception is thrown, the message will not have been delivered.
      *
-     * @param inputStream the stream to read its body from
+     * @param inputStream - the stream to read its body from
+     * @param bin - the underlying byte input stream
      * @throws IOException if a read error occurs on the input stream
      * @throws ClassNotFoundException if the object class cannot be found
      */
-    protected abstract void readBody(ObjectInput inputStream) throws IOException, ClassNotFoundException;
+    protected abstract void readBody(ObjectInput inputStream, ByteArrayInputStream bin) throws IOException, ClassNotFoundException;
 
     /**
-     * Generate the headers for a JMS message.
+     * Invoked when an AMQP message is being transformed into a RMQMessage
+     * The implementing class should <i>only</i> read its body by this method
+     *
+     * @param barr - the byte array payload of the AMQP message
+     */
+    protected abstract void readAmqpBody(byte[] barr);
+
+    /**
+     * Generate the headers for this JMS message.
      * <p>
      * We attach <i>some</i> JMS properties as headers on the message. This is so the broker can see them for the
      * purposes of message selection during routing.
@@ -814,6 +831,53 @@ public abstract class RMQMessage implements Message, Cloneable {
      * But (<i>from the JMS 1.1 spec</i>):<br/>
      * <blockquote> Message header field references are restricted to <code>JMSDeliveryMode</code>,
      * <code>JMSPriority</code>, <code>JMSMessageID</code>, <code>JMSTimestamp</code>, <code>JMSCorrelationID</code>,
+     * and <code>JMSType</code>. (Why not <code>JMSExpiration</code> as well?)
+     * <p>
+     * <code>JMSMessageID</code>, <code>JMSCorrelationID</code>, and <code>JMSType</code> values may be
+     * <code>null</code> and if so are treated as a NULL value.
+     * </p>
+     * </blockquote>
+     */
+    Map<String, Object> toHeaders() throws IOException, JMSException {
+        Map<String, Object> hdrs = new HashMap<String, Object>();
+
+        // set non-null user properties
+        for (Map.Entry<String, Serializable> e : this.userJmsProperties.entrySet()) {
+            putIfNotNull(hdrs, e.getKey(), e.getValue());
+        }
+
+        // set (overwrite?) selectable JMS properties
+        hdrs.put("JMSDeliveryMode", (this.getJMSDeliveryMode()==DeliveryMode.PERSISTENT ? "PERSISTENT": "NON_PERSISTENT"));
+        putIfNotNull(hdrs, "JMSMessageID", this.getJMSMessageID());
+        hdrs.put("JMSTimestamp", this.getJMSTimestamp());
+        hdrs.put("JMSPriority", this.getJMSPriority());
+        putIfNotNull(hdrs, "JMSCorrelationID", this.getJMSCorrelationID());
+        putIfNotNull(hdrs, "JMSType", this.getJMSType());
+
+        return hdrs;
+    }
+
+    /**
+     * Generate the headers for an AMQP message.
+     * <p>
+     * We attach <i>some</i> JMS properties as headers on the message. This is so the client can see them at the other end.
+     * </p>
+     * <p>
+     * The headers we code are user headers (if they are type convertible) and:
+     * </p>
+     *
+     * <pre>
+     * <b>Header Field</b>        <b>Set By</b>
+     * JMSDeliveryMode     send or publish method
+     * JMSPriority         send or publish method
+     * JMSMessageID        send or publish method
+     * JMSTimestamp        send or publish method
+     * JMSType             send or publish method (not client, as we aren't the client).
+     * </pre>
+     * <p>
+     * But (<i>from the JMS 1.1 spec</i>):<br/>
+     * <blockquote> Message header field references are restricted to <code>JMSDeliveryMode</code>,
+     * <code>JMSPriority</code>, <code>JMSMessageID</code>, <code>JMSTimestamp</code>, <code>JMSCorrelationID</code>,
      * and <code>JMSType</code>.
      * <p>
      * <code>JMSMessageID</code>, <code>JMSCorrelationID</code>, and <code>JMSType</code> values may be
@@ -821,23 +885,36 @@ public abstract class RMQMessage implements Message, Cloneable {
      * </p>
      * </blockquote>
      */
-    static Map<String, Object> toHeaders(RMQMessage msg) throws IOException, JMSException {
+    Map<String, Object> toAmqpHeaders() throws IOException, JMSException {
         Map<String, Object> hdrs = new HashMap<String, Object>();
 
         // set non-null user properties
-        for (Map.Entry<String, Serializable> e : msg.userJmsProperties.entrySet()) {
-            putIfNotNull(hdrs, e.getKey(), e.getValue());
+        for (Map.Entry<String, Serializable> e : this.userJmsProperties.entrySet()) {
+            putIfNotNullAndAmqpType(hdrs, e.getKey(), e.getValue());
         }
 
         // set (overwrite?) selectable JMS properties
-        hdrs.put("JMSDeliveryMode", (msg.getJMSDeliveryMode()==DeliveryMode.PERSISTENT ? "PERSISTENT": "NON_PERSISTENT"));
-        putIfNotNull(hdrs, "JMSMessageID", msg.getJMSMessageID());
-        hdrs.put("JMSTimestamp", msg.getJMSTimestamp());
-        hdrs.put("JMSPriority", msg.getJMSPriority());
-        putIfNotNull(hdrs, "JMSCorrelationID", msg.getJMSCorrelationID());
-        putIfNotNull(hdrs, "JMSType", msg.getJMSType());
+        hdrs.put("JMSDeliveryMode", (this.getJMSDeliveryMode()==DeliveryMode.PERSISTENT ? "PERSISTENT": "NON_PERSISTENT"));
+        putIfNotNull(hdrs, "JMSMessageID", this.getJMSMessageID());
+        hdrs.put("JMSTimestamp", this.getJMSTimestamp());
+        hdrs.put("JMSPriority", this.getJMSPriority());
+        putIfNotNull(hdrs, "JMSCorrelationID", this.getJMSCorrelationID());
+        putIfNotNull(hdrs, "JMSType", this.getJMSType());
 
         return hdrs;
+    }
+
+    private static void putIfNotNullAndAmqpType(Map<String, Object> hdrs, String key, Object val) {
+        if (val!=null)
+            if (  val instanceof String
+               || val instanceof Integer
+               || val instanceof Float
+               || val instanceof Double
+               || val instanceof Long
+               || val instanceof Short
+               || val instanceof Byte
+               )
+                hdrs.put(key, val);
     }
 
     private static void putIfNotNull(Map<String, Object> hdrs, String key, Object val) {
@@ -845,77 +922,152 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
 
     /**
-     * Serializes the body of a {@link RMQMessage} to a byte array.
-     * This method invokes the {@link #writeBody(ObjectOutput)} method
-     * on the class that is being serialized
-     * @param msg - the message to serialize
+     * Generates an AMQP byte array body for this message.
+     * This method invokes the {@link #writeAmqpBody(ObjectOutput)} method
+     * on the message subclass.
      * @return the body in a byte array
-     * @throws IOException if serialization fails
+     * @throws IOException if conversion fails
      */
-    static byte[] toMessage(RMQMessage msg) throws IOException, JMSException {
+    byte[] toAmqpByteArray() throws IOException, JMSException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
-        ObjectOutputStream out = new ObjectOutputStream(bout);
-        //write the class of the message so we can instantiate on the other end
-        out.writeUTF(msg.getClass().getName());
-        //write out message id
-        out.writeUTF(msg.internalMessageID);
-        //write our JMS properties
-        out.writeInt(msg.rmqProperties.size());
-        for (Map.Entry<String, Serializable> entry : msg.rmqProperties.entrySet()) {
-            out.writeUTF(entry.getKey());
-            writePrimitive(entry.getValue(), out, true);
-        }
-        //write custom properties
-        out.writeInt(msg.userJmsProperties.size());
-        for (Map.Entry<String, Serializable> entry : msg.userJmsProperties.entrySet()) {
-            out.writeUTF(entry.getKey());
-            writePrimitive(entry.getValue(), out, true);
-        }
         //invoke write body
-        msg.writeBody(out);
+        this.writeAmqpBody(bout);
         //flush and return
-        out.flush();
+        bout.flush();
         return bout.toByteArray();
     }
 
     /**
-     * Deserializes a {@link RMQMessage} from a byte array
+     * Generates a JMS byte array body for this message.
+     * This method invokes the {@link #writeBody(ObjectOutput)} method
+     * on the class that is being serialized
+     * @return the body in a byte array
+     * @throws IOException if serialization fails
+     */
+    byte[] toByteArray() throws IOException, JMSException {
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(DEFAULT_MESSAGE_BODY_SIZE);
+        ObjectOutputStream out = new ObjectOutputStream(bout);
+        //write the class of the message so we can instantiate on the other end
+        out.writeUTF(this.getClass().getName());
+        //write out message id
+        out.writeUTF(this.internalMessageID);
+        //write our JMS properties
+        out.writeInt(this.rmqProperties.size());
+        for (Map.Entry<String, Serializable> entry : this.rmqProperties.entrySet()) {
+            out.writeUTF(entry.getKey());
+            writePrimitive(entry.getValue(), out, true);
+        }
+        //write custom properties
+        out.writeInt(this.userJmsProperties.size());
+        for (Map.Entry<String, Serializable> entry : this.userJmsProperties.entrySet()) {
+            out.writeUTF(entry.getKey());
+            writePrimitive(entry.getValue(), out, true);
+        }
+        out.flush();  // ensure structured part written to byte stream
+        this.writeBody(out, bout);
+        out.flush();  // force any more structured data to byte stream
+        return bout.toByteArray();
+    }
+
+    /**
+     * Deserializes a {@link RMQMessage} from a JMS generated byte array
      * This method invokes the {@link #readBody(ObjectInput)} method
      * on the deserialized class
      * @param b - the message bytes
-     * @return a subclass to a RMQMessage
+     * @return a RMQMessage object
+     * @throws ClassNotFoundException - if the class to be deserialized wasn't found
+     * @throws IOException if an exception occurs during deserialization
+     * @throws IllegalAccessException if an exception occurs during class instantiation
+     * @throws InstantiationException if an exception occurs during class instantiation
+     * @throws RMQJMSException if RJMS class-related errors occur
+     */
+    static RMQMessage fromMessage(byte[] b) throws RMQJMSException {
+        /* If we don't recognise the message format this throws an exception */
+        try {
+            ByteArrayInputStream bin = new ByteArrayInputStream(b);
+            ObjectInputStream in = new ObjectInputStream(bin);
+            //read the classname from the stream
+            String clazz = in.readUTF();
+            //instantiate the message object with the thread context classloader
+            RMQMessage msg = (RMQMessage) Class.forName(clazz, true, Thread.currentThread().getContextClassLoader()).newInstance();
+            //read the message id
+            msg.internalMessageID = in.readUTF();
+            //read JMS properties
+            int propsize = in.readInt();
+            for (int i = 0; i < propsize; i++) {
+                String name = in.readUTF();
+                Object value = readPrimitive(in);
+                msg.rmqProperties.put(name, (Serializable) value);
+            }
+            //read custom properties
+            propsize = in.readInt();
+            for (int i = 0; i < propsize; i++) {
+                String name = in.readUTF();
+                Object value = readPrimitive(in);
+                msg.userJmsProperties.put(name, (Serializable) value);
+            }
+            // read the body of the message
+            msg.readBody(in, bin);
+            return msg;
+        } catch (IOException x) {
+            throw new RMQJMSException(x);
+        } catch (ClassNotFoundException x) {
+            throw new RMQJMSException(x);
+        } catch (IllegalAccessException x) {
+            throw new RMQJMSException(x);
+        } catch (InstantiationException x) {
+            throw new RMQJMSException(x);
+        }
+    }
+
+    /**
+     * Deserializes a {@link RMQBytesMessage} from an AMQP generated byte array
+     * into a pre-created message object.
+     * @param b - the message bytes
+     * @param msg - a pre-created skeleton message object
+     * @return a RMQMessage object, with the correct body
      * @throws ClassNotFoundException - if the class to be deserialized wasn't found
      * @throws IOException if an exception occurs during deserialization
      * @throws IllegalAccessException if an exception occurs during class instantiation
      * @throws InstantiationException if an exception occurs during class instantiation
      */
-    static RMQMessage fromMessage(byte[] b) throws ClassNotFoundException, IOException, IllegalAccessException,
-                                                  InstantiationException {
-        /* TODO If we don't recognise the message format then we need to create a generic BytesMessage */
-        ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(b));
-        //read the classname from the stream
-        String clazz = in.readUTF();
-        //instantiate the message object with the thread context classloader
-        RMQMessage msg = (RMQMessage) Class.forName(clazz, true, Thread.currentThread().getContextClassLoader()).newInstance();
-        //read the message id
-        msg.internalMessageID = in.readUTF();
-        //read JMS properties
-        int propsize = in.readInt();
-        for (int i = 0; i < propsize; i++) {
-            String name = in.readUTF();
-            Object value = readPrimitive(in);
-            msg.rmqProperties.put(name, (Serializable) value);
-        }
-        //read custom properties
-        propsize = in.readInt();
-        for (int i = 0; i < propsize; i++) {
-            String name = in.readUTF();
-            Object value = readPrimitive(in);
-            msg.userJmsProperties.put(name, (Serializable) value);
-        }
-        //invoke read body on the
-        msg.readBody(in);
+    static RMQMessage fromAmqpMessage(byte[] b, RMQMessage msg) throws IOException {
+        msg.readAmqpBody(b);
         return msg;
+    }
+
+    /**
+     * @param deliveryMode JMS delivery mode value
+     * @return RabbitMQ delivery mode value
+     */
+    static final int rmqDeliveryMode(int deliveryMode) {
+        return (deliveryMode == javax.jms.DeliveryMode.PERSISTENT ? 2 : 1);
+    }
+
+    /**
+     * @param rmqDeliveryMode rabbitmq delivery mode value
+     * @return JMS delivery mode String
+     */
+    static final int jmsDeliveryMode(Integer rmqDeliveryMode) {
+        return ( ( rmqDeliveryMode != null
+                && rmqDeliveryMode == 2
+                 ) ? javax.jms.DeliveryMode.PERSISTENT
+                   : javax.jms.DeliveryMode.NON_PERSISTENT);
+    }
+
+    /**
+     * @param rmqExpiration rabbitmq expiration value
+     * @return JMS expiration long value
+     */
+    static final long jmsExpiration(String rmqExpiration, Date da) {
+        if (null==da) da = new Date(); // assume now -- wrong nearly always
+        if (null==rmqExpiration)
+            return (0l);
+        try {
+            return da.getTime() + Long.valueOf(rmqExpiration);
+        } catch (NumberFormatException e) { // ignore it if conversion problems */ }
+            return (0l);
+        }
     }
 
     @Override
@@ -954,7 +1106,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     /**
      * Called when a message is sent so that each message is unique
      */
-    public void generateInternalID() throws JMSException {
+    public void generateInternalID() {
         this.internalMessageID = Util.generateUUID("");
         this.rmqProperties.put(JMS_MESSAGE_ID, "ID:" + this.internalMessageID);
     }
@@ -1075,4 +1227,64 @@ public abstract class RMQMessage implements Message, Cloneable {
         return super.clone();
     }
 
+    void setJMSPropertiesFromAmqpProperties(BasicProperties props) throws JMSException {
+        this.setJMSDeliveryMode(jmsDeliveryMode(props.getDeliveryMode())); // derive delivery mode from Rabbit delivery mode
+
+        Date da = props.getTimestamp();
+        if (null!=da)   this.setJMSTimestamp(da.getTime()/1000l);  // JMS timestamps are the number of *seconds* since jan 1 1900
+
+        String ex = props.getExpiration();  // this is a time-to-live period in milliseconds, as a Long.toString(long, 10)
+        if (null!=ex)   this.setJMSExpiration(RMQMessage.jmsExpiration(ex, da));
+
+        Integer pr = props.getPriority();
+        if (null!=pr)   this.setJMSPriority(pr);
+
+        String mi = props.getMessageId();  // This is AMQP's message ID
+        if (null!=mi)   this.setJMSMessageID(mi);
+
+        String ci = props.getCorrelationId();  // This is AMQP's correlation ID
+        if (null!=ci)   this.setJMSCorrelationID(ci);
+
+        this.setJMSType(isAmqpTextMessage(props.getHeaders()) ? "TextMessage" : "BytesMessage");
+
+        // now set properties from header: these may overwrite the ones that have already been set above
+        Map<String, Object> hdrs = props.getHeaders();
+        if (hdrs!=null) {
+            for (Entry<String, Object> e : hdrs.entrySet()) {
+                String key = e.getKey();
+                Object val = e.getValue();
+                if      (key.equals("JMSExpiration"))   { this.setJMSExpiration(objectToLong(val, 0l));}
+                else if (key.equals("JMSPriority"))     { this.setJMSPriority(objectToInt(val, 4));}
+                else if (key.equals("JMSTimestamp"))    { this.setJMSTimestamp(objectToLong(val, 0l));}
+                else if (key.equals("JMSMessageID"))    { this.setJMSMessageID(val.toString());}
+                else if (key.equals("JMSCorrelationID")){ this.setJMSCorrelationID(val.toString());}
+                else if (key.equals("JMSType"))         { this.setJMSType(val.toString());}
+                else if (key.startsWith(PREFIX))        {} // avoid setting this internal field
+                else if (key.startsWith("JMS"))         {} // avoid setting this field
+                else                                    { this.userJmsProperties.put(key, val.toString());}
+            }
+        }
+    }
+
+    static final boolean isAmqpTextMessage(Map<String, Object> hdrs) {
+        return (hdrs!=null && "TextMessage".equals(hdrs.get("JMSType").toString()));
+    }
+
+    private final static long objectToLong(Object val, long dft) {
+        if (val==null) return dft;
+        if (val instanceof Number) return ((Number) val).longValue();
+        try {
+            if (val instanceof CharSequence) return Long.valueOf(val.toString());
+        } catch (NumberFormatException _) { /*ignore*/ }
+        return dft;
+    }
+
+    private final static int objectToInt(Object val, int dft) {
+        if (val==null) return dft;
+        if (val instanceof Number) return ((Number) val).intValue();
+        try {
+            if (val instanceof CharSequence) return Integer.valueOf(val.toString());
+        } catch (NumberFormatException _) { /*ignore*/ }
+        return dft;
+    }
 }

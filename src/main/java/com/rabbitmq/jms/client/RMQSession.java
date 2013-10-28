@@ -45,7 +45,6 @@ import com.rabbitmq.client.impl.AMQCommand;
 import com.rabbitmq.client.impl.AMQImpl;
 import com.rabbitmq.client.impl.Method;
 import com.rabbitmq.jms.admin.RMQDestination;
-import com.rabbitmq.jms.admin.RMQExchangeInfo;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQMapMessage;
 import com.rabbitmq.jms.client.message.RMQObjectMessage;
@@ -140,6 +139,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
         return Collections.unmodifiableMap(map);
     }
+
+    private static final String JMS_TOPIC_SELECTOR_EXCHANGE_TYPE = "x-jms-topic";
 
     private static final long ON_MESSAGE_EXECUTOR_TIMEOUT_MS = 2000; // 2 seconds
     private final DeliveryExecutor deliveryExecutor = new DeliveryExecutor(ON_MESSAGE_EXECUTOR_TIMEOUT_MS);
@@ -362,7 +363,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             // TODO should we deliver the message at this time, knowing that we can't ack it?
             // My recommendation is that we bail out here and not proceed -- but how?
         } finally {
-                this.leaveCommittingBlock();
+            this.leaveCommittingBlock();
         }
     }
     }
@@ -376,7 +377,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             this.logger.warn("Cannot reject/requeue message received (dTag={})", deliveryTag, x);
             // this is fine. we didn't ack the message in the first place
         } finally {
-                this.leaveCommittingBlock();
+            this.leaveCommittingBlock();
         }
     }
     }
@@ -525,7 +526,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     void declareDestinationIfNecessary(RMQDestination destination) throws JMSException {
-        if (destination != null && !destination.isDeclared()) {
+        if (destination != null && !destination.isAmqp() && !destination.isDeclared()) {
             if (destination.isQueue()) {
                 declareRMQQueue(destination, null, false);
             } else {
@@ -552,7 +553,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         return true;
     }
     boolean aSyncAllowed() {
-        // TODO: return (Number of receives is zero for all MessageConsumers.)
+        // Return (Number of receives is zero for all MessageConsumers.)
         for (RMQMessageConsumer mc : consumers) {
             if (0 != mc.getNumberOfReceives()) return false;
         }
@@ -583,12 +584,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 this.declareRMQQueue(dest, queueName, durableSubscriber);
                 if (jmsSelector==null) {
                     // bind the queue to the exchange with the correct routing key
-                    this.channel.queueBind(queueName, dest.getExchangeInfo().name(), dest.getRoutingKey());
+                    this.channel.queueBind(queueName, dest.getAmqpExchangeName(), dest.getAmqpRoutingKey());
                 } else {
                     // get this session's topic selector exchange (name)
                     String selectionExchange = this.getSelectionExchange(durableSubscriber);
                     // bind it to the topic exchange with the topic routing key
-                    this.channel.exchangeBind(selectionExchange, dest.getExchangeInfo().name(), dest.getRoutingKey());
+                    this.channel.exchangeBind(selectionExchange, dest.getAmqpExchangeName(), dest.getAmqpRoutingKey());
                     this.bindSelectorQueue(dest, jmsSelector, queueName, selectionExchange);
                 }
             } catch (IOException x) {
@@ -608,7 +609,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             // get a channel specifically to bind the selector queue
             Channel channel = this.getSacrificialChannel();
             // bind the queue to the topic selector exchange with the jmsSelector expression as argument
-            channel.queueBind(queueName, selectionExchange, dest.getRoutingKey(), args);
+            channel.queueBind(queueName, selectionExchange, dest.getAmqpRoutingKey(), args);
         } catch (IOException ioe) {
             this.unsetSacrificialChannel();
             // Channel was closed early; check what sort of error this is
@@ -648,7 +649,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         try {
             // get a channel specifically to unbind the selector queue
             Channel channel = this.getSacrificialChannel();
-            channel.queueUnbind(queueName, selectionExchange, dest.getRoutingKey(), args);
+            channel.queueUnbind(queueName, selectionExchange, dest.getAmqpRoutingKey(), args);
         } catch (IOException ioe) {
             // ignore
         }
@@ -689,7 +690,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (this.durableTopicSelectorExchange==null) {
             this.durableTopicSelectorExchange = Util.generateUUID("jms-dutop-slx-");
         }
-        this.channel.exchangeDeclare(this.durableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, true, true, RJMS_TOPIC_SELECTOR_EXCHANGE_ARGUMENTS);
+        this.channel.exchangeDeclare(this.durableTopicSelectorExchange, JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, true, true, RJMS_TOPIC_SELECTOR_EXCHANGE_ARGUMENTS);
         return this.durableTopicSelectorExchange;
     }
 
@@ -697,7 +698,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (this.nonDurableTopicSelectorExchange==null) {
             this.nonDurableTopicSelectorExchange = Util.generateUUID("jms-ndtop-slx-");
         }
-        this.channel.exchangeDeclare(this.nonDurableTopicSelectorExchange, RMQExchangeInfo.JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, RJMS_TOPIC_SELECTOR_EXCHANGE_ARGUMENTS);
+        this.channel.exchangeDeclare(this.nonDurableTopicSelectorExchange, JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, RJMS_TOPIC_SELECTOR_EXCHANGE_ARGUMENTS);
         return this.nonDurableTopicSelectorExchange;
     }
 
@@ -756,8 +757,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         logger.trace("declare RabbitMQ queue for destination '{}', explicitName '{}', durableSubscriber={}", dest, queueNameOverride, durableSubscriber);
         String queueName = queueNameOverride!=null ? queueNameOverride : dest.getQueueName();
 
-        String exchangeName = dest.getExchangeInfo().name();
-        String exchangeType = dest.getExchangeInfo().type();
+        String exchangeName = dest.getAmqpExchangeName();
+        String exchangeType = dest.amqpExchangeType();
 
         /*
          * We only want destinations to survive server restarts if
@@ -777,7 +778,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         Map<String,Object> options = null; //new HashMap<String,Object>();
 
         if (dest.isQueue()) {
-            if (RMQExchangeInfo.RABBITMQ_AMQ_DIRECT_EXCHANGE_NAME.equals(exchangeName)) {
+            if (dest.noNeedToDeclareExchange()) {
                 logger.warn("no need to declare built-in exchange for queue destination '{}'", dest);
             }
             else {
@@ -841,16 +842,16 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @throws JMSException
      */
     private void declareTopic(RMQDestination dest) throws JMSException {
-        if (RMQExchangeInfo.RABBITMQ_AMQ_TOPIC_EXCHANGE_NAME.equals(dest.getExchangeInfo().name())) {
+        if (dest.noNeedToDeclareExchange()) {
             logger.warn("no need to declare built-in exchange for topic destination '{}'", dest);
         }
         else {
             logger.trace("declare RabbitMQ exchange for topic destination '{}'", dest);
             try {
                 this.channel.exchangeDeclare(/* the name of the exchange */
-                                             dest.getExchangeInfo().name(),
+                                             dest.getAmqpExchangeName(),
                                              /* the type of exchange to use */
-                                             dest.getExchangeInfo().type(),
+                                             dest.amqpExchangeType(),
                                              /* durable for all except temporary topics */
                                              !dest.isTemporary(),
                                              // TODO: how do we delete exchanges used for temporary topics
