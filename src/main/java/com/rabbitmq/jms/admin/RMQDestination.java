@@ -86,7 +86,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * least one of these three parameters must be non-<code>null</code>.
      * </p>
      *
-     * @param destinationName the name of the topic or queue
+     * @param destinationName the name of the queue destination
      * @param amqpExchangeName - the exchange name for the mapped resource
      * @param amqpRoutingKey - the routing key for the mapped resource
      * @param amqpQueueName - the queue name of the mapped resource
@@ -150,6 +150,8 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
         if (this.isDeclared())
             throw new IllegalStateException();
         this.amqp = amqp;
+        this.isQueue = true;
+        this.isTemporary = false;
     }
     public String getAmqpQueueName() {
         return this.amqpQueueName;
@@ -236,11 +238,10 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
         Reference ref = new Reference(this.getClass().getCanonicalName());
         addStringProperty(ref, "destinationName", this.destinationName);
         addBooleanProperty(ref, "amqp", this.amqp);
-        if (this.amqp) {
-            addStringProperty(ref, "amqpExchangeName", this.amqpExchangeName);
-            addStringProperty(ref, "amqpRoutingKey", this.amqpRoutingKey);
-            addStringProperty(ref, "amqpQueueName", this.amqpQueueName);
-        }
+        addBooleanProperty(ref, "isQueue", this.isQueue);
+        addStringProperty(ref, "amqpExchangeName", this.amqpExchangeName);
+        addStringProperty(ref, "amqpRoutingKey", this.amqpRoutingKey);
+        addStringProperty(ref, "amqpQueueName", this.amqpQueueName);
         return ref;
     }
 
