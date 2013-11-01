@@ -93,7 +93,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         } catch (IOException x) {
             String msg = x.getMessage();
             if (msg!=null) {
-                if (msg.contains("authentication failure"))
+                if (msg.contains("authentication failure") || msg.contains("refused using authentication"))
                     throw new RMQJMSSecurityException(x);
                 else if (msg.contains("Connection refused"))
                     throw new RMQJMSException("RabbitMQ connection was refused. RabbitMQ broker may not be available.", x);
