@@ -2,11 +2,12 @@ open_source_license.txt
 
 JMS Client for VMware vFabric RabbitMQ 1.1.0 GA
 
-===========================================================================
 
-The following copyright statements and licenses apply to various open
-source software packages (or portions thereof) that are distributed with
-this GoPivotal, Inc. Product.
+
+================================================================
+The following copyright statements and licenses apply to various
+open source software packages (or portions thereof) that are
+distributed with this GoPivotal, Inc. Product.
 
 The GoPivotal Product may also include other GoPivotal components,
 which may contain additional open source software packages. One or
@@ -20,10 +21,13 @@ may also only use portions of a given package.
 =================================================================
 TABLE OF CONTENTS
 =================================================================
-The following is a listing of the open source components detailed in
-this document. This list is provided for your convenience; please
-read further if you wish to review the copyright notice(s) and
-the full text of the license associated with each component.
+The following is a listing of the open source components detailed
+in this document. This list is provided for your convenience;
+please read further if you wish to review the copyright notice(s)
+and the full text of the license associated with each component.
+
+
+
 
 
 
@@ -51,6 +55,7 @@ APPENDIX. Standard License Files
    >>> Apache License, V2.0
 
    >>> Mozilla Public License, V1.1
+
 
 
 
@@ -833,8 +838,7 @@ EXHIBIT A -Mozilla Public License.
    the Original Code Source Code for Your Modifications.]
 
 
-
-===========================================================================
+================================================
 
 To the extent any open source components are licensed under the
 GPL and/or LGPL, or other similar licenses that require the
@@ -850,7 +854,7 @@ clearly specify: OPEN SOURCE FILES REQUEST,
 Attention General Counsel. GoPivotal shall mail a copy of the
 Source Files to you on a CD or equivalent physical medium. This
 offer to obtain a copy of the Source Files is valid for three
-years from the date you acquired this Software product. Alternatively,
-the Source Files may accompany the GoPivotal product.
+years from the date you acquired this Software product. Alternatively, the Source
+Files may accompany the GoPivotal product.
 
 [RABBITJMS110GASS061913]
