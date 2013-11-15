@@ -101,76 +101,59 @@ public enum SqlClauseType {
 
     // Non-terminals have an array of alternatives; each alternative is an SqlTreeNodeType and an SqlClauseType array.
     // I would have liked to use SqlClauseType explicitly, but Java doesn't let me use an enumerated type term in
-    // the definition of a term, unless it has been defined lexically beforehand (!) so I use indexes instead (yuch).
+    // the definition of a term, unless it has been defined lexically beforehand (!) so I use strings instead!!
 
     // Terminals are simply proxies for the SqlTokenType type.
 
     // non-terminals:
-    expression                                  // index 00
-              ( nt(COLLAPSE1,1) ),              //             -> or_expr
-    or_expr                                     // index 01
-              ( nt(DISJUNCTION,2,26,1)          //             -> and_expr OR or_expr
-              , nt(COLLAPSE1,2) ),              //              | and_expr
-    and_expr                                    // index 02
-              ( nt(CONJUNCTION,3,25,2)          //             -> not_expr AND and_expr
-              , nt(COLLAPSE1,3) ),              //              | not_expr
-    not_expr                                    // index 03
-              ( nt(PREFIXUNARYOP,27,4)          //             -> NOT cmp_expr
-              , nt(COLLAPSE1,4) ),              //              | cmp_expr
-    cmp_expr                                    // index 04
-              ( nt(BINARYOP,8,5,8)              //             -> arith_expr op_cmp arith_expr
-              , nt(TERNARYOP,8,23,8,25,8)       //              | arith_expr BETWEEN arith_expr AND arith_expr
-              , nt(TERNARYOP,8,24,8,25,8)       //              | arith_expr NOT_BETWEEN arith_expr AND arith_expr
-              , nt(COLLAPSE1,8) ),              //              | arith_expr
-    op_cmp                                      // index 05
-              ( nt(LEAF,31)                     //             -> CMP_EQ
-              , nt(LEAF,32)                     //              | CMP_NEQ
-              , nt(LEAF,33)                     //              | CMP_LTEQ
-              , nt(LEAF,34)                     //              | CMP_GTEQ
-              , nt(LEAF,35)                     //              | CMP_LT
-              , nt(LEAF,36) ),                  //              | CMP_GT
-    op_plus                                     // index 06
-              ( nt(LEAF,37)                     //             -> OP_PLUS
-              , nt(LEAF,38) ),                  //              | OP_MINUS
-    op_mult                                     // index 07
-              ( nt(LEAF,39)                     //             -> OP_MULT
-              , nt(LEAF,40) ),                  //              | OP_DIV
-    arith_expr                                  // index 08
-              ( nt(COLLAPSE1,9) ),              //             -> plus_expr
-    plus_expr                                   // index 09
-              ( nt(BINARYOP,10,6,9)             //             -> mult_expr op_plus plus_expr
-              , nt(COLLAPSE1,10) ),             //              | mult_expr
-    mult_expr                                   // index 10
-              ( nt(BINARYOP,11,7,10)            //             -> sign_expr op_mult mult_expr
-              , nt(COLLAPSE1,11) ),             //              | sign_expr
-    sign_expr                                   // index 11
-              ( nt(PREFIXUNARYOP,6,11)          //             -> op_plus sign_expr
-              , nt(COLLAPSE1,12) ),             //              | simple
-    simple                                      // index 12
-              ( nt(COLLAPSE2,42,0,43)           //             -> LP expression RP
-              , nt(LEAF,29)                     //              | TRUE
-              , nt(LEAF,30)                     //              | FALSE
-              , nt(LEAF,45)                     //              | STRING
-              , nt(COLLAPSE1,16)                //              | number
-              , nt(POSTFIXUNARYOP,44,21)        //              | IDENT IS_NULL
-              , nt(POSTFIXUNARYOP,44,22)        //              | IDENT IS_NOT_NULL
-              , nt(BINARYOP,44,19,13)           //              | IDENT IN stringlist
-              , nt(BINARYOP,44,20,13)           //              | IDENT NOT_IN stringlist
-              , nt(BINARYOP,44,17,15)           //              | IDENT LIKE pattern
-              , nt(BINARYOP,44,18,15)           //              | IDENT NOT_LIKE pattern
-              , nt(LEAF,44) ),                  //              | IDENT
-    stringlist                                  // index 13
-              ( nt(COLLAPSE2,42,14,43)),        //             -> LP strings RP
-    strings                                     // index 14
-              ( nt(BINARYOP,45,41,14)           //             -> STRING COMMA strings
-              , nt(LIST,45) ),                  //              | STRING
-    pattern                                     // index 15
-              ( nt(PATTERN2,45,28,45)           //             -> STRING ESCAPE STRING
-              , nt(PATTERN1,45) ),              //              | STRING
-    number                                      // index 16
-              ( nt(LEAF,46)                     //             -> HEX
-              , nt(LEAF,47)                     //              | FLOAT
-              , nt(LEAF,48) ),                  //              | INT
+    expression( nt(COLLAPSE1,      /* -> */ "or_expr") ),
+    or_expr   ( nt(DISJUNCTION,    /* -> */ "and_expr OR or_expr")
+              , nt(COLLAPSE1,      /*  | */ "and_expr") ),
+    and_expr  ( nt(CONJUNCTION,    /* -> */ "not_expr AND and_expr")
+              , nt(COLLAPSE1,      /*  |  */ "not_expr") ),
+    not_expr  ( nt(PREFIXUNARYOP,  /* ->  */ "NOT cmp_expr")
+              , nt(COLLAPSE1,      /*  |  */ "cmp_expr") ),
+    cmp_expr  ( nt(BINARYOP,       /* ->  */ "arith_expr op_cmp arith_expr")
+              , nt(TERNARYOP,      /*  |  */ "arith_expr BETWEEN arith_expr AND arith_expr")
+              , nt(TERNARYOP,      /*  |  */ "arith_expr NOT_BETWEEN arith_expr AND arith_expr")
+              , nt(COLLAPSE1,      /*  |  */ "arith_expr") ),
+    op_cmp    ( nt(LEAF,           /* ->  */ "CMP_EQ")
+              , nt(LEAF,           /*  |  */ "CMP_NEQ")
+              , nt(LEAF,           /*  |  */ "CMP_LTEQ")
+              , nt(LEAF,           /*  |  */ "CMP_GTEQ")
+              , nt(LEAF,           /*  |  */ "CMP_LT")
+              , nt(LEAF,           /*  |  */ "CMP_GT") ),
+    op_plus   ( nt(LEAF,           /* ->  */ "OP_PLUS")
+              , nt(LEAF,           /*  |  */ "OP_MINUS") ),
+    op_mult   ( nt(LEAF,           /* ->  */ "OP_MULT")
+              , nt(LEAF,           /*  |  */ "OP_DIV") ),
+    arith_expr( nt(COLLAPSE1,      /* ->  */ "plus_expr") ),
+    plus_expr ( nt(BINARYOP,       /* ->  */ "mult_expr op_plus plus_expr")
+              , nt(COLLAPSE1,      /*  |  */ "mult_expr") ),
+    mult_expr ( nt(BINARYOP,       /* ->  */ "sign_expr op_mult mult_expr")
+              , nt(COLLAPSE1,      /*  |  */ "sign_expr") ),
+    sign_expr ( nt(PREFIXUNARYOP,  /* ->  */ "op_plus sign_expr")
+              , nt(COLLAPSE1,      /*  |  */ "simple") ),
+    simple    ( nt(COLLAPSE2,      /* ->  */ "LP expression RP")
+              , nt(LEAF,           /*  |  */ "TRUE")
+              , nt(LEAF,           /*  |  */ "FALSE")
+              , nt(LEAF,           /*  |  */ "STRING")
+              , nt(COLLAPSE1,      /*  |  */ "number")
+              , nt(POSTFIXUNARYOP, /*  |  */ "IDENT NULL")
+              , nt(POSTFIXUNARYOP, /*  |  */ "IDENT NOT_NULL")
+              , nt(BINARYOP,       /*  |  */ "IDENT IN stringlist")
+              , nt(BINARYOP,       /*  |  */ "IDENT NOT_IN stringlist")
+              , nt(BINARYOP,       /*  |  */ "IDENT LIKE pattern")
+              , nt(BINARYOP,       /*  |  */ "IDENT NOT_LIKE pattern")
+              , nt(LEAF,           /*  |  */ "IDENT") ),
+    stringlist( nt(COLLAPSE2,      /* ->  */ "LP strings RP") ),
+    strings   ( nt(BINARYOP,       /* ->  */ "STRING COMMA strings")
+              , nt(LIST,           /*  |  */ "STRING") ),
+    pattern   ( nt(PATTERN2,       /* ->  */ "STRING ESCAPE STRING")
+              , nt(PATTERN1,       /*  |  */ "STRING") ),
+    number    ( nt(LEAF,           /* ->  */ "HEX")
+              , nt(LEAF,           /*  |  */ "FLOAT")
+              , nt(LEAF,           /*  |  */ "INT") ),
 
     // terminals:
     LIKE        (SqlTokenType.LIKE       ),     // index 17
@@ -251,11 +234,11 @@ public enum SqlClauseType {
         for (int i=0; i<this.clauses.length; ++i) { // for each alternative clause
             ts.reset(pos);
             SqlTreeNodeType treeNodeType = this.clauses[i].left();
-            int[] intalt = this.clauses[i].right();
-            SqlParseTree[] children = new SqlParseTree[intalt.length];
+            SqlClauseType[] alt = this.clauses[i].clauses();
+            SqlParseTree[] children = new SqlParseTree[alt.length];
             SqlParseTree child = null;
-            for (int childIndex = 0; childIndex < intalt.length; ++childIndex) {
-                child = SqlClauseType.values()[intalt[childIndex]].parse(ts);   // recursive call
+            for (int childIndex = 0; childIndex < alt.length; ++childIndex) {
+                child = alt[childIndex].parse(ts);   // recursive call
                 if (child == null) break;
                 children[childIndex] = child;
             }
@@ -270,8 +253,21 @@ public enum SqlClauseType {
 
     boolean isTerminal() { return this.tokenType != null; }
 
-    private static final CP nt(SqlTreeNodeType tnt, int ... ts) { return new CP(tnt, ts); }
+    private static final CP nt(SqlTreeNodeType tnt, String ts) { return new CP(tnt, ts); }
 
-    private static class CP extends Pair<SqlTreeNodeType, int[]> { public CP(SqlTreeNodeType l, int[] r) { super(l, r); } };
+    private static class CP extends Pair<SqlTreeNodeType, String> {
+        public CP(SqlTreeNodeType l, String r) { super(l, r); }
+        public SqlClauseType[] clauses() {
+            return aValueOf(this.right());
+        }
+    };
 
+    private static SqlClauseType[] aValueOf(String s) {
+        String[] ss = s.split(" ");
+        SqlClauseType[] scts = new SqlClauseType[ss.length];
+        for (int i=0; i<ss.length; ++i) {
+            scts[i] = SqlClauseType.valueOf(ss[i]);
+        }
+        return scts;
+    }
 }

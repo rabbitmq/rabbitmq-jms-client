@@ -2,6 +2,7 @@ package com.rabbitmq.jms.parse.sql;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -73,6 +74,8 @@ public class SqlClauseTypeTest {
         assertEquals("Residue not empty", "", stream.getResidue());
 
         SqlParseTree stn = sct.parse(stream);
+        assertNotNull("parse failed", stn);
+
         assertTrue("Stream not fully used", !stream.moreTokens());
 
         String[] formatted = stn.formattedTree();

@@ -2,6 +2,7 @@ package com.rabbitmq.jms.parse.sql;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -77,7 +78,9 @@ public class SqlParserTest {
 
         SqlParser sp = new SqlParser(stream);
         SqlParseTree pt = sp.parse();
-        assertTrue("parseIncomplete", sp.parseOk());
+        assertNotNull("parse failed", pt);
+
+        assertTrue("parse incomplete", sp.parseOk());
 
         String[] formatted = pt.formattedTree();
         assertArrayEquals("Parsed tree doesn't match", outStr, formatted);
