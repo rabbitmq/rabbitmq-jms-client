@@ -3,8 +3,6 @@ package com.rabbitmq.jms.parse;
 /**
  * A {@link Parser} generates a parse tree of nodes.
  *
- * @author spowell
- *
  * @param <Node> - type of node in the ParseTree produced
  */
 public interface Parser<Node> {

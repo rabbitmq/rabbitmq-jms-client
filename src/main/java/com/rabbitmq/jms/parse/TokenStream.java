@@ -6,7 +6,6 @@ package com.rabbitmq.jms.parse;
 /**
  * A read-only sequence of {@link Token}s that are read one-by-one. Reads are not destructive and the stream can be reset and reread.
  * At any time a position may be obtained, and subsequently used to reset the stream <i>to that position</i>.
- * @author spowell
  *
  * @param <Token> - the type of items in the stream
  * @param <Position> - the type which implements the positions in the stream

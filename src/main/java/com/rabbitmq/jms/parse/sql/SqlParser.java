@@ -4,8 +4,10 @@ import com.rabbitmq.jms.parse.Parser;
 import com.rabbitmq.jms.parse.TokenStream;
 
 /**
- * This uses {@link SqlClauseType} to build a naïve parser for the grammar defined in that type.
- *
+ * This uses {@link SqlProduction} to build a naïve parser for the grammar defined in that type.
+ * <p>
+ * This class is <i>not thread-safe</i> since it modifies the passed {@link TokenStream} which is (potentially) shared.
+ * </p>
  */
 public class SqlParser implements Parser<SqlTreeNode> {
 
@@ -17,15 +19,15 @@ public class SqlParser implements Parser<SqlTreeNode> {
         this.tokenStream = tokenStream;
     }
 
-//    @Override
+    @Override
     public SqlParseTree parse() {
         this.reset();
-        SqlParseTree parsed = SqlClauseType.ROOT.parse(this.tokenStream);
+        SqlParseTree parsed = SqlProduction.ROOT.parse(this.tokenStream);
         if (this.tokenStream.moreTokens()) {
             this.parseOk = false;
-            this.terminationMessage = "Terminated before end of stream; "
-                    + "next token is: '" + this.tokenStream.readToken()
-                    + "' at position: " + this.tokenStream.position() + ".";
+            this.terminationMessage =
+                String.format("Terminated before end of stream; next token is: '%s' at index: %s."
+                             , this.tokenStream.readToken(), this.tokenStream.position());
             return null;
         } else {
             this.parseOk = true;
@@ -33,12 +35,12 @@ public class SqlParser implements Parser<SqlTreeNode> {
         return parsed;
     }
 
-//    @Override
+    @Override
     public boolean parseOk() {
         return this.parseOk;
     }
 
-//    @Override
+    @Override
     public String getTerminationMessage() {
         return this.terminationMessage;
     }

@@ -25,7 +25,6 @@ import java.util.regex.Pattern;
  * <i>begin</i> with a keyword being (mis)recognised as a keyword <i>followed by</i> an identifier.
  * This pattern checks that the next character is not part of an identifier body, but does not match it.
  * </p>
- * @author spowell
  */
 enum SqlTokenType {
 //  Token_name_  Emit_  Description____   Recognition_pattern_____________________________________________    Type_of_variable_datum__

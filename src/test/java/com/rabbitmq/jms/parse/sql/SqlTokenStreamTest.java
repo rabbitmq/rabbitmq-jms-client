@@ -17,7 +17,7 @@ public class SqlTokenStreamTest {
                      , "float: 0.21"
                      , "identifier: name"
                      , "IS NULL"
-                     , "string: hello world's"
+                     , "string: 'hello world''s'"
                      , "float: 200.0"
                      , "float: 200.0"
                      , "float: 2.0"

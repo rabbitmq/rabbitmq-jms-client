@@ -2,8 +2,7 @@ package com.rabbitmq.jms.parse.sql;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -53,23 +52,18 @@ public class SqlParserTest {
     }
 
     @Test
-    public void clause3() throws Exception {
-        assertParse(  "not 2 < 3"
-                    , "PREFIXUNARYOP: NOT"
-                    , "    BINARYOP: <"
-                    , "        LEAF: integer: 2"
-                    , "        LEAF: integer: 3"
-                   );
-    }
+    public void incompleteParse() throws Exception {
+        SqlParser sp = new SqlParser(new SqlTokenStream("not 2 < 3 (-1)"));
+        sp.parse();
 
-    @Test
-    public void clause4() throws Exception {
-        assertParse(  "2.5 between 2 and 3"
-                    , "TERNARYOP: BETWEEN"
-                    , "    LEAF: float: 2.5"
-                    , "    LEAF: integer: 2"
-                    , "    LEAF: integer: 3"
-                   );
+        if (sp.parseOk()) {
+            fail("Parse did not fail!");
+        } else {
+            assertEquals( "Parse did not fail with the right message."
+                        , "Terminated before end of stream; next token is: '(' at index: 4."
+                        , sp.getTerminationMessage()
+                        );
+        }
     }
 
     private void assertParse(String inStr, String... outStr) {
@@ -78,9 +72,10 @@ public class SqlParserTest {
 
         SqlParser sp = new SqlParser(stream);
         SqlParseTree pt = sp.parse();
-        assertNotNull("parse failed", pt);
 
-        assertTrue("parse incomplete", sp.parseOk());
+        if (!sp.parseOk()) {
+            fail(sp.getTerminationMessage());
+        }
 
         String[] formatted = pt.formattedTree();
         assertArrayEquals("Parsed tree doesn't match", outStr, formatted);

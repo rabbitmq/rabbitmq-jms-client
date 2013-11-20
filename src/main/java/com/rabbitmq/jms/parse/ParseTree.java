@@ -6,9 +6,10 @@
 package com.rabbitmq.jms.parse;
 
 /**
- * A tree of {@link Node}s which can be traversed.
+ * A non-empty tree of {@link Node}s which can be traversed.
  * <p>
- * The tree is either null (in which case it is empty), or is a (root) {@link Node} and a(n array of) children. Each child in the array is a {@link ParseTree ParseTree&lt;Node&gt;}.
+ * The tree is a (root) {@link Node} and a(n array of) children (if there are no children this can be null).
+ * Each child in the array is a {@link ParseTree ParseTree&lt;Node&gt;}.
  * </p>
  * @param <Node> - the type of nodes in the tree
  */
@@ -34,15 +35,9 @@ public interface ParseTree<Node> {
     ParseTree<Node>[] getChildren();
 
     /**
-     * Visit all nodes in the tree from here down.
-     * <p>
-     * Implementation decides how to use the continuation
-     * and the order (strategy) of the traversal. The nodes in the tree may or may not be modifiable during a visit,
-     * according to the implementation, but the structure of the tree must be unmodified.
-     * </p>
-     * @param obj - parameter to pass to each node visitation;
-     * @return continuation - <code>true</code> means continue;
-     * <code>false</code> means abort traversal.
+     * Get the nodes of the children of the root of the tree.
+     * @return an array of {@link Node}s.
      */
-    boolean visit(Object obj);
+    Node[] getChildNodes();
+
 }

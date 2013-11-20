@@ -1,12 +1,10 @@
-/**
- *
- */
 package com.rabbitmq.jms.parse.sql;
 
 import java.util.List;
 
 /**
- * @author spowell
+ * Tokens are lexically extracted from SQL selector expressions.
+ * A token has a type {@link SqlTokenType} and a value. The value can be either a {@link String} or a list of {@link String}s.
  */
 class SqlToken {
     private final SqlTokenType tokType;
@@ -19,10 +17,8 @@ class SqlToken {
 
     SqlToken(SqlTokenType tokType, List<String> tokValueList) {
         this(tokType, null, tokValueList);
-    }
-
-    SqlToken(SqlTokenType tokType) {
-        this(tokType, null, null);
+        if (tokType.valueType() != SqlTokenValueType.LIST)
+            throw new IllegalArgumentException("type not a LIST");
     }
 
     private SqlToken(SqlTokenType tokType, String tokValue, List<String> tokValueList) {
@@ -36,12 +32,10 @@ class SqlToken {
     }
 
     List<String> getList() {
-        if (this.tokType.valueType() == SqlTokenValueType.LIST)
-            return this.tokValueList;
-        return null;
+        return this.tokValueList;
     }
 
-    float getFloat() {
+    double getFloat() {
         if (this.tokType.valueType() == SqlTokenValueType.FLOAT)
             return(stringToFloat(this.tokValue));
         return 0.0F;
@@ -68,18 +62,19 @@ class SqlToken {
     }
     public String toString() {
         StringBuilder sb = new StringBuilder(this.tokType.description());
-        //sb.append(this.tokType.valueType().toString(value))
         switch (this.tokType.valueType()) {
         case FLOAT:
-            sb.append(": ").append(getFloat());   break;
+            sb.append(": ").append(getFloat());         break;
         case HEX:
-            sb.append(": ").append(getHex());     break;
+            sb.append(": ").append(getHex());           break;
         case IDENT:
-            sb.append(": ").append(getIdent());   break;
+            sb.append(": ").append(getIdent());         break;
         case LONG:
-            sb.append(": ").append(getLong());    break;
+            sb.append(": ").append(getLong());          break;
         case STRING:
-            sb.append(": ").append(getString());  break;
+            sb.append(": ").append(this.tokValue);      break;
+        case LIST:
+            sb.append(": ").append(this.tokValueList);  break;
         default:
             break;
         }
@@ -91,12 +86,7 @@ class SqlToken {
         StringBuilder sb = new StringBuilder();
         for (int i=1; i<len; ++i) {
             char c=s.charAt(i);
-            switch (c) {
-                case '\'' : if ('\''==s.charAt(i+1))
-                                ++i;
-                            break;
-                default   : break;
-            }
+            if (c == '\'' && s.charAt(i+1) == '\'') ++i;  // compress two single-quotes to one
             sb.append(c);
         }
         return sb.toString();
@@ -144,7 +134,7 @@ class SqlToken {
             default : return 0L;
         }
     }
-    private final static float stringToFloat(String s) {
-        return Float.valueOf(s);
+    private final static double stringToFloat(String s) {
+        return Double.valueOf(s);
     }
 }

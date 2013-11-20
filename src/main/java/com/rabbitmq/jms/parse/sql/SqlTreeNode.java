@@ -2,25 +2,29 @@ package com.rabbitmq.jms.parse.sql;
 
 
 /**
- * These are the nodes of an Sql Parse Tree.
- * @author spowell
- *
+ * An {@link SqlParseTree} has a node at each point of the tree.
+ * A Node has a type ({@link SqlTreeType}) which determines its degree and a value ({@link SqlToken}) which refines the operation this denotes.
  */
 public class SqlTreeNode {
 
-    private final SqlTreeNodeType treeNodeType;
+    private final SqlTreeType treeNodeType;
     private final SqlToken nodeValue;               // null value means children
 
-    SqlTreeNode(SqlTreeNodeType treeNodeType, SqlToken nodeValue) {
+    private SqlExpressionType expType = SqlExpressionType.NOT_SET;  // type of expression represented by this node (if known)
+
+    SqlTreeNode(SqlTreeType treeNodeType, SqlToken nodeValue) {
         this.treeNodeType = treeNodeType;
         this.nodeValue = nodeValue;
     }
 
-    SqlTreeNode(SqlTreeNodeType treeNodeType) {
+    SqlTreeNode(SqlTreeType treeNodeType) {
         this(treeNodeType, null);
     }
 
+    void setExpType(SqlExpressionType expType) { this.expType = expType; }
+    SqlExpressionType getExpType() { return this.expType; }
+
     SqlToken nodeValue()       { return this.nodeValue; }
-    SqlTreeNodeType nodeType() { return this.treeNodeType; }
+    SqlTreeType nodeType() { return this.treeNodeType; }
 
 }
