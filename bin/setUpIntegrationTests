@@ -4,9 +4,19 @@ source bin/set-vars
 
 echo "Start RabbitMQ server (version ${RMQ_VERSION}) for Integration Tests"
 
-if [ -z "${RJMS_RABBITMQ_BASE}" ] ; then
-  echo "Couldn't find the RJMS_RABBITMQ_BASE directory"
-  exit 1
+if [ ! -d "${RJMS_RABBITMQ_BASE}" ] ; then
+  sudo ./bin/util/getRabbitVersion ${RMQ_VERSION}
+  if [ ! -d "${RJMS_RABBITMQ_BASE}" ] ; then
+    echo "Couldn't find, nor build the RJMS_RABBITMQ_BASE directory"
+    exit 1
+  fi
+fi
+
+if [ ! -a "${RJMS_RABBITMQ_BASE}/etc/rabbitmq/rabbitmq.config" ] ; then
+  if [ -a "/opt/vmware/rabbitmq_config/rabbitmq.config" ] ; then
+    echo 'rabbitmq.config will be copied into rabbitmq_server/etc/rabbitmq'
+    sudo cp /opt/vmware/rabbitmq_config/rabbitmq.config ${RJMS_RABBITMQ_BASE}/etc/rabbitmq/rabbitmq.config
+  fi
 fi
 
 sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmqctl -n ${RJMS_RABBITMQ_NODENAME} stop || echo 'not stopped'
