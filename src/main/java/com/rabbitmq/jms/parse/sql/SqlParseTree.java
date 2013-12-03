@@ -4,12 +4,21 @@ import java.util.ArrayList;
 
 import com.rabbitmq.jms.parse.ParseTree;
 
+/**
+ * Tree used to hold a parsed SQL (selector) expression. The node values are of type {@link SqlTreeNode}.
+ *
+ */
 public class SqlParseTree implements ParseTree<SqlTreeNode> {
 
     private final SqlTreeNode node;
     private final SqlParseTree[] children;
     private final SqlTreeNode[] nodes;
 
+    /**
+     * Tree constructor: takes the node value and the children; both are <b><code>final</code></b> fields of the tree.
+     * @param node - the node value of the (root of the) tree.
+     * @param children - a series of trees; omitting these arguments will imply a zero-length array of trees.
+     */
     public SqlParseTree(SqlTreeNode node, SqlParseTree... children) {
         this.node = node;
         this.children = children;
@@ -31,23 +40,21 @@ public class SqlParseTree implements ParseTree<SqlTreeNode> {
         return this.children;
     }
 
+    /**
+     * @return an array of {@link String}s which form a readable representation of the tree.
+     */
     String[] formattedTree() {
-        if (this.children == null) {
-            return sa(this.node.toString());
-        } else {
-            ArrayList<String> lines = new ArrayList<String>();
-            SqlToken tokVal = this.node.nodeValue();
-            lines.add(this.node.nodeType().toString() + (tokVal == null ? ":" : ": " + tokVal));
-            for (SqlParseTree child: this.children) {
-                String[] childLines = child.formattedTree();
-                for (String childLine: childLines) {
-                    lines.add("    " + childLine);
-                }
+        ArrayList<String> lines = new ArrayList<String>();
+        SqlToken tokVal = this.node.value();
+        lines.add(this.node.treeType().toString() + (tokVal == null ? ":" : ": " + tokVal));
+        for (SqlParseTree child: this.children) {
+            String[] childLines = child.formattedTree();
+            for (String childLine: childLines) {
+                lines.add("    " + childLine);
             }
-            return lines.toArray(new String[lines.size()]);
         }
+        return lines.toArray(new String[lines.size()]);
     }
-    private static final String[] sa(String...ss) { return ss; }
 
     @Override
     public SqlTreeNode[] getChildNodes() {

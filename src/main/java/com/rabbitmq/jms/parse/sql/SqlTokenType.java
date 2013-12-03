@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
  * </p>
  */
 enum SqlTokenType {
-//  Token_name_  Emit_  Description____   Recognition_pattern_____________________________________________    Type_of_variable_datum__
+//  Token_name_ Include Description____   Recognition_pattern_____________________________________________    Type_of_variable_datum__
     WS          (false, "whitespace"    , "\\s+"                                                           ),
     LIKE        (true , "LIKE"          , "[Ll][Ii][Kk][Ee](?![a-zA-Z0-9_$.])"                             ),
     NOT_LIKE    (true , "NOT LIKE"      , "[Nn][Oo][Tt]\\s+[Ll][Ii][Kk][Ee](?![a-zA-Z0-9_$.])"             ),
@@ -66,7 +66,7 @@ enum SqlTokenType {
     HEX         (true , "hex"           , "0x[0-9a-fA-F]+"                                                  , SqlTokenValueType.HEX   ),
     LIST        (false, "list"          , null                                                              , SqlTokenValueType.LIST  );
 
-    private boolean isToken;            // include in token stream
+    private boolean include;            // include in token stream
     private String description;         // used in diagnostics
     private Pattern pattern;            // recogniser
     private SqlTokenValueType vtype;    // type of variable data in token
@@ -75,8 +75,8 @@ enum SqlTokenType {
         this(isToken, description, regex, SqlTokenValueType.NO_VALUE);
     }
 
-    SqlTokenType(boolean isToken, String description, String regex, SqlTokenValueType vtype) {
-        this.isToken = isToken;
+    SqlTokenType(boolean include, String description, String regex, SqlTokenValueType vtype) {
+        this.include = include;
         this.description = description;         // for diagnostics
         this.vtype = vtype;                     // data type of variable data
         this.pattern = (regex==null ? null : Pattern.compile(regex));  // recognition pattern
@@ -91,7 +91,7 @@ enum SqlTokenType {
     }
 
     boolean include() {
-        return this.isToken;
+        return this.include;
     }
 
     Pattern pattern() {

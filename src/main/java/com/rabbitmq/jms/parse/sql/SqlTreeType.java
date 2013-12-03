@@ -20,17 +20,17 @@ enum SqlTreeType {
     LEAF           {@Override SqlParseTree tree(SqlParseTree[] sub) { return sub[0]; } } ,
     DISJUNCTION    {@Override SqlParseTree tree(SqlParseTree[] sub) { return new SqlParseTree(this.treeNode(), sub[0], sub[2]); } } ,
     CONJUNCTION    {@Override SqlParseTree tree(SqlParseTree[] sub) { return new SqlParseTree(this.treeNode(), sub[0], sub[2]); } } ,
-    POSTFIXUNARYOP {@Override SqlParseTree tree(SqlParseTree[] sub) { return new SqlParseTree(this.treeNode(sub[1].getNode().nodeValue()), sub[0]); } } ,
-    PREFIXUNARYOP  {@Override SqlParseTree tree(SqlParseTree[] sub) { return new SqlParseTree(this.treeNode(sub[0].getNode().nodeValue()), sub[1]); } },
-    BINARYOP       {@Override SqlParseTree tree(SqlParseTree[] sub) { return new SqlParseTree(this.treeNode(sub[1].getNode().nodeValue()), sub[0], sub[2]); } },
-    TERNARYOP      {@Override SqlParseTree tree(SqlParseTree[] sub) { return new SqlParseTree(this.treeNode(sub[1].getNode().nodeValue()), sub[0], sub[2], sub[4]); } },
+    POSTFIXUNARYOP {@Override SqlParseTree tree(SqlParseTree[] sub) { return new SqlParseTree(this.treeNode(sub[1].getNode().value()), sub[0]); } } ,
+    PREFIXUNARYOP  {@Override SqlParseTree tree(SqlParseTree[] sub) { return new SqlParseTree(this.treeNode(sub[0].getNode().value()), sub[1]); } },
+    BINARYOP       {@Override SqlParseTree tree(SqlParseTree[] sub) { return new SqlParseTree(this.treeNode(sub[1].getNode().value()), sub[0], sub[2]); } },
+    TERNARYOP      {@Override SqlParseTree tree(SqlParseTree[] sub) { return new SqlParseTree(this.treeNode(sub[1].getNode().value()), sub[0], sub[2], sub[4]); } },
     PATTERN1       {@Override SqlParseTree tree(SqlParseTree[] sub) { return new SqlParseTree(this.treeNode(), sub[0]); } } ,
     PATTERN2       {@Override SqlParseTree tree(SqlParseTree[] sub) { return new SqlParseTree(this.treeNode(), sub[0], sub[2]); } } ,
-    LIST           {@Override SqlParseTree tree(SqlParseTree[] sub) { return new SqlParseTree(this.treeNode(new SqlToken(SqlTokenType.LIST, newList(sub[0].getNode().nodeValue().getString())))); } } ,
+    LIST           {@Override SqlParseTree tree(SqlParseTree[] sub) { return new SqlParseTree(this.treeNode(new SqlToken(SqlTokenType.LIST, newList(sub[0].getNode().value().getString())))); } } ,
     // the following node types should never appear in the final tree but are parsing artifacts
     COLLAPSE1      {@Override SqlParseTree tree(SqlParseTree[] sub) { return sub[0]; } } ,
     COLLAPSE2      {@Override SqlParseTree tree(SqlParseTree[] sub) { return sub[1]; } } ,
-    JOINLIST       {@Override SqlParseTree tree(SqlParseTree[] sub) { return new SqlParseTree(this.treeNode(LIST, new SqlToken(SqlTokenType.LIST, consList(sub[0].getNode().nodeValue().getString(), sub[2].getNode().nodeValue().getList())))); } } ,
+    JOINLIST       {@Override SqlParseTree tree(SqlParseTree[] sub) { return new SqlParseTree(this.treeNode(LIST, new SqlToken(SqlTokenType.LIST, consList(sub[0].getNode().value().getString(), sub[2].getNode().value().getList())))); } } ,
     ;
 
     protected SqlTreeNode treeNode() {

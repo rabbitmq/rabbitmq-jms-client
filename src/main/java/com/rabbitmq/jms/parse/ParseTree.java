@@ -1,17 +1,22 @@
 /**
- * Parse trees offer a structured view of a parsed token stream.
- * They include parsing errors and parse failures, so essentially encapsulate the result of a parse() operation.
- * There must be no sharing of children in the tree, but there might be sharing of node data.
+ * Parse trees capture a structured view of a parsed token stream.
+ * They encapsulate the result of a parse() operation.
+ * <p>
+ *
+ * </p>
+ * <p>
+ * Traversal algorithms will assume that there are no loops in the tree (no child can be its own ancestor).
+ * </p>
  */
 package com.rabbitmq.jms.parse;
 
 /**
  * A non-empty tree of {@link Node}s which can be traversed.
  * <p>
- * The tree is a (root) {@link Node} and a(n array of) children (if there are no children this can be null).
+ * The tree is a {@link Node} and a(n array of) children (if there are no children this must be a zero-length array and must not be <code>null</code>).
  * Each child in the array is a {@link ParseTree ParseTree&lt;Node&gt;}.
  * </p>
- * @param <Node> - the type of nodes in the tree
+ * @param <Node> - the type of nodes in the tree, a {@link Node} is attached to the root of each subtree.
  */
 public interface ParseTree<Node> {
 
@@ -29,13 +34,13 @@ public interface ParseTree<Node> {
 
 
     /**
-     * Get the children of the root of the tree.
+     * Get the immediate children of the root of the tree.
      * @return an array of children.
      */
     ParseTree<Node>[] getChildren();
 
     /**
-     * Get the nodes of the children of the root of the tree.
+     * Get the nodes of the immediate children of the root of the tree.
      * @return an array of {@link Node}s.
      */
     Node[] getChildNodes();

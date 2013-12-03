@@ -4,7 +4,7 @@ import com.rabbitmq.jms.parse.Parser;
 import com.rabbitmq.jms.parse.TokenStream;
 
 /**
- * This uses {@link SqlProduction} to build a naïve parser for the grammar defined in that type.
+ * This uses {@link SqlProduction} as a naïve parser for the grammar defined in that type.
  * <p>
  * This class is <i>not thread-safe</i> since it modifies the passed {@link TokenStream} which is (potentially) shared.
  * </p>
