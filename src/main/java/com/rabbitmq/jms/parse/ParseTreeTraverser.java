@@ -25,7 +25,7 @@ public abstract class ParseTreeTraverser {  // stop direct instantiation
      * @return <code>true</code> if the traversal completed, <code>false</code> if it was aborted prematurely
      */
     public static <Node> boolean traversePreOrder(ParseTree<Node> tree, Visitor<Node> visitor) {
-        if (!visitor.visit(tree)) return false;
+        if (!visitor.visit(tree.getNode(), tree.getChildNodes())) return false;
         for (ParseTree<Node> st : tree.getChildren()) {
             if (!traversePreOrder(st, visitor)) return false;
         }
@@ -43,7 +43,7 @@ public abstract class ParseTreeTraverser {  // stop direct instantiation
         for (ParseTree<Node> st : tree.getChildren()) {
             if (!traversePostOrder(st, visitor)) return false;
         }
-        if (!visitor.visit(tree)) return false;
+        if (!visitor.visit(tree.getNode(), tree.getChildNodes())) return false;
         return true;
     }
 

@@ -62,21 +62,25 @@ class SqlToken {
     }
     public String toString() {
         StringBuilder sb = new StringBuilder(this.tokType.description());
-        switch (this.tokType.valueType()) {
-        case FLOAT:
-            sb.append(": ").append(getFloat());         break;
-        case HEX:
-            sb.append(": ").append(getHex());           break;
-        case IDENT:
-            sb.append(": ").append(getIdent());         break;
-        case LONG:
-            sb.append(": ").append(getLong());          break;
-        case STRING:
-            sb.append(": ").append(this.tokValue);      break;
-        case LIST:
-            sb.append(": ").append(this.tokValueList);  break;
-        default:
-            break;
+        try {
+            switch (this.tokType.valueType()) {
+            case FLOAT:
+                sb.append(": ").append(getFloat());         break;
+            case HEX:
+                sb.append(": ").append(getHex());           break;
+            case IDENT:
+                sb.append(": ").append(getIdent());         break;
+            case LONG:
+                sb.append(": ").append(getLong());          break;
+            case STRING:
+                sb.append(": ").append(this.tokValue);      break;
+            case LIST:
+                sb.append(": ").append(this.tokValueList);  break;
+            default:
+                break;
+            }
+        } catch (Exception e) {
+            sb.append("invalid(").append(this.tokValue).append(')');
         }
         return sb.toString();
     }

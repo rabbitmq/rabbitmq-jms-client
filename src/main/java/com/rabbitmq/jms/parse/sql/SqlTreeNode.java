@@ -16,8 +16,8 @@ public class SqlTreeNode {
         this.value = value;
     }
 
-    SqlTreeNode(SqlTreeType treeNodeType) {
-        this(treeNodeType, null);
+    SqlTreeNode(SqlTreeType treeType) {
+        this(treeType, null);
     }
 
     // getter and setter for expression type
@@ -28,4 +28,8 @@ public class SqlTreeNode {
     SqlToken    value()     { return this.value;    }
     SqlTreeType treeType()  { return this.treeType; }
 
+    @Override
+    public String toString() {
+        return "SqlTreeNode [treeType=" + treeType + ", value=" + value + ", expType=" + expType + "]";
+    }
 }
