@@ -148,7 +148,7 @@ public class SqlTokenStream implements TokenStream<SqlToken, Integer> {
             }
         }
         // no matches found, so return the starting position
-        return m.start();
+        return m.regionStart();
     }
 
     private final static Matcher getMatcher(CharSequence cseq) {

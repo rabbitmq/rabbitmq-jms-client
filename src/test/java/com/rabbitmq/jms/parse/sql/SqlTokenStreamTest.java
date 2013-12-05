@@ -1,6 +1,7 @@
 package com.rabbitmq.jms.parse.sql;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +46,11 @@ public class SqlTokenStreamTest {
     }
 
     @Test
+    public void testIdentifierError() {
+        assertTokeniseFailure(" ~ABC='abc'");
+    }
+
+    @Test
     public void testGeneralSpacing() {
         assertTokenise("\n\t\f\r\u000BIS NULLify \n", "identifier: IS", "identifier: NULLify");
     }
@@ -58,6 +64,11 @@ public class SqlTokenStreamTest {
             listOut.add(t.toString());
         }
         assertEquals("Parse failure", resultList(strs), listOut);
+    }
+
+    private void assertTokeniseFailure(String inStr, String ...strs) {
+        SqlTokenStream stream = new SqlTokenStream(inStr);
+        assertNotEquals("Residue empty", "", stream.getResidue());
     }
 
     private static List<String> resultList(String ... strs) {
