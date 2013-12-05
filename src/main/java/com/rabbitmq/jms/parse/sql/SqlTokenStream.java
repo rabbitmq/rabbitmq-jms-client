@@ -16,7 +16,7 @@ import com.rabbitmq.jms.parse.TokenStream;
  * the tokeniser failed to completely scan the input.
  * </p>
  */
-class SqlTokenStream implements TokenStream<SqlToken, Integer> {
+public class SqlTokenStream implements TokenStream<SqlToken, Integer> {
 
     private static final Pattern JUNK_PATTERN = Pattern.compile("");
 
@@ -37,7 +37,7 @@ class SqlTokenStream implements TokenStream<SqlToken, Integer> {
      * @see #tokenize()
      * @param cseq - the sequence of characters (for example a {@link String}) which is tokenized
      */
-    SqlTokenStream(CharSequence cseq) {
+    public SqlTokenStream(CharSequence cseq) {
         Pair<List<SqlToken>, CharSequence> result = tokenize(cseq);
         this.tokenSequence = result.left();
         this.tokenSequenceSize = result.left().size();

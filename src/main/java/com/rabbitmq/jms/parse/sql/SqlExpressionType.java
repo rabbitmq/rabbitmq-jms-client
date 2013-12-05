@@ -4,7 +4,7 @@ package com.rabbitmq.jms.parse.sql;
  * The types of the subexpressions in an SQL (selector) expression.
  *
  */
-enum SqlExpressionType {
+public enum SqlExpressionType {
     NOT_SET,    // type not determined
     BOOL,       // top level expression is a logical one
     STRING,     // valid in equality comparisons

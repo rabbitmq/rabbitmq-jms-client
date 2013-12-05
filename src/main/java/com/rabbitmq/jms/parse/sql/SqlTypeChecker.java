@@ -7,14 +7,15 @@ import java.util.Map;
 
 import com.rabbitmq.jms.parse.ParseTree;
 
-public class SqlTypeChecker {
+public abstract class SqlTypeChecker { // prevent instantiation   directly
+    private SqlTypeChecker() {}        // prevent instantiation indirectly
 
-    static SqlExpressionType deriveExpressionType(ParseTree<SqlTreeNode> tree, Map<String, SqlExpressionType> identifierType) {
+    public static SqlExpressionType deriveExpressionType(ParseTree<SqlTreeNode> tree, Map<String, SqlExpressionType> identifierType) {
         traversePostOrder(tree, new SqlTypeSetterVisitor(identifierType));
         return tree.getNode().getExpType();
     }
 
-    static SqlExpressionType deriveExpressionType(ParseTree<SqlTreeNode> tree) {
+    public static SqlExpressionType deriveExpressionType(ParseTree<SqlTreeNode> tree) {
         return deriveExpressionType(tree, Collections.<String, SqlExpressionType> emptyMap());
     }
 
