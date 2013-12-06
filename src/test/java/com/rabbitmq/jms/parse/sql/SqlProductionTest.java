@@ -4,6 +4,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.TimeUnit;
@@ -15,7 +16,14 @@ import com.rabbitmq.jms.util.TimeTracker;
 public class SqlProductionTest {
 
     @Test
+    public void root() throws Exception {
+        assertEquals("ROOT incorrectly set", SqlProduction.ROOT, SqlProduction.expression);
+    }
+
+    @Test
     public void expression() throws Exception {
+        assertNullParse(SqlProduction.expression);
+
         assertParse(SqlProduction.expression, "nothing IS NULL"
                    , "POSTFIXUNARYOP: IS NULL"
                    , "    LEAF: identifier: nothing"
@@ -55,6 +63,8 @@ public class SqlProductionTest {
 
     @Test
     public void not_expr() throws Exception {
+        assertNullParse(SqlProduction.not_expr);
+
         assertParse(SqlProduction.not_expr,  "not 2 < 3"
                     , "PREFIXUNARYOP: NOT"
                     , "    BINARYOP: <"
@@ -65,6 +75,8 @@ public class SqlProductionTest {
 
     @Test
     public void cmp_expr() throws Exception {
+        assertNullParse(SqlProduction.cmp_expr);
+
         assertParse(SqlProduction.cmp_expr,
                     "2.5 < 3"
                     , "BINARYOP: <"
@@ -89,6 +101,8 @@ public class SqlProductionTest {
 
     @Test
     public void arith_expr() throws Exception {
+        assertNullParse(SqlProduction.arith_expr);
+
         assertParse(SqlProduction.arith_expr,
                     "2.5 * 2 - 3"
                     , "BINARYOP: -"
@@ -101,6 +115,8 @@ public class SqlProductionTest {
 
     @Test
     public void sign_expr() throws Exception {
+        assertNullParse(SqlProduction.sign_expr);
+
         assertParse(SqlProduction.sign_expr,
                     "--+-23.3"
                     , "PREFIXUNARYOP: -"
@@ -113,6 +129,8 @@ public class SqlProductionTest {
 
     @Test
     public void stringlist() throws Exception {
+        assertNullParse(SqlProduction.stringlist);
+
         assertParse(SqlProduction.stringlist,
                     "( '', 'asd' )"
                     , "LIST: list: [, asd]"
@@ -125,6 +143,8 @@ public class SqlProductionTest {
 
     @Test
     public void STRING() throws Exception {
+        assertNullParse(SqlProduction.STRING);
+
         assertParse(SqlProduction.STRING,
                     "'asd'"
                     , "LEAF: string: 'asd'"
@@ -133,6 +153,8 @@ public class SqlProductionTest {
 
     @Test
     public void pattern() throws Exception {
+        assertNullParse(SqlProduction.pattern);
+
         assertParse(SqlProduction.pattern,
                     "'asd'"
                     , "PATTERN1:"
@@ -159,6 +181,8 @@ public class SqlProductionTest {
 
     @Test
     public void simple() throws Exception {
+        assertNullParse(SqlProduction.simple);
+
         assertParse(SqlProduction.simple,
                     "(asd + 1)"
                     , "BINARYOP: +"
@@ -249,6 +273,14 @@ public class SqlProductionTest {
 
         String[] formatted = stn.formattedTree();
         assertArrayEquals("Parsed tree doesn't match", outStr, formatted);
+    }
+
+    private void assertNullParse(SqlProduction sct) {
+        SqlTokenStream stream = new SqlTokenStream("");
+        assertEquals("Residue not empty", "", stream.getResidue());
+
+        SqlParseTree stn = sct.parse(stream);
+        assertNull("parse not null for empty tokenstream", stn);
     }
 
 }
