@@ -141,7 +141,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         // , {<<"JMSCorrelationID">>, string}
         // , {<<"JMSType">>,          string}
         // ]
-        map.put("JMSDeliveryMode",  new String[]{"PERSISTENT","NON_PERSISTENT"});
+        map.put("JMSDeliveryMode",  "string");
         map.put("JMSPriority",      "number");
         map.put("JMSMessageID",     "string");
         map.put("JMSTimestamp",     "number");
