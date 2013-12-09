@@ -51,7 +51,6 @@ import com.rabbitmq.jms.client.message.RMQObjectMessage;
 import com.rabbitmq.jms.client.message.RMQStreamMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.parse.sql.SqlExpressionType;
-import com.rabbitmq.jms.parse.sql.SqlParseTree;
 import com.rabbitmq.jms.parse.sql.SqlParser;
 import com.rabbitmq.jms.parse.sql.SqlTokenStream;
 import com.rabbitmq.jms.parse.sql.SqlTypeChecker;
@@ -653,14 +652,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @param jmsSelector - selector string
      */
     private static void verifyJmsSelectorType(String jmsSelector, boolean correct) {
-        SqlParseTree parsed = new SqlParser(new SqlTokenStream(jmsSelector)).parse();
-        if (correct) {
-            if (parsed == null || !canBeBool(SqlTypeChecker.deriveExpressionType(parsed, JMS_TYPE_IDENTS)))
-                throw new RuntimeException(String.format("'%s' is accepted, but does not seem valid to SqlTypeChecker", jmsSelector));
-        } else {
-            if (parsed != null && canBeBool(SqlTypeChecker.deriveExpressionType(parsed, JMS_TYPE_IDENTS)))
-                throw new RuntimeException(String.format("'%s' causes failure, but seems valid to SqlTypeChecker", jmsSelector));
-        }
+        SqlTokenStream tokenStream = new SqlTokenStream(jmsSelector);
+        boolean selectorAllTokenized = "".equals(tokenStream.getResidue());
+
+        if (correct && (!selectorAllTokenized || !canBeBool(SqlTypeChecker.deriveExpressionType(new SqlParser(tokenStream).parse(), JMS_TYPE_IDENTS))))
+            throw new RuntimeException(String.format("\"%s\" is accepted, but does not seem valid to SqlTypeChecker", jmsSelector));
+        else if (!correct && (selectorAllTokenized && canBeBool(SqlTypeChecker.deriveExpressionType(new SqlParser(tokenStream).parse(), JMS_TYPE_IDENTS))))
+            throw new RuntimeException(String.format("\"%s\" causes failure, but seems valid to SqlTypeChecker", jmsSelector));
     }
 
     private static boolean canBeBool(SqlExpressionType set) {

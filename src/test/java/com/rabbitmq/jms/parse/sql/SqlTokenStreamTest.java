@@ -51,6 +51,11 @@ public class SqlTokenStreamTest {
     }
 
     @Test
+    public void testSingleQuoteError() {
+        assertTokeniseFailure("abc'");
+    }
+
+    @Test
     public void testGeneralSpacing() {
         assertTokenise("\n\t\f\r\u000BIS NULLify \n", "identifier: IS", "identifier: NULLify");
     }

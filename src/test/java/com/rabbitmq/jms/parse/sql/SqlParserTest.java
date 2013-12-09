@@ -53,15 +53,32 @@ public class SqlParserTest {
 
     @Test
     public void incompleteParse() throws Exception {
-        SqlParser sp = new SqlParser(new SqlTokenStream("not 2 < 3 (-1)"));
+        SqlTokenStream tokenStream = new SqlTokenStream("not 2 < 3 (-1)");
+        SqlParser sp = new SqlParser(tokenStream);
         sp.parse();
 
-        if (sp.parseOk()) {
+        if ("".equals(tokenStream.getResidue()) && sp.parseOk()) {
             fail("Parse did not fail!");
         } else {
             assertEquals( "Parse did not fail with the right message."
                         , "Terminated before end of stream; next token is: '(' at index: 4."
                         , sp.getTerminationMessage()
+                        );
+        }
+    }
+
+    @Test
+    public void unopenedQuoteParse() throws Exception {
+        SqlTokenStream tokenStream = new SqlTokenStream("'abc' = abc'");
+        SqlParser sp = new SqlParser(tokenStream);
+        sp.parse();
+
+        if ("".equals(tokenStream.getResidue()) && sp.parseOk()) {
+            fail("Parse did not fail!");
+        } else {
+            assertEquals( "Parse did not fail correctly. Residue not valid."
+                        , "'"
+                        , tokenStream.getResidue()
                         );
         }
     }
