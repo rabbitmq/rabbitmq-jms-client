@@ -22,4 +22,8 @@ public class RMQJMSSelectorException extends InvalidSelectorException {
         super(msg, errorCode);
         this.initCause(x);
     }
+
+    public RMQJMSSelectorException(String msg) {
+        super(msg);
+    }
 }
