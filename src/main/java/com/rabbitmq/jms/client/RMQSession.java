@@ -50,10 +50,13 @@ import com.rabbitmq.jms.client.message.RMQMapMessage;
 import com.rabbitmq.jms.client.message.RMQObjectMessage;
 import com.rabbitmq.jms.client.message.RMQStreamMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
+import com.rabbitmq.jms.parse.sql.SqlExpressionType;
+import com.rabbitmq.jms.parse.sql.SqlParser;
+import com.rabbitmq.jms.parse.sql.SqlTokenStream;
+import com.rabbitmq.jms.parse.sql.SqlTypeChecker;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.RMQJMSSelectorException;
 import com.rabbitmq.jms.util.Util;
-
 /**
  * RabbitMQ implementation of JMS {@link Session}
  */
@@ -109,17 +112,25 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     /** Name of argument on exchange create; used to determine selection policy */
     private static final String RJMS_POLICY_ARG = "rjms_selection_policy";
 
-    private static final Map<String, Object> JMS_TYPE_INFO_ARGUMENTS = generateJMSTypeInfoMap();
-
-    private static final Map<String, Object> RJMS_TOPIC_SELECTOR_EXCHANGE_ARGUMENTS = generateJMSExchangeArgs("jms-topic");
-//    private static final Map<String, Object> RJMS_QUEUE_SELECTOR_EXCHANGE_ARGUMENTS = generateJMSExchangeArgs("jms-queue");
-
-    private static Map<String, Object> generateJMSExchangeArgs(String policy) {
-        Map<String, Object> map = new HashMap<String, Object>(2);  // pair of elements only
-        map.put(RJMS_TYPE_INFO_ARG, (Object) JMS_TYPE_INFO_ARGUMENTS);
-        map.put(RJMS_POLICY_ARG, (Object) policy);
+    private static Map<String, SqlExpressionType> generateJMSTypeIdents() {
+        Map<String, SqlExpressionType> map = new HashMap<String, SqlExpressionType>(6);  // six elements only
+        // [ {<<"JMSDeliveryMode">>,  [<<"PERSISTENT">>, <<"NON_PERSISTENT">>]}
+        // , {<<"JMSPriority">>,      number}
+        // , {<<"JMSMessageID">>,     string}
+        // , {<<"JMSTimestamp">>,     number}
+        // , {<<"JMSCorrelationID">>, string}
+        // , {<<"JMSType">>,          string}
+        // ]
+        map.put("JMSDeliveryMode",  SqlExpressionType.STRING);
+        map.put("JMSPriority",      SqlExpressionType.ARITH );
+        map.put("JMSMessageID",     SqlExpressionType.STRING);
+        map.put("JMSTimestamp",     SqlExpressionType.ARITH );
+        map.put("JMSCorrelationID", SqlExpressionType.STRING);
+        map.put("JMSType",          SqlExpressionType.STRING);
         return Collections.unmodifiableMap(map);
     }
+
+    private static final Map<String, SqlExpressionType> JMS_TYPE_IDENTS = generateJMSTypeIdents();
 
     private static Map<String, Object> generateJMSTypeInfoMap() {
         Map<String, Object> map = new HashMap<String, Object>(6);  // six elements only
@@ -130,13 +141,25 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         // , {<<"JMSCorrelationID">>, string}
         // , {<<"JMSType">>,          string}
         // ]
-        map.put("JMSDeliveryMode",  new String[]{"PERSISTENT","NON_PERSISTENT"});
+        map.put("JMSDeliveryMode",  "string");
         map.put("JMSPriority",      "number");
         map.put("JMSMessageID",     "string");
         map.put("JMSTimestamp",     "number");
         map.put("JMSCorrelationID", "string");
         map.put("JMSType",          "string");
 
+        return Collections.unmodifiableMap(map);
+    }
+
+    private static final Map<String, Object> JMS_TYPE_INFO_ARGUMENTS = generateJMSTypeInfoMap();
+
+    private static final Map<String, Object> RJMS_TOPIC_SELECTOR_EXCHANGE_ARGUMENTS = generateJMSExchangeArgs("jms-topic");
+//    private static final Map<String, Object> RJMS_QUEUE_SELECTOR_EXCHANGE_ARGUMENTS = generateJMSExchangeArgs("jms-queue");
+
+    private static Map<String, Object> generateJMSExchangeArgs(String policy) {
+        Map<String, Object> map = new HashMap<String, Object>(2);  // pair of elements only
+        map.put(RJMS_TYPE_INFO_ARG, (Object) JMS_TYPE_INFO_ARGUMENTS);
+        map.put(RJMS_POLICY_ARG, (Object) policy);
         return Collections.unmodifiableMap(map);
     }
 
@@ -615,11 +638,31 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             // Channel was closed early; check what sort of error this is
             if (this.checkPreconditionFailure(ioe)) {
                 this.unbindFailedSelectorQueue(dest, jmsSelector, queueName, selectionExchange, args);
+                verifyJmsSelectorType(jmsSelector, false);
                 throw new RMQJMSSelectorException(ioe);
             } else {
                 throw ioe;
             }
         }
+        verifyJmsSelectorType(jmsSelector, true);
+    }
+
+    /**
+     * Check that the jmsSelector string has a type expression error in it.
+     * @param jmsSelector - selector string
+     */
+    private static void verifyJmsSelectorType(String jmsSelector, boolean correct) {
+        SqlTokenStream tokenStream = new SqlTokenStream(jmsSelector);
+        boolean selectorAllTokenized = "".equals(tokenStream.getResidue());
+
+        if (correct && (!selectorAllTokenized || !canBeBool(SqlTypeChecker.deriveExpressionType(new SqlParser(tokenStream).parse(), JMS_TYPE_IDENTS))))
+            throw new RuntimeException(String.format("\"%s\" is accepted, but does not seem valid to SqlTypeChecker", jmsSelector));
+        else if (!correct && (selectorAllTokenized && canBeBool(SqlTypeChecker.deriveExpressionType(new SqlParser(tokenStream).parse(), JMS_TYPE_IDENTS))))
+            throw new RuntimeException(String.format("\"%s\" causes failure, but seems valid to SqlTypeChecker", jmsSelector));
+    }
+
+    private static boolean canBeBool(SqlExpressionType set) {
+        return (set == SqlExpressionType.BOOL || set == SqlExpressionType.ANY);
     }
 
     private Channel getSacrificialChannel() throws IOException {
