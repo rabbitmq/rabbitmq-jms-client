@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 GoPivotal, Inc. All rights reserved. */
+/* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
 import static com.rabbitmq.jms.util.UriCodec.encHost;
