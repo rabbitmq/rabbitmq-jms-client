@@ -41,9 +41,6 @@ import org.slf4j.LoggerFactory;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ShutdownSignalException;
-import com.rabbitmq.client.impl.AMQCommand;
-import com.rabbitmq.client.impl.AMQImpl;
-import com.rabbitmq.client.impl.Method;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQMapMessage;
@@ -72,9 +69,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private final int acknowledgeMode;
     /** The main RabbitMQ channel we use under the hood */
     private final Channel channel;
-    /** A sacrificial channel we use for requests that might fail */
-    private Channel sacrificialChannel = null; // @GuardedBy(scLock)
-    private Object scLock = new Object();
     /** Set to true if close() has been called and completed */
     private volatile boolean closed = false;
     /** The message listener for this session. */
@@ -466,7 +460,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     private void closeRabbitChannels() throws JMSException {
-        this.unsetSacrificialChannel(); // does not throw exceptions
         if (this.channel==null) return;
         try {
             this.channel.close();
@@ -627,92 +620,27 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private void bindSelectorQueue(RMQDestination dest, String jmsSelector, String queueName, String selectionExchange)
             throws InvalidSelectorException, IOException {
-        Map<String, Object> args = Collections.singletonMap(RJMS_SELECTOR_ARG, (Object)jmsSelector);
-        try {
-            // get a channel specifically to bind the selector queue
-            Channel channel = this.getSacrificialChannel();
+        if (selectorIsTypeValid(jmsSelector)) {
+            Map<String, Object> args = Collections.singletonMap(RJMS_SELECTOR_ARG, (Object)jmsSelector);
             // bind the queue to the topic selector exchange with the jmsSelector expression as argument
-            channel.queueBind(queueName, selectionExchange, dest.getAmqpRoutingKey(), args);
-        } catch (IOException ioe) {
-            this.unsetSacrificialChannel();
-            // Channel was closed early; check what sort of error this is
-            if (this.checkPreconditionFailure(ioe)) {
-                this.unbindFailedSelectorQueue(dest, jmsSelector, queueName, selectionExchange, args);
-                verifyJmsSelectorType(jmsSelector, false);
-                throw new RMQJMSSelectorException(ioe);
-            } else {
-                throw ioe;
-            }
+            this.channel.queueBind(queueName, selectionExchange, dest.getAmqpRoutingKey(), args);
+        } else {
+            throw new RMQJMSSelectorException(String.format("Selector expression: \"%s\" is not type-valid.", jmsSelector));
         }
-        verifyJmsSelectorType(jmsSelector, true);
     }
 
     /**
-     * Check that the jmsSelector string has a type expression error in it.
-     * @param jmsSelector - selector string
+     * Is the selector string type-valid?
+     * @param jmsSelector - the selector string
+     * @return <code>true</code> if it is valid, <code>false</code> if not.
      */
-    private static void verifyJmsSelectorType(String jmsSelector, boolean correct) {
+    private static boolean selectorIsTypeValid(String jmsSelector) {
         SqlTokenStream tokenStream = new SqlTokenStream(jmsSelector);
-        boolean selectorAllTokenized = "".equals(tokenStream.getResidue());
-
-        if (correct && (!selectorAllTokenized || !canBeBool(SqlTypeChecker.deriveExpressionType(new SqlParser(tokenStream).parse(), JMS_TYPE_IDENTS))))
-            throw new RuntimeException(String.format("\"%s\" is accepted, but does not seem valid to SqlTypeChecker", jmsSelector));
-        else if (!correct && (selectorAllTokenized && canBeBool(SqlTypeChecker.deriveExpressionType(new SqlParser(tokenStream).parse(), JMS_TYPE_IDENTS))))
-            throw new RuntimeException(String.format("\"%s\" causes failure, but seems valid to SqlTypeChecker", jmsSelector));
+        return ("".equals(tokenStream.getResidue())) && canBeBool(SqlTypeChecker.deriveExpressionType(new SqlParser(tokenStream).parse(), JMS_TYPE_IDENTS));
     }
 
     private static boolean canBeBool(SqlExpressionType set) {
         return (set == SqlExpressionType.BOOL || set == SqlExpressionType.ANY);
-    }
-
-    private Channel getSacrificialChannel() throws IOException {
-        synchronized (this.scLock) {
-            if (this.sacrificialChannel == null) {
-                this.sacrificialChannel = this.getConnection().createRabbitChannel(false); // not transactional
-            }
-            return this.sacrificialChannel;
-        }
-    }
-
-    private void unsetSacrificialChannel() {
-        synchronized (this.scLock) {
-            if (this.sacrificialChannel != null) {
-                try {
-                    if (this.sacrificialChannel.isOpen())
-                        this.sacrificialChannel.close();
-                } catch (IOException e) {
-                    // ignore any failures
-                }
-            }
-            this.sacrificialChannel = null;
-        }
-    }
-
-    private void unbindFailedSelectorQueue(RMQDestination dest, String jmsSelector, String queueName, String selectionExchange, Map<String, Object> args) {
-        try {
-            // get a channel specifically to unbind the selector queue
-            Channel channel = this.getSacrificialChannel();
-            channel.queueUnbind(queueName, selectionExchange, dest.getAmqpRoutingKey(), args);
-        } catch (IOException ioe) {
-            // ignore
-        }
-    }
-
-    private boolean checkPreconditionFailure(IOException ioe) {
-        Throwable cause = ioe.getCause();
-        if (cause instanceof ShutdownSignalException) {
-            ShutdownSignalException sse = (ShutdownSignalException) cause;
-            Object reason = sse.getReason();
-            if (reason instanceof AMQCommand) {
-                Method meth = ((AMQCommand) reason).getMethod();
-                if (meth instanceof AMQImpl.Channel.Close) {
-                    AMQImpl.Channel.Close close = (AMQImpl.Channel.Close) meth;
-                    if (close.getReplyCode() == AMQImpl.PRECONDITION_FAILED)
-                        return true;
-                }
-            }
-        }
-        return false;
     }
 
     /**
