@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.junit.Before;
@@ -20,10 +19,10 @@ import com.rabbitmq.jms.parse.Visitor;
 
 /**
  * This test class generates all combinations of {@link SqlTreeNode}s possible at a point of an {@link SqlParseTree} and
- * runs {@link SqlTypeSetterVisitor#visit()} against them.  There are tables of expected results, and
+ * runs {@link SqlCompilerVisitor#visit()} against them.  There are tables of expected results, and
  * if the combination isn't in the table the result is expected to be {@link SqlExpressionType SqlExpressionType.INVALID}.
  */
-public class SqlTypeSetterVisitorTest {
+public class SqlCompilerVisitorTest {
 
     //Table of expected results:
 
@@ -81,7 +80,6 @@ public class SqlTypeSetterVisitorTest {
     private static final SqlExpressionType[] NO_EXPRESSIONS = new SqlExpressionType[0];
 
     private Visitor<SqlTreeNode> tsVisitorBasic;
-    private Visitor<SqlTreeNode> tsVisitorIdents;
 
     @Before
     public void setUp() throws Exception {
@@ -94,8 +92,7 @@ public class SqlTypeSetterVisitorTest {
         idTypes.put("aList"     , SqlExpressionType.LIST    );
         idTypes.put("aNotSet"   , SqlExpressionType.NOT_SET );
 
-        tsVisitorBasic = new SqlTypeSetterVisitor();
-        tsVisitorIdents = new SqlTypeSetterVisitor(idTypes);
+        this.tsVisitorBasic = new SqlCompilerVisitor();
     }
 
     @Test
@@ -114,14 +111,14 @@ public class SqlTypeSetterVisitorTest {
         //                     TRUE                                     (BOOL)
         //                     FALSE                                    (BOOL)
         //LIST           0     *                                        (NOT_SET)
-        checkSetExpTypeForLeaves( withIdents
-        , SqlTreeType.LEAF
+        checkCompilerForLeaves
+        ( SqlTreeType.LEAF
         , os(SqlTokenType.IDENT, SqlTokenType.STRING     , SqlTokenType.FLOAT     , SqlTokenType.INT       , SqlTokenType.HEX       , SqlTokenType.LIST     , SqlTokenType.TRUE     , SqlTokenType.FALSE    )
         , os(null,               SqlExpressionType.STRING, SqlExpressionType.ARITH, SqlExpressionType.ARITH, SqlExpressionType.ARITH, SqlExpressionType.LIST, SqlExpressionType.BOOL, SqlExpressionType.BOOL)
           // null expressionType in result means the type is determined by the identifier token
         );
-        checkSetExpTypeForLeaves( withIdents
-        , SqlTreeType.LIST
+        checkCompilerForLeaves
+        ( SqlTreeType.LIST
         , os((SqlTokenType)null       )  // null means any type will do
         , os(SqlExpressionType.NOT_SET)
         );
@@ -135,19 +132,19 @@ public class SqlTypeSetterVisitorTest {
         //                     OP_MINUS       ARITH+                    (ARITH)
         //                     OP_PLUS        ARITH+                    (ARITH)
         //PATTERN1       1     *              *                         (NOT_SET)
-        checkSetExpType
+        checkCompiler
         ( SqlTreeType.POSTFIXUNARYOP
         , os(SqlTokenType.NULL      , SqlTokenType.NOT_NULL  )
         , os(genCombs(os((SqlExpressionType)null)), genCombs(os((SqlExpressionType)null))) // any types will do
         , os(SqlExpressionType.BOOL , SqlExpressionType.BOOL )
         );
-        checkSetExpType
+        checkCompiler
         ( SqlTreeType.PREFIXUNARYOP
         , os(SqlTokenType.NOT                    , SqlTokenType.OP_MINUS                , SqlTokenType.OP_PLUS                 )
         , os(genCombs(os(SqlExpressionType.BOOL)), genCombs(os(SqlExpressionType.ARITH)), genCombs(os(SqlExpressionType.ARITH)))
         , os(SqlExpressionType.BOOL, SqlExpressionType.ARITH, SqlExpressionType.ARITH)
         );
-        checkSetExpType
+        checkCompiler
         ( SqlTreeType.PATTERN1
         , os((SqlTokenType)null       )              // null means any type will do
         , o1(genCombs(os((SqlExpressionType)null)))  // any type will do
@@ -176,19 +173,19 @@ public class SqlTypeSetterVisitorTest {
         //                     OP_PLUS
         //                     OP_MINUS       ARITH+  ARITH+            (ARITH)
         //PATTERN2       2     *              *       *                 (NOT_SET)
-        checkSetExpType
+        checkCompiler
         ( SqlTreeType.CONJUNCTION
         , os(SqlTokenType.NULL     )
         , o1(genCombs(os(SqlExpressionType.BOOL, SqlExpressionType.BOOL)))
         , os(SqlExpressionType.BOOL)
         );
-        checkSetExpType
+        checkCompiler
         ( SqlTreeType.DISJUNCTION
         , os(SqlTokenType.NULL     )
         , o1(genCombs(os(SqlExpressionType.BOOL, SqlExpressionType.BOOL)))
         , os(SqlExpressionType.BOOL)
         );
-        checkSetExpType
+        checkCompiler
         ( SqlTreeType.BINARYOP
         , os(SqlTokenType.CMP_EQ)
         , o1(genCombs( os(SqlExpressionType.BOOL, SqlExpressionType.BOOL)
@@ -196,7 +193,7 @@ public class SqlTypeSetterVisitorTest {
                      , os(SqlExpressionType.ARITH, SqlExpressionType.ARITH)))
         , os(SqlExpressionType.BOOL)
         );
-        checkSetExpType
+        checkCompiler
         ( SqlTreeType.BINARYOP
         , os(SqlTokenType.CMP_NEQ)
         , o1(genCombs( os(SqlExpressionType.BOOL, SqlExpressionType.BOOL)
@@ -204,7 +201,7 @@ public class SqlTypeSetterVisitorTest {
                      , os(SqlExpressionType.ARITH, SqlExpressionType.ARITH)))
         , os(SqlExpressionType.BOOL)
         );
-        checkSetExpType
+        checkCompiler
         ( SqlTreeType.BINARYOP
         , os(SqlTokenType.CMP_LT    , SqlTokenType.CMP_LTEQ  , SqlTokenType.CMP_GT    , SqlTokenType.CMP_GTEQ  )
         , os( genCombs(os(SqlExpressionType.ARITH, SqlExpressionType.ARITH))
@@ -213,7 +210,7 @@ public class SqlTypeSetterVisitorTest {
             , genCombs(os(SqlExpressionType.ARITH, SqlExpressionType.ARITH)))
         , os(SqlExpressionType.BOOL , SqlExpressionType.BOOL , SqlExpressionType.BOOL , SqlExpressionType.BOOL )
         );
-        checkSetExpType
+        checkCompiler
         ( SqlTreeType.BINARYOP
         , os(SqlTokenType.LIKE       , SqlTokenType.NOT_LIKE   , SqlTokenType.IN         , SqlTokenType.NOT_IN     )
         , os( genCombs(os(SqlExpressionType.STRING, null))
@@ -222,7 +219,7 @@ public class SqlTypeSetterVisitorTest {
             , genCombs(os(SqlExpressionType.STRING, null)))
         , os(SqlExpressionType.BOOL  , SqlExpressionType.BOOL  , SqlExpressionType.BOOL  , SqlExpressionType.BOOL  )
         );
-        checkSetExpType
+        checkCompiler
         ( SqlTreeType.BINARYOP
         , os(SqlTokenType.OP_DIV    , SqlTokenType.OP_MULT   , SqlTokenType.OP_PLUS   , SqlTokenType.OP_MINUS  )
         , os( genCombs(os(SqlExpressionType.ARITH, SqlExpressionType.ARITH))
@@ -231,7 +228,7 @@ public class SqlTypeSetterVisitorTest {
             , genCombs(os(SqlExpressionType.ARITH, SqlExpressionType.ARITH)))
         , os(SqlExpressionType.ARITH, SqlExpressionType.ARITH, SqlExpressionType.ARITH, SqlExpressionType.ARITH)
         );
-        checkSetExpType
+        checkCompiler
         ( SqlTreeType.PATTERN2
         , os((SqlTokenType)null       )  // null means any type will do
         , o1(genCombs(os((SqlExpressionType)null, null)))  // any types will do
@@ -242,7 +239,7 @@ public class SqlTypeSetterVisitorTest {
     public void testVisit3() {
         //TERNARYOP      3     BETWEEN
         //                     NOT_BETWEEN    ARITH+  ARITH+  ARITH+    (BOOL)
-        checkSetExpType
+        checkCompiler
         ( SqlTreeType.TERNARYOP
         , os(SqlTokenType.BETWEEN, SqlTokenType.NOT_BETWEEN)
         , os( genCombs(os(SqlExpressionType.ARITH, SqlExpressionType.ARITH, SqlExpressionType.ARITH))
@@ -251,13 +248,12 @@ public class SqlTypeSetterVisitorTest {
         );
     }
 
-    private void checkSetExpTypeForLeaves(boolean withIdents, SqlTreeType treeType, SqlTokenType[] tts, SqlExpressionType[] rets) {
+    private void checkCompilerForLeaves(SqlTreeType treeType, SqlTokenType[] tts, SqlExpressionType[] rets) {
         int resultIndex=0;
         for (SqlTokenType pre_tt: tts) {
             for (SqlTokenType tt : (pre_tt == null) ? SqlTokenType.values() : os(pre_tt)) { // null means any one will do, try them all
-                for( PairSTSET tokenExpType : generateTokenExpTypePairs(withIdents, tt, rets[resultIndex])) {
-                    Visitor<SqlTreeNode> visitor = (withIdents ? tsVisitorIdents : tsVisitorBasic);
-                    assertVisitGood(treeType, tokenExpType.left(), NO_EXPRESSIONS, tokenExpType.right(), visitor);
+                for( PairSTSET tokenExpType : generateTokenExpTypePairs(tt, rets[resultIndex])) {
+                    assertVisitGood(treeType, tokenExpType.left(), NO_EXPRESSIONS, tokenExpType.right(), this.tsVisitorBasic);
                 }
             }
             ++resultIndex;
@@ -282,28 +278,19 @@ public class SqlTypeSetterVisitorTest {
         return tn;
     }
 
-    private PairSTSET[] generateTokenExpTypePairs(boolean withIdents, SqlTokenType tt, SqlExpressionType sqlExpressionType) {
+    private PairSTSET[] generateTokenExpTypePairs(SqlTokenType tt, SqlExpressionType sqlExpressionType) {
         if (tt == SqlTokenType.IDENT && sqlExpressionType == null) {
-            if (withIdents) {
-                ArrayList<PairSTSET> plist = new ArrayList<PairSTSET>();
-                for(Entry<String, SqlExpressionType> e: idTypes.entrySet()) {
-                    plist.add(PairSTSET.pair(new SqlToken(tt, e.getKey()), e.getValue()));
-                }
-                plist.add(PairSTSET.pair(new SqlToken(tt,"dummyIdent"), SqlExpressionType.ANY));
-                return plist.toArray(new PairSTSET[plist.size()]);
-            } else
-                return os(PairSTSET.pair(new SqlToken(tt,"dummyIdent"), SqlExpressionType.ANY));
+            return os(PairSTSET.pair(new SqlToken(tt,"dummyIdent"), SqlExpressionType.ANY));
         } else
             return os(PairSTSET.pair(new SqlToken(tt,"no-value"), sqlExpressionType));
     }
 
-    private void checkSetExpType(SqlTreeType treeType, SqlTokenType[] tts, SqlExpressionType[][][] aaaets, SqlExpressionType[] rets) {
+    private void checkCompiler(SqlTreeType treeType, SqlTokenType[] tts, SqlExpressionType[][][] aaaets, SqlExpressionType[] rets) {
         int resultIndex=0;
         for (SqlTokenType pre_tt: tts) {
             for (SqlTokenType tt : (pre_tt == null) ? SqlTokenType.values() : os(pre_tt)) { // null means any one will do, try them all
                 for(TripleSTaSETSET tokenAExpTypeExpType : generateTokenExpTypeTriples(tt, aaaets[resultIndex], rets[resultIndex])) {
-                    assertVisitGood(treeType, tokenAExpTypeExpType.first(), tokenAExpTypeExpType.second(), tokenAExpTypeExpType.third(), tsVisitorBasic);
-                    assertVisitGood(treeType, tokenAExpTypeExpType.first(), tokenAExpTypeExpType.second(), tokenAExpTypeExpType.third(), tsVisitorIdents);
+                    assertVisitGood(treeType, tokenAExpTypeExpType.first(), tokenAExpTypeExpType.second(), tokenAExpTypeExpType.third(), this.tsVisitorBasic);
                 }
             }
             ++resultIndex;

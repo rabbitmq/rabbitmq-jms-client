@@ -11,7 +11,8 @@ import com.rabbitmq.jms.parse.Visitor;
  * and the {@link SqlExpressionType} of the children nodes.
  * <p>
  * To type a whole tree this can be applied to it by visiting the subtrees in ‘postorder’; each node visited
- * then has its child nodes already visited and therefore typed.
+ * then has its child nodes already visited and therefore typed. In consequence, this visitor does nothing in
+ * its {@link #visitBefore()} implementation.
  * </p>
  * <p>
  * The visitor has a (final) map state which pre-specifies the {@link SqlExpressionType} of some identifiers,
@@ -31,8 +32,16 @@ public class SqlTypeSetterVisitor implements Visitor<SqlTreeNode> {
         this(Collections.<String, SqlExpressionType> emptyMap());
     }
 
+    /* (non-Javadoc)
+     * @see com.rabbitmq.jms.parse.Visitor#visitBefore(java.lang.Object, Node[])
+     */
     @Override
-    public boolean visit(SqlTreeNode parent, SqlTreeNode[] children) {
+    public boolean visitBefore(SqlTreeNode parent, SqlTreeNode[] children) {
+        return true;
+    }
+
+    @Override
+    public boolean visitAfter(SqlTreeNode parent, SqlTreeNode[] children) {
         parent.setExpType(typeOf(parent, children));
         return true; // traverse the whole tree
     }

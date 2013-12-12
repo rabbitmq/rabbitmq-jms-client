@@ -11,8 +11,8 @@ public class SqlParserTest {
     @Test
     public void simpleTree() throws Exception {
         assertParse( "nothing IS NULL"
-                   , "POSTFIXUNARYOP: IS NULL"
-                   , "    LEAF: identifier: nothing"
+                   , "POSTFIXUNARYOP: is_null"
+                   , "    LEAF: ident: nothing"
                    );
     }
 
@@ -20,30 +20,30 @@ public class SqlParserTest {
     public void moreTrees() throws Exception {
         assertParse( "nothing IS NULL And JMSPrefix > 12-4"
                    , "CONJUNCTION:"
-                   , "    POSTFIXUNARYOP: IS NULL"
-                   , "        LEAF: identifier: nothing"
+                   , "    POSTFIXUNARYOP: is_null"
+                   , "        LEAF: ident: nothing"
                    , "    BINARYOP: >"
-                   , "        LEAF: identifier: JMSPrefix"
+                   , "        LEAF: ident: JMSPrefix"
                    , "        BINARYOP: -"
                    , "            LEAF: integer: 12"
                    , "            LEAF: integer: 4"
                    );
         assertParse( "nothing IS NulL oR JMSPrefix > 12- 4"
                    , "DISJUNCTION:"
-                   , "    POSTFIXUNARYOP: IS NULL"
-                   , "        LEAF: identifier: nothing"
+                   , "    POSTFIXUNARYOP: is_null"
+                   , "        LEAF: ident: nothing"
                    , "    BINARYOP: >"
-                   , "        LEAF: identifier: JMSPrefix"
+                   , "        LEAF: ident: JMSPrefix"
                    , "        BINARYOP: -"
                    , "            LEAF: integer: 12"
                    , "            LEAF: integer: 4"
                    );
         assertParse( "nothing IS NulL oR (JMSPrefix >= 12/-4.3)"
                    , "DISJUNCTION:"
-                   , "    POSTFIXUNARYOP: IS NULL"
-                   , "        LEAF: identifier: nothing"
+                   , "    POSTFIXUNARYOP: is_null"
+                   , "        LEAF: ident: nothing"
                    , "    BINARYOP: >="
-                   , "        LEAF: identifier: JMSPrefix"
+                   , "        LEAF: ident: JMSPrefix"
                    , "        BINARYOP: /"
                    , "            LEAF: integer: 12"
                    , "            PREFIXUNARYOP: -"
@@ -62,7 +62,7 @@ public class SqlParserTest {
         } else {
             assertEquals( "Parse did not fail with the right message."
                         , "Terminated before end of stream; next token is: '(' at index: 4."
-                        , sp.getTerminationMessage()
+                        , sp.getErrorMessage()
                         );
         }
     }
@@ -91,7 +91,7 @@ public class SqlParserTest {
         SqlParseTree pt = sp.parse();
 
         if (!sp.parseOk()) {
-            fail(sp.getTerminationMessage());
+            fail(sp.getErrorMessage());
         }
 
         String[] formatted = pt.formattedTree();
