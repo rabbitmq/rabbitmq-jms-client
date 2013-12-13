@@ -61,7 +61,7 @@ class SqlToken {
         return "";
     }
     public String toString() {
-        StringBuilder sb = new StringBuilder(this.tokType.description());
+        StringBuilder sb = new StringBuilder(this.tokType.opCode());
         try {
             switch (this.tokType.valueType()) {
             case FLOAT:

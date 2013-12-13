@@ -19,7 +19,7 @@ public class SqlCompiler implements Compiler {
             this.errorMessage = "Could not compile parsed tree "+ parseTree.formattedTree();
         } else {
             this.compileOk = true;
-            this.compiledCode = parseTree.getNode().getCode();
+            this.compiledCode = compilerVisitor.extractCode();
             this.errorMessage = null;
         }
     }

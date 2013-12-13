@@ -1,419 +1,178 @@
 package com.rabbitmq.jms.parse.sql;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import org.junit.Before;
 import org.junit.Test;
 
-import com.rabbitmq.jms.parse.Multiples.Pair;
-import com.rabbitmq.jms.parse.Multiples.Triple;
-import com.rabbitmq.jms.parse.Visitor;
-
 /**
- * This test class generates all combinations of {@link SqlTreeNode}s possible at a point of an {@link SqlParseTree} and
- * runs {@link SqlCompilerVisitor#visit()} against them.  There are tables of expected results, and
- * if the combination isn't in the table the result is expected to be {@link SqlExpressionType SqlExpressionType.INVALID}.
+ * This test class generates all {@link SqlTreeNode}s possible at a parent of an {@link SqlParseTree} and
+ * runs {@link SqlCompilerVisitor#visit()} against it.  The children are supplied (but should not matter).
  */
 public class SqlCompilerVisitorTest {
 
     //Table of expected results:
 
-    //SqlTreeType   arity  SqlTreeNode    SqlTreeType.expType()...  (Result)
-    //˜˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜  ˜˜˜˜˜˜˜˜˜˜˜    ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜   ˜˜˜˜˜˜˜˜˜
-    //LEAF           0     IDENT                                    (id-type)
-    //                     STRING                                   (STRING)
-    //                     FLOAT                                    (ARITH)
-    //                     INT                                      (ARITH)
-    //                     HEX                                      (ARITH)
-    //                     LIST                                     (LIST)
-    //                     TRUE                                     (BOOL)
-    //                     FALSE                                    (BOOL)
-    //LIST           0     *                                        (NOT_SET)
+  //SqlTreeType   arity  SqlTreeNode  (beforeResult)         (afterResult)
+    //˜˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜  ˜˜˜˜˜˜˜˜˜˜˜  ˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜  ˜˜˜˜˜˜˜˜˜˜˜˜˜
+    //LEAF           0     IDENT        {'ident',<<"dummy">>}
+    //                     STRING       <<"dummy">>
+    //                     FLOAT        1.57e12
+    //                     INT          42
+    //                     HEX          42
+    //                     LIST         [<<"a">>,<<"b">>]
+    //                     TRUE         'true'
+    //                     FALSE        'false'
+    //LIST           0     LIST         [<<"a">>,<<"b">>]
 
-    //POSTFIXUNARYOP 1     NULL           *                         (BOOL)
-    //                     NOT_NULL       *                         (BOOL)
-    //PREFIXUNARYOP  1     NOT            BOOL+                     (BOOL)
-    //                     OP_MINUS       ARITH+                    (ARITH)
-    //                     OP_PLUS        ARITH+                    (ARITH)
-    //PATTERN1       1     *              *                         (NOT_SET)
+    //POSTFIXUNARYOP 1     NULL         {'is_null'             }
+    //                     NOT_NULL     {'not_null'            }
+    //PREFIXUNARYOP  1     NOT          {'not'                 }
+    //                     OP_MINUS     {'-'                   }
+    //                     OP_PLUS      {'+'                   }
+    //PATTERN1       1     *
 
-    //CONJUNCTION
-    //DISJUNCTION    2     *              BOOL+   BOOL+             (BOOL)
-    //BINARYOP       2     CMP_EQ
-    //                     CMP_NEQ        BOOL+   BOOL+             (BOOL)
-    //                                    STRING+ STRING+           (BOOL)
-    //                                    ARITH+  ARITH+            (BOOL)
-    //                     CMP_LT
-    //                     CMP_LTEQ
-    //                     CMP_GT
-    //                     CMP_GTEQ       ARITH+  ARITH+            (BOOL)
-    //                     LIKE
-    //                     NOT_LIKE
-    //                     IN
-    //                     NOT_IN         STRING+ *                 (BOOL)
-    //                     OP_DIV
-    //                     OP_MULT
-    //                     OP_PLUS
-    //                     OP_MINUS       ARITH+  ARITH+            (ARITH)
-    //PATTERN2       2     *              *       *                 (NOT_SET)
+    //CONJUNCTION    2     *            {'and'                 }
+    //DISJUNCTION    2     *            {'or'                  }
+    //BINARYOP       2     CMP_EQ       {'='                   }
+    //                     CMP_NEQ      {'<>'                  }
+    //                     CMP_LT       {'<'                   }
+    //                     CMP_LTEQ     {'<='                  }
+    //                     CMP_GT       {'>='                  }
+    //                     CMP_GTEQ     {'>='                  }
+    //                     LIKE         {'like'                }
+    //                     NOT_LIKE     {'not_like'            }
+    //                     IN           {'in'                  }
+    //                     NOT_IN       {'not_in'              }
+    //                     OP_DIV       {'/'                   }
+    //                     OP_MULT      {'*'                   }
+    //                     OP_PLUS      {'+'                   }
+    //                     OP_MINUS     {'-'                   }
+    //PATTERN2       2     *
 
-    //TERNARYOP      3     BETWEEN
-    //                     NOT_BETWEEN    ARITH+  ARITH+  ARITH+    (BOOL)
+    //TERNARYOP      3     BETWEEN      {'between'             }
+    //                     NOT_BETWEEN  {'not_between'         }
 
-    // id-type means look the identifier up in the map for its type; ANY if not there.
-    // type+ means type|ANY;
+    // ‹arity› children are supplied, each of TEST type
     // *     means anything is allowed;
 
-    // things that do not occur in the table should give the result INVALID.
-
-    // Some useful pre-typed identifiers
-    private final Map<String, SqlExpressionType> idTypes = new HashMap<String, SqlExpressionType>();
-
-    private static final SqlExpressionType[] NO_EXPRESSIONS = new SqlExpressionType[0];
-
-    private Visitor<SqlTreeNode> tsVisitorBasic;
-
-    @Before
-    public void setUp() throws Exception {
-        // Some useful pre-typed identifiers
-        idTypes.put("aBool"     , SqlExpressionType.BOOL    );
-        idTypes.put("aArith"    , SqlExpressionType.ARITH   );
-        idTypes.put("aAny"      , SqlExpressionType.ANY     );
-        idTypes.put("aString"   , SqlExpressionType.STRING  );
-        idTypes.put("aInvalid"  , SqlExpressionType.INVALID );
-        idTypes.put("aList"     , SqlExpressionType.LIST    );
-        idTypes.put("aNotSet"   , SqlExpressionType.NOT_SET );
-
-        this.tsVisitorBasic = new SqlCompilerVisitor();
+    private static final String DUMMY_FLOAT = "1.57E12";
+    private static final String DUMMY_STRING = "dummySTRING";
+    private static final String DUMMY_IDENT = "dummyIDENT";
+    private static final List<String> TEST_LIST = new ArrayList<String>();
+    static {
+        TEST_LIST.add("a");
+        TEST_LIST.add("b");
     }
+    private static final String TEST_LIST_COMPILED = "[<<\"a\">>,<<\"b\">>]";
 
     @Test
     public void testVisit0() {
-        visit0(false);
-        visit0(true);
-    }
+        //LEAF           0     IDENT        {'ident',<<"dummyIDENT">>}
+        //                     STRING       <<"dummySTRING">>
+        //                     FLOAT        1.57e12
+        //                     INT          42
+        //                     HEX          42
+        //                     LIST         [<<"a">>,<<"b">>]
+        //                     TRUE         'true'
+        //                     FALSE        'false'
+        //LIST           0     LIST         [<<"a">>,<<"b">>]
+        assertCompileStep(SqlTreeType.LEAF, SqlTokenType.IDENT , 0, "{'ident',<<\""+DUMMY_IDENT+"\">>}", "");
+        assertCompileStep(SqlTreeType.LEAF, SqlTokenType.STRING, 0, "<<\""+DUMMY_STRING+"\">>"         , "");
+        assertCompileStep(SqlTreeType.LEAF, SqlTokenType.FLOAT , 0, DUMMY_FLOAT                        , "");
+        assertCompileStep(SqlTreeType.LEAF, SqlTokenType.INT   , 0, "43"                               , "");
+        assertCompileStep(SqlTreeType.LEAF, SqlTokenType.HEX   , 0, "42"                               , "");
+        assertCompileStep(SqlTreeType.LEAF, SqlTokenType.LIST  , 0, TEST_LIST_COMPILED                 , "");
+        assertCompileStep(SqlTreeType.LEAF, SqlTokenType.TRUE  , 0, "'true'"                           , "");
+        assertCompileStep(SqlTreeType.LEAF, SqlTokenType.FALSE , 0, "'false'"                          , "");
 
-    private void visit0(boolean withIdents) {
-        //LEAF           0     IDENT                                    (id-type)
-        //                     STRING                                   (STRING)
-        //                     FLOAT                                    (ARITH)
-        //                     INT                                      (ARITH)
-        //                     HEX                                      (ARITH)
-        //                     LIST                                     (LIST)
-        //                     TRUE                                     (BOOL)
-        //                     FALSE                                    (BOOL)
-        //LIST           0     *                                        (NOT_SET)
-        checkCompilerForLeaves
-        ( SqlTreeType.LEAF
-        , os(SqlTokenType.IDENT, SqlTokenType.STRING     , SqlTokenType.FLOAT     , SqlTokenType.INT       , SqlTokenType.HEX       , SqlTokenType.LIST     , SqlTokenType.TRUE     , SqlTokenType.FALSE    )
-        , os(null,               SqlExpressionType.STRING, SqlExpressionType.ARITH, SqlExpressionType.ARITH, SqlExpressionType.ARITH, SqlExpressionType.LIST, SqlExpressionType.BOOL, SqlExpressionType.BOOL)
-          // null expressionType in result means the type is determined by the identifier token
-        );
-        checkCompilerForLeaves
-        ( SqlTreeType.LIST
-        , os((SqlTokenType)null       )  // null means any type will do
-        , os(SqlExpressionType.NOT_SET)
-        );
+        assertCompileStep(SqlTreeType.LIST, SqlTokenType.LIST  , 0, TEST_LIST_COMPILED                 , "");
     }
 
     @Test
     public void testVisit1() {
-        //POSTFIXUNARYOP 1     NULL           *                         (BOOL)
-        //                     NOT_NULL       *                         (BOOL)
-        //PREFIXUNARYOP  1     NOT            BOOL+                     (BOOL)
-        //                     OP_MINUS       ARITH+                    (ARITH)
-        //                     OP_PLUS        ARITH+                    (ARITH)
-        //PATTERN1       1     *              *                         (NOT_SET)
-        checkCompiler
-        ( SqlTreeType.POSTFIXUNARYOP
-        , os(SqlTokenType.NULL      , SqlTokenType.NOT_NULL  )
-        , os(genCombs(os((SqlExpressionType)null)), genCombs(os((SqlExpressionType)null))) // any types will do
-        , os(SqlExpressionType.BOOL , SqlExpressionType.BOOL )
-        );
-        checkCompiler
-        ( SqlTreeType.PREFIXUNARYOP
-        , os(SqlTokenType.NOT                    , SqlTokenType.OP_MINUS                , SqlTokenType.OP_PLUS                 )
-        , os(genCombs(os(SqlExpressionType.BOOL)), genCombs(os(SqlExpressionType.ARITH)), genCombs(os(SqlExpressionType.ARITH)))
-        , os(SqlExpressionType.BOOL, SqlExpressionType.ARITH, SqlExpressionType.ARITH)
-        );
-        checkCompiler
-        ( SqlTreeType.PATTERN1
-        , os((SqlTokenType)null       )              // null means any type will do
-        , o1(genCombs(os((SqlExpressionType)null)))  // any type will do
-        , os(SqlExpressionType.NOT_SET)
-        );
+        //POSTFIXUNARYOP 1     NULL         {'is_null'             }
+        //                     NOT_NULL     {'not_null'            }
+        //PREFIXUNARYOP  1     NOT          {'not'                 }
+        //                     OP_MINUS     {'-'                   }
+        //                     OP_PLUS      {'+'                   }
+        //PATTERN1       1     *
+        fail("novisit1");
     }
 
     @Test
     public void testVisit2() {
-        //CONJUNCTION
-        //DISJUNCTION    2     *              BOOL+   BOOL+             (BOOL)
-        //BINARYOP       2     CMP_EQ
-        //                     CMP_NEQ        BOOL+   BOOL+             (BOOL)
-        //                                    STRING+ STRING+           (BOOL)
-        //                                    ARITH+  ARITH+            (BOOL)
-        //                     CMP_LT
-        //                     CMP_LTEQ
-        //                     CMP_GT
-        //                     CMP_GTEQ       ARITH+  ARITH+            (BOOL)
-        //                     LIKE
-        //                     NOT_LIKE
-        //                     IN
-        //                     NOT_IN         STRING+ *                 (BOOL)
-        //                     OP_DIV
-        //                     OP_MULT
-        //                     OP_PLUS
-        //                     OP_MINUS       ARITH+  ARITH+            (ARITH)
-        //PATTERN2       2     *              *       *                 (NOT_SET)
-        checkCompiler
-        ( SqlTreeType.CONJUNCTION
-        , os(SqlTokenType.NULL     )
-        , o1(genCombs(os(SqlExpressionType.BOOL, SqlExpressionType.BOOL)))
-        , os(SqlExpressionType.BOOL)
-        );
-        checkCompiler
-        ( SqlTreeType.DISJUNCTION
-        , os(SqlTokenType.NULL     )
-        , o1(genCombs(os(SqlExpressionType.BOOL, SqlExpressionType.BOOL)))
-        , os(SqlExpressionType.BOOL)
-        );
-        checkCompiler
-        ( SqlTreeType.BINARYOP
-        , os(SqlTokenType.CMP_EQ)
-        , o1(genCombs( os(SqlExpressionType.BOOL, SqlExpressionType.BOOL)
-                     , os(SqlExpressionType.STRING, SqlExpressionType.STRING)
-                     , os(SqlExpressionType.ARITH, SqlExpressionType.ARITH)))
-        , os(SqlExpressionType.BOOL)
-        );
-        checkCompiler
-        ( SqlTreeType.BINARYOP
-        , os(SqlTokenType.CMP_NEQ)
-        , o1(genCombs( os(SqlExpressionType.BOOL, SqlExpressionType.BOOL)
-                     , os(SqlExpressionType.STRING, SqlExpressionType.STRING)
-                     , os(SqlExpressionType.ARITH, SqlExpressionType.ARITH)))
-        , os(SqlExpressionType.BOOL)
-        );
-        checkCompiler
-        ( SqlTreeType.BINARYOP
-        , os(SqlTokenType.CMP_LT    , SqlTokenType.CMP_LTEQ  , SqlTokenType.CMP_GT    , SqlTokenType.CMP_GTEQ  )
-        , os( genCombs(os(SqlExpressionType.ARITH, SqlExpressionType.ARITH))
-            , genCombs(os(SqlExpressionType.ARITH, SqlExpressionType.ARITH))
-            , genCombs(os(SqlExpressionType.ARITH, SqlExpressionType.ARITH))
-            , genCombs(os(SqlExpressionType.ARITH, SqlExpressionType.ARITH)))
-        , os(SqlExpressionType.BOOL , SqlExpressionType.BOOL , SqlExpressionType.BOOL , SqlExpressionType.BOOL )
-        );
-        checkCompiler
-        ( SqlTreeType.BINARYOP
-        , os(SqlTokenType.LIKE       , SqlTokenType.NOT_LIKE   , SqlTokenType.IN         , SqlTokenType.NOT_IN     )
-        , os( genCombs(os(SqlExpressionType.STRING, null))
-            , genCombs(os(SqlExpressionType.STRING, null))
-            , genCombs(os(SqlExpressionType.STRING, null))
-            , genCombs(os(SqlExpressionType.STRING, null)))
-        , os(SqlExpressionType.BOOL  , SqlExpressionType.BOOL  , SqlExpressionType.BOOL  , SqlExpressionType.BOOL  )
-        );
-        checkCompiler
-        ( SqlTreeType.BINARYOP
-        , os(SqlTokenType.OP_DIV    , SqlTokenType.OP_MULT   , SqlTokenType.OP_PLUS   , SqlTokenType.OP_MINUS  )
-        , os( genCombs(os(SqlExpressionType.ARITH, SqlExpressionType.ARITH))
-            , genCombs(os(SqlExpressionType.ARITH, SqlExpressionType.ARITH))
-            , genCombs(os(SqlExpressionType.ARITH, SqlExpressionType.ARITH))
-            , genCombs(os(SqlExpressionType.ARITH, SqlExpressionType.ARITH)))
-        , os(SqlExpressionType.ARITH, SqlExpressionType.ARITH, SqlExpressionType.ARITH, SqlExpressionType.ARITH)
-        );
-        checkCompiler
-        ( SqlTreeType.PATTERN2
-        , os((SqlTokenType)null       )  // null means any type will do
-        , o1(genCombs(os((SqlExpressionType)null, null)))  // any types will do
-        , os(SqlExpressionType.NOT_SET)
-        );
+        //CONJUNCTION    2     *            {'and'                 }
+        //DISJUNCTION    2     *            {'or'                  }
+        //BINARYOP       2     CMP_EQ       {'='                   }
+        //                     CMP_NEQ      {'<>'                  }
+        //                     CMP_LT       {'<'                   }
+        //                     CMP_LTEQ     {'<='                  }
+        //                     CMP_GT       {'>='                  }
+        //                     CMP_GTEQ     {'>='                  }
+        //                     LIKE         {'like'                }
+        //                     NOT_LIKE     {'not_like'            }
+        //                     IN           {'in'                  }
+        //                     NOT_IN       {'not_in'              }
+        //                     OP_DIV       {'/'                   }
+        //                     OP_MULT      {'*'                   }
+        //                     OP_PLUS      {'+'                   }
+        //                     OP_MINUS     {'-'                   }
+        //PATTERN2       2     *
+        fail("novisit2");
     }
     @Test
     public void testVisit3() {
-        //TERNARYOP      3     BETWEEN
-        //                     NOT_BETWEEN    ARITH+  ARITH+  ARITH+    (BOOL)
-        checkCompiler
-        ( SqlTreeType.TERNARYOP
-        , os(SqlTokenType.BETWEEN, SqlTokenType.NOT_BETWEEN)
-        , os( genCombs(os(SqlExpressionType.ARITH, SqlExpressionType.ARITH, SqlExpressionType.ARITH))
-            , genCombs(os(SqlExpressionType.ARITH, SqlExpressionType.ARITH, SqlExpressionType.ARITH)))
-        , os(SqlExpressionType.BOOL, SqlExpressionType.BOOL)
-        );
+        //TERNARYOP      3     BETWEEN      {'between'             }
+        //                     NOT_BETWEEN  {'not_between'         }
+        fail("novisit3");
     }
 
-    private void checkCompilerForLeaves(SqlTreeType treeType, SqlTokenType[] tts, SqlExpressionType[] rets) {
-        int resultIndex=0;
-        for (SqlTokenType pre_tt: tts) {
-            for (SqlTokenType tt : (pre_tt == null) ? SqlTokenType.values() : os(pre_tt)) { // null means any one will do, try them all
-                for( PairSTSET tokenExpType : generateTokenExpTypePairs(tt, rets[resultIndex])) {
-                    assertVisitGood(treeType, tokenExpType.left(), NO_EXPRESSIONS, tokenExpType.right(), this.tsVisitorBasic);
-                }
-            }
-            ++resultIndex;
+    private void assertCompileStep(SqlTreeType treeType, SqlTokenType tokenType, int arity, String expectedBefore, String expectedAfter) {
+        SqlCompilerVisitor scv = new SqlCompilerVisitor();
+        SqlTreeNode parent = new SqlTreeNode(treeType, testSqlToken(tokenType));
+        SqlTreeNode[] children = testChildren(arity);
+
+        scv.visitBefore(parent, children);
+        assertEquals(String.format("", treeType, tokenType), expectedBefore, scv.extractCode());
+        assertEquals("extractCode() does not clear result after visistBefore()", "", scv.extractCode());
+
+        scv.visitAfter(parent, children);
+        assertEquals(String.format("", treeType, tokenType), expectedAfter, scv.extractCode());
+        assertEquals("extractCode() does not clear result after visistAfter()", "", scv.extractCode());
+    }
+
+    private SqlTreeNode[] testChildren(int arity) {
+        SqlTreeNode[] children = new SqlTreeNode[arity];
+        for (int i=0; i<arity; ++i) {
+            children[i] = new SqlTreeNode(SqlTreeType.LEAF, testSqlToken(SqlTokenType.TEST));
         }
+        return children;
     }
 
-    private static void assertVisitGood( SqlTreeType treeType, SqlToken token, SqlExpressionType[] argTypes, SqlExpressionType resultType
-                                       , Visitor<SqlTreeNode> visitor
-                                       ) {
-        ArrayList<SqlTreeNode> children = new ArrayList<SqlTreeNode>();
-        for (SqlExpressionType arg : argTypes) {
-            children.add(sqlDummyTypedNode(arg));
-        }
-        SqlTreeNode stn = new SqlTreeNode(treeType, token);
-        assertTrue(visitor.visitAfter(stn, children.toArray(new SqlTreeNode[children.size()])));
-        assertEquals("Wrong expType for " + stn + " with children " + children, resultType, stn.getExpType());
-    }
-
-    private static SqlTreeNode sqlDummyTypedNode(SqlExpressionType arg) {
-        SqlTreeNode tn = new SqlTreeNode(null, new SqlToken(SqlTokenType.WS, ""));
-        tn.setExpType(arg);
-        return tn;
-    }
-
-    private PairSTSET[] generateTokenExpTypePairs(SqlTokenType tt, SqlExpressionType sqlExpressionType) {
-        if (tt == SqlTokenType.IDENT && sqlExpressionType == null) {
-            return os(PairSTSET.pair(new SqlToken(tt,"dummyIdent"), SqlExpressionType.ANY));
-        } else
-            return os(PairSTSET.pair(new SqlToken(tt,"no-value"), sqlExpressionType));
-    }
-
-    private void checkCompiler(SqlTreeType treeType, SqlTokenType[] tts, SqlExpressionType[][][] aaaets, SqlExpressionType[] rets) {
-        int resultIndex=0;
-        for (SqlTokenType pre_tt: tts) {
-            for (SqlTokenType tt : (pre_tt == null) ? SqlTokenType.values() : os(pre_tt)) { // null means any one will do, try them all
-                for(TripleSTaSETSET tokenAExpTypeExpType : generateTokenExpTypeTriples(tt, aaaets[resultIndex], rets[resultIndex])) {
-                    assertVisitGood(treeType, tokenAExpTypeExpType.first(), tokenAExpTypeExpType.second(), tokenAExpTypeExpType.third(), this.tsVisitorBasic);
-                }
-            }
-            ++resultIndex;
-        }
-    }
-
-    private TripleSTaSETSET[] generateTokenExpTypeTriples(SqlTokenType tt, SqlExpressionType[][] validCombinations, SqlExpressionType sqlExpressionType) {
-        List<TripleSTaSETSET> plist = new ArrayList<TripleSTaSETSET>();
-        SqlToken rootToken = new SqlToken(tt, "no-value");
-        for(SqlExpressionType[] args: validCombinations) {
-            plist.add(new TripleSTaSETSET(rootToken, args, sqlExpressionType));
-        }
-        for(SqlExpressionType[] args: complement(validCombinations)) {
-            plist.add(new TripleSTaSETSET(rootToken, args, SqlExpressionType.INVALID));
-        }
-        return plist.toArray(new TripleSTaSETSET[plist.size()]);
-    }
-
-    private SqlExpressionType[][] complement(SqlExpressionType[][] validCombinations) {
-        // #validCombinations > 0
-        // x,y : validCombinations | #x = #y
-        Set<List<SqlExpressionType>> setOfCombs = new HashSet<List<SqlExpressionType>>();
-        for (SqlExpressionType[] comb : validCombinations) {
-            setOfCombs.add(listOf(comb));
-        }
-
-        Set<List<SqlExpressionType>> product = setProduct(validCombinations[0].length);
-        product.removeAll(setOfCombs);
-
-        SqlExpressionType[][] arrArr = new SqlExpressionType[product.size()][];
-        int index = 0;
-        for(List<SqlExpressionType> list : product) {
-            arrArr[index++] = list.toArray(new SqlExpressionType[list.size()]);
-        }
-        return arrArr;
-    }
-
-    private List<SqlExpressionType> listOf(SqlExpressionType[] comb) {
-        List<SqlExpressionType> list = new ArrayList<SqlExpressionType>(comb.length);
-        for(SqlExpressionType set : comb) {
-            list.add(set);
-        }
-        return list;
-    }
-
-    private Set<List<SqlExpressionType>> setProduct(int n) {
-        // 0 ≤ n ≤ 3
-        Set<List<SqlExpressionType>> product = new HashSet<List<SqlExpressionType>>();
-        SqlExpressionType[] allVals = SqlExpressionType.values();
-        switch (n) {
-        case 0:
-            product.add(listOf(new SqlExpressionType[0]));
-            break;
-        case 1:
-            for (SqlExpressionType set : allVals) {
-                product.add(listOf(os(set)));
-            }
-            break;
-        case 2:
-            for (SqlExpressionType set1 : allVals) {
-                for (SqlExpressionType set2 : allVals) {
-                    product.add(listOf(os(set1, set2)));
-                }
-            }
-            break;
-        case 3:
-            for (SqlExpressionType set1 : allVals) {
-                for (SqlExpressionType set2 : allVals) {
-                    for (SqlExpressionType set3 : allVals) {
-                        product.add(listOf(os(set1, set2, set3)));
-                    }
-                }
-            }
-            break;
+    private SqlToken testSqlToken(SqlTokenType tokenType) {
+        switch (tokenType) {
+        case FLOAT:
+            return new SqlToken(tokenType, DUMMY_FLOAT);
+        case HEX:
+            return new SqlToken(tokenType, "0x2A");              //  value 42
+        case IDENT:
+            return new SqlToken(tokenType, DUMMY_IDENT);
+        case INT:
+            return new SqlToken(tokenType, "43");
+        case LIST:
+            return new SqlToken(tokenType, TEST_LIST);
+        case STRING:
+            return new SqlToken(tokenType, "'"+DUMMY_STRING+"'"); // note quotes
+        case LP:
+        case RP:
+        case WS:
+            fail(String.format("Test token generated of type «%s»", tokenType));
         default:
-            throw new IllegalArgumentException("cannot generate product for n="+n);
+            return new SqlToken(tokenType, tokenType.opCode());
         }
-        return product;
     }
-
-    private static SqlExpressionType[][] genCombs(SqlExpressionType[]... aaets) {
-        List<SqlExpressionType> emptyArgList = new ArrayList<SqlExpressionType>();
-        List<List<SqlExpressionType>> argLists = new ArrayList<List<SqlExpressionType>>();
-        argLists.add(emptyArgList);
-        List<List<SqlExpressionType>> list = new ArrayList<List<SqlExpressionType>>();
-        for(SqlExpressionType[] aets : aaets) {
-            list.addAll(generateArgumentCombinationLists(0, aets, argLists));
-        }
-        SqlExpressionType[][] result = new SqlExpressionType[list.size()][];
-        {   int index = 0;
-            for(List<SqlExpressionType> argList : list) {
-                result[index++] = argList.toArray(new SqlExpressionType[argList.size()]);
-            }
-        }
-        return result;
-    }
-
-    private static List<List<SqlExpressionType>> generateArgumentCombinationLists(int start, SqlExpressionType[] aets, List<List<SqlExpressionType>> lists) {
-        if (start < aets.length) {
-            List<List<SqlExpressionType>> newLists = new ArrayList<List<SqlExpressionType>>();
-            for(List<SqlExpressionType> alist : lists) {
-                SqlExpressionType[] ets = (aets[start] == null ? SqlExpressionType.values()
-                                                               : os(aets[start], SqlExpressionType.ANY));
-                for(SqlExpressionType et: ets) {
-                    List<SqlExpressionType> copyList = new ArrayList<SqlExpressionType>(alist);
-                    copyList.add(et);
-                    newLists.add(copyList);
-                }
-            }
-            return generateArgumentCombinationLists(start+1, aets, newLists);
-        }
-        return lists;
-    }
-
-    private static class PairSTSET extends Pair<SqlToken, SqlExpressionType> {
-        private PairSTSET(SqlToken l, SqlExpressionType r) { super(l, r); }
-        public static PairSTSET pair(SqlToken l, SqlExpressionType r) { return new PairSTSET(l,r); }
-    };
-    private static class TripleSTaSETSET extends Triple<SqlToken, SqlExpressionType[], SqlExpressionType> {
-        private TripleSTaSETSET(SqlToken f, SqlExpressionType[] s, SqlExpressionType t) { super(f, s, t); }
-    };
-
-    private static <Obj> Obj[] os(Obj... objs) { return objs; }
-    // os doesn't work as expected when Obj is already an Array and there is a single argument. Hence following special case:
-    private static SqlExpressionType[][][] o1(SqlExpressionType[][] aaset) { SqlExpressionType[][][] aaaset = new SqlExpressionType[1][][]; aaaset[0] = aaset; return aaaset; }
 }

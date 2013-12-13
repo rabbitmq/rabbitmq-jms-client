@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 /**
  * SQL Token type
  * <p>
- * Each type of token has a description, a recognition pattern (regular expression), a data type (for associated data),
+ * Each type of token has an <b>opCode</b> (which is printable), a recognition pattern (regular expression), a data type (for associated data),
  * and a boolean flag indicating if the token is streamed. Tokens which are not streamed are intended to be discarded
  * when recognised. Token which are streamed are intended for consumption by a parser.
  * </p>
@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
  * </p>
  */
 enum SqlTokenType {
-//  Token_name_ Include Description____   Recognition_pattern_____________________________________________    Type_of_variable_datum__
+//  Token_name_ Include OpCode_________   Recognition_pattern_____________________________________________    Type_of_variable_datum__
     WS          (false, "whitespace"    , "\\s+"                                                           ),
     LIKE        (true , "like"          , "[Ll][Ii][Kk][Ee](?![a-zA-Z0-9_$.])"                             ),
     NOT_LIKE    (true , "not_like"      , "[Nn][Oo][Tt]\\s+[Ll][Ii][Kk][Ee](?![a-zA-Z0-9_$.])"             ),
@@ -64,26 +64,27 @@ enum SqlTokenType {
                                               + "|\\.[0-9]*)"                                               , SqlTokenValueType.FLOAT ),
     INT         (true , "integer"       , "[0-9]+"                                                          , SqlTokenValueType.LONG  ),
     HEX         (true , "hex"           , "0x[0-9a-fA-F]+"                                                  , SqlTokenValueType.HEX   ),
-    LIST        (false, "list"          , null                                                              , SqlTokenValueType.LIST  );
+    LIST        (false, "list"          , null                                                              , SqlTokenValueType.LIST  ),
+    TEST        (false, "‹›"            , null                                                              , SqlTokenValueType.NO_VALUE);  // only used in unit testing
 
     private boolean include;            // include in token stream
-    private String description;         // used in diagnostics
-    private Pattern pattern;            // recogniser
+    private String opCode;              // used by compiler
+    private Pattern pattern;            // recogniser for tokenizer
     private SqlTokenValueType vtype;    // type of variable data in token
 
-    SqlTokenType(boolean isToken, String description, String regex) {
-        this(isToken, description, regex, SqlTokenValueType.NO_VALUE);
+    SqlTokenType(boolean isToken, String opCode, String regex) {
+        this(isToken, opCode, regex, SqlTokenValueType.NO_VALUE);
     }
 
-    SqlTokenType(boolean include, String description, String regex, SqlTokenValueType vtype) {
+    SqlTokenType(boolean include, String opCode, String regex, SqlTokenValueType vtype) {
         this.include = include;
-        this.description = description;         // for diagnostics
-        this.vtype = vtype;                     // data type of variable data
-        this.pattern = (regex==null ? null : Pattern.compile(regex));  // recognition pattern
+        this.opCode = opCode;
+        this.vtype = vtype;
+        this.pattern = (regex==null ? null : Pattern.compile(regex));
     }
 
-    String description() {
-        return this.description;
+    String opCode() {
+        return this.opCode;
     }
 
     SqlTokenValueType valueType() {

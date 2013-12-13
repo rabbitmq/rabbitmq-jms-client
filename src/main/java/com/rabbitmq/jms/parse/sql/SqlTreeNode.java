@@ -10,7 +10,6 @@ public class SqlTreeNode {
     private final SqlToken value;               // null value means children
 
     private SqlExpressionType expType = SqlExpressionType.NOT_SET;  // type of expression represented by this node (if known)
-    private String code;  // compiled version of this node (including child nodes)
 
     SqlTreeNode(SqlTreeType treeType, SqlToken value) {
         this.treeType = treeType;
@@ -24,10 +23,6 @@ public class SqlTreeNode {
     // getter and setter for expression type - used by SqlTypeSetterVisitor
     void setExpType(SqlExpressionType expType) { this.expType = expType; }
     SqlExpressionType getExpType() { return this.expType; }
-
-    // getter and setter for code - used by SqlCompilerVisitor
-    void setCode(String code) { this.code = code; }
-    String getCode() { return this.code; }
 
     // getters for node value and type
     SqlToken    value()     { return this.value;    }
