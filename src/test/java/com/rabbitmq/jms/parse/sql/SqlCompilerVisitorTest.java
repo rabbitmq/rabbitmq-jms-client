@@ -16,7 +16,7 @@ public class SqlCompilerVisitorTest {
 
     //Table of expected results:
 
-  //SqlTreeType   arity  SqlTreeNode  (beforeResult)         (afterResult)
+    //SqlTreeType   arity  SqlTreeNode  (beforeResult)         (afterResult)
     //˜˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜  ˜˜˜˜˜˜˜˜˜˜˜  ˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜  ˜˜˜˜˜˜˜˜˜˜˜˜˜
     //LEAF           0     IDENT        {'ident',<<"dummy">>}
     //                     STRING       <<"dummy">>
@@ -33,7 +33,7 @@ public class SqlCompilerVisitorTest {
     //PREFIXUNARYOP  1     NOT          {'not'                 }
     //                     OP_MINUS     {'-'                   }
     //                     OP_PLUS      {'+'                   }
-    //PATTERN1       1     *
+    //PATTERN1       1     *                                   'no_escape'
 
     //CONJUNCTION    2     *            {'and'                 }
     //DISJUNCTION    2     *            {'or'                  }
@@ -79,7 +79,6 @@ public class SqlCompilerVisitorTest {
         //                     LIST         [<<"a">>,<<"b">>]
         //                     TRUE         'true'
         //                     FALSE        'false'
-        //LIST           0     LIST         [<<"a">>,<<"b">>]
         assertCompileStep(SqlTreeType.LEAF, SqlTokenType.IDENT , 0, "{'ident',<<\""+DUMMY_IDENT+"\">>}", "");
         assertCompileStep(SqlTreeType.LEAF, SqlTokenType.STRING, 0, "<<\""+DUMMY_STRING+"\">>"         , "");
         assertCompileStep(SqlTreeType.LEAF, SqlTokenType.FLOAT , 0, DUMMY_FLOAT                        , "");
@@ -89,6 +88,7 @@ public class SqlCompilerVisitorTest {
         assertCompileStep(SqlTreeType.LEAF, SqlTokenType.TRUE  , 0, "'true'"                           , "");
         assertCompileStep(SqlTreeType.LEAF, SqlTokenType.FALSE , 0, "'false'"                          , "");
 
+        //LIST           0     LIST         [<<"a">>,<<"b">>]
         assertCompileStep(SqlTreeType.LIST, SqlTokenType.LIST  , 0, TEST_LIST_COMPILED                 , "");
     }
 
@@ -96,17 +96,28 @@ public class SqlCompilerVisitorTest {
     public void testVisit1() {
         //POSTFIXUNARYOP 1     NULL         {'is_null'             }
         //                     NOT_NULL     {'not_null'            }
+        assertCompileStep(SqlTreeType.POSTFIXUNARYOP, SqlTokenType.NULL    , 1, "{'is_null'" , "}");
+        assertCompileStep(SqlTreeType.POSTFIXUNARYOP, SqlTokenType.NOT_NULL, 1, "{'not_null'", "}");
+
         //PREFIXUNARYOP  1     NOT          {'not'                 }
         //                     OP_MINUS     {'-'                   }
         //                     OP_PLUS      {'+'                   }
+        assertCompileStep(SqlTreeType.PREFIXUNARYOP, SqlTokenType.NOT      , 1, "{'not'"     , "}");
+        assertCompileStep(SqlTreeType.PREFIXUNARYOP, SqlTokenType.OP_MINUS , 1, "{'-'"       , "}");
+        assertCompileStep(SqlTreeType.PREFIXUNARYOP, SqlTokenType.OP_PLUS  , 1, "{'+'"       , "}");
+
         //PATTERN1       1     *
-        fail("novisit1");
+        assertCompileStep(SqlTreeType.PATTERN1     , SqlTokenType.TEST , 1, "", "'no_escape'");
     }
 
     @Test
     public void testVisit2() {
         //CONJUNCTION    2     *            {'and'                 }
+        assertCompileStep(SqlTreeType.CONJUNCTION, SqlTokenType.TEST    , 2, "{'and'", "}");
+
         //DISJUNCTION    2     *            {'or'                  }
+        assertCompileStep(SqlTreeType.DISJUNCTION, SqlTokenType.TEST    , 2, "{'or'" , "}");
+
         //BINARYOP       2     CMP_EQ       {'='                   }
         //                     CMP_NEQ      {'<>'                  }
         //                     CMP_LT       {'<'                   }
@@ -121,14 +132,31 @@ public class SqlCompilerVisitorTest {
         //                     OP_MULT      {'*'                   }
         //                     OP_PLUS      {'+'                   }
         //                     OP_MINUS     {'-'                   }
+        assertCompileStep(SqlTreeType.BINARYOP, SqlTokenType.CMP_EQ  , 2, "{'='"       , "}");
+        assertCompileStep(SqlTreeType.BINARYOP, SqlTokenType.CMP_NEQ , 2, "{'<>'"      , "}");
+        assertCompileStep(SqlTreeType.BINARYOP, SqlTokenType.CMP_LT  , 2, "{'<'"       , "}");
+        assertCompileStep(SqlTreeType.BINARYOP, SqlTokenType.CMP_LTEQ, 2, "{'<='"      , "}");
+        assertCompileStep(SqlTreeType.BINARYOP, SqlTokenType.CMP_GT  , 2, "{'>'"       , "}");
+        assertCompileStep(SqlTreeType.BINARYOP, SqlTokenType.CMP_GTEQ, 2, "{'>='"      , "}");
+        assertCompileStep(SqlTreeType.BINARYOP, SqlTokenType.LIKE    , 2, "{'like'"    , "}");
+        assertCompileStep(SqlTreeType.BINARYOP, SqlTokenType.NOT_LIKE, 2, "{'not_like'", "}");
+        assertCompileStep(SqlTreeType.BINARYOP, SqlTokenType.IN      , 2, "{'in'"      , "}");
+        assertCompileStep(SqlTreeType.BINARYOP, SqlTokenType.NOT_IN  , 2, "{'not_in'"  , "}");
+        assertCompileStep(SqlTreeType.BINARYOP, SqlTokenType.OP_DIV  , 2, "{'/'"       , "}");
+        assertCompileStep(SqlTreeType.BINARYOP, SqlTokenType.OP_MULT , 2, "{'*'"       , "}");
+        assertCompileStep(SqlTreeType.BINARYOP, SqlTokenType.OP_PLUS , 2, "{'+'"       , "}");
+        assertCompileStep(SqlTreeType.BINARYOP, SqlTokenType.OP_MINUS, 2, "{'-'"       , "}");
+
         //PATTERN2       2     *
-        fail("novisit2");
+        assertCompileStep(SqlTreeType.PATTERN2, SqlTokenType.TEST, 2, "", "");
     }
+
     @Test
     public void testVisit3() {
         //TERNARYOP      3     BETWEEN      {'between'             }
         //                     NOT_BETWEEN  {'not_between'         }
-        fail("novisit3");
+        assertCompileStep(SqlTreeType.TERNARYOP, SqlTokenType.BETWEEN    , 3, "{'between'"    , "}");
+        assertCompileStep(SqlTreeType.TERNARYOP, SqlTokenType.NOT_BETWEEN, 3, "{'not_between'", "}");
     }
 
     private void assertCompileStep(SqlTreeType treeType, SqlTokenType tokenType, int arity, String expectedBefore, String expectedAfter) {

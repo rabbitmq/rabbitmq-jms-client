@@ -28,7 +28,7 @@ public class SqlCompilerVisitor implements Visitor<SqlTreeNode> {
 
     public String extractCode() {
         if (this.sb.length() == 0) return ""; // nothing to extract
-        String code = this.sb.substring(1);   // leading comma is removed
+        String code = this.sb.substring((this.sb.charAt(0) == ',') ? 1 : 0);  // a leading comma is removed
         this.sb.setLength(0);
         return code;
     }
