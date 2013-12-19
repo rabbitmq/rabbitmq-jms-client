@@ -68,6 +68,22 @@ public class SqlParserTest {
     }
 
     @Test
+    public void badParse() throws Exception {
+        SqlTokenStream tokenStream = new SqlTokenStream("true and");
+        SqlParser sp = new SqlParser(tokenStream);
+        sp.parse();
+
+        if ("".equals(tokenStream.getResidue()) && sp.parseOk()) {
+            fail("Parse did not fail!");
+        } else {
+            assertEquals( "Parse did not fail with the right message."
+                        , "Terminated before end of stream; next token is: 'and' at index: 1."
+                        , sp.getErrorMessage()
+                        );
+        }
+    }
+
+    @Test
     public void unopenedQuoteParse() throws Exception {
         SqlTokenStream tokenStream = new SqlTokenStream("'abc' = abc'");
         SqlParser sp = new SqlParser(tokenStream);
