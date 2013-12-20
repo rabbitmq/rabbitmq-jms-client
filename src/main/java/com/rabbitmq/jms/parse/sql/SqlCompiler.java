@@ -12,15 +12,15 @@ public class SqlCompiler implements Compiler {
 
     public SqlCompiler(SqlParseTree parseTree) {
         SqlCompilerVisitor compilerVisitor = new SqlCompilerVisitor();
-        boolean aborted = traverse(parseTree, compilerVisitor);
-        if (aborted) {
-            this.compileOk = false;
-            this.compiledCode = null;
-            this.errorMessage = "Could not compile parsed tree "+ parseTree.formattedTree();
-        } else {
+        boolean completed = traverse(parseTree, compilerVisitor);
+        if (completed) {
             this.compileOk = true;
             this.compiledCode = compilerVisitor.extractCode();
             this.errorMessage = null;
+        } else {
+            this.compileOk = false;
+            this.compiledCode = null;
+            this.errorMessage = "Could not compile parsed tree "+ parseTree.formattedTree();
         }
     }
 
