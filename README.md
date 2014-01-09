@@ -14,7 +14,7 @@ The complete list of RabbitMQ JMS project repositories is:
 * [`rabbit-jms-trader`](#rabbit-jms-trader) a specialised `pom` project that builds a sample application using the RabbitMQ JMS client.
 * [`rabbit-jms-boot-demo`](#rabbit-jms-boot-demo) a very small sample app using Spring, with Groovy and Java embodiments.
 
-### `rabbit-jms-client` <a name="rabbit-jms-client"></a>
+### <a name="rabbit-jms-client"></a> `rabbit-jms-client`
 
 This repository. The jar is built, and installed into the local Maven repository, using
 
