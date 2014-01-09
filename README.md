@@ -22,27 +22,27 @@ This repository. The jar is built, and installed into the local Maven repository
 
 as usual, but requires access to pre-built `rabbit-jms-parent` and `rabbit-jms-topic-exchange` projects at the same version level. It requires special access permissions to `deploy`.
 
-### `rabbit-jms-parent` <a name="rabbit-jms-parent"></a>
+### <a name="rabbit-jms-parent"></a> `rabbit-jms-parent`
 
 The holder of the master version, the (Maven) plugin and package dependencies and their versions, and certain globally used property settings. It can be built and deployed locally for private use (using `install`).
 
-### `rabbit-jms-cts` <a name="rabbit-jms-cts"></a>
+### <a name="rabbit-jms-cts"></a> `rabbit-jms-cts`
 
 A fork of a compliance test suite, adjusted to test this client to its functional limits.
 
-### `rabbit-jms-package` <a name="rabbit-jms-package"></a>
+### <a name="rabbit-jms-package"></a> `rabbit-jms-package`
 
 The master distribution build project — this knows what pieces and versions of samples, the Plugin and the client jar to build and package for distribution.
 
-### `rabbit-jms-topic-exchange` <a name="rabbit-jms-topic-exchange"></a>
+### <a name="rabbit-jms-topic-exchange"></a> `rabbit-jms-topic-exchange`
 
 This is an Erlang coded RabbitMQ plugin (_the Plugin_) which defines a new exchange type for RabbitMQ Server. Exchanges of this type can piggy-back onto topic exchanges (by exchange to exchange binding) to filter out messages based upon their properties and a selector expression (written in a JMS SQL syntax).
 
-### `rabbit-jms-trader` <a name="rabbit-jms-trader"></a>
+### <a name="rabbit-jms-trader"></a> `rabbit-jms-trader`
 
 A sample RabbitMQ JMS Client application, completely self-contained. Built with play and comes with a tomcat container for demonstration purposes.
 
-### `rabbit-jms-boot-demo` <a name="rabbit-jms-boot-demo"></a>
+### <a name="rabbit-jms-boot-demo"></a> `rabbit-jms-boot-demo`
 
 A sample very small RabbitMQ JMS Client application, using Spring and with both `groovy` and Java stand-alone invocations. Suitable for development trial.
 This repository is not distributed.
