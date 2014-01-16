@@ -16,8 +16,8 @@ public class SqlTokenStreamTest {
                        "integer: 1"
                      , "float: 2.0"
                      , "float: 0.21"
-                     , "identifier: name"
-                     , "IS NULL"
+                     , "ident: name"
+                     , "is_null"
                      , "string: 'hello world''s'"
                      , "float: 200.0"
                      , "float: 200.0"
@@ -27,22 +27,26 @@ public class SqlTokenStreamTest {
 
     @Test
     public void testKeywordIdentifier() {
-        assertTokenise("nothing not", "identifier: nothing", "NOT");
+        assertTokenise("nothing not"
+                       , "ident: nothing"
+                       , "not");
     }
 
     @Test
     public void testExpression() {
-        assertTokenise("nothing IS NULL", "identifier: nothing", "IS NULL");
+        assertTokenise("nothing IS NULL"
+                       , "ident: nothing"
+                       , "is_null");
     }
 
     @Test
     public void testKeywordSequenceSpacing() {
-        assertTokenise("IS  NOT NULL", "IS NOT NULL");
-        assertTokenise("IS\nNOT NULL", "IS NOT NULL");
-        assertTokenise("IS\tNOT NULL", "IS NOT NULL");
-        assertTokenise("IS\fNOT NULL", "IS NOT NULL");
-        assertTokenise("IS\rNOT NULL", "IS NOT NULL");
-        assertTokenise("IS\u000BNOT NULL", "IS NOT NULL");
+        assertTokenise("IS  NOT NULL", "not_null");
+        assertTokenise("IS\nNOT NULL", "not_null");
+        assertTokenise("IS\tNOT NULL", "not_null");
+        assertTokenise("IS\fNOT NULL", "not_null");
+        assertTokenise("IS\rNOT NULL", "not_null");
+        assertTokenise("IS\u000BNOT NULL", "not_null");
     }
 
     @Test
@@ -57,7 +61,9 @@ public class SqlTokenStreamTest {
 
     @Test
     public void testGeneralSpacing() {
-        assertTokenise("\n\t\f\r\u000BIS NULLify \n", "identifier: IS", "identifier: NULLify");
+        assertTokenise("\n\t\f\r\u000BIS NULLify \n"
+                       , "ident: IS"
+                       , "ident: NULLify");
     }
 
     private void assertTokenise(String inStr, String ...strs) {

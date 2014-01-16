@@ -20,7 +20,7 @@ public class SqlTreeNode {
         this(treeType, null);
     }
 
-    // getter and setter for expression type
+    // getter and setter for expression type - used by SqlTypeSetterVisitor
     void setExpType(SqlExpressionType expType) { this.expType = expType; }
     SqlExpressionType getExpType() { return this.expType; }
 

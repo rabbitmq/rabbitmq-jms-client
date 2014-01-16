@@ -1,6 +1,6 @@
 package com.rabbitmq.jms.parse.sql;
 
-import static com.rabbitmq.jms.parse.ParseTreeTraverser.traversePostOrder;
+import static com.rabbitmq.jms.parse.ParseTreeTraverser.traverse;
 
 import java.util.Collections;
 import java.util.Map;
@@ -12,7 +12,7 @@ public abstract class SqlTypeChecker { // prevent instantiation   directly
 
     public static SqlExpressionType deriveExpressionType(ParseTree<SqlTreeNode> tree, Map<String, SqlExpressionType> identifierType) {
         if (tree == null) return SqlExpressionType.NOT_SET; // null trees are not of any type
-        traversePostOrder(tree, new SqlTypeSetterVisitor(identifierType));
+        traverse(tree, new SqlTypeSetterVisitor(identifierType));
         return tree.getNode().getExpType();
     }
 

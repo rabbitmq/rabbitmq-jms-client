@@ -272,7 +272,7 @@ public class SqlTypeSetterVisitorTest {
             children.add(sqlDummyTypedNode(arg));
         }
         SqlTreeNode stn = new SqlTreeNode(treeType, token);
-        assertTrue(visitor.visit(stn, children.toArray(new SqlTreeNode[children.size()])));
+        assertTrue(visitor.visitAfter(stn, children.toArray(new SqlTreeNode[children.size()])));
         assertEquals("Wrong expType for " + stn + " with children " + children, resultType, stn.getExpType());
     }
 

@@ -48,6 +48,7 @@ import com.rabbitmq.jms.client.message.RMQObjectMessage;
 import com.rabbitmq.jms.client.message.RMQStreamMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.parse.sql.SqlExpressionType;
+import com.rabbitmq.jms.parse.sql.SqlParseTree;
 import com.rabbitmq.jms.parse.sql.SqlParser;
 import com.rabbitmq.jms.parse.sql.SqlTokenStream;
 import com.rabbitmq.jms.parse.sql.SqlTypeChecker;
@@ -620,23 +621,27 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private void bindSelectorQueue(RMQDestination dest, String jmsSelector, String queueName, String selectionExchange)
             throws InvalidSelectorException, IOException {
-        if (selectorIsTypeValid(jmsSelector)) {
+        if (selectorIsValid(jmsSelector)) {
             Map<String, Object> args = Collections.singletonMap(RJMS_SELECTOR_ARG, (Object)jmsSelector);
             // bind the queue to the topic selector exchange with the jmsSelector expression as argument
             this.channel.queueBind(queueName, selectionExchange, dest.getAmqpRoutingKey(), args);
         } else {
-            throw new RMQJMSSelectorException(String.format("Selector expression: \"%s\" is not type-valid.", jmsSelector));
+            throw new RMQJMSSelectorException(String.format("Selector expression: \"%s\" is not type-valid or is incorrectly formed.", jmsSelector));
         }
     }
 
     /**
-     * Is the selector string type-valid?
+     * Can the selector string be parsed and is it type-valid for JMS message selection?
      * @param jmsSelector - the selector string
      * @return <code>true</code> if it is valid, <code>false</code> if not.
      */
-    private static boolean selectorIsTypeValid(String jmsSelector) {
+    private static boolean selectorIsValid(String jmsSelector) {
         SqlTokenStream tokenStream = new SqlTokenStream(jmsSelector);
-        return ("".equals(tokenStream.getResidue())) && canBeBool(SqlTypeChecker.deriveExpressionType(new SqlParser(tokenStream).parse(), JMS_TYPE_IDENTS));
+        if (!"".equals(tokenStream.getResidue())) return false;
+        SqlParser sp = new SqlParser(tokenStream);
+        SqlParseTree spt = sp.parse();
+        if (!sp.parseOk()) return false;
+        return canBeBool(SqlTypeChecker.deriveExpressionType(spt, JMS_TYPE_IDENTS));
     }
 
     private static boolean canBeBool(SqlExpressionType set) {

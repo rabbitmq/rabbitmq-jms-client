@@ -25,35 +25,35 @@ public class SqlProductionTest {
         assertNullParse(SqlProduction.expression);
 
         assertParse(SqlProduction.expression, "nothing IS NULL"
-                   , "POSTFIXUNARYOP: IS NULL"
-                   , "    LEAF: identifier: nothing"
+                   , "POSTFIXUNARYOP: is_null"
+                   , "    LEAF: ident: nothing"
                    );
         assertParse(SqlProduction.expression, "nothing IS NULL And JMSPrefix > 12-4"
                    , "CONJUNCTION:"
-                   , "    POSTFIXUNARYOP: IS NULL"
-                   , "        LEAF: identifier: nothing"
+                   , "    POSTFIXUNARYOP: is_null"
+                   , "        LEAF: ident: nothing"
                    , "    BINARYOP: >"
-                   , "        LEAF: identifier: JMSPrefix"
+                   , "        LEAF: ident: JMSPrefix"
                    , "        BINARYOP: -"
                    , "            LEAF: integer: 12"
                    , "            LEAF: integer: 4"
                    );
         assertParse(SqlProduction.expression, "nothing IS NulL oR JMSPrefix > 12- 4"
                    , "DISJUNCTION:"
-                   , "    POSTFIXUNARYOP: IS NULL"
-                   , "        LEAF: identifier: nothing"
+                   , "    POSTFIXUNARYOP: is_null"
+                   , "        LEAF: ident: nothing"
                    , "    BINARYOP: >"
-                   , "        LEAF: identifier: JMSPrefix"
+                   , "        LEAF: ident: JMSPrefix"
                    , "        BINARYOP: -"
                    , "            LEAF: integer: 12"
                    , "            LEAF: integer: 4"
                    );
         assertParse(SqlProduction.expression, "nothing IS NulL oR (JMSPrefix >= 12/-4.3)"
                    , "DISJUNCTION:"
-                   , "    POSTFIXUNARYOP: IS NULL"
-                   , "        LEAF: identifier: nothing"
+                   , "    POSTFIXUNARYOP: is_null"
+                   , "        LEAF: ident: nothing"
                    , "    BINARYOP: >="
-                   , "        LEAF: identifier: JMSPrefix"
+                   , "        LEAF: ident: JMSPrefix"
                    , "        BINARYOP: /"
                    , "            LEAF: integer: 12"
                    , "            PREFIXUNARYOP: -"
@@ -66,7 +66,7 @@ public class SqlProductionTest {
         assertNullParse(SqlProduction.not_expr);
 
         assertParse(SqlProduction.not_expr,  "not 2 < 3"
-                    , "PREFIXUNARYOP: NOT"
+                    , "PREFIXUNARYOP: not"
                     , "    BINARYOP: <"
                     , "        LEAF: integer: 2"
                     , "        LEAF: integer: 3"
@@ -85,14 +85,14 @@ public class SqlProductionTest {
                    );
         assertParse(SqlProduction.cmp_expr,
                     "2.5 between 2 and 3"
-                    , "TERNARYOP: BETWEEN"
+                    , "TERNARYOP: between"
                     , "    LEAF: float: 2.5"
                     , "    LEAF: integer: 2"
                     , "    LEAF: integer: 3"
                    );
         assertParse(SqlProduction.cmp_expr,
                     "2.5 not between 2 and 3"
-                    , "TERNARYOP: NOT BETWEEN"
+                    , "TERNARYOP: not_between"
                     , "    LEAF: float: 2.5"
                     , "    LEAF: integer: 2"
                     , "    LEAF: integer: 3"
@@ -186,58 +186,58 @@ public class SqlProductionTest {
         assertParse(SqlProduction.simple,
                     "(asd + 1)"
                     , "BINARYOP: +"
-                    , "    LEAF: identifier: asd"
+                    , "    LEAF: ident: asd"
                     , "    LEAF: integer: 1"
                    );
         assertParse(SqlProduction.simple,
                     "  true "
-                    , "LEAF: TRUE"
+                    , "LEAF: true"
                    );
         assertParse(SqlProduction.simple,
                     "FalSe"
-                    , "LEAF: FALSE"
+                    , "LEAF: false"
                    );
         assertParse(SqlProduction.simple,
                     "fred is null"
-                    , "POSTFIXUNARYOP: IS NULL"
-                    , "    LEAF: identifier: fred"
+                    , "POSTFIXUNARYOP: is_null"
+                    , "    LEAF: ident: fred"
                    );
         assertParse(SqlProduction.simple,
                     "fred is not null"
-                    , "POSTFIXUNARYOP: IS NOT NULL"
-                    , "    LEAF: identifier: fred"
+                    , "POSTFIXUNARYOP: not_null"
+                    , "    LEAF: ident: fred"
                    );
         assertParse(SqlProduction.simple,
                     "fred iN  ('a' ,'b')"
-                    , "BINARYOP: IN"
-                    , "    LEAF: identifier: fred"
+                    , "BINARYOP: in"
+                    , "    LEAF: ident: fred"
                     , "    LIST: list: [a, b]"
                    );
         assertParse(SqlProduction.simple,
                     "fred nOt  iN  ('a' ,'b')"
-                    , "BINARYOP: NOT IN"
-                    , "    LEAF: identifier: fred"
+                    , "BINARYOP: not_in"
+                    , "    LEAF: ident: fred"
                     , "    LIST: list: [a, b]"
                    );
         assertParse(SqlProduction.simple,
                     "fred like  'a*'"
-                    , "BINARYOP: LIKE"
-                    , "    LEAF: identifier: fred"
+                    , "BINARYOP: like"
+                    , "    LEAF: ident: fred"
                     , "    PATTERN1:"
                     , "        LEAF: string: 'a*'"
                    );
         assertParse(SqlProduction.simple,
                     "fred like  'a*' escape '\\'"
-                    , "BINARYOP: LIKE"
-                    , "    LEAF: identifier: fred"
+                    , "BINARYOP: like"
+                    , "    LEAF: ident: fred"
                     , "    PATTERN2:"
                     , "        LEAF: string: 'a*'"
                     , "        LEAF: string: '\\'"
                    );
         assertParse(SqlProduction.simple,
                     "fred like  'a' escape ''''"
-                    , "BINARYOP: LIKE"
-                    , "    LEAF: identifier: fred"
+                    , "BINARYOP: like"
+                    , "    LEAF: ident: fred"
                     , "    PATTERN2:"
                     , "        LEAF: string: 'a'"
                     , "        LEAF: string: ''''"

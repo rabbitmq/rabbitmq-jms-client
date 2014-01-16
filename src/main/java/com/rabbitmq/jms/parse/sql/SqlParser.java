@@ -6,33 +6,34 @@ import com.rabbitmq.jms.parse.TokenStream;
 /**
  * This uses {@link SqlProduction} as a naïve parser for the grammar defined in that type.
  * <p>
- * This class is <i>not thread-safe</i> since it modifies the passed {@link TokenStream} which is (potentially) shared.
+ * This class is <i>not thread-safe during construction</i> since it then modifies the passed {@link TokenStream} which is (potentially) shared.
  * </p>
  */
 public class SqlParser implements Parser<SqlTreeNode> {
 
-    private final TokenStream<SqlToken, Integer> tokenStream;
-    private boolean parseOk = false;
-    private String terminationMessage = null;
+    private final boolean parseOk;
+    private final String errorMessage;
+    private final SqlParseTree parseTree;
 
     public SqlParser(TokenStream<SqlToken, Integer> tokenStream) {
-        this.tokenStream = tokenStream;
+        this.parseTree = SqlProduction.ROOT.parse(tokenStream);
+        if (tokenStream.moreTokens()) {
+            this.parseOk = false;
+            this.errorMessage =
+                String.format("Terminated before end of stream; next token is: '%s' at index: %s."
+                             , tokenStream.readToken(), tokenStream.position());
+        } else if (this.parseTree == null) {
+            this.parseOk = false;
+            this.errorMessage = "No parse tree produced.";
+        } else {
+            this.parseOk = true;
+            this.errorMessage = null;
+        }
     }
 
     @Override
     public SqlParseTree parse() {
-        this.reset();
-        SqlParseTree parsed = SqlProduction.ROOT.parse(this.tokenStream);
-        if (this.tokenStream.moreTokens()) {
-            this.parseOk = false;
-            this.terminationMessage =
-                String.format("Terminated before end of stream; next token is: '%s' at index: %s."
-                             , this.tokenStream.readToken(), this.tokenStream.position());
-            return null;
-        } else {
-            this.parseOk = true;
-        }
-        return parsed;
+        return this.parseTree;
     }
 
     @Override
@@ -41,14 +42,7 @@ public class SqlParser implements Parser<SqlTreeNode> {
     }
 
     @Override
-    public String getTerminationMessage() {
-        return this.terminationMessage;
+    public String getErrorMessage() {
+        return this.errorMessage;
     }
-
-    private final void reset() {
-        this.parseOk = false;
-        this.tokenStream.reset();
-        this.terminationMessage = null;
-    }
-
 }
