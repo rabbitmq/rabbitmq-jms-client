@@ -1,12 +1,13 @@
 #!/bin/bash
 
+# Uses $1 and sets local RJMS_* vars:
 source bin/set-vars
 
 echo "Stop RabbitMQ server (version ${RMQ_VERSION}) after Integration Tests"
 
-if [ ! -d "${RJMS_RABBITMQ_BASE}" ] ; then
-  echo "Couldn't find the RJMS_RABBITMQ_BASE directory"
+if [[ ! -d "${RJMS_RABBITMQ_BASE}" ]] ; then
+  echo "Could not find a directory called '${RJMS_RABBITMQ_BASE}'"
   exit 1
 fi
 
-(sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmqctl -n ${RJMS_RABBITMQ_NODENAME} stop && echo 'RabbitMQ server is stopped') || echo 'not stopped'
+(sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmqctl -n ${RJMS_RABBITMQ_NODENAME} stop && echo 'RabbitMQ server is stopped') || echo 'RabbitMQ server is not stopped'
