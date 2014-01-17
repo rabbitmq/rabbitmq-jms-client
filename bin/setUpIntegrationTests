@@ -1,32 +1,31 @@
 #!/bin/bash
 
+# uses $1 and sets local RJMS_* vars:
 source bin/set-vars
 
 echo "Start RabbitMQ server (version ${RMQ_VERSION}) for Integration Tests"
 
-if [ ! -d "${RJMS_RABBITMQ_BASE}" ] ; then
-  sudo ./bin/util/getRabbitVersion ${RMQ_VERSION}
-  if [ ! -d "${RJMS_RABBITMQ_BASE}" ] ; then
-    echo "Couldn't find, nor build the RJMS_RABBITMQ_BASE directory"
+if [[ ! -d "${RJMS_RABBITMQ_BASE}" ]] ; then
+  sudo ./bin/util/getRabbitVersion ${RMQ_VERSION} ${RJMS_SERVERS_BASE}
+  if [[ ! -d "${RJMS_RABBITMQ_BASE}" ]] ; then
+    echo "Could not find and could not generate a directory '${RJMS_RABBITMQ_BASE}'"
     exit 1
   fi
 fi
 
-if [ ! -a "${RJMS_RABBITMQ_BASE}/etc/rabbitmq/rabbitmq.config" ] ; then
-  if [ -a "/opt/vmware/rabbitmq_config/rabbitmq.config" ] ; then
-    echo 'rabbitmq.config will be copied into rabbitmq_server/etc/rabbitmq'
-    sudo cp /opt/vmware/rabbitmq_config/rabbitmq.config ${RJMS_RABBITMQ_BASE}/etc/rabbitmq/rabbitmq.config
+if [[ ! -f "${RJMS_RABBITMQ_BASE}/etc/rabbitmq/rabbitmq.config" ]] ; then
+  if [[ -f "${RJMS_SERVERS_BASE}/rabbitmq_config/rabbitmq.config" ]] ; then
+    echo "rabbitmq.config will be copied into ${RJMS_RABBITMQ_BASE}/etc/rabbitmq"
+    sudo cp ${RJMS_SERVERS_BASE}/rabbitmq_config/rabbitmq.config ${RJMS_RABBITMQ_BASE}/etc/rabbitmq/rabbitmq.config
   fi
 fi
 
 sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmqctl -n ${RJMS_RABBITMQ_NODENAME} stop || echo 'not stopped'
 
-echo 'Delete previous logs:'
+echo 'Delete previous logs...'
 sudo rm -rf ${RJMS_RABBITMQ_BASE}/var/log/rabbitmq/*
-echo '-------------------------'
-echo 'Delete previous mnesia db:'
+echo 'Delete previous mnesia db...'
 sudo rm -rf ${RJMS_RABBITMQ_BASE}/var/lib/mnesia/*
-echo '-------------------------'
 
 sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmq-plugins disable rabbitmq_jms_topic_exchange
 sudo rm ${RJMS_RABBITMQ_PLUGINS}/rjms-topic-selector-*.ez
