@@ -47,7 +47,6 @@ import com.rabbitmq.jms.client.message.RMQMapMessage;
 import com.rabbitmq.jms.client.message.RMQObjectMessage;
 import com.rabbitmq.jms.client.message.RMQStreamMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
-import com.rabbitmq.jms.parse.Multiples.Pair;
 import com.rabbitmq.jms.parse.sql.SqlCompiler;
 import com.rabbitmq.jms.parse.sql.SqlExpressionType;
 import com.rabbitmq.jms.parse.sql.SqlParser;
@@ -620,29 +619,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private void bindSelectorQueue(RMQDestination dest, String jmsSelector, String queueName, String selectionExchange)
             throws InvalidSelectorException, IOException {
-        CompileResult erlangSelector = compileSelector(jmsSelector);
-        if (erlangSelector.compileOK()) {
-            Map<String, Object> args = Collections.singletonMap(RJMS_COMPILED_SELECTOR_ARG, (Object)erlangSelector.stringOf());
+        SqlCompiler compiled = new SqlCompiler(new SqlParser(new SqlTokenStream(jmsSelector)), JMS_TYPE_IDENTS);
+        if (compiled.compileOk()) {
+            Map<String, Object> args = Collections.singletonMap(RJMS_COMPILED_SELECTOR_ARG, (Object)compiled.compile());
             // bind the queue to the topic selector exchange with the jmsSelector expression as argument
             this.channel.queueBind(queueName, selectionExchange, dest.getAmqpRoutingKey(), args);
         } else {
-            throw new RMQJMSSelectorException(String.format("Selector expression failure: \"%s\".", erlangSelector.stringOf()));
+            throw new RMQJMSSelectorException(String.format("Selector expression failure: \"%s\".", jmsSelector));
         }
-    }
-
-    private static class CompileResult extends Pair<CharSequence,Boolean> {
-        CompileResult(CharSequence cs, Boolean b) { super(cs,b); }
-        String stringOf() { return this.left().toString(); }
-        boolean compileOK() { return this.right(); }
-    };
-
-    private static CompileResult compileSelector(String jmsSelector) {
-        SqlCompiler compiled = new SqlCompiler(new SqlParser(new SqlTokenStream(jmsSelector)), JMS_TYPE_IDENTS);
-        if (!compiled.compileOk()) {
-            return new CompileResult(compiled.getErrorMessage(), false);
-        }
-
-        return new CompileResult(compiled.compile() + ".", true);
     }
 
     /**

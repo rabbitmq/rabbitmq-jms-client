@@ -18,7 +18,7 @@ public class SqlCompiler implements Compiler {
             if (canBeBool(SqlTypeChecker.deriveExpressionType(parseTree, identTypes))) {
                 SqlCompilerVisitor compilerVisitor = new SqlCompilerVisitor();
                 if (this.compileOk = traverse(parseTree, compilerVisitor)) {
-                    this.compiledCode = compilerVisitor.extractCode();
+                    this.compiledCode = compilerVisitor.extractCode() + ".";
                     this.errorMessage = null;
                 } else {
                     this.compiledCode = null;
