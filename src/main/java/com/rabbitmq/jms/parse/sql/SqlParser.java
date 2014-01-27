@@ -15,20 +15,27 @@ public class SqlParser implements Parser<SqlTreeNode> {
     private final String errorMessage;
     private final SqlParseTree parseTree;
 
-    public SqlParser(TokenStream<SqlToken, Integer> tokenStream) {
-        this.parseTree = SqlProduction.ROOT.parse(tokenStream);
-        if (tokenStream.moreTokens()) {
-            this.parseOk = false;
-            this.errorMessage =
-                String.format("Terminated before end of stream; next token is: '%s' at index: %s."
-                             , tokenStream.readToken(), tokenStream.position());
-        } else if (this.parseTree == null) {
-            this.parseOk = false;
-            this.errorMessage = "No parse tree produced.";
+    public SqlParser(SqlTokenStream tokenStream) {
+        if ("".equals(tokenStream.getResidue())) {
+            this.parseTree = SqlProduction.ROOT.parse(tokenStream);
+            if (tokenStream.moreTokens()) {
+                this.parseOk = false;
+                this.errorMessage =
+                        String.format("Terminated before end of stream; next token is: '%s' at index: %s."
+                                      , tokenStream.readToken(), tokenStream.position());
+            } else if (this.parseTree == null) {
+                this.parseOk = false;
+                this.errorMessage = "No parse tree produced.";
+            } else {
+                this.parseOk = true;
+                this.errorMessage = null;
+            }
         } else {
-            this.parseOk = true;
-            this.errorMessage = null;
+            this.parseOk = false;
+            this.errorMessage = "Unrecognised syntax after: '" + tokenStream.getResidue() + "'";
+            this.parseTree = null;
         }
+
     }
 
     @Override

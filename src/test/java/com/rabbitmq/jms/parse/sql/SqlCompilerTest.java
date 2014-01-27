@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.Test;
 
@@ -34,7 +35,7 @@ public class SqlCompilerTest {
             fail(sp.getErrorMessage());
         }
 
-        SqlCompiler compiled = new SqlCompiler(pt);
+        SqlCompiler compiled = new SqlCompiler(sp, Collections.<String, SqlExpressionType> emptyMap());
         if (!compiled.compileOk()) {
             fail("Did not compile, tree=" + Arrays.toString(pt.formattedTree()));
         }
