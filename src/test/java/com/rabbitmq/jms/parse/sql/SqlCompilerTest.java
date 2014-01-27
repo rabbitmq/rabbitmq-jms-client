@@ -14,14 +14,14 @@ public class SqlCompilerTest {
     @Test
     public void simpleCompiles() {
         assertCompile( "nothing is null"
-                     , "{'is_null',{'ident',<<\"nothing\">>}}" );
+                     , "{'is_null',{'ident',<<\"nothing\">>}}." );
 
         assertCompile( "nothing IS NULL And JMSPrefix > 12-4"
                      , "{'and'"+
                        ",{'is_null',{'ident',<<\"nothing\">>}}"+
                        ",{'>'"+
                          ",{'ident',<<\"JMSPrefix\">>}"+
-                         ",{'-',12,4}}}" );
+                         ",{'-',12,4}}}." );
     }
 
     private void assertCompile(String inStr, String outStr) {
