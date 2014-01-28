@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.Test;
 
@@ -13,14 +14,14 @@ public class SqlCompilerTest {
     @Test
     public void simpleCompiles() {
         assertCompile( "nothing is null"
-                     , "{'is_null',{'ident',<<\"nothing\">>}}" );
+                     , "{'is_null',{'ident',<<\"nothing\">>}}." );
 
         assertCompile( "nothing IS NULL And JMSPrefix > 12-4"
                      , "{'and'"+
                        ",{'is_null',{'ident',<<\"nothing\">>}}"+
                        ",{'>'"+
                          ",{'ident',<<\"JMSPrefix\">>}"+
-                         ",{'-',12,4}}}" );
+                         ",{'-',12,4}}}." );
     }
 
     private void assertCompile(String inStr, String outStr) {
@@ -34,7 +35,7 @@ public class SqlCompilerTest {
             fail(sp.getErrorMessage());
         }
 
-        SqlCompiler compiled = new SqlCompiler(pt);
+        SqlCompiler compiled = new SqlCompiler(sp, Collections.<String, SqlExpressionType> emptyMap());
         if (!compiled.compileOk()) {
             fail("Did not compile, tree=" + Arrays.toString(pt.formattedTree()));
         }
