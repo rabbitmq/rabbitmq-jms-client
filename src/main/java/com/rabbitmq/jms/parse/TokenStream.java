@@ -1,3 +1,4 @@
+/* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 /**
  * A stream of tokens. Supports getNextToken() and putBackToken() operations as well as moreTokens().
  */

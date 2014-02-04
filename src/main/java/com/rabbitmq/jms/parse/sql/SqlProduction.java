@@ -1,3 +1,4 @@
+/* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.parse.sql;
 
 import static com.rabbitmq.jms.parse.sql.SqlTreeType.BINARYOP;

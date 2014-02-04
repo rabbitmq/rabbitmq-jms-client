@@ -1,3 +1,4 @@
+/* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 /**
  * Parse trees capture a structured view of a parsed token stream.
  * They encapsulate the result of a parse() operation.
