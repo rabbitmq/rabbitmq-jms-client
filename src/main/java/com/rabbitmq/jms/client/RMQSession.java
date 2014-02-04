@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.admin.RMQDestination;
+import com.rabbitmq.jms.browsing.InternalMessageQueue;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQMapMessage;
 import com.rabbitmq.jms.client.message.RMQObjectMessage;
@@ -871,22 +872,29 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * {@inheritDoc}
-     * @throws UnsupportedOperationException in version 1.0
      */
     @Override
     public QueueBrowser createBrowser(Queue queue) throws JMSException {
         illegalStateExceptionIfClosed();
-        throw new UnsupportedOperationException("Browsing not supported in version 1.0");
+        return createBrowser(queue, null);
     }
 
     /**
      * {@inheritDoc}
-     * @throws UnsupportedOperationException in version 1.0
+     * @throws UnsupportedOperationException with non-null selector in versions [1.0, oo)
      */
     @Override
     public QueueBrowser createBrowser(Queue queue, String messageSelector) throws JMSException {
         illegalStateExceptionIfClosed();
-        throw new UnsupportedOperationException("Browsing not supported in version 1.0");
+        if (!(null == messageSelector || messageSelector.isEmpty()))
+            throw new UnsupportedOperationException("Browsing with selectors not supported");
+        if (queue instanceof RMQDestination) {
+            RMQDestination rmqDest = (RMQDestination) queue;
+            if (rmqDest.isQueue()) {
+                return new InternalMessageQueue(this, rmqDest);
+            }
+        }
+        throw new UnsupportedOperationException("Unknown destination");
     }
 
     /**
