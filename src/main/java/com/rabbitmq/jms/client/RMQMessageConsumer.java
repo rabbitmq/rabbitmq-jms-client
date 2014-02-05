@@ -431,7 +431,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @return <code>true</code> if {@link #close()} has been invoked and the call has completed, or <code>false</code>
      *         if {@link #close()} has not been called or is in progress
      */
-    public boolean isClosed() {
+    boolean isClosed() {
         return this.closed;
     }
 
@@ -462,7 +462,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      *
      * @return the destination this message consumer is registered with
      */
-    public RMQDestination getDestination() {
+    RMQDestination getDestination() {
         return this.destination;
     }
 
@@ -471,7 +471,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      *
      * @return the session this consumer was created by
      */
-    public RMQSession getSession() {
+    RMQSession getSession() {
         return this.session;
     }
 
@@ -480,7 +480,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      *
      * @return unique tag that this consumer holds
      */
-    public String getUUIDTag() {
+    private String getUUIDTag() {
         return this.uuidTag;
     }
 
@@ -507,7 +507,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @see #getNoLocal()
      * @return true if the noLocal variable was set
      */
-    public boolean getNoLocalNoException() {
+    private boolean getNoLocalNoException() {
         return this.noLocal;
     }
 
@@ -518,7 +518,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      *
      * @throws InterruptedException if the thread is interrupted
      */
-    public void pause() throws InterruptedException {
+    void pause() throws InterruptedException {
         this.receiveManager.closeGate();
         this.receiveManager.waitToClear(new TimeTracker(STOP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
         this.abortables.stop();

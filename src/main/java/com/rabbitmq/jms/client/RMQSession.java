@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.admin.RMQDestination;
-import com.rabbitmq.jms.browsing.InternalMessageQueue;
+import com.rabbitmq.jms.browsing.BrowsingMessageQueue;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQMapMessage;
 import com.rabbitmq.jms.client.message.RMQObjectMessage;
@@ -276,9 +276,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * Same as {@link #getTransacted()}
      * but does not declare a JMSException in the throw clause
      * @return true if this session is transacted
-     * @see  #getTransacted()
      */
-    public boolean getTransactedNoException() {
+    private boolean getTransactedNoException() {
         return this.transacted;
     }
 
@@ -298,7 +297,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * {@link Session#CLIENT_ACKNOWLEDGE}, {@link Session#DUPS_OK_ACKNOWLEDGE} or
      * {@link Session#SESSION_TRANSACTED}
      */
-    public int getAcknowledgeModeNoException() {
+    int getAcknowledgeModeNoException() {
         return this.acknowledgeMode;
     }
 
@@ -891,7 +890,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (queue instanceof RMQDestination) {
             RMQDestination rmqDest = (RMQDestination) queue;
             if (rmqDest.isQueue()) {
-                return new InternalMessageQueue(this, rmqDest);
+                return new BrowsingMessageQueue(this, rmqDest);
             }
         }
         throw new UnsupportedOperationException("Unknown destination");
@@ -1003,7 +1002,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * Returns the connection this session is associated with
      * @return
      */
-    public RMQConnection getConnection() {
+    RMQConnection getConnection() {
         return this.connection;
     }
 
@@ -1011,7 +1010,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * Returns the {@link Channel} this session has created
      * @return
      */
-    public Channel getChannel() {
+    Channel getChannel() {
         return this.channel;
     }
 
@@ -1022,7 +1021,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
     }
 
-    public void removeProducer(RMQMessageProducer producer) {
+    void removeProducer(RMQMessageProducer producer) {
         if (this.producers.remove(producer)) {
             producer.internalClose();
         }
@@ -1040,7 +1039,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      *
      * @throws javax.jms.JMSException if the thread is interrupted
      */
-    public void pause() throws JMSException {
+    void pause() throws JMSException {
         for (RMQMessageConsumer consumer : this.consumers) {
             try {
                 consumer.pause();
@@ -1057,7 +1056,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @see javax.jms.Connection#stop()
      * @throws javax.jms.JMSException if the thread is interrupted
      */
-    public void resume() throws JMSException {
+    void resume() throws JMSException {
         for (RMQMessageConsumer consumer : this.consumers) {
             try {
                 consumer.resume();

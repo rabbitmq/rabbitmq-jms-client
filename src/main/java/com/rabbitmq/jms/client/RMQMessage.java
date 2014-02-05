@@ -710,13 +710,31 @@ public abstract class RMQMessage implements Message, Cloneable {
 
                 if (value==null) {
                     this.userJmsProperties.remove(name);
-                } else {
+                } else if (validPropertyValueType(value)) {
                     this.userJmsProperties.put(name, (Serializable) value);
+                } else {
+                    throw new MessageFormatException("Property '" + name + "' has incorrect value type.");
                 }
             }
         } catch (ClassCastException x) {
             throw new RMQJMSException("Property value not serializable.", x);
         }
+    }
+
+    /**
+     * Only certain types are allowed as property value types (excluding our own types).
+     * @param value
+     * @return
+     */
+    private boolean validPropertyValueType(Object value) {
+        return (value instanceof String
+             || value instanceof Boolean
+             || value instanceof Byte
+             || value instanceof Short
+             || value instanceof Integer
+             || value instanceof Long
+             || value instanceof Float
+             || value instanceof Double);
     }
 
     /**

@@ -3,6 +3,7 @@ package com.rabbitmq.jms.browsing;
 
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.jms.JMSException;
 import javax.jms.Queue;
@@ -15,25 +16,20 @@ import com.rabbitmq.jms.client.RMQSession;
 /**
  * Implementation class suitable for storing message information for browsing.
  */
-public class InternalMessageQueue implements QueueBrowser {
+public class BrowsingMessageQueue implements QueueBrowser {
 
-    private final RMQSession session;
     private final RMQDestination dest;
 
     private final Enumeration<RMQMessage> msgQueue;
 
-    public InternalMessageQueue(RMQSession session, RMQDestination dest) {
-        this.session = session;
+    public BrowsingMessageQueue(RMQSession session, RMQDestination dest) {
         this.dest = dest;
-        this.msgQueue = new Enumeration<RMQMessage>()
-            {   @Override public boolean hasMoreElements() { return false; }
-                @Override public RMQMessage  nextElement() { throw new NoSuchElementException(); }
-            };
+        this.msgQueue = new MessageEnumeration(session, dest);
     }
 
     @Override
     public Queue getQueue() throws JMSException {
-        return dest;
+        return this.dest;
     }
 
     @Override
@@ -42,8 +38,8 @@ public class InternalMessageQueue implements QueueBrowser {
         return null;
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
+    @SuppressWarnings("rawtypes")
     public Enumeration getEnumeration() throws JMSException {
         return this.msgQueue;
     }
@@ -55,4 +51,24 @@ public class InternalMessageQueue implements QueueBrowser {
         return;
     }
 
+    private static class MessageEnumeration implements Enumeration<RMQMessage> {
+
+        private java.util.Queue<RMQMessage> msgQueue;
+
+        public MessageEnumeration(RMQSession session, RMQDestination dest){
+            this.msgQueue = new ConcurrentLinkedQueue<RMQMessage>();
+            populateQueue(this.msgQueue, session, dest);
+        }
+
+        private static void populateQueue(final java.util.Queue<RMQMessage> msgQueue, RMQSession session, RMQDestination dest) {
+            // tbd
+        }
+
+        @Override public boolean hasMoreElements() { return !this.msgQueue.isEmpty(); }
+        @Override public RMQMessage nextElement() {
+            RMQMessage msg = this.msgQueue.poll();
+            if (null==msg) throw new NoSuchElementException();
+            return msg;
+        }
+    }
 }
