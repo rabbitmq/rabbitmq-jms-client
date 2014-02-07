@@ -1,13 +1,11 @@
 open_source_license.txt
 
-JMS Client for VMware vFabric RabbitMQ 1.1.3
-
-
+JMS Client for Pivotal RabbitMQ 1.1.3 GA
 
 ================================================================
 The following copyright statements and licenses apply to various
 open source software packages (or portions thereof) that are
-distributed with this PIVOTAL SOFTWARE, Inc. Product.
+distributed with this Pivotal, Inc. Product.
 
 The Pivotal Product may also include other Pivotal components,
 which may contain additional open source software packages. One or
@@ -25,6 +23,7 @@ The following is a listing of the open source components detailed
 in this document. This list is provided for your convenience; please
 read further if you wish to review the copyright notice(s) and the
 full text of the license associated with each component.
+
 
 
 SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
@@ -87,7 +86,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 --------------- SECTION 2: Apache License, V2.0 ----------
 
-Apache License, V2.0 are applicable to the following component(s).
+Apache License, V2.0 is applicable to the following component(s).
 
 
 >>> geronimo-jms_1.1_spec-1.1.1
@@ -108,7 +107,7 @@ Code license:  Apache License 2.0
 
 --------------- SECTION 3: Mozilla Public License, V1.1 ----------
 
-Mozilla Public License, V1.1 are applicable to the following component(s).
+Mozilla Public License, V1.1 is applicable to the following component(s).
 
 
 >>> amqp-client-3.0.4
@@ -834,18 +833,17 @@ EXHIBIT A -Mozilla Public License.
 
 
 
-================================================
-
+===========================================================================
 To the extent any open source components are licensed under the
 GPL and/or LGPL, or other similar licenses that require the
 source code and/or modifications to source code to be made
 available (as would be noted above), you may obtain a copy of
 the source code corresponding to the binaries for such open
 source components and modifications thereto, if any, (the
-"Source Files"), by downloading the Source Files from VMware's website at
-http://www.vmware.com/download/open_source.html, or by sending a request,
-with your name and address to: PIVOTAL SOFTWARE , Inc., 1900 S. Norfolk
-Street #125, San Mateo, CA 94403, Attention: General Counsel.
+"Source Files"), by downloading the Source Files from Pivotal?s website at
+http://www.gopivotal.com/open-source, or by sending a request,
+with your name and address to: Pivotal Software, Inc., 1900 S.
+Norfolk Street #125, San Mateo, CA 94403, Attention: General Counsel.
 All such requests should clearly specify: OPEN SOURCE FILES REQUEST,
 Attention General Counsel. Pivotal shall mail a copy of the
 Source Files to you on a CD or equivalent physical medium. This
@@ -853,4 +851,4 @@ offer to obtain a copy of the Source Files is valid for three
 years from the date you acquired this Software product.
 Alternatively, the Source Files may accompany the Pivotal product.
 
-[RABBITJMS112GASS121913]
+[RABBITJMS113GASS020714]
