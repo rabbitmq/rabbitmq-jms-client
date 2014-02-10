@@ -1,6 +1,6 @@
 open_source_license.txt
 
-JMS Client for Pivotal RabbitMQ 1.1.3 GA
+JMS Client for Pivotal RabbitMQ 1.1.4 SNAPSHOT
 
 ================================================================
 The following copyright statements and licenses apply to various
