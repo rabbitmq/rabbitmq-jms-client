@@ -109,13 +109,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private static Map<String, SqlExpressionType> generateJMSTypeIdents() {
         Map<String, SqlExpressionType> map = new HashMap<String, SqlExpressionType>(6);  // six elements only
-        // [ {<<"JMSDeliveryMode">>,  [<<"PERSISTENT">>, <<"NON_PERSISTENT">>]}
-        // , {<<"JMSPriority">>,      number}
-        // , {<<"JMSMessageID">>,     string}
-        // , {<<"JMSTimestamp">>,     number}
-        // , {<<"JMSCorrelationID">>, string}
-        // , {<<"JMSType">>,          string}
-        // ]
         map.put("JMSDeliveryMode",  SqlExpressionType.STRING);
         map.put("JMSPriority",      SqlExpressionType.ARITH );
         map.put("JMSMessageID",     SqlExpressionType.STRING);
@@ -124,28 +117,18 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         map.put("JMSType",          SqlExpressionType.STRING);
         return Collections.unmodifiableMap(map);
     }
-
     private static final Map<String, SqlExpressionType> JMS_TYPE_IDENTS = generateJMSTypeIdents();
 
     private static Map<String, Object> generateJMSTypeInfoMap() {
         Map<String, Object> map = new HashMap<String, Object>(6);  // six elements only
-        // [ {<<"JMSDeliveryMode">>,  [<<"PERSISTENT">>, <<"NON_PERSISTENT">>]}
-        // , {<<"JMSPriority">>,      number}
-        // , {<<"JMSMessageID">>,     string}
-        // , {<<"JMSTimestamp">>,     number}
-        // , {<<"JMSCorrelationID">>, string}
-        // , {<<"JMSType">>,          string}
-        // ]
         map.put("JMSDeliveryMode",  "string");
         map.put("JMSPriority",      "number");
         map.put("JMSMessageID",     "string");
         map.put("JMSTimestamp",     "number");
         map.put("JMSCorrelationID", "string");
         map.put("JMSType",          "string");
-
         return Collections.unmodifiableMap(map);
     }
-
     private static final Map<String, Object> JMS_TYPE_INFO_ARGUMENTS = generateJMSTypeInfoMap();
 
     private static final Map<String, Object> RJMS_TOPIC_SELECTOR_EXCHANGE_ARGUMENTS = generateJMSExchangeArgs("jms-topic");
@@ -161,6 +144,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private static final long ON_MESSAGE_EXECUTOR_TIMEOUT_MS = 2000; // 2 seconds
     private final DeliveryExecutor deliveryExecutor = new DeliveryExecutor(ON_MESSAGE_EXECUTOR_TIMEOUT_MS);
+
+    /** A channel we use for browsing queues */
+    private Channel browsingChannel = null; // @GuardedBy(bcLock)
+    private Object bcLock = new Object();
 
     /**
      * Creates a session object associated with a connection
@@ -459,6 +446,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     private void closeRabbitChannels() throws JMSException {
+        this.unsetBrowsingChannel(); // does not throw exception
         if (this.channel==null) return;
         try {
             this.channel.close();
@@ -890,10 +878,44 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (queue instanceof RMQDestination) {
             RMQDestination rmqDest = (RMQDestination) queue;
             if (rmqDest.isQueue()) {
-                return new BrowsingMessageQueue(this, rmqDest);
+                return new BrowsingMessageQueue(this, rmqDest, this.getBrowsingChannel());
             }
         }
         throw new UnsupportedOperationException("Unknown destination");
+    }
+
+    /**
+     * @return channel for browsing queues
+     * @throws JMSException if channel not available
+     */
+    private Channel getBrowsingChannel() throws JMSException {
+        try {
+            synchronized (this.bcLock) {
+                if (this.browsingChannel == null) {
+                    this.browsingChannel = this.getConnection().createRabbitChannel(false); // not transactional
+                }
+                return this.browsingChannel;
+            }
+        } catch (IOException e) {
+            throw new RMQJMSException("Failed to create browsing channel", e);
+        }
+    }
+
+    /**
+     * Silently discard browsing channel, if any.
+     */
+    private void unsetBrowsingChannel() {
+        synchronized (this.bcLock) {
+            if (this.browsingChannel != null) {
+                try {
+                    if (this.browsingChannel.isOpen())
+                        this.browsingChannel.close();
+                } catch (IOException e) {
+                    // ignore any failures
+                }
+            }
+            this.browsingChannel = null;
+        }
     }
 
     /**
