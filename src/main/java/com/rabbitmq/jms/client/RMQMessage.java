@@ -27,7 +27,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.rabbitmq.client.BasicProperties;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Consumer;
+import com.rabbitmq.client.GetResponse;
+import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
+import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.util.HexDisplay;
 import com.rabbitmq.jms.util.IteratorEnum;
 import com.rabbitmq.jms.util.RMQJMSException;
@@ -110,7 +115,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     /**
      * A message is read only if it has been received.
      * We set this flag when we receive a message in the following method
-     * {@link RMQMessageConsumer#processMessage(com.rabbitmq.client.GetResponse, boolean)}
+     * {@link RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse)}
      */
     private volatile boolean readonlyProperties=false;
     private volatile boolean readonlyBody=false;
@@ -131,7 +136,7 @@ public abstract class RMQMessage implements Message, Cloneable {
 
     /**
      * Sets the read only flag on this message
-     * @see RMQMessageConsumer#processMessage(com.rabbitmq.client.GetResponse, boolean)
+     * @see RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse)
      * @param readonly
      */
     protected void setReadonly(boolean readonly) {
@@ -152,7 +157,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * We use this delivery tag when we ack
      * a single message
      * @see RMQSession#acknowledgeMessages()
-     * @see RMQMessageConsumer#processMessage(com.rabbitmq.client.GetResponse, boolean)
+     * @see RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse)
      */
     private long rabbitDeliveryTag = -1;
     /**
@@ -164,7 +169,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
     /**
      * Sets the RabbitMQ delivery tag for this message.
-      * @see RMQMessageConsumer#processMessage(com.rabbitmq.client.GetResponse, boolean)
+      * @see RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse)
 
      * @param rabbitDeliveryTag
      */
@@ -187,7 +192,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
     /**
      * Sets the session this object was received by
-     * @see RMQMessageConsumer#processMessage(com.rabbitmq.client.GetResponse, boolean)
+     * @see RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse)
      * @see RMQSession#acknowledgeMessages()
      * @param session
      */
@@ -873,6 +878,54 @@ public abstract class RMQMessage implements Message, Cloneable {
         putIfNotNull(hdrs, "JMSType", this.getJMSType());
 
         return hdrs;
+    }
+
+    /**
+     * Converts a {@link GetResponse} to a {@link Message}
+     *
+     * @param response - the message information from RabbitMQ {@link Channel#basicGet} or via a {@link Consumer}.
+     * @return the JMS message corresponding to the RabbitMQ message
+     * @throws JMSException
+     */
+    public static RMQMessage convertMessage(RMQSession session, RMQDestination dest, GetResponse response) throws JMSException {
+        if (response == null) /* return null if the response is null */
+            return null;
+        if (dest.isAmqp()) {
+            return convertAmqpMessage(session, dest, response);
+        } else {
+            return convertJmsMessage(session, dest, response);
+        }
+    }
+
+    private static RMQMessage convertJmsMessage(RMQSession session, RMQDestination dest, GetResponse response) throws JMSException {
+        RMQMessage message = RMQMessage.fromMessage(response.getBody());        // Deserialize the message payload from the byte[] body
+
+        message.setSession(session);                                            // Insert session in received message for Message.acknowledge
+        message.setJMSRedelivered(response.getEnvelope().isRedeliver());        // Set the redelivered flag
+        message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());  // Insert delivery tag in received message for Message.acknowledge
+        // message.setJMSDestination(dest);                                     // DO NOT set the destination bug#57214768
+        // JMSProperties already set
+        message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
+        return message;
+    }
+
+    private static RMQMessage convertAmqpMessage(RMQSession session, RMQDestination dest, GetResponse response) throws JMSException {
+        try {
+            BasicProperties props = response.getProps();
+
+            RMQMessage message = RMQMessage.isAmqpTextMessage(props.getHeaders()) ? new RMQTextMessage() : new RMQBytesMessage();
+            message = RMQMessage.fromAmqpMessage(response.getBody(), message);      // Deserialize the message payload from the byte[] body
+
+            message.setSession(session);                                            // Insert session in received message for Message.acknowledge
+            message.setJMSRedelivered(response.getEnvelope().isRedeliver());        // Set the redelivered flag
+            message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());  // Insert delivery tag in received message for Message.acknowledge
+            message.setJMSDestination(dest);                                        // We cannot know the original destination, so set local one
+            message.setJMSPropertiesFromAmqpProperties(props);
+            message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
+            return message;
+        } catch (IOException x) {
+            throw new RMQJMSException(x);
+        }
     }
 
     /**

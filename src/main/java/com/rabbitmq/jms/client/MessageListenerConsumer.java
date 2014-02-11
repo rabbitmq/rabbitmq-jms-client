@@ -117,7 +117,10 @@ class MessageListenerConsumer implements Consumer, Abortable {
                     this.messageConsumer.explicitAck(dtag);
                 }
                 // Create a javax.jms.Message object and deliver it to the listener
-                this.messageConsumer.getSession().deliverMessage(this.messageConsumer.processMessage(response, this.autoAck), this.messageListener);
+                RMQMessage msg = RMQMessage.convertMessage(this.messageConsumer.getSession(), this.messageConsumer.getDestination(), response);
+                if (!this.autoAck)
+                    this.messageConsumer.getSession().unackedMessageReceived(msg);
+                this.messageConsumer.getSession().deliverMessage(msg, this.messageListener);
             } else {
                 // We are unable to deliver the message, nack it
                 logger.debug("basicNack: dtag='{}' (null MessageListener)", dtag);
