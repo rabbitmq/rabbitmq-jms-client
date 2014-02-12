@@ -1,3 +1,4 @@
+/* Copyright (c) 2014 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
