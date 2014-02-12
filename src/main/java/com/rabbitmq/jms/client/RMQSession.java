@@ -6,7 +6,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -42,7 +44,6 @@ import org.slf4j.LoggerFactory;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.admin.RMQDestination;
-import com.rabbitmq.jms.browsing.BrowsingMessageQueue;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQMapMessage;
 import com.rabbitmq.jms.client.message.RMQObjectMessage;
@@ -145,8 +146,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private static final long ON_MESSAGE_EXECUTOR_TIMEOUT_MS = 2000; // 2 seconds
     private final DeliveryExecutor deliveryExecutor = new DeliveryExecutor(ON_MESSAGE_EXECUTOR_TIMEOUT_MS);
 
-    /** A channel we use for browsing queues */
-    private Channel browsingChannel = null; // @GuardedBy(bcLock)
+    /** The channels we use for browsing queues (there may be more than one in operation at a time) */
+    private Set<Channel> browsingChannels = new HashSet<Channel>(); // @GuardedBy(bcLock)
     private Object bcLock = new Object();
 
     /**
@@ -446,7 +447,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     private void closeRabbitChannels() throws JMSException {
-        this.unsetBrowsingChannel(); // does not throw exception
+        this.clearBrowsingChannels(); // does not throw exception
         if (this.channel==null) return;
         try {
             this.channel.close();
@@ -878,43 +879,60 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (queue instanceof RMQDestination) {
             RMQDestination rmqDest = (RMQDestination) queue;
             if (rmqDest.isQueue()) {
-                return new BrowsingMessageQueue(this, rmqDest, this.getBrowsingChannel());
+                return new BrowsingMessageQueue(this, rmqDest);
             }
         }
         throw new UnsupportedOperationException("Unknown destination");
     }
 
     /**
+     * Get a (new) channel for queue browsing.
      * @return channel for browsing queues
      * @throws JMSException if channel not available
      */
-    private Channel getBrowsingChannel() throws JMSException {
+    Channel getBrowsingChannel() throws JMSException {
         try {
             synchronized (this.bcLock) {
-                if (this.browsingChannel == null) {
-                    this.browsingChannel = this.getConnection().createRabbitChannel(false); // not transactional
-                }
-                return this.browsingChannel;
+                Channel chan = this.getConnection().createRabbitChannel(false); // not transactional
+                this.browsingChannels.add(chan);
+                return chan;
             }
-        } catch (IOException e) {
-            throw new RMQJMSException("Failed to create browsing channel", e);
+        } catch (IOException ioe) {
+            throw new RMQJMSException("Cannot create browsing channel", ioe);
         }
     }
 
     /**
-     * Silently discard browsing channel, if any.
+     * Silently close and discard browsing channels, if any.
      */
-    private void unsetBrowsingChannel() {
+    private void clearBrowsingChannels() {
         synchronized (this.bcLock) {
-            if (this.browsingChannel != null) {
+            for (Channel chan : this.browsingChannels) {
                 try {
-                    if (this.browsingChannel.isOpen())
-                        this.browsingChannel.close();
+                    if (chan.isOpen())
+                        chan.close();
                 } catch (IOException e) {
-                    // ignore any failures
+                    // ignore any failures, we are clearing up
                 }
             }
-            this.browsingChannel = null;
+            this.browsingChannels.clear();
+        }
+    }
+
+    /**
+     * Close a specific browsing channel.
+     * @throws JMSException if channel cannot be created
+     */
+    void closeBrowsingChannel(Channel chan) throws JMSException {
+        try {
+            synchronized (this.bcLock) {
+                if (this.browsingChannels.remove(chan)) {
+                    if (chan.isOpen())
+                        chan.close();
+                }
+            }
+        } catch (IOException ioe) {
+            throw new RMQJMSException("Cannot close browsing channel", ioe);
         }
     }
 
