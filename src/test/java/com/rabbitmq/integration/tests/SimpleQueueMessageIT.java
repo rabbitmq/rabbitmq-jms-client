@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013, 2014 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
 import static org.junit.Assert.assertEquals;
@@ -8,6 +8,7 @@ import java.io.Serializable;
 import javax.jms.BytesMessage;
 import javax.jms.DeliveryMode;
 import javax.jms.MapMessage;
+import javax.jms.Message;
 import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.QueueReceiver;
@@ -23,7 +24,7 @@ import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.TestMessages;
 
 /**
- * Integration test for simple point-to-point messaging.
+ * Integration test for simple browsing of a queue.
  */
 public class SimpleQueueMessageIT extends AbstractITQueue {
 
@@ -43,16 +44,71 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
         return sb.toString();
     }
 
-    @Test
-    public void testSendAndReceiveLongTextMessage() throws Exception {
+    private enum MessageTestType {
+        LONG_TEXT {
+            @Override
+            Message gen(QueueSession s, Queue q) throws Exception { return s.createTextMessage(LONG_TEXT_BODY); }
+            @Override
+            void check(Message m, Queue q) throws Exception { assertEquals(LONG_TEXT_BODY, ((TextMessage) m).getText()); }
+        },
+        TEXT {
+            @Override
+            Message gen(QueueSession s, Queue q) throws Exception { return s.createTextMessage(MESSAGE); }
+            @Override
+            void check(Message m, Queue q) throws Exception { assertEquals(MESSAGE, ((TextMessage) m).getText()); }
+        },
+        BYTES {
+            @Override
+            Message gen(QueueSession s, Queue q) throws Exception {
+                BytesMessage message = s.createBytesMessage();
+                TestMessages.writeBytesMessage(message);
+                return message; }
+            @Override
+            void check(Message m, Queue q) throws Exception { TestMessages.readBytesMessage((BytesMessage) m); }
+        },
+        MAP {
+            @Override
+            Message gen(QueueSession s, Queue q) throws Exception {
+                MapMessage message = s.createMapMessage();
+                TestMessages.writeMapMessage(message);
+                return message; }
+            @Override
+            void check(Message m, Queue q) throws Exception { TestMessages.readMapMessage((MapMessage) m); }
+        },
+        STREAM {
+            @Override
+            Message gen(QueueSession s, Queue q) throws Exception {
+                StreamMessage message = s.createStreamMessage();
+                TestMessages.writeStreamMessage(message);
+                return message; }
+            @Override
+            void check(Message m, Queue q) throws Exception { TestMessages.readStreamMessage((StreamMessage) m); }
+        },
+        OBJECT {
+            @Override
+            Message gen(QueueSession s, Queue q) throws Exception {
+                ObjectMessage message = s.createObjectMessage();
+                message.setObjectProperty("objectProp", "This is an object property"); // try setting an object property, too
+                message.setObject((Serializable)q);
+                return message; }
+            @Override
+            void check(Message m, Queue q) throws Exception {
+                RMQDestination oq = (RMQDestination) q;
+                RMQDestination rq = (RMQDestination) ((ObjectMessage) m).getObject();
+                assertEquals("Object not read correctly;", oq, rq); }
+        };
+        abstract Message gen(QueueSession s, Queue q) throws Exception;
+        abstract void check(Message m, Queue q) throws Exception;
+    }
+
+    private void messageTestBase(MessageTestType mtt) throws Exception {
         try {
             queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             Queue queue = queueSession.createQueue(QUEUE_NAME);
             QueueSender queueSender = queueSession.createSender(queue);
             queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-            TextMessage message = queueSession.createTextMessage(LONG_TEXT_BODY);
-            queueSender.send(message);
+            queueSender.send(mtt.gen(queueSession, queue));
         } finally {
             reconnect();
         }
@@ -61,127 +117,36 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         Queue queue = queueSession.createQueue(QUEUE_NAME);
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-        TextMessage message = (TextMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
-        assertEquals(LONG_TEXT_BODY, message.getText());
+        mtt.check(queueReceiver.receive(TEST_RECEIVE_TIMEOUT), queue);
     }
 
     @Test
-    public void testSendAndReceiveTextMessage() throws Exception {
-        try {
-            queueConn.start();
-            QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-            Queue queue = queueSession.createQueue(QUEUE_NAME);
-            QueueSender queueSender = queueSession.createSender(queue);
-            queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-            TextMessage message = queueSession.createTextMessage(MESSAGE);
-            queueSender.send(message);
-        } finally {
-            reconnect();
-        }
-
-        queueConn.start();
-        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-        Queue queue = queueSession.createQueue(QUEUE_NAME);
-        QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-        TextMessage message = (TextMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
-        assertEquals(MESSAGE, message.getText());
+    public void testSendBrowseAndReceiveLongTextMessage() throws Exception {
+        messageTestBase(MessageTestType.LONG_TEXT);
     }
 
     @Test
-    public void testSendAndReceiveBytesMessage() throws Exception {
-        try {
-            queueConn.start();
-            QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-            Queue queue = queueSession.createQueue(QUEUE_NAME);
-            QueueSender queueSender = queueSession.createSender(queue);
-            queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-            BytesMessage message = queueSession.createBytesMessage();
-
-            TestMessages.writeBytesMessage(message);
-            queueSender.send(message);
-        } finally {
-            reconnect();
-        }
-
-        queueConn.start();
-        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-        Queue queue = queueSession.createQueue(QUEUE_NAME);
-        QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-        BytesMessage message = (BytesMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
-        TestMessages.readBytesMessage(message);
+    public void testSendBrowseAndReceiveTextMessage() throws Exception {
+        messageTestBase(MessageTestType.TEXT);
     }
 
     @Test
-    public void testSendAndReceiveMapMessage() throws Exception {
-        try {
-            queueConn.start();
-            QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-            Queue queue = queueSession.createQueue(QUEUE_NAME);
-            QueueSender queueSender = queueSession.createSender(queue);
-            queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-            MapMessage message = queueSession.createMapMessage();
-
-            TestMessages.writeMapMessage(message);
-            queueSender.send(message);
-        } finally {
-            reconnect();
-        }
-
-        queueConn.start();
-        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-        Queue queue = queueSession.createQueue(QUEUE_NAME);
-        QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-        MapMessage message = (MapMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
-        TestMessages.readMapMessage(message);
+    public void testSendBrowseAndReceiveBytesMessage() throws Exception {
+        messageTestBase(MessageTestType.BYTES);
     }
 
     @Test
-    public void testSendAndReceiveStreamMessage() throws Exception {
-        try {
-            queueConn.start();
-            QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-            Queue queue = queueSession.createQueue(QUEUE_NAME);
-            QueueSender queueSender = queueSession.createSender(queue);
-            queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-            StreamMessage message = queueSession.createStreamMessage();
-            TestMessages.writeStreamMessage(message);
-            queueSender.send(message);
-        } finally {
-            reconnect();
-        }
-
-        queueConn.start();
-        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-        Queue queue = queueSession.createQueue(QUEUE_NAME);
-        QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-        StreamMessage message = (StreamMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
-        TestMessages.readStreamMessage(message);
+    public void testSendBrowseAndReceiveMapMessage() throws Exception {
+        messageTestBase(MessageTestType.MAP);
     }
 
     @Test
-    public void testSendAndReceiveObjectMessage() throws Exception {
-        try {
-            queueConn.start();
-            QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-            Queue queue = queueSession.createQueue(QUEUE_NAME);
-            QueueSender queueSender = queueSession.createSender(queue);
-            queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-            ObjectMessage message = queueSession.createObjectMessage();
-            message.setObjectProperty("objectProp", "This is an object property"); // try setting an object property, too
-            //TestMessages.writeObjectMessage(message);
-            message.setObject((Serializable)queue);
-            queueSender.send(message);
-        } finally {
-            reconnect();
-        }
+    public void testSendBrowseAndReceiveStreamMessage() throws Exception {
+        messageTestBase(MessageTestType.STREAM);
+    }
 
-        queueConn.start();
-        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-        Queue queue = queueSession.createQueue(QUEUE_NAME);
-        QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-        ObjectMessage message = (ObjectMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
-        RMQDestination q = (RMQDestination) queue;
-        RMQDestination rq = (RMQDestination) message.getObject();
-        assertEquals("Object not read correctly;", q, rq);
+    @Test
+    public void testSendBrowseAndReceiveObjectMessage() throws Exception {
+        messageTestBase(MessageTestType.OBJECT);
     }
 }
