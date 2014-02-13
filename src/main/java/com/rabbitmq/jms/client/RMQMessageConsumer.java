@@ -105,7 +105,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     }
 
     /**
-     * {@inheritDoc} Note: This implementation always returns null
+     * {@inheritDoc}
      */
     @Override
     public String getMessageSelector() throws JMSException {

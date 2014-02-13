@@ -586,7 +586,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             try {
                 String queueName = consumerTag;
                 this.declareRMQQueue(dest, queueName, durableSubscriber);
-                if (jmsSelector==null) {
+                if (nullOrEmpty(jmsSelector)) {
                     // bind the queue to the exchange with the correct routing key
                     this.channel.queueBind(queueName, dest.getAmqpExchangeName(), dest.getAmqpRoutingKey());
                 } else {
@@ -655,12 +655,16 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector) throws JMSException {
         illegalStateExceptionIfClosed();
-        if (messageSelector==null || messageSelector.trim().isEmpty()) {
+        if (nullOrEmpty(messageSelector)) {
             return createConsumer(destination);
         } else {
             // we are not implementing this method yet
             throw new UnsupportedOperationException();
         }
+    }
+
+    private static boolean nullOrEmpty(String str) {
+        return str==null || str.trim().isEmpty();
     }
 
     /**
@@ -670,7 +674,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean noLocal) throws JMSException {
         illegalStateExceptionIfClosed();
-        if (messageSelector==null || messageSelector.trim().isEmpty()) {
+        if (nullOrEmpty(messageSelector)) {
             RMQMessageConsumer consumer = (RMQMessageConsumer)createConsumer(destination);
             consumer.setNoLocal(noLocal);
             return consumer;
@@ -828,8 +832,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
         illegalStateExceptionIfClosed();
-        if (messageSelector!=null && messageSelector.trim().isEmpty())
-            messageSelector = null;
 
         RMQDestination topicDest = (RMQDestination) topic;
         RMQMessageConsumer previousConsumer = this.subscriptions.get(name);
@@ -874,7 +876,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public QueueBrowser createBrowser(Queue queue, String messageSelector) throws JMSException {
         illegalStateExceptionIfClosed();
-        if (!(null == messageSelector || messageSelector.isEmpty()))
+        if (!nullOrEmpty(messageSelector))
             throw new UnsupportedOperationException("Browsing with selectors not supported");
         if (queue instanceof RMQDestination) {
             RMQDestination rmqDest = (RMQDestination) queue;
@@ -1021,9 +1023,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public TopicSubscriber createSubscriber(Topic topic, String messageSelector, boolean noLocal) throws JMSException {
         illegalStateExceptionIfClosed();
-
-        if (messageSelector!=null && messageSelector.trim().isEmpty()) messageSelector = null;
-
         RMQMessageConsumer consumer = createConsumerInternal((RMQDestination) topic, null, false, messageSelector);
         consumer.setNoLocal(noLocal);
         return consumer;
