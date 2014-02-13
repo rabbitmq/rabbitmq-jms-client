@@ -2,6 +2,7 @@
 package com.rabbitmq.integration.tests;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.Serializable;
 
@@ -25,13 +26,13 @@ enum MessageTestType {
         @Override
         Message gen(QueueSession s, Serializable obj) throws Exception { return s.createTextMessage(LONG_TEXT_BODY); }
         @Override
-        void check(Message m, Serializable obj) throws Exception { assertEquals(LONG_TEXT_BODY, ((TextMessage) m).getText()); }
+        void check(Message m, Serializable obj) throws Exception { assertEquals(LONG_TEXT_BODY, ((TextMessage) nonNull(m)).getText()); }
     },
     TEXT {
         @Override
         Message gen(QueueSession s, Serializable obj) throws Exception { return s.createTextMessage(MESSAGE); }
         @Override
-        void check(Message m, Serializable obj) throws Exception { assertEquals(MESSAGE, ((TextMessage) m).getText()); }
+        void check(Message m, Serializable obj) throws Exception { assertEquals(MESSAGE, ((TextMessage) nonNull(m)).getText()); }
     },
     BYTES {
         @Override
@@ -40,7 +41,7 @@ enum MessageTestType {
             TestMessages.writeBytesMessage(message);
             return message; }
         @Override
-        void check(Message m, Serializable obj) throws Exception { TestMessages.readBytesMessage((BytesMessage) m); }
+        void check(Message m, Serializable obj) throws Exception { TestMessages.readBytesMessage((BytesMessage) nonNull(m)); }
     },
     MAP {
         @Override
@@ -49,7 +50,7 @@ enum MessageTestType {
             TestMessages.writeMapMessage(message);
             return message; }
         @Override
-        void check(Message m, Serializable obj) throws Exception { TestMessages.readMapMessage((MapMessage) m); }
+        void check(Message m, Serializable obj) throws Exception { TestMessages.readMapMessage((MapMessage) nonNull(m)); }
     },
     STREAM {
         @Override
@@ -58,7 +59,7 @@ enum MessageTestType {
             TestMessages.writeStreamMessage(message);
             return message; }
         @Override
-        void check(Message m, Serializable obj) throws Exception { TestMessages.readStreamMessage((StreamMessage) m); }
+        void check(Message m, Serializable obj) throws Exception { TestMessages.readStreamMessage((StreamMessage) nonNull(m)); }
     },
     OBJECT {
         @Override
@@ -69,12 +70,13 @@ enum MessageTestType {
             return message; }
         @Override
         void check(Message m, Serializable obj) throws Exception {
-            Serializable robj = (Serializable) ((ObjectMessage) m).getObject();
+            Serializable robj = (Serializable) ((ObjectMessage) nonNull(m)).getObject();
             assertEquals("Object not read correctly;", obj, robj); }
     };
     abstract Message gen(QueueSession s, Serializable obj) throws Exception;
     abstract void check(Message m, Serializable obj) throws Exception;
 
+    private static final Message nonNull(Message m) throws Exception { assertNotNull("Message received is null", m); return m; }
     private static final String MESSAGE = "Hello " + MessageTestType.class.getName();
     private static final char[] CHAR = new char[]{' ', ';', '…', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
     private static final int CHARLEN = CHAR.length;

@@ -1,10 +1,15 @@
 /* Copyright (c) 2014 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.Serializable;
+import java.util.Enumeration;
 
 import javax.jms.DeliveryMode;
+import javax.jms.Message;
 import javax.jms.Queue;
+import javax.jms.QueueBrowser;
 import javax.jms.QueueReceiver;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
@@ -36,9 +41,21 @@ public class SimpleBrowseQueueMessageIT extends AbstractITQueue {
         queueConn.start();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         Queue queue = queueSession.createQueue(QUEUE_NAME);
+
+        {// Browse queue before receiving message
+            QueueBrowser queueBrowser = queueSession.createBrowser(queue);
+            Enumeration<?> e = queueBrowser.getEnumeration();
+
+            int numE = 0;
+            Message msg = null;
+            while (e.hasMoreElements()) { ++numE; msg = (Message) e.nextElement(); }
+
+            assertEquals("Wrong number of messages on browse queue", 1, numE);
+            mtt.check(msg, (Serializable) queue);
+        }
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
 
-        mtt.check(queueReceiver.receive(TEST_RECEIVE_TIMEOUT), (Serializable)queue);
+        mtt.check(queueReceiver.receive(TEST_RECEIVE_TIMEOUT), (Serializable) queue);
     }
 
     @Test
