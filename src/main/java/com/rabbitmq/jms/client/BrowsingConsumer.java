@@ -49,11 +49,9 @@ class BrowsingConsumer extends DefaultConsumer {
                                AMQP.BasicProperties properties,
                                byte[] body)
     throws IOException {
+        this.msgQueue.add(new GetResponse(envelope, properties, body, --this.messagesExpected));
         if (this.messagesExpected == 0) {
             this.getChannel().basicCancel(consumerTag);
-        }
-        else {
-            this.msgQueue.add(new GetResponse(envelope, properties, body, --this.messagesExpected));
         }
     }
 }

@@ -16,7 +16,7 @@ import com.rabbitmq.jms.util.RMQJMSException;
 
 class BrowsingMessageEnumeration implements Enumeration<RMQMessage> {
 
-    private static final int BROWSING_CONSUMER_TIMEOUT = 1000; // ms
+    private static final int BROWSING_CONSUMER_TIMEOUT = 10000; // ms
     private final java.util.Queue<GetResponse> msgQueue;
     private final RMQSession session;
     private final RMQDestination dest;
