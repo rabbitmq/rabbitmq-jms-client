@@ -87,4 +87,13 @@ public class SimpleBrowseQueueMessageIT extends AbstractITQueue {
     public void testSendBrowseAndReceiveObjectMessage() throws Exception {
         messageTestBase(MessageTestType.OBJECT);
     }
+
+    @Test(expected=UnsupportedOperationException.class)
+    public void testBrowseWithSelectorRejected() throws Exception {
+        queueConn.start();
+        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        Queue queue = queueSession.createQueue(QUEUE_NAME);
+
+        queueSession.createBrowser(queue, "false");
+    }
 }
