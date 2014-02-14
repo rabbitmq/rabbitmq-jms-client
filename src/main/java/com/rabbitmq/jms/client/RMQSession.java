@@ -50,6 +50,7 @@ import com.rabbitmq.jms.client.message.RMQObjectMessage;
 import com.rabbitmq.jms.client.message.RMQStreamMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.parse.sql.SqlCompiler;
+import com.rabbitmq.jms.parse.sql.SqlEvaluator;
 import com.rabbitmq.jms.parse.sql.SqlExpressionType;
 import com.rabbitmq.jms.parse.sql.SqlParser;
 import com.rabbitmq.jms.parse.sql.SqlTokenStream;
@@ -608,9 +609,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private void bindSelectorQueue(RMQDestination dest, String jmsSelector, String queueName, String selectionExchange)
             throws InvalidSelectorException, IOException {
-        SqlCompiler compiled = new SqlCompiler(new SqlParser(new SqlTokenStream(jmsSelector)), JMS_TYPE_IDENTS);
-        if (compiled.compileOk()) {
-            Map<String, Object> args = Collections.singletonMap(RJMS_COMPILED_SELECTOR_ARG, (Object)compiled.compile());
+        SqlCompiler compiler = new SqlCompiler(new SqlEvaluator(new SqlParser(new SqlTokenStream(jmsSelector)), JMS_TYPE_IDENTS));
+        if (compiler.compileOk()) {
+            Map<String, Object> args = Collections.singletonMap(RJMS_COMPILED_SELECTOR_ARG, (Object)compiler.compile());
             // bind the queue to the topic selector exchange with the jmsSelector expression as argument
             this.channel.queueBind(queueName, selectionExchange, dest.getAmqpRoutingKey(), args);
         } else {
