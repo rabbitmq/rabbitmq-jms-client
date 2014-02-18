@@ -41,7 +41,7 @@ class BrowsingMessageEnumeration implements Enumeration<RMQMessage> {
                     channel.basicCancel(consumerTag);
             }
         } catch(IOException ioe) {
-            throw new RMQJMSException("Failed to browse queue '"+queueName+"'", ioe);
+            throw new RMQJMSException(String.format("Failed to browse queue named «%s»", queueName), ioe);
         }
     }
 
