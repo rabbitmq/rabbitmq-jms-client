@@ -419,7 +419,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             Boolean b = (Boolean) o;
             return b.booleanValue();
         } else {
-            throw new MessageFormatException("Unable to convert from class:" + o.getClass().getName());
+            throw new MessageFormatException(String.format("Unable to convert from class «%s»", o.getClass().getName()));
         }
     }
 
@@ -437,7 +437,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             Byte b = (Byte) o;
             return b.byteValue();
         } else
-            throw new MessageFormatException("Unable to convert from class:" + o.getClass().getName());
+            throw new MessageFormatException(String.format("Unable to convert from class «%s»", o.getClass().getName()));
     }
 
     /**
@@ -457,7 +457,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             Short b = (Short) o;
             return b.shortValue();
         } else
-            throw new MessageFormatException("Unable to convert from class:" + o.getClass().getName());
+            throw new MessageFormatException(String.format("Unable to convert from class «%s»", o.getClass().getName()));
     }
 
     /**
@@ -480,7 +480,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             Integer b = (Integer) o;
             return b.intValue();
         } else
-            throw new MessageFormatException("Unable to convert from class:" + o.getClass().getName());
+            throw new MessageFormatException(String.format("Unable to convert from class «%s»", o.getClass().getName()));
     }
 
     /**
@@ -506,7 +506,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             Long b = (Long) o;
             return b.longValue();
         } else
-            throw new MessageFormatException("Unable to convert from class:" + o.getClass().getName());
+            throw new MessageFormatException(String.format("Unable to convert from class «%s»", o.getClass().getName()));
     }
 
     /**
@@ -523,7 +523,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             Float b = (Float) o;
             return b.floatValue();
         } else
-            throw new MessageFormatException("Unable to convert from class:" + o.getClass().getName());
+            throw new MessageFormatException(String.format("Unable to convert from class «%s»", o.getClass().getName()));
     }
 
     /**
@@ -543,7 +543,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             Double b = (Double) o;
             return b.doubleValue();
         } else
-            throw new MessageFormatException("Unable to convert from class:" + o.getClass().getName());
+            throw new MessageFormatException(String.format("Unable to convert from class «%s»", o.getClass().getName()));
     }
 
     /**
@@ -657,19 +657,19 @@ public abstract class RMQMessage implements Message, Cloneable {
             char c = name.charAt(0);
             for (int i=0; i<INVALID_STARTS_WITH.length; i++) {
                 if (c == INVALID_STARTS_WITH[i]) {
-                    throw new JMSException("Identifier may not start with: '"+c+"'");
+                    throw new JMSException(String.format("Identifier may not start with character «%s»", c));
                 }
             }
             //check funky chars inside the string
             for (int i=0; i<MAY_NOT_CONTAIN.length; i++) {
                 if (name.indexOf(MAY_NOT_CONTAIN[i])>=0) {
-                    throw new JMSException("Identifier may not contain: '"+MAY_NOT_CONTAIN[i]+"'");
+                    throw new JMSException(String.format("Identifier may not contain character «%s»", MAY_NOT_CONTAIN[i]));
                 }
             }
             //check reserverd names
             for (int i=0; i<RESERVED_NAMES.length; i++) {
                 if (name.equalsIgnoreCase(RESERVED_NAMES[i])) {
-                    throw new JMSException("Invalid identifier: '"+RESERVED_NAMES[i]+"'");
+                    throw new JMSException(String.format("Invalid identifier «%s»", RESERVED_NAMES[i]));
                 }
             }
 
@@ -689,17 +689,17 @@ public abstract class RMQMessage implements Message, Cloneable {
                  * an integer and it must be larger than 0
                  */
                 if (!(value instanceof Integer)) {
-                    throw new MessageFormatException(RMQConnectionMetaData.JMSX_GROUP_SEQ_LABEL+" can only be of type int");
+                    throw new MessageFormatException(String.format("«%s» can only be of type int", RMQConnectionMetaData.JMSX_GROUP_SEQ_LABEL));
                 } else {
                     int val = ((Integer)value).intValue();
-                    if (val<=0) throw new JMSException(RMQConnectionMetaData.JMSX_GROUP_SEQ_LABEL+" must be >0");
+                    if (val<=0) throw new JMSException(String.format("«%s» must be >0", RMQConnectionMetaData.JMSX_GROUP_SEQ_LABEL));
                 }
             } else if (RMQConnectionMetaData.JMSX_GROUP_ID_LABEL.equals(name)) {
                 /**
                  * Special case property must be a string
                  */
                 if (value!=null && (!(value instanceof String))) {
-                    throw new MessageFormatException(RMQConnectionMetaData.JMSX_GROUP_ID_LABEL+" can only be of type String");
+                    throw new MessageFormatException(String.format("«%s» can only be of type String", RMQConnectionMetaData.JMSX_GROUP_ID_LABEL));
                 }
             }
 
@@ -718,7 +718,7 @@ public abstract class RMQMessage implements Message, Cloneable {
                 } else if (validPropertyValueType(value)) {
                     this.userJmsProperties.put(name, (Serializable) value);
                 } else {
-                    throw new MessageFormatException("Property '" + name + "' has incorrect value type.");
+                    throw new MessageFormatException(String.format("Property «%s» has incorrect value type.", name));
                 }
             }
         } catch (ClassCastException x) {
