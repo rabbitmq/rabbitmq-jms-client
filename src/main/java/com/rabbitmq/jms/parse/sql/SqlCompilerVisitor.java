@@ -5,33 +5,40 @@ import java.util.List;
 
 import com.rabbitmq.jms.parse.Visitor;
 
-
 /**
  * This visitor accumulates a compiled version of the tree (code) in the form of an Erlang term.
  * It visits the tree node (parent) both before and after the subtree nodes (children), so as to
  * bracket the generated code correctly.
  */
-public class SqlCompilerVisitor implements Visitor<SqlTreeNode> {
+class SqlCompilerVisitor implements Visitor<SqlTreeNode> {
+    private static final boolean BEFORE = true;
+    private static final boolean AFTER = false;
 
     private final StringBuilder sb = new StringBuilder();
 
     @Override
     public boolean visitBefore(SqlTreeNode parent, SqlTreeNode[] children) {
-        codeOf(true, this.sb, parent, children);
+        codeOf(BEFORE, this.sb, parent, children);
         return true; // traverse the whole tree
     }
 
     @Override
     public boolean visitAfter(SqlTreeNode parent, SqlTreeNode[] children) {
-        codeOf(false, this.sb, parent, children);
+        codeOf(AFTER, this.sb, parent, children);
         return true; // traverse the whole tree
     }
 
     public String extractCode() {
         if (this.sb.length() == 0) return ""; // nothing to extract
-        String code = this.sb.substring((this.sb.charAt(0) == ',') ? 1 : 0);  // a leading comma is removed
+        // a leading comma is removed
+        return this.sb.substring((this.sb.charAt(0) == ',') ? 1 : 0);
+    }
+
+    /**
+     * Reset code accumulator -- used only in tests
+     */
+    void clearCode() {
         this.sb.setLength(0);
-        return code;
     }
 
     /**

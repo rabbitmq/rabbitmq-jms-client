@@ -14,7 +14,7 @@ public abstract class SqlTypeChecker { // prevent instantiation   directly
     public static SqlExpressionType deriveExpressionType(ParseTree<SqlTreeNode> tree, Map<String, SqlExpressionType> identifierType) {
         if (tree == null) return SqlExpressionType.NOT_SET; // null trees are not of any type
         traverse(tree, new SqlTypeSetterVisitor(identifierType));
-        return tree.getNode().getExpType();
+        return tree.getNode().getExpValue().getType();
     }
 
     public static SqlExpressionType deriveExpressionType(ParseTree<SqlTreeNode> tree) {

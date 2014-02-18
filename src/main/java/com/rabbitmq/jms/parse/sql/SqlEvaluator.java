@@ -1,6 +1,8 @@
 /* Copyright (c) 2014 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.parse.sql;
 
+import static com.rabbitmq.jms.parse.ParseTreeTraverser.traverse;
+
 import java.util.Map;
 
 import com.rabbitmq.jms.parse.Evaluator;
@@ -11,7 +13,6 @@ import com.rabbitmq.jms.parse.Evaluator;
  */
 public class SqlEvaluator implements Evaluator<Boolean> {
 
-    private final SqlEvaluatorVisitor evalVisitor = new SqlEvaluatorVisitor();
     private final SqlParseTree typedParseTree;
     private final String errorMessage;
     private final boolean evaluatorOk;
@@ -39,8 +40,15 @@ public class SqlEvaluator implements Evaluator<Boolean> {
 
     @Override
     public Boolean evaluate(Map<String, Object> env) {
-        // TODO Auto-generated method stub
-        return null;
+        if (this.evaluatorOk){
+            SqlEvaluatorVisitor eVisitor = new SqlEvaluatorVisitor(env);
+            if (traverse(this.typedParseTree, eVisitor)) {
+                Object val = this.typedParseTree.getNode().getExpValue().getValue();
+                if (val != null && val instanceof Boolean)
+                    return (Boolean) val;
+            }
+        }
+        return false;
     }
 
     /**

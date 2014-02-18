@@ -274,12 +274,12 @@ public class SqlTypeSetterVisitorTest {
         }
         SqlTreeNode stn = new SqlTreeNode(treeType, token);
         assertTrue(visitor.visitAfter(stn, children.toArray(new SqlTreeNode[children.size()])));
-        assertEquals("Wrong expType for " + stn + " with children " + children, resultType, stn.getExpType());
+        assertEquals("Wrong expType for " + stn + " with children " + children, resultType, stn.getExpValue().getType());
     }
 
     private static SqlTreeNode sqlDummyTypedNode(SqlExpressionType arg) {
         SqlTreeNode tn = new SqlTreeNode(null, new SqlToken(SqlTokenType.WS, ""));
-        tn.setExpType(arg);
+        tn.getExpValue().setType(arg);
         return tn;
     }
 
@@ -380,7 +380,7 @@ public class SqlTypeSetterVisitorTest {
             }
             break;
         default:
-            throw new IllegalArgumentException("cannot generate product for n="+n);
+            throw new IllegalArgumentException("cannot generate product set for n="+n);
         }
         return product;
     }
