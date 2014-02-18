@@ -11,6 +11,7 @@ import com.rabbitmq.jms.parse.Evaluator;
  */
 public class SqlEvaluator implements Evaluator<Boolean> {
 
+    private final SqlEvaluatorVisitor evalVisitor = new SqlEvaluatorVisitor();
     private final SqlParseTree typedParseTree;
     private final String errorMessage;
     private final boolean evaluatorOk;
