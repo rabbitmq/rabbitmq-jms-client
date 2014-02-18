@@ -197,7 +197,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 }
             } else {
                 mlConsumer.abort();
-                throw new IllegalStateException("MessageListener concurrently set on Consumer " + this);
+                throw new IllegalStateException(String.format("MessageListener concurrently set on Consumer «%s».", this));
             }
         }
     }
@@ -490,7 +490,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     @Override
     public Topic getTopic() throws JMSException {
         if (this.getDestination().isQueue()) {
-            throw new JMSException("Destination is of type Queue, not Topic");
+            throw new JMSException("Destination is not of type Topic");
         }
         return this.getDestination();
     }

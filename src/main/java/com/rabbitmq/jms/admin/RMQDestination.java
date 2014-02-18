@@ -118,7 +118,9 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
             if ( (exchangeName==null) != (routingKey==null)
               || (exchangeName==null && routingKey==null && queueName==null)
                ) {
-                throw new IllegalArgumentException("Invalid AMQP resource settings (exchangeName='"+exchangeName+"', routingKey='"+routingKey+"', queueName='"+queueName+"').");
+                throw new IllegalArgumentException(
+                   String.format("Invalid AMQP resource settings (exchangeName=«%s», routingKey=«%s», queueName=«%s»)."
+                                                                , exchangeName,      routingKey,      queueName));
             }
         }
         this.amqp = amqp;
