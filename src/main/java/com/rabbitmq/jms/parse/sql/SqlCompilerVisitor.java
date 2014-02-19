@@ -35,7 +35,7 @@ class SqlCompilerVisitor implements Visitor<SqlTreeNode> {
     }
 
     /**
-     * Reset code accumulator -- used only in tests
+     * Reset code accumulator -- used in unit tests
      */
     void clearCode() {
         this.sb.setLength(0);
@@ -124,13 +124,13 @@ class SqlCompilerVisitor implements Visitor<SqlTreeNode> {
                 else        sb.append('}');
                 break;
             default:
-                throw new RuntimeException(String.format( "Cannot compile tree type: «%s» with token «%s»."
+                throw new RuntimeException(String.format( "Internal error: cannot compile tree type: «%s» with token «%s»."
                                                         , parent.treeType(), parent.value()
                                                         ));
             }
             break;
         default:
-            throw new RuntimeException(String.format( "Cannot compile tree type: «%s»."
+            throw new RuntimeException(String.format( "Internal error: cannot compile tree type: «%s»."
                                                     , parent.treeType()
                                                     ));
         }
