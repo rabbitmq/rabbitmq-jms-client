@@ -457,7 +457,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      * @throws MessageFormatException if s is not a recognised type for writing
      * @throws NullPointerException if s is null
      */
-    private final static void writePrimitiveData(Object s, RMQByteArrayOutputStream out) throws JMSException {
+    private static final void writePrimitiveData(Object s, RMQByteArrayOutputStream out) throws JMSException {
         if(s==null) {
             throw new NullPointerException();
         } else if (s instanceof Boolean) {

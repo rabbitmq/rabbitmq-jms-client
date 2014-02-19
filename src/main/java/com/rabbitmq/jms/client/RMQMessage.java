@@ -1341,7 +1341,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         return (hdrs!=null && "TextMessage".equals(hdrs.get("JMSType").toString()));
     }
 
-    private final static long objectToLong(Object val, long dft) {
+    private static final long objectToLong(Object val, long dft) {
         if (val==null) return dft;
         if (val instanceof Number) return ((Number) val).longValue();
         try {
@@ -1350,7 +1350,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         return dft;
     }
 
-    private final static int objectToInt(Object val, int dft) {
+    private static final int objectToInt(Object val, int dft) {
         if (val==null) return dft;
         if (val instanceof Number) return ((Number) val).intValue();
         try {

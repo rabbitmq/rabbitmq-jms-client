@@ -6,7 +6,6 @@ import java.util.Map;
 
 import com.rabbitmq.jms.parse.Visitor;
 
-
 /**
  * This visitor sets the type of the expression at a node of a tree, using the type of node
  * and the {@link SqlExpressionType} of the children nodes.
@@ -33,9 +32,6 @@ public class SqlTypeSetterVisitor implements Visitor<SqlTreeNode> {
         this(Collections.<String, SqlExpressionType> emptyMap());
     }
 
-    /* (non-Javadoc)
-     * @see com.rabbitmq.jms.parse.Visitor#visitBefore(java.lang.Object, Node[])
-     */
     @Override
     public boolean visitBefore(SqlTreeNode parent, SqlTreeNode[] children) {
         return true;

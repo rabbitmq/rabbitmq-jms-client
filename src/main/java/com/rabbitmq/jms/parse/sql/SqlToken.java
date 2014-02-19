@@ -86,7 +86,7 @@ class SqlToken {
         return sb.toString();
     }
 
-    private final static String unEscape(String s) {
+    private static final String unEscape(String s) {
         final int len = s.length()-1;
         StringBuilder sb = new StringBuilder();
         for (int i=1; i<len; ++i) {
@@ -104,7 +104,7 @@ class SqlToken {
      * @param s - hex token string to convert to a long integer
      * @return the long integer equal in value to the hex token
      */
-    private final static long hexToLong(String s) {
+    private static final long hexToLong(String s) {
         final int len = s.length();
         long result = 0L;
         for (int i=2; i<len; ++i) { // i starts at 2 to skip the "0x" prefix of the hex token
@@ -112,7 +112,7 @@ class SqlToken {
         }
         return result;
     }
-    private final static long hexVal(char c) {
+    private static final long hexVal(char c) {
         switch (c) {
             case '0': return 0L;
             case '1': return 1L;
@@ -139,7 +139,7 @@ class SqlToken {
             default : return 0L;
         }
     }
-    private final static double stringToFloat(String s) {
+    private static final double stringToFloat(String s) {
         return Double.valueOf(s);
     }
 }

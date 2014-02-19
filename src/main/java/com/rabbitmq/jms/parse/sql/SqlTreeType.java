@@ -45,6 +45,6 @@ enum SqlTreeType {
     /** Construct a tree of this type from the given array of subtrees */
     abstract SqlParseTree tree(SqlParseTree[] sub);
 
-    private final static List<String> newList(String s)  { List<String> al = new ArrayList<String>(); al.add(s); return al; }
-    private final static List<String> consList(String s, List<String> al) { al.add(0,s); return al; }
+    private static final List<String> newList(String s)  { List<String> al = new ArrayList<String>(); al.add(s); return al; }
+    private static final List<String> consList(String s, List<String> al) { al.add(0,s); return al; }
 }

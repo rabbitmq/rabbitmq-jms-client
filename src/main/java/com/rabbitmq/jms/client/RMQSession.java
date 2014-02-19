@@ -95,7 +95,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /** Lock and parms for commit and rollback blocking of other commands */
     private final Object commitLock = new Object();
-    private final static long COMMIT_WAIT_MAX = 2000L; // 2 seconds
+    private static final long COMMIT_WAIT_MAX = 2000L; // 2 seconds
     private boolean committing = false; // GuardedBy("commitLock");
 
     /** Selector exchange for topic selection */

@@ -296,7 +296,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     /** This is dictated by `erlang:send_after' on which rabbitmq depends to implement TTL:
      * <br/><code>-define(MAX_EXPIRY_TIMER, 4294967295)</code>.
      */
-    private final static long MAX_TTL = 4294967295L;
+    private static final long MAX_TTL = 4294967295L;
 
     /**
      * Convert long time-to-live to String time-to-live for amqp protocol.

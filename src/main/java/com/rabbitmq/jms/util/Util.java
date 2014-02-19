@@ -12,7 +12,7 @@ public final class Util {
      * @param prefix - prefix of uniquely generated string; may be <code>null</code>, in which case “<code>null</code>” is the prefix used.
      * @return a UUID string with given prefix
      */
-    public final static String generateUUID(String prefix) {
+    public static final String generateUUID(String prefix) {
         return new StringBuilder().append(prefix).append(UUID.randomUUID()).toString();
     }
 }
