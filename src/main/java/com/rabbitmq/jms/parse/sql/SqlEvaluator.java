@@ -11,7 +11,7 @@ import com.rabbitmq.jms.parse.Evaluator;
  * A boolean evaluator for JMS Sql selector expressions.
  *
  */
-public class SqlEvaluator implements Evaluator<Boolean> {
+public class SqlEvaluator implements Evaluator {
 
     private final SqlParseTree typedParseTree;
     private final String errorMessage;
@@ -39,7 +39,7 @@ public class SqlEvaluator implements Evaluator<Boolean> {
     }
 
     @Override
-    public Boolean evaluate(Map<String, Object> env) {
+    public boolean evaluate(Map<String, Object> env) {
         if (this.evaluatorOk){
             SqlEvaluatorVisitor eVisitor = new SqlEvaluatorVisitor(env);
             if (traverse(this.typedParseTree, eVisitor)) {

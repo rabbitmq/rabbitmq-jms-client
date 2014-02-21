@@ -11,15 +11,15 @@ import java.util.Map;
  *
  * @param <Result> -- the type of result the evaluated expression will return
  */
-public interface Evaluator<Result> {
+public interface Evaluator {
 
     /**
      * Evaluates the (given) expression with the <code>env</code>ironment given.
      * This call should not fail, provided {@link #evaluatorOk()} is <code>true</code>.
      * @param env - the values of the variables used when evaluating the expression
-     * @return the evaluated result
+     * @return the evaluated result: true or false
      */
-    Result evaluate(Map<String, Object> env);
+    boolean evaluate(Map<String, Object> env);
 
     /**
      * This call is idempotent.

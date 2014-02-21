@@ -10,30 +10,26 @@ import javax.jms.JMSException;
 
 import com.rabbitmq.client.AMQP.Queue;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
+import com.rabbitmq.jms.parse.sql.SqlEvaluator;
 import com.rabbitmq.jms.util.RMQJMSException;
 
 class BrowsingMessageEnumeration implements Enumeration<RMQMessage> {
 
     private static final int BROWSING_CONSUMER_TIMEOUT = 10000; // ms
-    private final java.util.Queue<GetResponse> msgQueue;
-    private final RMQSession session;
-    private final RMQDestination dest;
+    private final java.util.Queue<RMQMessage> msgQueue;
 
-    public BrowsingMessageEnumeration(RMQSession session, RMQDestination dest, Channel channel, String queueName) throws JMSException {
-        this.session = session;
-        this.dest = dest;
-        this.msgQueue = new ConcurrentLinkedQueue<GetResponse>();
-        populateQueue(this.msgQueue, channel, queueName);
+    public BrowsingMessageEnumeration(RMQSession session, RMQDestination dest, Channel channel, SqlEvaluator evaluator) throws JMSException {
+        this.msgQueue = new ConcurrentLinkedQueue<RMQMessage>();
+        populateQueue(this.msgQueue, channel, session, dest, dest.getQueueName(), evaluator);
     }
 
-    private static void populateQueue(final java.util.Queue<GetResponse> msgQueue, Channel channel, String queueName) throws JMSException {
+    private static void populateQueue(final java.util.Queue<RMQMessage> msgQueue, Channel channel, RMQSession session, RMQDestination dest, String queueName, SqlEvaluator evaluator) throws JMSException {
         try {
             Queue.DeclareOk qdec = channel.queueDeclarePassive(queueName);
             if (qdec.getMessageCount() > 0) {
                 int messagesExpected = qdec.getMessageCount();
-                BrowsingConsumer bc = new BrowsingConsumer(channel, messagesExpected, msgQueue);
+                BrowsingConsumer bc = new BrowsingConsumer(channel, session, dest, messagesExpected, msgQueue, evaluator);
                 String consumerTag = channel.basicConsume(queueName, bc);
                 if (bc.finishesInTime(BROWSING_CONSUMER_TIMEOUT))
                     return;
@@ -47,13 +43,9 @@ class BrowsingMessageEnumeration implements Enumeration<RMQMessage> {
 
     @Override public boolean hasMoreElements() { return !this.msgQueue.isEmpty(); }
     @Override public RMQMessage nextElement() {
-        GetResponse resp = this.msgQueue.poll();
+        RMQMessage resp = this.msgQueue.poll();
         if (null==resp) throw new NoSuchElementException();
-        try {
-            return RMQMessage.convertMessage(this.session, this.dest, resp);
-        } catch (JMSException e) {
-            return null;
-        }
+        return resp;
     }
 
     void clearQueue() {

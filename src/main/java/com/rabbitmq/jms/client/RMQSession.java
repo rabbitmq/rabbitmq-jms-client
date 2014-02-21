@@ -119,7 +119,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         map.put("JMSType",          SqlExpressionType.STRING);
         return Collections.unmodifiableMap(map);
     }
-    private static final Map<String, SqlExpressionType> JMS_TYPE_IDENTS = generateJMSTypeIdents();
+    static final Map<String, SqlExpressionType> JMS_TYPE_IDENTS = generateJMSTypeIdents();
 
     private static Map<String, Object> generateJMSTypeInfoMap() {
         Map<String, Object> map = new HashMap<String, Object>(6);  // six elements only
@@ -872,17 +872,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * {@inheritDoc}
-     * @throws UnsupportedOperationException with non-null selector in versions [1.0, oo)
      */
     @Override
     public QueueBrowser createBrowser(Queue queue, String messageSelector) throws JMSException {
         illegalStateExceptionIfClosed();
-        if (!nullOrEmpty(messageSelector))
-            throw new UnsupportedOperationException("Browsing with selectors not supported");
         if (queue instanceof RMQDestination) {
             RMQDestination rmqDest = (RMQDestination) queue;
             if (rmqDest.isQueue()) {
-                return new BrowsingMessageQueue(this, rmqDest);
+                return new BrowsingMessageQueue(this, rmqDest, messageSelector);
             }
         }
         throw new UnsupportedOperationException("Unknown destination");

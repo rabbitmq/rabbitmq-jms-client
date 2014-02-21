@@ -689,17 +689,17 @@ public abstract class RMQMessage implements Message, Cloneable {
                  * an integer and it must be larger than 0
                  */
                 if (!(value instanceof Integer)) {
-                    throw new MessageFormatException(String.format("«%s» can only be of type int", RMQConnectionMetaData.JMSX_GROUP_SEQ_LABEL));
+                    throw new MessageFormatException(String.format("Property «%s» can only be of type int", RMQConnectionMetaData.JMSX_GROUP_SEQ_LABEL));
                 } else {
                     int val = ((Integer)value).intValue();
-                    if (val<=0) throw new JMSException(String.format("«%s» must be >0", RMQConnectionMetaData.JMSX_GROUP_SEQ_LABEL));
+                    if (val<=0) throw new JMSException(String.format("Property «%s» must be >0", RMQConnectionMetaData.JMSX_GROUP_SEQ_LABEL));
                 }
             } else if (RMQConnectionMetaData.JMSX_GROUP_ID_LABEL.equals(name)) {
                 /**
                  * Special case property must be a string
                  */
                 if (value!=null && (!(value instanceof String))) {
-                    throw new MessageFormatException(String.format("«%s» can only be of type String", RMQConnectionMetaData.JMSX_GROUP_ID_LABEL));
+                    throw new MessageFormatException(String.format("Property «%s» can only be of type String", RMQConnectionMetaData.JMSX_GROUP_ID_LABEL));
                 }
             }
 
@@ -828,15 +828,14 @@ public abstract class RMQMessage implements Message, Cloneable {
     protected abstract void readAmqpBody(byte[] barr);
 
     /**
-     * Generate the headers for this JMS message.
+     * Generate the headers for this JMS message; these are the properties used in selection.
      * <p>
-     * We attach <i>some</i> JMS properties as headers on the message. This is so the broker can see them for the
-     * purposes of message selection during routing.
+     * We attach <i>some</i> JMS properties as headers on the message. This is for the
+     * purposes of message selection.
      * </p>
      * <p>
      * The headers are:
      * </p>
-     *
      * <pre>
      * <b>Header Field</b>        <b>Set By</b>
      * JMSDestination      send or publish method
@@ -851,10 +850,12 @@ public abstract class RMQMessage implements Message, Cloneable {
      * JMSRedelivered      JMS provider
      * </pre>
      * <p>
-     * But (<i>from the JMS 1.1 spec</i>):<br/>
+     * <i>From the JMS 1.1 spec:</i><br/>
      * <blockquote> Message header field references are restricted to <code>JMSDeliveryMode</code>,
      * <code>JMSPriority</code>, <code>JMSMessageID</code>, <code>JMSTimestamp</code>, <code>JMSCorrelationID</code>,
-     * and <code>JMSType</code>. (Why not <code>JMSExpiration</code> as well?)
+     * and <code>JMSType</code>.</blockquote>
+     * <p>[<i>Why not <code>JMSExpiration</code>?</i> ]</p>
+     * <blockquote>
      * <p>
      * <code>JMSMessageID</code>, <code>JMSCorrelationID</code>, and <code>JMSType</code> values may be
      * <code>null</code> and if so are treated as a NULL value.
