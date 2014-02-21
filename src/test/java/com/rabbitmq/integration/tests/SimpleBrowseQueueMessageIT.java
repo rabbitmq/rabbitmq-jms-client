@@ -104,6 +104,6 @@ public class SimpleBrowseQueueMessageIT extends AbstractITQueue {
 
     @Test
     public void testBrowseWithSelectorTrue() throws Exception {
-        messageTestBase(MessageTestType.TEXT, "true", 0);
+        messageTestBase(MessageTestType.TEXT, "true", 1);
     }
 }
