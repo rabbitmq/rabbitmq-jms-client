@@ -30,6 +30,9 @@ public class SimpleBrowseQueueMessageIT extends AbstractITQueue {
             queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             Queue queue = queueSession.createQueue(QUEUE_NAME);
+
+            drainQueue(queueSession, queue);
+
             QueueSender queueSender = queueSession.createSender(queue);
             queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 
