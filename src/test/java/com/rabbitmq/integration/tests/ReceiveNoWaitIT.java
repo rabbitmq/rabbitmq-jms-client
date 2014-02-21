@@ -15,10 +15,9 @@ import org.junit.Test;
 /**
  * Integration test for simple browsing of a queue.
  */
-public class SimpleQueueMessageIT extends AbstractITQueue {
+public class ReceiveNoWaitIT extends AbstractITQueue {
 
-    private static final String QUEUE_NAME = "test.queue."+SimpleQueueMessageIT.class.getCanonicalName();
-    private static final long TEST_RECEIVE_TIMEOUT = 1000; // one second
+    private static final String QUEUE_NAME = "test.queue."+ReceiveNoWaitIT.class.getCanonicalName();
 
     private void messageTestBase(MessageTestType mtt) throws Exception {
         try {
@@ -39,7 +38,7 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         Queue queue = queueSession.createQueue(QUEUE_NAME);
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-        mtt.check(queueReceiver.receive(TEST_RECEIVE_TIMEOUT), (Serializable)queue);
+        mtt.check(queueReceiver.receiveNoWait(), (Serializable)queue);
     }
 
     @Test
