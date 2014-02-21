@@ -39,14 +39,15 @@ class DelayedReceiver {
     }
 
     /**
-     * Get a message if one arrives in the time available.
-     * @param tt - keeps track of the time
+     * Get a message; if there isn't one, try again at intervals not exceeding the total time available. Aborts if closed while polling.
+     * @param tt - keeps track of the time available
      * @return message gotten, or <code>null</code> if timeout or connection closed.
      */
     public GetResponse get(TimeTracker tt) {
         try {
             synchronized (this.responseLock) {
-                GetResponse resp = null;
+                GetResponse resp = this.rmqMessageConsumer.getFromRabbitQueue();
+                if (resp != null) return resp;
                 while (!this.aborted && !tt.timedOut()) {
                     resp = this.rmqMessageConsumer.getFromRabbitQueue();
                     if (resp != null)
