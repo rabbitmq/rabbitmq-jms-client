@@ -34,7 +34,9 @@ public class SimpleBrowseQueueMessageIT extends AbstractITQueue {
             queueConn.start();
             QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             Queue queue = queueSession.createQueue(QUEUE_NAME);
+
             drainQueue(queueSession, queue);
+
             QueueSender queueSender = queueSession.createSender(queue);
             queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 
@@ -56,24 +58,13 @@ public class SimpleBrowseQueueMessageIT extends AbstractITQueue {
             while (e.hasMoreElements()) {
                 ++numE;
                 msg = (Message) e.nextElement();
-                mtt.check(msg, (Serializable) queue);
-            }
+            mtt.check(msg, (Serializable) queue);
+        }
             assertEquals("Wrong number of messages on browse queue", numExpected, numE);
         }
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
 
         mtt.check(queueReceiver.receive(TEST_RECEIVE_TIMEOUT), (Serializable) queue);
-    }
-
-    private static final void drainQueue(QueueSession session, Queue queue) throws Exception {
-        QueueReceiver receiver = session.createReceiver(queue);
-        int n=0;
-        Message msg = receiver.receiveNoWait();
-        while (msg != null) {
-            ++n;
-            msg = receiver.receiveNoWait();
-        }
-        System.out.println("»»»» Drained messages (n="+n+") from queue "+queue+".");
     }
 
     @Test
