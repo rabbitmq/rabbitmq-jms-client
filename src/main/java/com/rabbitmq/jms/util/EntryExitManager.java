@@ -40,7 +40,7 @@ import com.rabbitmq.jms.client.Completion;
  */
 public class EntryExitManager {
 
-    private final GateWaiter gate;
+    private final WaiterGate gate;
     private final Queue<Completion> entered = new ConcurrentLinkedQueue<Completion>();
     private ThreadLocal<Completion> threadCompletion = new ThreadLocal<Completion>();
 
@@ -54,7 +54,7 @@ public class EntryExitManager {
      * Create an <code>EntryExitManager</code>, initially closed.
      */
     public EntryExitManager() {
-        this.gate = new GateWaiter(false) {
+        this.gate = new WaiterGate(false) {
             @Override public void onEntry() { /*register on entry*/ EntryExitManager.this.registerEntry();}
             @Override public void onAbort() { /*noop*/ }
             };
