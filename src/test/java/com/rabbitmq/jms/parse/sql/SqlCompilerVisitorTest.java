@@ -201,7 +201,7 @@ public class SqlCompilerVisitorTest {
         case LP:
         case RP:
         case WS:
-            fail(String.format("Test token generated of type «%s»", tokenType));
+            fail(String.format("Test token generated of type [%s]", tokenType));
         default:
             return new SqlToken(tokenType, tokenType.opCode());
         }

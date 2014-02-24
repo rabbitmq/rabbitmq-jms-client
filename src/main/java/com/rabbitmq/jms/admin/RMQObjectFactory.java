@@ -129,7 +129,7 @@ public class RMQObjectFactory implements ObjectFactory {
             topic = true;
         } else if (javax.jms.Queue.class.getName().equals(className)) {
         } else {
-            throw new NamingException(String.format("Unknown class «%s»", className));
+            throw new NamingException(String.format("Unknown class [%s]", className));
         }
 
         if (connectionFactory) {
@@ -202,11 +202,11 @@ public class RMQObjectFactory implements ObjectFactory {
                                      String defaultValue) throws NamingException {
         RefAddr ra = ref.get(propertyName);
         if (!mayBeNull && (ra == null || ra.getContent()==null)) {
-            throw new NamingException(String.format("Property «%s» may not be null.", propertyName));
+            throw new NamingException(String.format("Property [%s] may not be null.", propertyName));
         }
         String content = ra == null ? null : ra.getContent() == null ? null : ra.getContent().toString();
         if (!mayBeNull && (content == null)) {
-            throw new NamingException(String.format("Property «%s» is present but is lacking a value.", propertyName));
+            throw new NamingException(String.format("Property [%s] is present but is lacking a value.", propertyName));
         }
 
         if (content == null && mayBeNull) {
@@ -230,11 +230,11 @@ public class RMQObjectFactory implements ObjectFactory {
                                        boolean defaultValue) throws NamingException {
         RefAddr ra = ref.get(propertyName);
         if (!mayBeNull && (ra == null || ra.getContent()==null)) {
-            throw new NamingException(String.format("Property «%s» may not be null.", propertyName));
+            throw new NamingException(String.format("Property [%s] may not be null.", propertyName));
         }
         String content = ra == null ? null : ra.getContent() == null ? null : ra.getContent().toString();
         if (!mayBeNull && (content == null)) {
-            throw new NamingException(String.format("Property «%s» is present but is lacking a value.", propertyName));
+            throw new NamingException(String.format("Property [%s] is present but is lacking a value.", propertyName));
         }
 
         if (content == null && mayBeNull) {
@@ -258,18 +258,18 @@ public class RMQObjectFactory implements ObjectFactory {
                                int defaultValue) throws NamingException {
         RefAddr ra = ref.get(propertyName);
         if (!mayBeNull && ra == null) {
-            throw new NamingException(String.format("Property «%s» may not be null.", propertyName));
+            throw new NamingException(String.format("Property [%s] may not be null.", propertyName));
         }
         String content = ra == null ? null : ra.getContent() == null ? null : ra.getContent().toString();
         if (content == null && !mayBeNull) {
-            throw new NamingException(String.format("Property «%s» is present but is lacking a value.", propertyName));
+            throw new NamingException(String.format("Property [%s] is present but is lacking a value.", propertyName));
         }
         int result = defaultValue;
         try {
             result = Integer.parseInt(content);
         } catch (Exception x) {
             if (!mayBeNull) {
-                NamingException nx = new NamingException(String.format("Property «%s» is present but is not an integer value «%s»", propertyName, content));
+                NamingException nx = new NamingException(String.format("Property [%s] is present but is not an integer value [%s]", propertyName, content));
                 nx.setRootCause(x);
                 throw nx;
             }

@@ -110,7 +110,7 @@ public class SqlTypeSetterVisitor implements Visitor<SqlTreeNode> {
         case COLLAPSE1:
         case COLLAPSE2:
         case JOINLIST:
-            throw new RuntimeException(String.format("Node type: «%s» should not occur", parent.treeType()));
+            throw new RuntimeException(String.format("Node type: [%s] should not occur", parent.treeType()));
         }
         return SqlExpressionType.NOT_SET;
     }

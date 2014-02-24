@@ -32,7 +32,7 @@ public abstract class AbstractITQueue {
             ++n;
             msg = receiver.receiveNoWait();
         }
-        if (n>0) System.out.println("»» WARNING »» Drained messages (n="+n+") from queue "+queue+" prior to test.");
+        if (n>0) System.out.println(">> INFO >> Drained messages (n="+n+") from queue "+queue+" prior to test.");
     }
 
     protected void reconnect() throws Exception {
