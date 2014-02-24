@@ -193,7 +193,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 }
             } else {
                 mlConsumer.abort();
-                throw new IllegalStateException(String.format("MessageListener concurrently set on Consumer «%s».", this));
+                throw new IllegalStateException(String.format("MessageListener concurrently set on Consumer [%s].", this));
             }
         }
     }

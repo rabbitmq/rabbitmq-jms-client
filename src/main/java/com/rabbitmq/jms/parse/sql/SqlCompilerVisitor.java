@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.rabbitmq.jms.parse.Visitor;
 
-
 /**
  * This visitor accumulates a compiled version of the tree (code) in the form of an Erlang term.
  * It visits the tree node (parent) both before and after the subtree nodes (children), so as to
@@ -29,9 +28,15 @@ public class SqlCompilerVisitor implements Visitor<SqlTreeNode> {
 
     public String extractCode() {
         if (this.sb.length() == 0) return ""; // nothing to extract
-        String code = this.sb.substring((this.sb.charAt(0) == ',') ? 1 : 0);  // a leading comma is removed
+        // a leading comma is removed
+        return this.sb.substring((this.sb.charAt(0) == ',') ? 1 : 0);
+    }
+
+    /**
+     * Reset code accumulator -- used in unit tests
+     */
+    void clearCode() {
         this.sb.setLength(0);
-        return code;
     }
 
     /**
@@ -75,7 +80,7 @@ public class SqlCompilerVisitor implements Visitor<SqlTreeNode> {
                 if (before) sb.append(',').append(binString(parent.value().getString()));
                 break;
             default:
-                throw new RuntimeException(String.format( "Cannot compile tree type: «%s» with token «%s»."
+                throw new RuntimeException(String.format( "Cannot compile tree type: [%s] with token [%s]."
                                                         , parent.treeType(), parent.value()
                                                         ));
             }
@@ -117,13 +122,13 @@ public class SqlCompilerVisitor implements Visitor<SqlTreeNode> {
                 else        sb.append('}');
                 break;
             default:
-                throw new RuntimeException(String.format( "Cannot compile tree type: «%s» with token «%s»."
+                throw new RuntimeException(String.format( "Internal error: cannot compile tree type: [%s] with token [%s]."
                                                         , parent.treeType(), parent.value()
                                                         ));
             }
             break;
         default:
-            throw new RuntimeException(String.format( "Cannot compile tree type: «%s»."
+            throw new RuntimeException(String.format( "Internal error: cannot compile tree type: [%s]."
                                                     , parent.treeType()
                                                     ));
         }
