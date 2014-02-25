@@ -12,7 +12,6 @@ import com.rabbitmq.client.AMQP.Queue;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.parse.sql.SqlEvaluator;
-import com.rabbitmq.jms.util.RMQJMSException;
 
 class BrowsingMessageEnumeration implements Enumeration<RMQMessage> {
 
@@ -37,7 +36,8 @@ class BrowsingMessageEnumeration implements Enumeration<RMQMessage> {
                     channel.basicCancel(consumerTag);
             }
         } catch(IOException ioe) {
-            throw new RMQJMSException(String.format("Failed to browse queue named [%s]", queueName), ioe);
+//            System.out.println(String.format(">> ERROR >> Failed to browse queue named [%s]", queueName));
+//            Just return an empty enumeration: it is not an error to try to browse a non-existent queue
         }
     }
 
