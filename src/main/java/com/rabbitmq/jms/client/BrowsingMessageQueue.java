@@ -29,7 +29,6 @@ class BrowsingMessageQueue implements QueueBrowser {
         Channel chan = session.getBrowsingChannel();
         SqlEvaluator evaluator = setEvaluator(selector);
         this.msgQueue  = new BrowsingMessageEnumeration(session, dest, chan, evaluator);
-        session.closeBrowsingChannel(chan); // this should requeue all the messages browsed
     }
 
     private static final SqlEvaluator setEvaluator(String selector) throws JMSException {

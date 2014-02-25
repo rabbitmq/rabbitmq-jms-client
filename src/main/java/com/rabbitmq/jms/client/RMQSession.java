@@ -921,9 +921,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * Close a specific browsing channel.
-     * @throws JMSException if channel cannot be created
      */
-    void closeBrowsingChannel(Channel chan) throws JMSException {
+    void closeBrowsingChannel(Channel chan) {
         try {
             synchronized (this.bcLock) {
                 if (this.browsingChannels.remove(chan)) {
@@ -932,7 +931,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 }
             }
         } catch (IOException ioe) {
-            throw new RMQJMSException("Cannot close browsing channel", ioe);
+//            throw new RMQJMSException("Cannot close browsing channel", ioe);
+            // ignore errors in clearing up
         }
     }
 
