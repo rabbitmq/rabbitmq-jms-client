@@ -85,8 +85,8 @@ class SqlEvaluatorVisitor implements Visitor<SqlTreeNode> {
 
     private static final Object operationValue(SqlTokenType op, Object[] vals) {
         switch (op) {
-        case BETWEEN:       return between(vals[0], vals[1], vals[2]);
-        case NOT_BETWEEN:   return logicalNot(between(vals[0], vals[1], vals[2]));
+        case NOT_BETWEEN:   return notBetween(vals[0], vals[1], vals[2]);
+        case BETWEEN:       return logicalNot(notBetween(vals[0], vals[1], vals[2]));
 
         case CMP_EQ:        return equals(vals[0], vals[1]);
         case CMP_NEQ:       return logicalNot(equals(vals[0], vals[1]));
@@ -127,25 +127,42 @@ class SqlEvaluatorVisitor implements Visitor<SqlTreeNode> {
 
     private static final Object add(Object o1, Object o2) {
         if (isLong(o1)) {
-            if (isLong(o2)) return (Long) o1 + (Long) o2;
-            else if(isDouble(o2)) return new Double(o1.toString()) + (Double) o2;
+            if (isLong(o2)) return toLong(o1) + toLong(o2);
+            else if(isDouble(o2)) return new Double(o1.toString()) + toDouble(o2);
             else return null;
         } else if (isDouble(o1)) {
-            if (isDouble(o2)) return (Double) o1 + (Double) o2;
-            else if (isLong(o2)) return (Double) o1 + new Double(o2.toString());
+            if (isDouble(o2)) return toDouble(o1) + toDouble(o2);
+            else if (isLong(o2)) return toDouble(o1) + new Double(o2.toString());
             else return null;
         }
         return null;
     }
 
+    private static final long toLong(Object o) {
+        // isLong(o) is true
+        if (o instanceof Long) return (Long) o;
+        return ((Integer) o).longValue();
+    }
+
+    private static final boolean toBool(Object o) {
+        // isBool(o) is true
+        return (Boolean) o;
+    }
+
+    private static final double toDouble(Object o) {
+        // isDouble(o) is true
+        if (o instanceof Double) return (Double) o;
+        return ((Float) o).doubleValue();
+    }
+
     private static final Object subtract(Object o1, Object o2) {
         if (isLong(o1)) {
-            if (isLong(o2)) return (Long) o1 - (Long) o2;
-            else if(isDouble(o2)) return new Double(o1.toString()) - (Double) o2;
+            if (isLong(o2)) return toLong(o1) - toLong(o2);
+            else if(isDouble(o2)) return new Double(o1.toString()) - toDouble(o2);
             else return null;
         } else if (isDouble(o1)) {
-            if (isDouble(o2)) return (Double) o1 - (Double) o2;
-            else if (isLong(o2)) return (Double) o1 - new Double(o2.toString());
+            if (isDouble(o2)) return toDouble(o1) - toDouble(o2);
+            else if (isLong(o2)) return toDouble(o1) - new Double(o2.toString());
             else return null;
         }
         return null;
@@ -153,12 +170,12 @@ class SqlEvaluatorVisitor implements Visitor<SqlTreeNode> {
 
     private static final Object multiply(Object o1, Object o2) {
         if (isLong(o1)) {
-            if (isLong(o2)) return (Long) o1 * (Long) o2;
-            else if(isDouble(o2)) return new Double(o1.toString()) * (Double) o2;
+            if (isLong(o2)) return toLong(o1) * toLong(o2);
+            else if(isDouble(o2)) return new Double(o1.toString()) * toDouble(o2);
             else return null;
         } else if (isDouble(o1)) {
-            if (isDouble(o2)) return (Double) o1 * (Double) o2;
-            else if (isLong(o2)) return (Double) o1 * new Double(o2.toString());
+            if (isDouble(o2)) return toDouble(o1) * toDouble(o2);
+            else if (isLong(o2)) return toDouble(o1) * new Double(o2.toString());
             else return null;
         }
         return null;
@@ -166,12 +183,12 @@ class SqlEvaluatorVisitor implements Visitor<SqlTreeNode> {
 
     private static final Object divide(Object o1, Object o2) {
         if (isLong(o1)) {
-            if (isLong(o2)) return (Long) o1 / (Long) o2;
-            else if(isDouble(o2)) return new Double(o1.toString()) / (Double) o2;
+            if (isLong(o2)) return toLong(o1) / toLong(o2);
+            else if(isDouble(o2)) return new Double(o1.toString()) / toDouble(o2);
             else return null;
         } else if (isDouble(o1)) {
-            if (isDouble(o2)) return (Double) o1 / (Double) o2;
-            else if (isLong(o2)) return (Double) o1 / new Double(o2.toString());
+            if (isDouble(o2)) return toDouble(o1) / toDouble(o2);
+            else if (isLong(o2)) return toDouble(o1) / new Double(o2.toString());
             else return null;
         }
         return null;
@@ -187,12 +204,12 @@ class SqlEvaluatorVisitor implements Visitor<SqlTreeNode> {
 
     private static final Boolean greaterThan(Object o1, Object o2) {
         if (isLong(o1)) {
-            if (isLong(o2)) return (Long) o1 > (Long) o2;
-            else if(isDouble(o2)) return new Double(o1.toString()) > (Double) o2;
+            if (isLong(o2)) return toLong(o1) > toLong(o2);
+            else if(isDouble(o2)) return new Double(o1.toString()) > toDouble(o2);
             else return null;
         } else if (isDouble(o1)) {
-            if (isDouble(o2)) return (Double) o1 > (Double) o2;
-            else if (isLong(o2)) return (Double) o1 > new Double(o2.toString());
+            if (isDouble(o2)) return toDouble(o1) > toDouble(o2);
+            else if (isLong(o2)) return toDouble(o1) > new Double(o2.toString());
             else return null;
         }
         return null;
@@ -200,15 +217,24 @@ class SqlEvaluatorVisitor implements Visitor<SqlTreeNode> {
 
     private static final Boolean equals(Object o1, Object o2) {
         if (o1==null || o2==null) return null;
-        return o1.equals(o2);
+        if (o1 instanceof String) return o1.equals(o2);
+        if (isBool(o1) && isBool(o2)) return toBool(o1) == toBool(o2);
+        if (isLong(o1)) {
+            if (isLong(o2)) return toLong(o1) == toLong(o2);
+            else if (isDouble(o2)) return (double)toLong(o1) == toDouble(o2);
+        } else if (isDouble(o1)) {
+            if (isLong(o2)) return toDouble(o1) == (double)toLong(o2);
+            else if (isDouble(o2)) return toDouble(o1) == toDouble(o2);
+        }
+        return false;
     }
 
     private static final boolean isNull(Object o) {
         return o==null;
     }
 
-    private static final Boolean between(Object o1, Object o2, Object o3) {
-        return logicalNot(logicalOr(greaterThan(o1, o2), greaterThan(o2, o3)));
+    private static final Boolean notBetween(Object o1, Object o2, Object o3) {
+        return logicalOr(greaterThan(o2, o1), greaterThan(o1, o3));
     }
 
     private static final Object leafValue(SqlToken value, Map<String, Object> env) {
@@ -218,6 +244,7 @@ class SqlEvaluatorVisitor implements Visitor<SqlTreeNode> {
         case FLOAT:  return value.getFloat();
         case HEX:    return value.getHex();
         case INT:    return value.getLong();
+        case LIST:   return value.getList();
         case IDENT:  return env==null ? null : env.get(value.getIdent());
         case STRING: return value.getString();
         default:
@@ -253,11 +280,11 @@ class SqlEvaluatorVisitor implements Visitor<SqlTreeNode> {
     }
 
     private static final boolean isLong(Object o) {
-        return o!=null && o instanceof Long;
+        return o!=null && o instanceof Long || o instanceof Integer;
     }
 
     private static final boolean isDouble(Object o) {
-        return o!=null && o instanceof Double;
+        return o!=null && o instanceof Double || o instanceof Float;
     }
 
     private static final boolean isString(Object o) {

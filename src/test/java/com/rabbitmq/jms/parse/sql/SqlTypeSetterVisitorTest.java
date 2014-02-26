@@ -38,7 +38,7 @@ public class SqlTypeSetterVisitorTest {
     //                     LIST                                     (LIST)
     //                     TRUE                                     (BOOL)
     //                     FALSE                                    (BOOL)
-    //LIST           0     *                                        (NOT_SET)
+    //LIST           0     LIST                                     (LIST)
 
     //POSTFIXUNARYOP 1     NULL           *                         (BOOL)
     //                     NOT_NULL       *                         (BOOL)
@@ -114,7 +114,7 @@ public class SqlTypeSetterVisitorTest {
         //                     LIST                                     (LIST)
         //                     TRUE                                     (BOOL)
         //                     FALSE                                    (BOOL)
-        //LIST           0     *                                        (NOT_SET)
+        //LIST           0     LIST                                     (LIST)
         checkSetExpTypeForLeaves( withIdents
         , SqlTreeType.LEAF
         , os(SqlTokenType.IDENT, SqlTokenType.STRING     , SqlTokenType.FLOAT     , SqlTokenType.INT       , SqlTokenType.HEX       , SqlTokenType.LIST     , SqlTokenType.TRUE     , SqlTokenType.FALSE    )
@@ -123,8 +123,8 @@ public class SqlTypeSetterVisitorTest {
         );
         checkSetExpTypeForLeaves( withIdents
         , SqlTreeType.LIST
-        , os((SqlTokenType)null       )  // null means any type will do
-        , os(SqlExpressionType.NOT_SET)
+        , os(SqlTokenType.LIST     )
+        , os(SqlExpressionType.LIST)
         );
     }
 

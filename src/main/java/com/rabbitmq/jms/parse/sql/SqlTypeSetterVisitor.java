@@ -104,8 +104,9 @@ public class SqlTypeSetterVisitor implements Visitor<SqlTreeNode> {
         // Following cases should not affect the result:
         case PATTERN1:
         case PATTERN2:
-        case LIST:
             break;
+        case LIST:
+            return SqlExpressionType.LIST;
         // Following cases should not appear:
         case COLLAPSE1:
         case COLLAPSE2:
