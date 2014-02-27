@@ -132,7 +132,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             if (CLIENT_IDS.putIfAbsent(clientID, clientID)==null) {
                 this.clientID = clientID;
             } else {
-                throw new InvalidClientIDException(String.format("A connection with client ID «%s» already exists.", clientID));
+                throw new InvalidClientIDException(String.format("A connection with client ID [%s] already exists.", clientID));
             }
         } else {
             throw new IllegalStateException("Client ID already set.");

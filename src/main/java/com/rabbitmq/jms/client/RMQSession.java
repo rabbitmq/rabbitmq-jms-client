@@ -854,7 +854,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                     logger.warn("Re-subscribing to topic '{}' with name '{}'", topicDest, name);
                 } else {
                     logger.error("Subscription with name '{}' for topic '{}' already exists", name, topicDest);
-                    throw new JMSException(String.format("Subscription with name «%s» and topic «%s» already exists", name, topicDest));
+                    throw new JMSException(String.format("Subscription with name [%s] and topic [%s] already exists", name, topicDest));
                 }
             } else {
                 logger.warn("Previous subscription with name '{}' was for topic '{}' and is replaced by one for topic '{}'", name, prevDest, topicDest);
