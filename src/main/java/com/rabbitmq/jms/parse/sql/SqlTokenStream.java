@@ -133,7 +133,7 @@ public class SqlTokenStream implements TokenStream<SqlToken, Integer> {
         return new Pair<List<SqlToken>, CharSequence>(tokenList, cseq.subSequence(cseqIndexNext, cseqLength));
     }
 
-    private final static int matchFirstSqlTokenType(List<SqlToken> tokenList, Matcher m) {
+    private static final int matchFirstSqlTokenType(List<SqlToken> tokenList, Matcher m) {
         // See SqlTokenType: order is important
         for (SqlTokenType tt : SqlTokenType.values()) {
             Pattern ttPattern = tt.pattern();
@@ -152,7 +152,7 @@ public class SqlTokenStream implements TokenStream<SqlToken, Integer> {
         return m.regionStart();
     }
 
-    private final static Matcher getMatcher(CharSequence cseq) {
+    private static final Matcher getMatcher(CharSequence cseq) {
         return JUNK_PATTERN.matcher(cseq); // it doesn't matter what pattern we use here
     }
 }

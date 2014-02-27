@@ -81,7 +81,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.terminationTimeout = terminationTimeout;
     }
 
-    private final static long FIFTEEN_SECONDS_MS = 15000;
+    private static final long FIFTEEN_SECONDS_MS = 15000;
     /**
      * Creates an RMQConnection object, with default termination timeout of 15 seconds.
      * @param rabbitConnection the TCP connection wrapper to the RabbitMQ broker

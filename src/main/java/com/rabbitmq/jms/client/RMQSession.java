@@ -50,6 +50,7 @@ import com.rabbitmq.jms.client.message.RMQObjectMessage;
 import com.rabbitmq.jms.client.message.RMQStreamMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.parse.sql.SqlCompiler;
+import com.rabbitmq.jms.parse.sql.SqlEvaluator;
 import com.rabbitmq.jms.parse.sql.SqlExpressionType;
 import com.rabbitmq.jms.parse.sql.SqlParser;
 import com.rabbitmq.jms.parse.sql.SqlTokenStream;
@@ -94,7 +95,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /** Lock and parms for commit and rollback blocking of other commands */
     private final Object commitLock = new Object();
-    private final static long COMMIT_WAIT_MAX = 2000L; // 2 seconds
+    private static final long COMMIT_WAIT_MAX = 2000L; // 2 seconds
     private boolean committing = false; // GuardedBy("commitLock");
 
     /** Selector exchange for topic selection */
@@ -118,7 +119,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         map.put("JMSType",          SqlExpressionType.STRING);
         return Collections.unmodifiableMap(map);
     }
-    private static final Map<String, SqlExpressionType> JMS_TYPE_IDENTS = generateJMSTypeIdents();
+    static final Map<String, SqlExpressionType> JMS_TYPE_IDENTS = generateJMSTypeIdents();
 
     private static Map<String, Object> generateJMSTypeInfoMap() {
         Map<String, Object> map = new HashMap<String, Object>(6);  // six elements only
@@ -608,9 +609,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private void bindSelectorQueue(RMQDestination dest, String jmsSelector, String queueName, String selectionExchange)
             throws InvalidSelectorException, IOException {
-        SqlCompiler compiled = new SqlCompiler(new SqlParser(new SqlTokenStream(jmsSelector)), JMS_TYPE_IDENTS);
-        if (compiled.compileOk()) {
-            Map<String, Object> args = Collections.singletonMap(RJMS_COMPILED_SELECTOR_ARG, (Object)compiled.compile());
+        SqlCompiler compiler = new SqlCompiler(new SqlEvaluator(new SqlParser(new SqlTokenStream(jmsSelector)), JMS_TYPE_IDENTS));
+        if (compiler.compileOk()) {
+            Map<String, Object> args = Collections.singletonMap(RJMS_COMPILED_SELECTOR_ARG, (Object)compiler.compile());
             // bind the queue to the topic selector exchange with the jmsSelector expression as argument
             this.channel.queueBind(queueName, selectionExchange, dest.getAmqpRoutingKey(), args);
         } else {
@@ -871,17 +872,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * {@inheritDoc}
-     * @throws UnsupportedOperationException with non-null selector in versions [1.0, oo)
      */
     @Override
     public QueueBrowser createBrowser(Queue queue, String messageSelector) throws JMSException {
         illegalStateExceptionIfClosed();
-        if (!nullOrEmpty(messageSelector))
-            throw new UnsupportedOperationException("Browsing with selectors not supported");
         if (queue instanceof RMQDestination) {
             RMQDestination rmqDest = (RMQDestination) queue;
             if (rmqDest.isQueue()) {
-                return new BrowsingMessageQueue(this, rmqDest);
+                return new BrowsingMessageQueue(this, rmqDest, messageSelector);
             }
         }
         throw new UnsupportedOperationException("Unknown destination");
@@ -923,9 +921,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * Close a specific browsing channel.
-     * @throws JMSException if channel cannot be created
      */
-    void closeBrowsingChannel(Channel chan) throws JMSException {
+    void closeBrowsingChannel(Channel chan) {
         try {
             synchronized (this.bcLock) {
                 if (this.browsingChannels.remove(chan)) {
@@ -934,7 +931,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 }
             }
         } catch (IOException ioe) {
-            throw new RMQJMSException("Cannot close browsing channel", ioe);
+//            throw new RMQJMSException("Cannot close browsing channel", ioe);
+            // ignore errors in clearing up
         }
     }
 

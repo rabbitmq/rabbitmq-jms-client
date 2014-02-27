@@ -1,9 +1,7 @@
-/* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013, 2014 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.parse.sql;
 
 import static com.rabbitmq.jms.parse.ParseTreeTraverser.traverse;
-
-import java.util.Map;
 
 import com.rabbitmq.jms.parse.Compiler;
 
@@ -13,32 +11,22 @@ public class SqlCompiler implements Compiler {
     private final boolean compileOk;
     private final String errorMessage;
 
-    public SqlCompiler(SqlParser parser, Map<String, SqlExpressionType> identTypes) {
-        if (parser.parseOk()) {
-            SqlParseTree parseTree = parser.parse();
-            if (canBeBool(SqlTypeChecker.deriveExpressionType(parseTree, identTypes))) {
-                SqlCompilerVisitor compilerVisitor = new SqlCompilerVisitor();
-                if (this.compileOk = traverse(parseTree, compilerVisitor)) {
-                    this.compiledCode = compilerVisitor.extractCode() + ".";
-                    this.errorMessage = null;
-                } else {
-                    this.compiledCode = null;
-                    this.errorMessage = "Could not compile parsed tree "+ parseTree.formattedTree();
-                }
+    public SqlCompiler(SqlEvaluator eval) {
+        if (eval.evaluatorOk()) {
+            SqlParseTree parseTree = eval.typedParseTree();
+            SqlCompilerVisitor compilerVisitor = new SqlCompilerVisitor();
+            if (this.compileOk = traverse(parseTree, compilerVisitor)) {
+                this.compiledCode = compilerVisitor.extractCode() + ".";
+                this.errorMessage = null;
             } else {
-                this.compileOk = false;
                 this.compiledCode = null;
-                this.errorMessage = "Type error in expression";
+                this.errorMessage = "Could not compile parsed tree "+ parseTree.formattedTree();
             }
         } else {
            this.compileOk = false;
            this.compiledCode = null;
-           this.errorMessage = parser.getErrorMessage();
+           this.errorMessage = eval.getErrorMessage();
         }
-    }
-
-    private static boolean canBeBool(SqlExpressionType set) {
-        return (set == SqlExpressionType.BOOL || set == SqlExpressionType.ANY);
     }
 
     @Override
@@ -55,5 +43,4 @@ public class SqlCompiler implements Compiler {
     public String getErrorMessage() {
         return this.errorMessage;
     }
-
 }

@@ -36,7 +36,7 @@ public class SqlCompilerTest {
             fail(sp.getErrorMessage());
         }
 
-        SqlCompiler compiled = new SqlCompiler(sp, Collections.<String, SqlExpressionType> emptyMap());
+        SqlCompiler compiled = new SqlCompiler(new SqlEvaluator(sp, Collections.<String, SqlExpressionType> emptyMap()));
         if (!compiled.compileOk()) {
             fail("Did not compile, tree=" + Arrays.toString(pt.formattedTree()));
         }

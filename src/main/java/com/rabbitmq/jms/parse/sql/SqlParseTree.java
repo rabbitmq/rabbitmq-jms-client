@@ -6,10 +6,10 @@ import java.util.ArrayList;
 import com.rabbitmq.jms.parse.ParseTree;
 
 /**
- * Tree used to hold a parsed SQL (selector) expression. The node values are of type {@link SqlTreeNode}.
+ * Tree used to hold a parsed SQL (selector) expression. The nodes are of type {@link SqlTreeNode}.
  *
  */
-public class SqlParseTree implements ParseTree<SqlTreeNode> {
+class SqlParseTree implements ParseTree<SqlTreeNode> {
 
     private final SqlTreeNode node;
     private final SqlParseTree[] children;

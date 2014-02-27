@@ -6,7 +6,6 @@ import java.util.Map;
 
 import com.rabbitmq.jms.parse.Visitor;
 
-
 /**
  * This visitor sets the type of the expression at a node of a tree, using the type of node
  * and the {@link SqlExpressionType} of the children nodes.
@@ -33,9 +32,6 @@ public class SqlTypeSetterVisitor implements Visitor<SqlTreeNode> {
         this(Collections.<String, SqlExpressionType> emptyMap());
     }
 
-    /* (non-Javadoc)
-     * @see com.rabbitmq.jms.parse.Visitor#visitBefore(java.lang.Object, Node[])
-     */
     @Override
     public boolean visitBefore(SqlTreeNode parent, SqlTreeNode[] children) {
         return true;
@@ -43,7 +39,7 @@ public class SqlTypeSetterVisitor implements Visitor<SqlTreeNode> {
 
     @Override
     public boolean visitAfter(SqlTreeNode parent, SqlTreeNode[] children) {
-        parent.setExpType(typeOf(parent, children));
+        parent.getExpValue().setType(typeOf(parent, children));
         return true; // traverse the whole tree
     }
 
@@ -53,29 +49,29 @@ public class SqlTypeSetterVisitor implements Visitor<SqlTreeNode> {
             switch (parent.value().type()) {
             case CMP_EQ:
             case CMP_NEQ:
-                return equalTypeBool(children[0].getExpType(), children[1].getExpType());
+                return equalTypeBool(children[0].getExpValue().getType(), children[1].getExpValue().getType());
             case CMP_GT:
             case CMP_GTEQ:
             case CMP_LT:
             case CMP_LTEQ:
-                return arithTypeBool(children[0].getExpType(), children[1].getExpType());
+                return arithTypeBool(children[0].getExpValue().getType(), children[1].getExpValue().getType());
             case LIKE:
             case NOT_LIKE:
             case IN:
             case NOT_IN:
-                return stringTypeBool(children[0].getExpType());
+                return stringTypeBool(children[0].getExpValue().getType());
             case OP_DIV:
             case OP_MINUS:
             case OP_MULT:
             case OP_PLUS:
-                return arithTypeArith(children[0].getExpType(), children[1].getExpType());
+                return arithTypeArith(children[0].getExpValue().getType(), children[1].getExpValue().getType());
             default:
                 break;
             }
             break;
         case CONJUNCTION:
         case DISJUNCTION:
-            return boolTypeBool(children[0].getExpType(), children[1].getExpType());
+            return boolTypeBool(children[0].getExpValue().getType(), children[1].getExpValue().getType());
         case LEAF:
             switch (parent.value().type()) {
             case TRUE:
@@ -95,21 +91,22 @@ public class SqlTypeSetterVisitor implements Visitor<SqlTreeNode> {
         case PREFIXUNARYOP:
             switch (parent.value().type()) {
             case NOT:
-                return boolTypeBool(children[0].getExpType());
+                return boolTypeBool(children[0].getExpValue().getType());
             case OP_MINUS:
             case OP_PLUS:
-                return arithTypeArith(children[0].getExpType());
+                return arithTypeArith(children[0].getExpValue().getType());
             default:
                 break;
             }
             break;
         case TERNARYOP:
-            return arithTypeBool(children[0].getExpType(), children[1].getExpType(), children[2].getExpType());
+            return arithTypeBool(children[0].getExpValue().getType(), children[1].getExpValue().getType(), children[2].getExpValue().getType());
         // Following cases should not affect the result:
         case PATTERN1:
         case PATTERN2:
-        case LIST:
             break;
+        case LIST:
+            return SqlExpressionType.LIST;
         // Following cases should not appear:
         case COLLAPSE1:
         case COLLAPSE2:

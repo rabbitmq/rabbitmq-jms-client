@@ -167,11 +167,13 @@ public class SqlCompilerVisitorTest {
 
         scv.visitBefore(parent, children);
         assertEquals(String.format("", treeType, tokenType), expectedBefore, scv.extractCode());
-        assertEquals("extractCode() does not clear result after visistBefore()", "", scv.extractCode());
+        scv.clearCode();
+        assertEquals("extractCode() not cleared after visitBefore() and clearCode()", "", scv.extractCode());
 
         scv.visitAfter(parent, children);
         assertEquals(String.format("", treeType, tokenType), expectedAfter, scv.extractCode());
-        assertEquals("extractCode() does not clear result after visistAfter()", "", scv.extractCode());
+        scv.clearCode();
+        assertEquals("extractCode() not cleared after visitAfter() and clearCode()", "", scv.extractCode());
     }
 
     private SqlTreeNode[] testChildren(int arity) {
