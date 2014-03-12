@@ -50,7 +50,7 @@ class BrowsingMessageQueue implements QueueBrowser {
     @Override
     @SuppressWarnings("rawtypes")
     public Enumeration getEnumeration() throws JMSException {
-        Channel chan = session.getBrowsingChannel();
+        Channel chan = this.session.getBrowsingChannel();
         return new BrowsingMessageEnumeration(this.session, this.dest, chan, this.evaluator);
     }
 
