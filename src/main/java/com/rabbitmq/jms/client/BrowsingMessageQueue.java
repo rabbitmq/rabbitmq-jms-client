@@ -20,15 +20,14 @@ class BrowsingMessageQueue implements QueueBrowser {
 
     private final String selector;
     private final RMQDestination dest; // only needed for getQueue();
-
-    private final BrowsingMessageEnumeration msgQueue;
+    private final SqlEvaluator evaluator;
+    private final RMQSession session;
 
     public BrowsingMessageQueue(RMQSession session, RMQDestination dest, String selector) throws JMSException {
         this.dest = dest;
         this.selector = selector;
-        Channel chan = session.getBrowsingChannel();
-        SqlEvaluator evaluator = setEvaluator(selector);
-        this.msgQueue  = new BrowsingMessageEnumeration(session, dest, chan, evaluator);
+        this.session = session;
+        this.evaluator = setEvaluator(selector);
     }
 
     private static final SqlEvaluator setEvaluator(String selector) throws JMSException {
@@ -51,13 +50,13 @@ class BrowsingMessageQueue implements QueueBrowser {
     @Override
     @SuppressWarnings("rawtypes")
     public Enumeration getEnumeration() throws JMSException {
-        return this.msgQueue;
+        Channel chan = session.getBrowsingChannel();
+        return new BrowsingMessageEnumeration(this.session, this.dest, chan, this.evaluator);
     }
 
     @Override
     public void close() throws JMSException {
-        // discard all messages from enumeration
-        this.msgQueue.clearQueue();
+        //no-op
         return;
     }
 }
