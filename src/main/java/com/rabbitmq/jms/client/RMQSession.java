@@ -106,8 +106,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private static final String RJMS_COMPILED_SELECTOR_ARG = "rjms_erlang_selector";
     /** Name of argument on exchange create; used to specify identifier types */
     private static final String RJMS_TYPE_INFO_ARG = "rjms_type_info";
-    /** Name of argument on exchange create; used to determine selection policy */
-    private static final String RJMS_POLICY_ARG = "rjms_selection_policy";
 
     private static Map<String, SqlExpressionType> generateJMSTypeIdents() {
         Map<String, SqlExpressionType> map = new HashMap<String, SqlExpressionType>(6);  // six elements only
@@ -133,13 +131,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
     private static final Map<String, Object> JMS_TYPE_INFO_ARGUMENTS = generateJMSTypeInfoMap();
 
-    private static final Map<String, Object> RJMS_TOPIC_SELECTOR_EXCHANGE_ARGUMENTS = generateJMSExchangeArgs("jms-topic");
+    private static final Map<String, Object> RJMS_TOPIC_SELECTOR_EXCHANGE_ARGUMENTS = generateJMSExchangeArgs();
 
-    private static Map<String, Object> generateJMSExchangeArgs(String policy) {
-        Map<String, Object> map = new HashMap<String, Object>(2);  // pair of elements only
-        map.put(RJMS_TYPE_INFO_ARG, (Object) JMS_TYPE_INFO_ARGUMENTS);
-        map.put(RJMS_POLICY_ARG, (Object) policy);
-        return Collections.unmodifiableMap(map);
+    private static Map<String, Object> generateJMSExchangeArgs() {
+        return Collections.singletonMap(RJMS_TYPE_INFO_ARG, (Object) JMS_TYPE_INFO_ARGUMENTS);
     }
 
     private static final String JMS_TOPIC_SELECTOR_EXCHANGE_TYPE = "x-jms-topic";
