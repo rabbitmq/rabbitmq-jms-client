@@ -104,8 +104,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private volatile String nonDurableTopicSelectorExchange;
     /** Selector exchange arg key for erlang selector expression */
     private static final String RJMS_COMPILED_SELECTOR_ARG = "rjms_erlang_selector";
-    /** Name of argument on exchange create; used to specify identifier types */
-    private static final String RJMS_TYPE_INFO_ARG = "rjms_type_info";
 
     private static Map<String, SqlExpressionType> generateJMSTypeIdents() {
         Map<String, SqlExpressionType> map = new HashMap<String, SqlExpressionType>(6);  // six elements only
@@ -118,24 +116,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         return Collections.unmodifiableMap(map);
     }
     static final Map<String, SqlExpressionType> JMS_TYPE_IDENTS = generateJMSTypeIdents();
-
-    private static Map<String, Object> generateJMSTypeInfoMap() {
-        Map<String, Object> map = new HashMap<String, Object>(6);  // six elements only
-        map.put("JMSDeliveryMode",  "string");
-        map.put("JMSPriority",      "number");
-        map.put("JMSMessageID",     "string");
-        map.put("JMSTimestamp",     "number");
-        map.put("JMSCorrelationID", "string");
-        map.put("JMSType",          "string");
-        return Collections.unmodifiableMap(map);
-    }
-    private static final Map<String, Object> JMS_TYPE_INFO_ARGUMENTS = generateJMSTypeInfoMap();
-
-    private static final Map<String, Object> RJMS_TOPIC_SELECTOR_EXCHANGE_ARGUMENTS = generateJMSExchangeArgs();
-
-    private static Map<String, Object> generateJMSExchangeArgs() {
-        return Collections.singletonMap(RJMS_TYPE_INFO_ARG, (Object) JMS_TYPE_INFO_ARGUMENTS);
-    }
 
     private static final String JMS_TOPIC_SELECTOR_EXCHANGE_TYPE = "x-jms-topic";
 
@@ -632,7 +612,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (this.durableTopicSelectorExchange==null) {
             this.durableTopicSelectorExchange = Util.generateUUID("jms-dutop-slx-");
         }
-        this.channel.exchangeDeclare(this.durableTopicSelectorExchange, JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, true, true, RJMS_TOPIC_SELECTOR_EXCHANGE_ARGUMENTS);
+        this.channel.exchangeDeclare(this.durableTopicSelectorExchange, JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, true, true, null);
         return this.durableTopicSelectorExchange;
     }
 
@@ -640,7 +620,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (this.nonDurableTopicSelectorExchange==null) {
             this.nonDurableTopicSelectorExchange = Util.generateUUID("jms-ndtop-slx-");
         }
-        this.channel.exchangeDeclare(this.nonDurableTopicSelectorExchange, JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, RJMS_TOPIC_SELECTOR_EXCHANGE_ARGUMENTS);
+        this.channel.exchangeDeclare(this.nonDurableTopicSelectorExchange, JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, null);
         return this.nonDurableTopicSelectorExchange;
     }
 
