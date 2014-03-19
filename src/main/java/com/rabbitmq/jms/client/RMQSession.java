@@ -98,12 +98,26 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private static final long COMMIT_WAIT_MAX = 2000L; // 2 seconds
     private boolean committing = false; // GuardedBy("commitLock");
 
+    /** Client version obtained from compiled class. */
+    private static final GenericVersion CLIENT_VERSION = new GenericVersion(RMQSession.class.getPackage().getImplementationVersion());
+
+    private static final String RJMS_CLIENT_VERSION = CLIENT_VERSION.toString();
+    static {
+        if (RJMS_CLIENT_VERSION.equals("0.0.0"))
+            System.out.println("WARNING: Running test version of RJMS Client with no version information.");
+    }
+
     /** Selector exchange for topic selection */
     private volatile String durableTopicSelectorExchange;
     /** Selector exchange for topic selection */
     private volatile String nonDurableTopicSelectorExchange;
     /** Selector exchange arg key for erlang selector expression */
     private static final String RJMS_COMPILED_SELECTOR_ARG = "rjms_erlang_selector";
+    /** Selector exchange arg key for client version */
+    private static final String RJMS_VERSION_ARG = "rjms_version";
+    /** Selector exchange arguments */
+    private static final Map<String, Object> RJMS_SELECTOR_EXCHANGE_ARGS
+        = Collections.singletonMap(RJMS_VERSION_ARG, (Object)RJMS_CLIENT_VERSION);
 
     private static Map<String, SqlExpressionType> generateJMSTypeIdents() {
         Map<String, SqlExpressionType> map = new HashMap<String, SqlExpressionType>(6);  // six elements only
@@ -586,7 +600,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             throws InvalidSelectorException, IOException {
         SqlCompiler compiler = new SqlCompiler(new SqlEvaluator(new SqlParser(new SqlTokenStream(jmsSelector)), JMS_TYPE_IDENTS));
         if (compiler.compileOk()) {
-            Map<String, Object> args = Collections.singletonMap(RJMS_COMPILED_SELECTOR_ARG, (Object)compiler.compile());
+            Map<String, Object> args = new HashMap<String, Object>(5);
+            args.put(RJMS_COMPILED_SELECTOR_ARG, (Object)compiler.compile());
+            args.put(RJMS_VERSION_ARG, (Object)RJMS_CLIENT_VERSION);
             // bind the queue to the topic selector exchange with the jmsSelector expression as argument
             this.channel.queueBind(queueName, selectionExchange, dest.getAmqpRoutingKey(), args);
         } else {
@@ -612,7 +628,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (this.durableTopicSelectorExchange==null) {
             this.durableTopicSelectorExchange = Util.generateUUID("jms-dutop-slx-");
         }
-        this.channel.exchangeDeclare(this.durableTopicSelectorExchange, JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, true, true, null);
+        this.channel.exchangeDeclare(this.durableTopicSelectorExchange, JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, true, true, RJMS_SELECTOR_EXCHANGE_ARGS);
         return this.durableTopicSelectorExchange;
     }
 
@@ -620,7 +636,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (this.nonDurableTopicSelectorExchange==null) {
             this.nonDurableTopicSelectorExchange = Util.generateUUID("jms-ndtop-slx-");
         }
-        this.channel.exchangeDeclare(this.nonDurableTopicSelectorExchange, JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, null);
+        this.channel.exchangeDeclare(this.nonDurableTopicSelectorExchange, JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, RJMS_SELECTOR_EXCHANGE_ARGS);
         return this.nonDurableTopicSelectorExchange;
     }
 

@@ -13,9 +13,11 @@ public class RMQConnectionMetaData implements ConnectionMetaData {
 
     private static final String JMS_PROVIDER_NAME = "RabbitMQ";
 
-    private static final String RABBITMQ_VERSION = System.getProperty("RABBITMQ_VERSION","2.8.6");
-    private static final int RABBITMQ_MAJOR_VERSION = 2;
-    private static final int RABBITMQ_MINOR_VERSION = 8;
+    private static final GenericVersion RABBITMQ_VERSION_OBJECT =
+            new GenericVersion(com.rabbitmq.client.impl.Version.class.getPackage().getImplementationVersion());
+    private static final String RABBITMQ_VERSION = RABBITMQ_VERSION_OBJECT.toString();
+    private static final int RABBITMQ_MAJOR_VERSION = RABBITMQ_VERSION_OBJECT.getMajor();
+    private static final int RABBITMQ_MINOR_VERSION = RABBITMQ_VERSION_OBJECT.getMinor();
 
     private static final String JMS_VERSION = "1.1";
     private static final int JMS_MAJOR_VERSION = 1;
