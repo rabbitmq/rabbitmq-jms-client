@@ -25,7 +25,7 @@ sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmqctl -n ${RJMS_RABBITMQ_NODENAME} stop ||
 echo 'Delete previous logs...'
 sudo rm -rf ${RJMS_RABBITMQ_BASE}/var/log/rabbitmq/*
 echo 'Delete previous mnesia db...'
-sudo rm -rf ${RJMS_RABBITMQ_BASE}/var/lib/mnesia/*
+sudo rm -rf ${RJMS_RABBITMQ_BASE}/var/lib/rabbitmq/mnesia/*
 
 sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmq-plugins disable rabbitmq_jms_topic_exchange
 sudo rm ${RJMS_RABBITMQ_PLUGINS}/rjms-topic-selector-*.ez
