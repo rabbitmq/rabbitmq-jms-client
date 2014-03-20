@@ -349,9 +349,10 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("RMQConnection{");
-        sb.append("rabbitConnection=").append(this.rabbitConnection);
-        sb.append(", stopped=").append(this.stopped.get());
-        return sb.append('}').toString();
+        return new StringBuilder("RMQConnection{")
+                .append("rabbitConnection=").append(this.rabbitConnection)
+                .append(", stopped=").append(this.stopped.get())
+                .append(", queueBrowserReadMax=").append(this.queueBrowserReadMax)
+                .append('}').toString();
     }
 }

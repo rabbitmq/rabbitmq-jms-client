@@ -14,24 +14,29 @@ public class RabbitAPIConnectionFactory extends AbstractTestConnectionFactory {
 
     private static final int RABBIT_PORT = 5672; // 5672 default; 5673 Tracer.
     private final boolean testssl;
+    private int qbrMax;
 
     public RabbitAPIConnectionFactory() { this(false); }
 
-    public RabbitAPIConnectionFactory(boolean testssl) { this.testssl = testssl; }
+    public RabbitAPIConnectionFactory(boolean testssl) { this(testssl, 0); }
+
+    public RabbitAPIConnectionFactory(boolean testssl, int qbrMax) { this.testssl = testssl;
+                                                                     this.qbrMax = qbrMax;
+                                                                   }
+
     @Override
     public ConnectionFactory getConnectionFactory() {
-        return new RMQConnectionFactory() {
-
+        RMQConnectionFactory rmqCF = new RMQConnectionFactory() {
             private static final long serialVersionUID = 1L;
-
             @Override
             public Connection createConnection(String userName, String password) throws JMSException {
-                super.setSsl(testssl);
                 if (!testssl) this.setPort(RABBIT_PORT);
                 return super.createConnection(userName, password);
             }
-
         };
+        rmqCF.setSsl(testssl);
+        rmqCF.setQueueBrowserReadMax(qbrMax);
+        return rmqCF;
     }
 
 }

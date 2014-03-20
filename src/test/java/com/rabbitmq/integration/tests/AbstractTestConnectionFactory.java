@@ -5,10 +5,10 @@ public abstract class AbstractTestConnectionFactory {
     public abstract javax.jms.ConnectionFactory getConnectionFactory();
 
     public static AbstractTestConnectionFactory getTestConnectionFactory() throws Exception {
-        return new RabbitAPIConnectionFactory();
+        return getTestConnectionFactory(false, 0);
     }
 
-    public static AbstractTestConnectionFactory getSslTestConnectionFactory() throws Exception {
-        return new RabbitAPIConnectionFactory(true);
+    public static AbstractTestConnectionFactory getTestConnectionFactory(boolean isSsl, int qbrMax) throws Exception {
+        return new RabbitAPIConnectionFactory(isSsl, qbrMax);
     }
 }

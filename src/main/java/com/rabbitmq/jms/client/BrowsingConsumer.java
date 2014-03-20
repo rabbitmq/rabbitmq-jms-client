@@ -59,6 +59,7 @@ class BrowsingConsumer extends DefaultConsumer {
                                AMQP.BasicProperties properties,
                                byte[] body)
     throws IOException {
+        if (this.messagesExpected==0) return;
         try {
             RMQMessage msg = RMQMessage.convertMessage(this.session, this.dest, new GetResponse(envelope, properties, body, --this.messagesExpected));
             if (evaluator==null || evaluator.evaluate(msg.toHeaders()))

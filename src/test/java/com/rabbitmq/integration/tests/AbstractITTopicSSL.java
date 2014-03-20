@@ -14,7 +14,7 @@ public abstract class AbstractITTopicSSL {
     @Before
     public void beforeTests() throws Exception {
         this.connFactory =
-                (TopicConnectionFactory) AbstractTestConnectionFactory.getSslTestConnectionFactory()
+                (TopicConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory(true, 0)
                                                                       .getConnectionFactory();
         this.topicConn = connFactory.createTopicConnection();
     }

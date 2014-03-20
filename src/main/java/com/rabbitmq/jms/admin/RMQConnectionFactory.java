@@ -128,7 +128,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         .append(", host='").append(this.host)
         .append("', port=").append(this.getPort())
         .append(", virtualHost='").append(this.virtualHost)
-        .append("'}").toString();
+        .append("', queueBrowserReadMax=").append(this.queueBrowserReadMax)
+        .append('}').toString();
     }
 
     /**

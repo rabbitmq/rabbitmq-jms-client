@@ -5,11 +5,13 @@ import javax.jms.QueueConnectionFactory;
 
 import org.junit.Before;
 
-public abstract class AbstractITQueueSSL extends AbstractITQueue {
+/** The setting queueBrowserReadMax is set to 5 on the connection in this test framework. */
+public abstract class AbstractITLimitedQueue extends AbstractITQueue{
+    protected final static int QBR_MAX = 5;
 
     @Before
     public void beforeTests() throws Exception {
-        this.connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory(true, 0)
+        this.connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory(false, QBR_MAX)
                 .getConnectionFactory();
         this.queueConn = connFactory.createQueueConnection();
     }
