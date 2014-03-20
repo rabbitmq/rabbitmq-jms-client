@@ -17,17 +17,17 @@ class BrowsingMessageEnumeration implements Enumeration<RMQMessage> {
     private static final int BROWSING_CONSUMER_TIMEOUT = 10000; // ms
     private final java.util.Queue<RMQMessage> msgQueue;
 
-    public BrowsingMessageEnumeration(RMQSession session, RMQDestination dest, Channel channel, SqlEvaluator evaluator) throws JMSException {
+    public BrowsingMessageEnumeration(RMQSession session, RMQDestination dest, Channel channel, SqlEvaluator evaluator, int readMax) throws JMSException {
         this.msgQueue = new ConcurrentLinkedQueue<RMQMessage>();
-        populateQueue(this.msgQueue, channel, session, dest, evaluator);
+        populateQueue(this.msgQueue, channel, session, dest, evaluator, readMax);
         session.closeBrowsingChannel(channel); // this should requeue all the messages browsed
     }
 
-    private static void populateQueue(final java.util.Queue<RMQMessage> msgQueue, Channel channel, RMQSession session, RMQDestination dest, SqlEvaluator evaluator) {
+    private static void populateQueue(final java.util.Queue<RMQMessage> msgQueue, Channel channel, RMQSession session, RMQDestination dest, SqlEvaluator evaluator, int readMax) {
         try {
             Queue.DeclareOk qdec = channel.queueDeclarePassive(dest.getQueueName());
             if (qdec.getMessageCount() > 0) {
-                int messagesExpected = qdec.getMessageCount();
+                int messagesExpected = (readMax<=0) ? qdec.getMessageCount() : Math.min(readMax, qdec.getMessageCount());
                 BrowsingConsumer bc = new BrowsingConsumer(channel, session, dest, messagesExpected, msgQueue, evaluator);
                 String consumerTag = channel.basicConsume(dest.getQueueName(), bc);
                 if (bc.finishesInTime(BROWSING_CONSUMER_TIMEOUT))

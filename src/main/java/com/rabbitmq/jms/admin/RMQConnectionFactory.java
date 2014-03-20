@@ -85,7 +85,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         setRabbitUri(logger, this, factory, this.getUri());
         com.rabbitmq.client.Connection rabbitConnection = getRabbitConnection(factory);
 
-        RMQConnection conn = new RMQConnection(rabbitConnection, getTerminationTimeout());
+        RMQConnection conn = new RMQConnection(rabbitConnection, getTerminationTimeout(), getQueueBrowserReadMax());
         logger.debug("Connection {} created.", conn);
         return conn;
     }

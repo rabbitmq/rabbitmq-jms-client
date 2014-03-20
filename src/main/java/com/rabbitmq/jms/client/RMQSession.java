@@ -870,7 +870,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (queue instanceof RMQDestination) {
             RMQDestination rmqDest = (RMQDestination) queue;
             if (rmqDest.isQueue()) {
-                return new BrowsingMessageQueue(this, rmqDest, messageSelector);
+                return new BrowsingMessageQueue(this, rmqDest, messageSelector, this.connection.getQueueBrowserReadMax());
             }
         }
         throw new UnsupportedOperationException("Unknown destination");

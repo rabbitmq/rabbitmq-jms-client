@@ -63,6 +63,9 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     /** maximum time (in ms) to wait for close() to complete */
     private final long terminationTimeout;
 
+    /** max number of messages to read from a browsed queue */
+    private final int queueBrowserReadMax;
+
     private static ConcurrentHashMap<String, String> CLIENT_IDS = new ConcurrentHashMap<String, String>();
 
     /** List of all our durable subscriptions so we can track them on a per connection basis (maintained by sessions).*/
@@ -75,20 +78,25 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      * Creates an RMQConnection object.
      * @param rabbitConnection the TCP connection wrapper to the RabbitMQ broker
      * @param terminationTimeout timeout for close in milliseconds
+     * @param queueBrowserReadMax maximum number of messages to read from a QueueBrowser (before filtering)
      */
-    public RMQConnection(com.rabbitmq.client.Connection rabbitConnection, long terminationTimeout) {
+    public RMQConnection(com.rabbitmq.client.Connection rabbitConnection, long terminationTimeout, int queueBrowserReadMax) {
         this.rabbitConnection = rabbitConnection;
         this.terminationTimeout = terminationTimeout;
+        this.queueBrowserReadMax = queueBrowserReadMax;
     }
 
     private static final long FIFTEEN_SECONDS_MS = 15000;
     /**
-     * Creates an RMQConnection object, with default termination timeout of 15 seconds.
+     * Creates an RMQConnection object, with default termination timeout of 15 seconds, and unlimited reads from QueueBrowsers.
      * @param rabbitConnection the TCP connection wrapper to the RabbitMQ broker
      */
     public RMQConnection(com.rabbitmq.client.Connection rabbitConnection) {
-        this(rabbitConnection, FIFTEEN_SECONDS_MS);
+        this(rabbitConnection, FIFTEEN_SECONDS_MS, 0);
     }
+
+    /** For RMQSession to retrieve */
+    int getQueueBrowserReadMax() { return this.queueBrowserReadMax; }
 
     /**
      * {@inheritDoc}
