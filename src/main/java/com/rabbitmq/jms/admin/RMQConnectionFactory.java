@@ -55,6 +55,11 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private String host = "localhost";
     /** Default port NOT SET - determined by the type of connection (ssl or non-ssl) */
     private int port = -1;
+
+    /** The maximum number of messages to read on a queue browser, which must be non-negative;
+     *  0 means unlimited and is the default; negative values are interpreted as 0. */
+    private int queueBrowserReadMax = Math.max(0, Integer.getInteger("rabbit.jms.queueBrowserReadMax", 0));
+
     /** The time to wait for threads/messages to terminate during {@link Connection#close()} */
     private volatile long terminationTimeout = Long.getLong("rabbit.jms.terminationTimeout", 15000);
 
@@ -77,7 +82,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         // Create a new factory and set the properties
         com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
         resetSsl(factory);
-        setRabbitUri(factory, this.getUri());
+        setRabbitUri(logger, this, factory, this.getUri());
         com.rabbitmq.client.Connection rabbitConnection = getRabbitConnection(factory);
 
         RMQConnection conn = new RMQConnection(rabbitConnection, getTerminationTimeout());
@@ -135,7 +140,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         logger.trace("Set connection factory parameters by URI '{}'", uriString);
         // Create a temp factory and set the properties by uri
         com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
-        setRabbitUri(factory, uriString);
+        setRabbitUri(logger, this, factory, uriString);
         // Now extract our properties from this factory, leaving the rest unchanged.
         this.host = factory.getHost();
         this.password = factory.getPassword();
@@ -145,12 +150,12 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.virtualHost = factory.getVirtualHost();
     }
 
-    private void setRabbitUri(com.rabbitmq.client.ConnectionFactory factory, String uriString) throws RMQJMSException {
+    private static final void setRabbitUri(Logger logger, RMQConnectionFactory rmqFactory, com.rabbitmq.client.ConnectionFactory factory, String uriString) throws RMQJMSException {
         if (uriString != null) { // we get the defaults if the uri is null
             try {
                 factory.setUri(uriString);
             } catch (Exception e) {
-                this.logger.error("Could not set URI on {}", this, e);
+                logger.error("Could not set URI on {}", rmqFactory, e);
                 throw new RMQJMSException("Could not set URI on RabbitMQ connection factory.", e);
             }
         }
@@ -198,8 +203,17 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     @Override
     public Reference getReference() throws NamingException {
         Reference ref = new Reference(RMQConnectionFactory.class.getName());
-        addStringProperty(ref, "uri", this.getUri());
+        addStringRefProperty(ref, "uri", this.getUri());
+        addIntegerRefProperty(ref, "queueBrowserReadMax", this.getQueueBrowserReadMax());
         return ref;
+    }
+
+    /** For JNDI binding and Spring beans */
+    public void setQueueBrowserReadMax(int value) {
+        this.queueBrowserReadMax = value;
+    }
+    public int getQueueBrowserReadMax() {
+        return this.queueBrowserReadMax;
     }
 
     /**
@@ -208,11 +222,25 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * @param propertyName - the name of the property
      * @param value - the value to store with the property
      */
-    private static final void addStringProperty(Reference ref,
-                                                String propertyName,
-                                                String value) {
+    private static final void addStringRefProperty(Reference ref,
+                                                   String propertyName,
+                                                   String value) {
         if (value==null || propertyName==null) return;
         RefAddr ra = new StringRefAddr(propertyName, value);
+        ref.add(ra);
+    }
+
+    /**
+     * Adds an integer valued property to a Reference (as a RefAddr).
+     * @param ref - the reference to contain the value
+     * @param propertyName - the name of the property
+     * @param value - the value to store with the property
+     */
+    private static final void addIntegerRefProperty(Reference ref,
+                                                    String propertyName,
+                                                    Integer value) {
+        if (value==null || propertyName==null) return;
+        RefAddr ra = new StringRefAddr(propertyName, String.valueOf(value));
         ref.add(ra);
     }
 
