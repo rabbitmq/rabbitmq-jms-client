@@ -547,4 +547,10 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         }
     }
 
+    public static final RMQMessage recreate(BytesMessage msg) throws JMSException {
+        RMQBytesMessage rmqBMsg = new RMQBytesMessage();
+        RMQMessage.copyAttributes(rmqBMsg, msg);
+
+        return rmqBMsg;
+    }
 }

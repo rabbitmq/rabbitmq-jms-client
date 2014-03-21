@@ -16,12 +16,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.jms.BytesMessage;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
+import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.MessageFormatException;
 import javax.jms.MessageNotWriteableException;
+import javax.jms.ObjectMessage;
+import javax.jms.StreamMessage;
+import javax.jms.TextMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +37,9 @@ import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
+import com.rabbitmq.jms.client.message.RMQMapMessage;
+import com.rabbitmq.jms.client.message.RMQObjectMessage;
+import com.rabbitmq.jms.client.message.RMQStreamMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.util.HexDisplay;
 import com.rabbitmq.jms.util.IteratorEnum;
@@ -882,13 +890,13 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
 
     /**
-     * Converts a {@link GetResponse} to a {@link Message}
+     * Converts a {@link GetResponse} to a {@link RMQMessage}
      *
      * @param response - the message information from RabbitMQ {@link Channel#basicGet} or via a {@link Consumer}.
      * @return the JMS message corresponding to the RabbitMQ message
      * @throws JMSException
      */
-    public static RMQMessage convertMessage(RMQSession session, RMQDestination dest, GetResponse response) throws JMSException {
+    static RMQMessage convertMessage(RMQSession session, RMQDestination dest, GetResponse response) throws JMSException {
         if (response == null) /* return null if the response is null */
             return null;
         if (dest.isAmqp()) {
@@ -1358,5 +1366,35 @@ public abstract class RMQMessage implements Message, Cloneable {
             if (val instanceof CharSequence) return Integer.valueOf(val.toString());
         } catch (NumberFormatException _) { /*ignore*/ }
         return dft;
+    }
+
+    static final RMQMessage normalise(Message msg) throws JMSException {
+        if (msg instanceof RMQMessage) return (RMQMessage) msg;
+
+        /* If not one of our own, copy it into an RMQMessage */
+             if (msg instanceof BytesMessage ) return RMQBytesMessage.recreate((BytesMessage)msg);
+        else if (msg instanceof MapMessage   ) return RMQMapMessage.recreate((MapMessage)msg);
+        else if (msg instanceof ObjectMessage) return RMQObjectMessage.recreate((ObjectMessage)msg);
+        else if (msg instanceof StreamMessage) return RMQStreamMessage.recreate((StreamMessage)msg);
+        else if (msg instanceof TextMessage  ) return RMQTextMessage.recreate((TextMessage)msg);
+
+        /* Unrecognised JMS message. */
+        throw new RMQJMSException(String.format("Message '{}' is not a recognised JMS Message type.", msg),
+                                  new UnsupportedOperationException("normalise(Message msg)"));
+    }
+
+    /** Assign generic attributes.
+     * <pre>
+     * “rmqMessage = (RMQMessage) message;”</pre>
+     * <p>With conversion as appropriate.</p>
+     * @param rmqMessage message filled in with attributes
+     * @param message message from which attributes are gained.
+     */
+    protected static final void copyAttributes(RMQMessage rmqMessage, Message message) throws JMSException {
+        try {
+            // TODO: copy properties visible to Message interface
+        } catch (Exception e) {
+            throw new RMQJMSException("Error converting Message to RMQMessage.", e);
+        }
     }
 }

@@ -88,4 +88,11 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
     protected void writeAmqpBody(ByteArrayOutputStream out) throws IOException {
         out.write((this.text!=null ? this.text : "").getBytes("UTF-8"));
     }
+
+    public static final RMQMessage recreate(TextMessage msg) throws JMSException {
+        RMQTextMessage rmqTMsg = new RMQTextMessage();
+        RMQMessage.copyAttributes(rmqTMsg, msg);
+
+        return rmqTMsg;
+    }
 }

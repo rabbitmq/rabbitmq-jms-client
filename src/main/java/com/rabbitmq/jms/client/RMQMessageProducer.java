@@ -227,13 +227,13 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         if (deliveryMode != javax.jms.DeliveryMode.PERSISTENT)
             deliveryMode = javax.jms.DeliveryMode.NON_PERSISTENT;
 
-        /*
-         * Set known JMS message properties that need to be set during this call
-         */
+        /* Normalise message to internal form */
+        RMQMessage msg = RMQMessage.normalise(message);
+
+        /* Set known JMS message properties that need to be set during this call */
         long currentTime = System.currentTimeMillis();
         long expiration = timeToLive == 0L ? 0L : currentTime + timeToLive;
 
-        RMQMessage msg = (RMQMessage) message;
         msg.setJMSDeliveryMode(deliveryMode);
         msg.setJMSPriority(priority);
         msg.setJMSExpiration(expiration);
@@ -241,6 +241,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         msg.setJMSTimestamp(currentTime);
         msg.generateInternalID();
 
+        /* Now send it */
         if (destination.isAmqp()) {
             sendAMQPMessage(destination, msg, deliveryMode, priority, timeToLive);
         } else {

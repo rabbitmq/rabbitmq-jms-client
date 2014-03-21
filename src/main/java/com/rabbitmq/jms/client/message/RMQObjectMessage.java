@@ -109,4 +109,11 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
     protected void writeAmqpBody(ByteArrayOutputStream out) throws IOException {
         throw new UnsupportedOperationException();
     }
+
+    public static final RMQMessage recreate(ObjectMessage msg) throws JMSException {
+        RMQObjectMessage rmqOMsg = new RMQObjectMessage();
+        RMQMessage.copyAttributes(rmqOMsg, msg);
+
+        return rmqOMsg;
+    }
 }

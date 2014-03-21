@@ -525,4 +525,11 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
     protected void writeAmqpBody(ByteArrayOutputStream out) throws IOException {
         throw new UnsupportedOperationException();
     }
+
+    public static final RMQMessage recreate(StreamMessage msg) throws JMSException {
+        RMQStreamMessage rmqSMsg = new RMQStreamMessage();
+        RMQMessage.copyAttributes(rmqSMsg, msg);
+
+        return rmqSMsg;
+    }
 }

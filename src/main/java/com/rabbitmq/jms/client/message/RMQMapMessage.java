@@ -371,4 +371,11 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
     protected void writeAmqpBody(ByteArrayOutputStream out) throws IOException {
         throw new UnsupportedOperationException();
     }
+
+    public static final RMQMessage recreate(MapMessage msg) throws JMSException {
+        RMQMapMessage rmqMMsg = new RMQMapMessage();
+        RMQMessage.copyAttributes(rmqMMsg, msg);
+
+        return rmqMMsg;
+    }
 }
