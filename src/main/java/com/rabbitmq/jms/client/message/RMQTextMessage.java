@@ -93,6 +93,8 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
         RMQTextMessage rmqTMsg = new RMQTextMessage();
         RMQMessage.copyAttributes(rmqTMsg, msg);
 
+        rmqTMsg.setText(msg.getText());
+
         return rmqTMsg;
     }
 }

@@ -114,6 +114,8 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         RMQObjectMessage rmqOMsg = new RMQObjectMessage();
         RMQMessage.copyAttributes(rmqOMsg, msg);
 
+        rmqOMsg.setObject(msg.getObject());
+
         return rmqOMsg;
     }
 }

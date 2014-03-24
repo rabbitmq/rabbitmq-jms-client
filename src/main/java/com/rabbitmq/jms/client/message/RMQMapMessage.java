@@ -376,6 +376,16 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         RMQMapMessage rmqMMsg = new RMQMapMessage();
         RMQMessage.copyAttributes(rmqMMsg, msg);
 
+        copyMapObjects(rmqMMsg, msg);
         return rmqMMsg;
+    }
+
+    private static final void copyMapObjects(RMQMapMessage rmqMsg, MapMessage msg) throws JMSException {
+        @SuppressWarnings("unchecked")
+        Enumeration<String> mapNames = (Enumeration<String>) msg.getMapNames();
+        while (mapNames.hasMoreElements()) {
+            String name = mapNames.nextElement();
+            rmqMsg.setObject(name, msg.getObject(name));
+        }
     }
 }

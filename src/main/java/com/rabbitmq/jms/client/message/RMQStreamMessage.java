@@ -530,6 +530,15 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         RMQStreamMessage rmqSMsg = new RMQStreamMessage();
         RMQMessage.copyAttributes(rmqSMsg, msg);
 
+        msg.reset(); // reset to beginning
+        boolean endOfStream = false;
+        while(!endOfStream) {
+            try {
+                rmqSMsg.writeObject(msg.readObject());
+            } catch (MessageEOFException _) {
+                endOfStream = true;
+            }
+        }
         return rmqSMsg;
     }
 }

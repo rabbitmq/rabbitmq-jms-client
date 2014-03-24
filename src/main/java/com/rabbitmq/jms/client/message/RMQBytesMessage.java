@@ -551,6 +551,18 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         RMQBytesMessage rmqBMsg = new RMQBytesMessage();
         RMQMessage.copyAttributes(rmqBMsg, msg);
 
+        long bodyLength = msg.getBodyLength();
+        int bodySize = (int) Math.min(Math.max(0L, bodyLength), Integer.MAX_VALUE);
+        if (bodyLength != bodySize) throw new JMSException(String.format("BytesMessage body invalid length (%s). Negative or too large.", bodyLength));
+        try {
+            byte[] byteArray = new byte[bodySize];
+            msg.reset();
+            msg.readBytes(byteArray, bodySize); // read the whole body at once
+            rmqBMsg.writeBytes(byteArray);
+        } catch (OutOfMemoryError e) {
+            throw new RMQJMSException("Body too large for conversion to RMQMessage.", e);
+        }
+//        rmqBMsg.reset();  // make body read-only and set pointer to start.
         return rmqBMsg;
     }
 }

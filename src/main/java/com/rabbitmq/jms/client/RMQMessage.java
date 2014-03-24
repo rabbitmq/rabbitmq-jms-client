@@ -1377,10 +1377,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         else if (msg instanceof ObjectMessage) return RMQObjectMessage.recreate((ObjectMessage)msg);
         else if (msg instanceof StreamMessage) return RMQStreamMessage.recreate((StreamMessage)msg);
         else if (msg instanceof TextMessage  ) return RMQTextMessage.recreate((TextMessage)msg);
-
-        /* Unrecognised JMS message. */
-        throw new RMQJMSException(String.format("Message '{}' is not a recognised JMS Message type.", msg),
-                                  new UnsupportedOperationException("normalise(Message msg)"));
+        else                                   return RMQNullMessage.recreate(msg);
     }
 
     /** Assign generic attributes.
@@ -1392,9 +1389,23 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     protected static final void copyAttributes(RMQMessage rmqMessage, Message message) throws JMSException {
         try {
-            // TODO: copy properties visible to Message interface
+            rmqMessage.setJMSCorrelationID(message.getJMSCorrelationID());
+            rmqMessage.setJMSType(message.getJMSType());
+            // NOTE: all other JMS header values are set when the message is sent; except for ReplyTo which is ignored on
+            // a foreign message.
+            copyProperties(rmqMessage, message);
         } catch (Exception e) {
             throw new RMQJMSException("Error converting Message to RMQMessage.", e);
+        }
+    }
+
+    private static final void copyProperties(RMQMessage rmqMsg, Message msg) throws JMSException {
+        @SuppressWarnings("unchecked")
+        Enumeration<String> propNames = msg.getPropertyNames();
+
+        while (propNames.hasMoreElements()) {
+            String name = propNames.nextElement();
+            rmqMsg.setObjectProperty(name, msg.getObjectProperty(name));
         }
     }
 }
