@@ -253,7 +253,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     public byte[] getJMSCorrelationIDAsBytes() throws JMSException {
         String id = this.getStringProperty(JMS_MESSAGE_CORR_ID);
         if (id != null)
-            return id.getBytes(CHARSET);
+            return id.getBytes(getCharset());
         else
             return null;
     }
@@ -263,7 +263,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public void setJMSCorrelationIDAsBytes(byte[] correlationID) throws JMSException {
-        String id = correlationID != null ? new String(correlationID, CHARSET) : null;
+        String id = correlationID != null ? new String(correlationID, getCharset()) : null;
         this.setStringProperty(JMS_MESSAGE_CORR_ID, id);
     }
 
@@ -778,7 +778,6 @@ public abstract class RMQMessage implements Message, Cloneable {
 
     /**
      * {@inheritDoc}
-     * This is an abstract method, and is implementation specific
      */
     @Override
     public final void clearBody() throws JMSException {
@@ -788,10 +787,8 @@ public abstract class RMQMessage implements Message, Cloneable {
 
     protected abstract void clearBodyInternal() throws JMSException;
 
-    /**
-     *@return the charset used to convert a TextMessage to byte[]
-     */
-    public Charset getCharset() {
+    /** @return the {@link Charset} used to convert a {@link TextMessage} to <code>byte[]</code> */
+    private static final Charset getCharset() {
         return CHARSET;
     }
 
@@ -800,9 +797,9 @@ public abstract class RMQMessage implements Message, Cloneable {
      * a byte[] from a message. Each subclass must implement this, but ONLY
      * write its specific body. All the properties defined in {@link Message}
      * will be written by the parent class.
-     * @param out - the output stream to write the structured part of message body
-     * @param bout - the output stream to write the un-structured part of message body (explicit bytes)
-     * @throws IOException you may throw an IOException if the body can not be written
+     * @param out - the output stream to which the structured part of message body (scalar types) is written
+     * @param bout - the output stream to which the un-structured part of message body (explicit bytes) is written
+     * @throws IOException if the body can not be written
      */
     protected abstract void writeBody(ObjectOutput out, ByteArrayOutputStream bout) throws IOException;
 
@@ -810,8 +807,8 @@ public abstract class RMQMessage implements Message, Cloneable {
      * Invoked when {@link #toAmqpMessage(RMQMessage)} is called to create
      * a byte[] from a message. Each subclass must implement this, but ONLY
      * write its specific body.
-     * @param out - the output which to write the message body to.
-     * @throws IOException you may throw an IOException if the body can not be written
+     * @param out - the output stream to which the message body is written
+     * @throws IOException if the body can not be written
      */
     protected abstract void writeAmqpBody(ByteArrayOutputStream out) throws IOException;
 

@@ -14,7 +14,7 @@ public class RMQByteArrayOutputStream extends ByteArrayOutputStream {
     }
 
     public void writeBoolean(boolean value) throws JMSException {
-        this.write((byte) (value ? -1 : 0));
+        this.write((byte) (value ? 1 : 0));
     }
 
     public void writeByte(byte value) throws JMSException {
@@ -70,11 +70,13 @@ public class RMQByteArrayOutputStream extends ByteArrayOutputStream {
     }
 
     public void writeBytes(byte[] value) throws JMSException {
+        if (value == null)
+            throw new MessageFormatException("Null byte array");
         this.writeBytes(value, 0, value.length);
     }
 
     public void writeBytes(byte[] value, int offset, int length) throws JMSException {
-        if (value == null ) {
+        if (value == null) {
             throw new MessageFormatException("Null byte array");
         } else if (offset>=value.length || length<0) {
             throw new IndexOutOfBoundsException();
