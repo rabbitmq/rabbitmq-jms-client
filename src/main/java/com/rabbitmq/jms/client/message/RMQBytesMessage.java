@@ -39,6 +39,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
     /** The stream we write structured and unstructured data to */
     private transient RMQByteArrayOutputStream bout;
 
+    /** Instantiates a new, writable RMQBytesMessage */
     public RMQBytesMessage() {
         this(false);
     }
@@ -47,7 +48,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      * Instantiates a new RMQBytesMessage
      * @param reading - <code>true</code> if this message is in a read state
      */
-    public RMQBytesMessage(boolean reading) {
+    private RMQBytesMessage(boolean reading) {
         this.reading = reading;
         if (!reading) {
             /* If we are in Write state, then create the objects to support that state */
@@ -412,18 +413,23 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         this.reading = false;
     }
 
+    private final byte[] getByteArray() {
+        if (reading) return this.buf;
+        else return this.bout.toByteArray();
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected void writeBody(ObjectOutput oOut, ByteArrayOutputStream bout) throws IOException {
-        byte[] buf = this.bout.toByteArray();
-        bout.write(buf, 0, buf.length);
+        byte[] buf = getByteArray();
+        bout.write(buf);
     }
 
     @Override
     protected void writeAmqpBody(ByteArrayOutputStream baos) throws IOException {
-        byte[] buf = this.bout.toByteArray();
+        byte[] buf = getByteArray();
         baos.write(buf);
     }
 
@@ -434,8 +440,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      */
     @Override
     protected void readBody(ObjectInput inputStream, ByteArrayInputStream bin) throws IOException, ClassNotFoundException {
-        int len = bin.available();
-        this.buf = new byte[len];
+        this.buf = new byte[bin.available()];
         bin.read(this.buf);
         this.reading = true;
         this.pos = 0;
@@ -548,21 +553,21 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
     }
 
     public static final RMQMessage recreate(BytesMessage msg) throws JMSException {
-        RMQBytesMessage rmqBMsg = new RMQBytesMessage();
-        RMQMessage.copyAttributes(rmqBMsg, msg);
-
+        msg.reset();
         long bodyLength = msg.getBodyLength();
         int bodySize = (int) Math.min(Math.max(0L, bodyLength), Integer.MAX_VALUE);
         if (bodyLength != bodySize) throw new JMSException(String.format("BytesMessage body invalid length (%s). Negative or too large.", bodyLength));
         try {
+            RMQBytesMessage rmqBMsg = new RMQBytesMessage();
+            RMQMessage.copyAttributes(rmqBMsg, msg);
             byte[] byteArray = new byte[bodySize];
-            msg.reset();
-            msg.readBytes(byteArray, bodySize); // read the whole body at once
+            if (bodySize != msg.readBytes(byteArray, bodySize)) // must read the whole body at once
+                throw new MessageEOFException("Cannot read all of non-RMQ Message body.");
             rmqBMsg.writeBytes(byteArray);
+            rmqBMsg.reset();  // make body read-only and set pointer to start.
+            return rmqBMsg;
         } catch (OutOfMemoryError e) {
             throw new RMQJMSException("Body too large for conversion to RMQMessage.", e);
         }
-//        rmqBMsg.reset();  // make body read-only and set pointer to start.
-        return rmqBMsg;
     }
 }
