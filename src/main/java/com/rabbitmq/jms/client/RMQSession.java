@@ -1055,7 +1055,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
     }
 
-    private boolean isAutoAck() {
+    boolean isAutoAck() {
         return (getAcknowledgeModeNoException()!=Session.CLIENT_ACKNOWLEDGE);  // only case when auto ack not required
     }
 

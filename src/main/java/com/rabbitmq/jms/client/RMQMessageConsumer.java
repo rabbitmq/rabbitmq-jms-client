@@ -73,7 +73,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     /** Record and preserve the need to acknowledge automatically */
     private final boolean autoAck;
 
-    /** Track how this consumer if being used. */
+    /** Track how this consumer is being used. */
     private final AtomicInteger numberOfReceives = new AtomicInteger(0);
 
     /**
@@ -93,7 +93,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         this.messageSelector = messageSelector;
         if (!paused)
             this.receiveManager.openGate();
-        this.autoAck = determineAutoAck(session);
+        this.autoAck = session.isAutoAck();
     }
 
     /**
@@ -242,13 +242,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @return true if {@link Session#getAcknowledgeMode()}=={@link Session#DUPS_OK_ACKNOWLEDGE} or
      *         {@link Session#getAcknowledgeMode()}=={@link Session#AUTO_ACKNOWLEDGE} or transacted.
      */
-    boolean isAutoAck() {
+    final boolean isAutoAck() {
         return this.autoAck;
-    }
-
-    private static boolean determineAutoAck(RMQSession session) {
-        int ackMode = session.getAcknowledgeModeNoException();
-        return (ackMode != Session.CLIENT_ACKNOWLEDGE);  // could be transacted or auto_ack
     }
 
     /**
@@ -322,9 +317,9 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             try {
                 GetResponse resp = this.delayedReceiver.get(tt);
                 if (resp == null) return null; // nothing received in time or aborted
-                if (this.autoAck) this.session.explicitAck(resp.getEnvelope().getDeliveryTag());
+                if (this.isAutoAck()) this.session.explicitAck(resp.getEnvelope().getDeliveryTag());
                 RMQMessage msg = RMQMessage.convertMessage(this.getSession(), this.destination, resp);
-                if (!this.autoAck)
+                if (!this.isAutoAck())
                     this.getSession().unackedMessageReceived(msg);
                 return msg;
             } finally {
