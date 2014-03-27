@@ -59,8 +59,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     private int priority = Message.DEFAULT_PRIORITY;
     /**
-     * RabbitMQ doesn't support TTL for individual messages but when it does
-     * we can use this
+     * The default TTL value is 0 (zero), meaning indefinite (no time-out).
      */
     private long ttl = Message.DEFAULT_TIME_TO_LIVE;
 
