@@ -317,11 +317,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             try {
                 GetResponse resp = this.delayedReceiver.get(tt);
                 if (resp == null) return null; // nothing received in time or aborted
-                if (this.isAutoAck()) this.session.explicitAck(resp.getEnvelope().getDeliveryTag());
-                RMQMessage msg = RMQMessage.convertMessage(this.getSession(), this.destination, resp);
-                if (!this.isAutoAck())
-                    this.getSession().unackedMessageReceived(msg);
-                return msg;
+                return getJmsMsg(this.isAutoAck(), this.session, this.destination, resp);
             } finally {
                 this.receiveManager.exit();
             }
@@ -335,6 +331,14 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         } finally {
             this.numberOfReceives.decrementAndGet();
         }
+    }
+
+    /** Convert response to RMQMessage, and acknowledge it if necessary, and remembering it if unacknowledged, if necessary */
+    private static final RMQMessage getJmsMsg(boolean ack, RMQSession session, RMQDestination dest, GetResponse resp) throws JMSException {
+        if (ack) session.explicitAck(resp.getEnvelope().getDeliveryTag());
+        RMQMessage msg = RMQMessage.convertMessage(session, dest, resp);
+        if (!ack) session.unackedMessageReceived(msg);
+        return msg;
     }
 
     /**

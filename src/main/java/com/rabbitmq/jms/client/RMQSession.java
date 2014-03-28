@@ -68,8 +68,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private final RMQConnection connection;
     /** Set to true if this session is transacted. */
     private final boolean transacted;
+
+    /** This value must be the maximum allowed, and contiguous with valid values for {@link #acknowledgeMode}. */
+    public static final int CLIENT_INDIVIDUAL_ACKNOWLEDGE = 4; // mode in {0, 1, 2, 3, 4} is valid
     /** The ack mode used when receiving message */
     private final int acknowledgeMode;
+    /** Flag to remember if session is {@link #CLIENT_INDIVIDUAL_ACKNOWLEDGE} */
+    private final boolean isIndividualAck;
+
     /** The main RabbitMQ channel we use under the hood */
     private final Channel channel;
     /** Set to true if close() has been called and completed */
@@ -134,6 +140,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private static final String JMS_TOPIC_SELECTOR_EXCHANGE_TYPE = "x-jms-topic";
 
     private static final long ON_MESSAGE_EXECUTOR_TIMEOUT_MS = 2000; // 2 seconds
+
     private final DeliveryExecutor deliveryExecutor = new DeliveryExecutor(ON_MESSAGE_EXECUTOR_TIMEOUT_MS);
 
     /** The channels we use for browsing queues (there may be more than one in operation at a time) */
@@ -144,16 +151,25 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * Creates a session object associated with a connection
      * @param connection the connection that we will send data on
      * @param transacted whether this session is transacted or not
-     * @param mode the default ACK mode
+     * @param mode the (fixed) acknowledgement mode for this session
      * @param subscriptions the connection's subscriptions, shared with all sessions
-     * @throws JMSException if we fail to create a {@link Channel} object on the connection
+     * @throws JMSException if we fail to create a {@link Channel} object on the connection, or if the acknowledgement mode is incorrect
      */
     public RMQSession(RMQConnection connection, boolean transacted, int mode, Map<String, RMQMessageConsumer> subscriptions) throws JMSException {
-        assert (mode >= 0 && mode <= 3);
+        if (mode<0 || mode>CLIENT_INDIVIDUAL_ACKNOWLEDGE) throw new JMSException(String.format("Cannot create session with acknowledgement mode = {}.", mode));
         this.connection = connection;
         this.transacted = transacted;
         this.subscriptions = subscriptions;
-        this.acknowledgeMode = transacted ? Session.SESSION_TRANSACTED : mode;
+        if (transacted) {
+            this.acknowledgeMode = Session.SESSION_TRANSACTED;
+            this.isIndividualAck = false;
+        } else if (mode==CLIENT_INDIVIDUAL_ACKNOWLEDGE) {
+            this.acknowledgeMode = Session.CLIENT_ACKNOWLEDGE;
+            this.isIndividualAck = true;
+        } else {
+            this.acknowledgeMode = mode;
+            this.isIndividualAck = false;
+        }
         try {
             this.channel = connection.createRabbitChannel(transacted);
         } catch (IOException x) {
@@ -310,17 +326,17 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         illegalStateExceptionIfClosed();
         if (!this.transacted) throw new IllegalStateException("Session is not transacted");
         if (this.enterCommittingBlock()) {
-        try {
-            // Call commit on the channel.
-            // All messages ought already to have been acked.
-            this.channel.txCommit();
-        } catch (Exception x) {
-            this.logger.error("RabbitMQ exception on channel.txCommit() in session {}", this, x);
-            throw new RMQJMSException(x);
-        } finally {
-                this.leaveCommittingBlock();
+            try {
+                // Call commit on the channel.
+                // All messages ought already to have been acked.
+                this.channel.txCommit();
+            } catch (Exception x) {
+                this.logger.error("RabbitMQ exception on channel.txCommit() in session {}", this, x);
+                throw new RMQJMSException(x);
+            } finally {
+                    this.leaveCommittingBlock();
+            }
         }
-    }
     }
 
     /**
@@ -332,48 +348,48 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         illegalStateExceptionIfClosed();
         if (!this.transacted) throw new IllegalStateException("Session is not transacted");
         if (this.enterCommittingBlock()) {
-        try {
-            // rollback the RabbitMQ transaction which may cause some messages to become unacknowledged
-            this.channel.txRollback();
-            // requeue all unacknowledged messages (not automatically done by RabbitMQ)
-            this.channel.basicRecover(true); // requeue
-        } catch (IOException x) {
-                this.logger.error("RabbitMQ exception on channel.txRollback() or channel.basicRecover(true) in session {}",
-                                  this, x);
-            throw new RMQJMSException(x);
-        } finally {
-                this.leaveCommittingBlock();
+            try {
+                // rollback the RabbitMQ transaction which may cause some messages to become unacknowledged
+                this.channel.txRollback();
+                // requeue all unacknowledged messages (not automatically done by RabbitMQ)
+                this.channel.basicRecover(true); // requeue
+            } catch (IOException x) {
+                    this.logger.error("RabbitMQ exception on channel.txRollback() or channel.basicRecover(true) in session {}",
+                                      this, x);
+                throw new RMQJMSException(x);
+            } finally {
+                    this.leaveCommittingBlock();
+            }
         }
-    }
     }
 
     void explicitAck(long deliveryTag) {
         if (this.enterCommittingBlock()) {
-        try {
-            this.channel.basicAck(deliveryTag, false);
-        } catch (Exception x) {
-            // this is problematic, we have received a message, but we can't ACK it to the server
-            this.logger.error("Cannot acknowledge message received (dTag={})", deliveryTag, x);
-            // TODO should we deliver the message at this time, knowing that we can't ack it?
-            // My recommendation is that we bail out here and not proceed -- but how?
-        } finally {
-            this.leaveCommittingBlock();
+            try {
+                this.channel.basicAck(deliveryTag, false);
+            } catch (Exception x) {
+                // this is problematic, we have received a message, but we can't ACK it to the server
+                this.logger.error("Cannot acknowledge message received (dTag={})", deliveryTag, x);
+                // TODO should we deliver the message at this time, knowing that we can't ack it?
+                // My recommendation is that we bail out here and not proceed -- but how?
+            } finally {
+                this.leaveCommittingBlock();
+            }
         }
-    }
     }
 
     void explicitNack(long deliveryTag) {
         if (this.enterCommittingBlock()) {
-        try {
-            this.channel.basicNack(deliveryTag, false, true);
-        } catch (Exception x) {
-            // TODO logging impl debug message
-            this.logger.warn("Cannot reject/requeue message received (dTag={})", deliveryTag, x);
-            // this is fine. we didn't ack the message in the first place
-        } finally {
-            this.leaveCommittingBlock();
+            try {
+                this.channel.basicNack(deliveryTag, false, true);
+            } catch (Exception x) {
+                // TODO logging impl debug message
+                this.logger.warn("Cannot reject/requeue message received (dTag={})", deliveryTag, x);
+                // this is fine. we didn't ack the message in the first place
+            } finally {
+                this.leaveCommittingBlock();
+            }
         }
-    }
     }
 
     /**
@@ -1105,15 +1121,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     /**
      * Acknowledges messages in this session.
      * Invoked when the method {@link javax.jms.Message#acknowledge()} is called.
-     * @param message - the message to be acknowledged
+     * @param message - the message to be acknowledged, or the carrier to acknowledge all messages
      */
     void acknowledgeMessage(RMQMessage message) throws JMSException {
         illegalStateExceptionIfClosed();
 
         boolean groupAck      = false; // TODO: future functionality, allow group ack prior to the current tag
-        boolean individualAck = false; // TODO: future functionality, allow ack of single message
+        boolean individualAck = this.getIndividualAck();
         if (!isAutoAck() && !this.unackedMessageTags.isEmpty()) {
-            long messageTag = message.getRabbitDeliveryTag();
             /*
              * Per JMS specification Message.acknowledge(), if we ack
              * the last message in a group, we will ack all the ones prior received.
@@ -1130,60 +1145,35 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                  */
                 try {
                     if (individualAck) {
+                        long messageTag = message.getRabbitDeliveryTag();
                         if (!this.unackedMessageTags.contains(messageTag)) return; // ignore this request
                         /* ACK a single message */
-                        getChannel().basicAck(messageTag, // we ack the tag
-                                              false);     // and only that tag
-                        /* remove the message just acked from our list of un-acked messages */
+                        this.getChannel().basicAck(messageTag, false); // we ack the single message with this tag
                         this.unackedMessageTags.remove(messageTag);
-
                     } else if (groupAck) {
+                        long messageTag = message.getRabbitDeliveryTag();
+                        /** The tags that precede the given one, and the given one, if unacknowledged */
                         SortedSet<Long> previousTags = this.unackedMessageTags.headSet(messageTag+1);
-                        if (previousTags.isEmpty()) return; // nothing to do
+                        if (previousTags.isEmpty()) return; // no message to acknowledge
                         /* ack multiple message up until the existing tag */
-                        getChannel().basicAck(previousTags.last(), // we ack the latest one
+                        this.getChannel().basicAck(previousTags.last(), // we ack the latest one (which might be this one, but might not be)
                                               true);               // and everything prior to that
                         // now remove all the tags <= messageTag
                         previousTags.clear();
                     } else {
-                        getChannel().basicAck(this.unackedMessageTags.last(), // we ack the highest tag
+                        this.getChannel().basicAck(this.unackedMessageTags.last(), // we ack the highest tag
                                               true);                          // and everything prior to that
                         this.unackedMessageTags.clear();
                     }
                 } catch (IOException x) {
-                    logger.error("RabbitMQ exception on basicAck of message(s); with acknowledged message tag '{}' on session '{}'", messageTag, this, x);
+                    this.logger.error("RabbitMQ exception on basicAck of message {}; on session '{}'", message, this, x);
                     throw new RMQJMSException(x);
                 }
             }
         }
     }
 
-    /**
-     * Acknowledges all unacknowledged messages for this session.
-     * Invoked when the method {@link RMQMessage#acknowledge()} is called.
-     */
-    void acknowledgeMessages() throws JMSException {
-        illegalStateExceptionIfClosed();
-        if (!isAutoAck() && !this.unackedMessageTags.isEmpty()) {
-            /*
-             * Per JMS specification Message.acknowledge(), if we ack
-             * the last message in a group, we will ack all the ones prior received.
-             * Spec 11.2.21 says:
-             * "Note that the acknowledge method of Message acknowledges all messages
-             * received on that message's session."
-             */
-            synchronized (this.unackedMessageTags) {
-                long lastTag = this.unackedMessageTags.last();
-                /* ACK all messages unacknowledged (ACKed or NACKed) on this session. */
-                try {
-                    getChannel().basicAck(lastTag, // we ack the highest tag
-                                          true);   // and everything prior to that
-                    this.unackedMessageTags.clear();
-                } catch (IOException x) {
-                    logger.error("RabbitMQ exception on basicAck of message with tag '{}' on session '{}'", lastTag, this, x);
-                    throw new RMQJMSException(x);
-                }
-            }
-        }
+    private final boolean getIndividualAck() {
+        return this.isIndividualAck;
     }
 }
