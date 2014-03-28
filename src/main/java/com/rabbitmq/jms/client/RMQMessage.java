@@ -769,11 +769,11 @@ public abstract class RMQMessage implements Message, Cloneable {
      * <p>
      * [1] <a href="http://download.oracle.com/otn-pub/jcp/7195-jms-1.1-fr-spec-oth-JSpec/jms-1_1-fr-spec.pdf">JMS 1.1 spec</a> Section 11.3.2.2.
      * </p>
-     * @see RMQSession#acknowledgeMessages()
+     * @see RMQSession#acknowledgeMessage(RMQMessage)
      */
     @Override
     public void acknowledge() throws JMSException {
-        getSession().acknowledgeMessages();
+        getSession().acknowledgeMessage(this);
     }
 
     /**

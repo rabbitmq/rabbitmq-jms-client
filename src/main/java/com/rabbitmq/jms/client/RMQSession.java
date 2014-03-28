@@ -1103,6 +1103,62 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     /**
+     * Acknowledges messages in this session.
+     * Invoked when the method {@link javax.jms.Message#acknowledge()} is called.
+     * @param message - the message to be acknowledged
+     */
+    void acknowledgeMessage(RMQMessage message) throws JMSException {
+        illegalStateExceptionIfClosed();
+
+        boolean groupAck      = false; // TODO: future functionality, allow group ack prior to the current tag
+        boolean individualAck = false; // TODO: future functionality, allow ack of single message
+        if (!isAutoAck() && !this.unackedMessageTags.isEmpty()) {
+            long messageTag = message.getRabbitDeliveryTag();
+            /*
+             * Per JMS specification Message.acknowledge(), if we ack
+             * the last message in a group, we will ack all the ones prior received.
+             * Spec 11.2.21 says:
+             * "Note that the acknowledge method of Message acknowledges all messages
+             * received on that message's session."
+             */
+            synchronized (this.unackedMessageTags) {
+                /*
+                 * Make sure that the message is in our unack list
+                 * or we can't proceed
+                 * if it is not in the list, then the message is either
+                 * auto acked or been manually acked previously
+                 */
+                try {
+                    if (individualAck) {
+                        if (!this.unackedMessageTags.contains(messageTag)) return; // ignore this request
+                        /* ACK a single message */
+                        getChannel().basicAck(messageTag, // we ack the tag
+                                              false);     // and only that tag
+                        /* remove the message just acked from our list of un-acked messages */
+                        this.unackedMessageTags.remove(messageTag);
+
+                    } else if (groupAck) {
+                        SortedSet<Long> previousTags = this.unackedMessageTags.headSet(messageTag+1);
+                        if (previousTags.isEmpty()) return; // nothing to do
+                        /* ack multiple message up until the existing tag */
+                        getChannel().basicAck(previousTags.last(), // we ack the latest one
+                                              true);               // and everything prior to that
+                        // now remove all the tags <= messageTag
+                        previousTags.clear();
+                    } else {
+                        getChannel().basicAck(this.unackedMessageTags.last(), // we ack the highest tag
+                                              true);                          // and everything prior to that
+                        this.unackedMessageTags.clear();
+                    }
+                } catch (IOException x) {
+                    logger.error("RabbitMQ exception on basicAck of message(s); with acknowledged message tag '{}' on session '{}'", messageTag, this, x);
+                    throw new RMQJMSException(x);
+                }
+            }
+        }
+    }
+
+    /**
      * Acknowledges all unacknowledged messages for this session.
      * Invoked when the method {@link RMQMessage#acknowledge()} is called.
      */
