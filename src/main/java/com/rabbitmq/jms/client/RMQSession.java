@@ -286,7 +286,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * Same as {@link RMQSession#getAcknowledgeMode()} but without
-     * a declared exception in the throw clause
+     * a declared exception in the throws clause.
      * @return the acknowledge mode, one of {@link Session#AUTO_ACKNOWLEDGE},
      * {@link Session#CLIENT_ACKNOWLEDGE}, {@link Session#DUPS_OK_ACKNOWLEDGE} or
      * {@link Session#SESSION_TRANSACTED}
