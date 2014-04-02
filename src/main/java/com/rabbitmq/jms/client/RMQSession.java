@@ -1126,27 +1126,24 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     void acknowledgeMessage(RMQMessage message) throws JMSException {
         illegalStateExceptionIfClosed();
 
-        boolean groupAck      = true; // TODO: experiment; all CTS tests pass with this set!
         boolean individualAck = this.getIndividualAck();
+        boolean groupAck      = true;  // This assumption is new in RJMS 1.2.0 and is consistent with other implementations. It allows a form of group acknowledge.
         if (!isAutoAck() && !this.unackedMessageTags.isEmpty()) {
-            /*
-             * Per JMS specification Message.acknowledge(), if we ack
-             * the last message in a group, we will ack all the ones prior received.
-             * Spec 11.2.21 says:
-             * "Note that the acknowledge method of Message acknowledges all messages
-             * received on that message's session."
+            /**
+             * Per JMS specification of {@link Message#acknowledge()}, <i>if we ack the last message in a group, we will ack all the ones prior received</i>.
+             * <p>But, JMS spec 11.2.21 says:</p>
+             * <pre>"Note that the acknowledge method of Message acknowledges all messages
+             * received on that message's session."</pre>
+             * <p>
+             * The groupAck option acknowledges all previous messages in this session (and this one, too, if not acknowledged already).
+             * The individualAck option is set by session mode (CLIENT_INDIVIDUAL_ACKNOWLEDGE) and overrides groupAck (default) and acknowledges at most a single message.
+             * </p>
              */
             synchronized (this.unackedMessageTags) {
-                /*
-                 * Make sure that the message is in our unack list
-                 * or we can't proceed
-                 * if it is not in the list, then the message is either
-                 * auto acked or been manually acked previously
-                 */
                 try {
                     if (individualAck) {
                         long messageTag = message.getRabbitDeliveryTag();
-                        if (!this.unackedMessageTags.contains(messageTag)) return; // ignore this request
+                        if (!this.unackedMessageTags.contains(messageTag)) return; // this message already acknowledged
                         /* ACK a single message */
                         this.getChannel().basicAck(messageTag, false); // we ack the single message with this tag
                         this.unackedMessageTags.remove(messageTag);
@@ -1161,6 +1158,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                         // now remove all the tags <= messageTag
                         previousTags.clear();
                     } else {
+                        // this block is no longer possible (groupAck == true) after RJMS 1.2.0
                         this.getChannel().basicAck(this.unackedMessageTags.last(), // we ack the highest tag
                                               true);                          // and everything prior to that
                         this.unackedMessageTags.clear();
