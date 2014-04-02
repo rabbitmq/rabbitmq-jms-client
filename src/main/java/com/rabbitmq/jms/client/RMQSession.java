@@ -1126,7 +1126,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     void acknowledgeMessage(RMQMessage message) throws JMSException {
         illegalStateExceptionIfClosed();
 
-        boolean groupAck      = false; // TODO: future functionality, allow group ack prior to the current tag
+        boolean groupAck      = true; // TODO: experiment; all CTS tests pass with this set!
         boolean individualAck = this.getIndividualAck();
         if (!isAutoAck() && !this.unackedMessageTags.isEmpty()) {
             /*
