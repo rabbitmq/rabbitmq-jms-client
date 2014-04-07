@@ -1,7 +1,6 @@
 /* Copyright (c) 2014 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
-import java.io.IOException;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -11,7 +10,6 @@ import javax.jms.JMSException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rabbitmq.client.AMQP.Queue;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.parse.sql.SqlEvaluator;
@@ -31,11 +29,11 @@ class BrowsingMessageEnumeration implements Enumeration<RMQMessage> {
     private void populateQueue(Channel channel, RMQSession session, RMQDestination dest, SqlEvaluator evaluator, int readMax) {
         try {
             String destQueueName = dest.getQueueName();
-            Queue.DeclareOk qdec = channel.queueDeclarePassive(destQueueName);
-            if (qdec.getMessageCount() > 0) {
+            int qCount = channel.queueDeclarePassive(destQueueName).getMessageCount();
+            if (qCount > 0) {
                 // re-fetch messageCount, in case it is changing
-                qdec = redeclareCheck(channel, destQueueName, qdec);
-                int messagesExpected = (readMax<=0) ? qdec.getMessageCount() : Math.min(readMax, qdec.getMessageCount());
+                qCount = redeclareCheck(channel, destQueueName, qCount);
+                int messagesExpected = (readMax<=0) ? qCount : Math.min(readMax, qCount);
                 BrowsingConsumer bc = new BrowsingConsumer(channel, session, dest, messagesExpected, msgQueue, evaluator);
                 String consumerTag = channel.basicConsume(destQueueName, bc);
                 if (bc.finishesInTime(BROWSING_CONSUMER_TIMEOUT))
@@ -43,34 +41,20 @@ class BrowsingMessageEnumeration implements Enumeration<RMQMessage> {
                 else
                     channel.basicCancel(consumerTag);
             }
-        } catch(IOException e) {
-//          System.out.println(String.format(">> ERROR >> Failed to browse queue named [%s], exception [%s]", queueName, e));
-//          e.printStackTrace();
-//          Just return an empty enumeration: it is not an error to try to browse a non-existent queue
-        } catch(JMSException e) {
-//      System.out.println(String.format(">> ERROR >> Failed to browse queue named [%s], exception [%s]", queueName, e));
-//      e.printStackTrace();
-//      Just return an empty enumeration: it is not an error to try to browse a non-existent queue
+        } catch(Exception e) {
+            // Ignore any errors; the redeclareCheck() function will output a warning if necessary
         }
     }
 
-    private Queue.DeclareOk
-            redeclareCheck(Channel channel, String destQueueName, Queue.DeclareOk qdec) throws IOException, JMSException {
-        Queue.DeclareOk qdec2 = channel.queueDeclarePassive(destQueueName);
-        if (qdec.getMessageCount() != qdec2.getMessageCount()) {
-            // Issue warning and take the second count
+    private int redeclareCheck(Channel channel, String destQueueName, int qCount) throws Exception {
+        int qCount2 = channel.queueDeclarePassive(destQueueName).getMessageCount();
+        if (qCount != qCount2) {
+            // Issue warning
             this.logger.warn( "QueueBrowser detected changing count of messages in queue {}; first count={}, second count={}."
-                            , destQueueName, qdec.getMessageCount(), qdec2.getMessageCount()
+                            , destQueueName, qCount, qCount2
                             );
-            // TEST CATCH FAILURE
-            throw new RuntimeException( String.format( "TEST: QueueBrowser changing message contents queue=%s, firsrt count=%s, second count=%s"
-                                                    , destQueueName, qdec.getMessageCount(), qdec2.getMessageCount()
-                                                    )
-                                     , new IOException("")
-                                     );
-//            return qdec2;
         }
-        return qdec;
+        return qCount2; // take the second count anyway
     }
 
     @Override public boolean hasMoreElements() {
