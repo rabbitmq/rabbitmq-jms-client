@@ -18,12 +18,14 @@ import javax.jms.Session;
 import org.junit.Test;
 
 /**
- * Integration test for simple browsing of a queue.
+ * Integration test for browsing a queue multiple times.
  */
-public class SimpleBrowseQueueMessageIT extends AbstractITQueue {
+public class MultipleBrowseQueueMessageIT extends AbstractITQueue {
 
-    private static final String QUEUE_NAME = "test.queue."+SimpleBrowseQueueMessageIT.class.getCanonicalName();
+    private static final String QUEUE_NAME = "test.queue." + MultipleBrowseQueueMessageIT.class.getCanonicalName();
     private static final long TEST_RECEIVE_TIMEOUT = 1000; // one second
+
+    private static final int REPEATS = 3;
 
     private void messageTestBase(MessageTestType mtt) throws Exception {
         messageTestBase(mtt, null, 1);
@@ -51,16 +53,18 @@ public class SimpleBrowseQueueMessageIT extends AbstractITQueue {
 
         {// Browse queue before receiving message
             QueueBrowser queueBrowser = queueSession.createBrowser(queue, selector);
-            Enumeration<?> e = queueBrowser.getEnumeration();
 
-            int numE = 0;
-            Message msg = null;
-            while (e.hasMoreElements()) {
-                ++numE;
-                msg = (Message) e.nextElement();
-                mtt.check(msg, (Serializable) queue);
+            for (int repeat=0; repeat<REPEATS; ++repeat) {
+                Enumeration<?> e = queueBrowser.getEnumeration();
+                int numE = 0;
+                Message msg = null;
+                while (e.hasMoreElements()) {
+                    ++numE;
+                    msg = (Message) e.nextElement();
+                    mtt.check(msg, (Serializable) queue);
+                }
+                assertEquals("Wrong number of messages on browse queue", numExpected, numE);
             }
-            assertEquals("Wrong number of messages on browse queue", numExpected, numE);
         }
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
 
