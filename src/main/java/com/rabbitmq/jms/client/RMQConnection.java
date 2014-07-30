@@ -240,15 +240,14 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         if (cID != null)
             CLIENT_IDS.remove(cID);
 
-        Exception sessionException = null;
+        // We null any exception listener since we don't want it driven during close().
+        this.exceptionListener = null;
+
         for (RMQSession session : this.sessions) {
             try {
                 session.internalClose();
             } catch (Exception e) {
-                if (null==sessionException) {
-                    sessionException = e;
-                    logger.error("exception closing session ({})", session, e);
-                }
+                logger.error("exception closing session ({})", session, e);
             }
         }
         this.sessions.clear();
