@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ShutdownListener;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.util.RMQJMSException;
 
@@ -51,8 +52,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private static final ConnectionMetaData connectionMetaData = new RMQConnectionMetaData();
     /** The client ID for this connection */
     private String clientID;
-    /** The exception listener - TODO implement usage of exception listener */
-    private ExceptionListener exceptionListener;
+    /** The exception listener */
+    private ExceptionListener exceptionListener = null;
     /** The list of all {@link RMQSession} objects created by this connection */
     private final List<RMQSession> sessions = Collections.<RMQSession> synchronizedList(new ArrayList<RMQSession>());
     /** value to see if this connection has been closed */
@@ -81,6 +82,9 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      * @param queueBrowserReadMax maximum number of messages to read from a QueueBrowser (before filtering)
      */
     public RMQConnection(com.rabbitmq.client.Connection rabbitConnection, long terminationTimeout, int queueBrowserReadMax) {
+
+        rabbitConnection.addShutdownListener(new RMQConnectionShutdownListener());
+
         this.rabbitConnection = rabbitConnection;
         this.terminationTimeout = terminationTimeout;
         this.queueBrowserReadMax = queueBrowserReadMax;
@@ -173,7 +177,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     @Override
     public void setExceptionListener(ExceptionListener listener) throws JMSException {
-        logger.trace("set ExceptionListener ({})", listener);
+        logger.trace("set ExceptionListener ({}) on connection ({})", listener, this);
         illegalStateExceptionIfClosed();
         freezeClientID();
         this.exceptionListener = listener;
@@ -355,4 +359,14 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
                 .append(", queueBrowserReadMax=").append(this.queueBrowserReadMax)
                 .append('}').toString();
     }
+
+    private class RMQConnectionShutdownListener implements ShutdownListener {
+        @Override
+        public void shutdownCompleted(ShutdownSignalException cause) {
+            if ( null==exceptionListener || cause.isInitiatedByApplication() )
+                return; // Ignore this
+//            exceptionListener.onException(new RMQJMSException(String.format("error in {}, connection closed", cause.getReference()), cause));
+        }
+    }
+
 }
