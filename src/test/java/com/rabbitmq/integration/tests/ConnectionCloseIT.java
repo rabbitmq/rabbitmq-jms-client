@@ -5,8 +5,10 @@ import static org.junit.Assert.fail;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -20,7 +22,7 @@ import org.junit.Test;
 import com.rabbitmq.jms.client.Completion;
 
 /**
- * Integration test of close on receive on a Topic destination.
+ * Integration test of close while waiting for receive on a Topic destination.
  */
 public class ConnectionCloseIT extends AbstractITTopic {
     private static final String TOPIC_NAME = "test.topic." + ConnectionCloseIT.class.getCanonicalName();
@@ -29,8 +31,11 @@ public class ConnectionCloseIT extends AbstractITTopic {
     private static final long ONE_SECOND = 1000; // ms
     private static final long ZERO_SECONDS = 0; // ms
 
+    private AtomicBoolean atomBool = new AtomicBoolean();
+    private AtomicReference<JMSException> atomJMSExceptionRef = new AtomicReference<JMSException>();
+
     @Test
-    public void testSendAndReceiveTextMessage() throws Exception {
+    public void testCloseDuringReceive() throws Exception {
         topicConn.start();
 
         TopicSession topicSession = topicConn.createTopicSession(true, Session.DUPS_OK_ACKNOWLEDGE);
@@ -48,6 +53,43 @@ public class ConnectionCloseIT extends AbstractITTopic {
             receiveCompletion.waitUntilComplete(FIVE_SECONDS, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
             fail("Timeout before receive returns!");
+        }
+    }
+
+    @Test
+    public void testCloseDuringReceiveWithExceptionListener() throws Exception {
+        ExceptionListener eListener = new ExceptionListener() {
+
+            @Override
+            public void onException(JMSException exception) {
+                atomBool.set(true);
+                atomJMSExceptionRef.set(exception);
+            }};
+
+        topicConn.setExceptionListener(eListener);
+
+        topicConn.start();
+
+
+        TopicSession topicSession = topicConn.createTopicSession(true, Session.DUPS_OK_ACKNOWLEDGE);
+        Topic topicDestination = topicSession.createTopic(TOPIC_NAME);
+        MessageConsumer messageConsumer = topicSession.createConsumer(topicDestination);
+
+        Completion receiveCompletion = new Completion();
+        Thread receiver = new DelayedReceive(ZERO_SECONDS, messageConsumer, receiveCompletion);
+        Thread closer = new DelayedClose(ONE_SECOND, topicConn);
+
+        receiver.start();
+        closer.start();
+
+        try {
+            receiveCompletion.waitUntilComplete(FIVE_SECONDS, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            fail("Timeout before receive returns!");
+        }
+
+        if (atomBool.get()) {
+            fail(String.format("ExceptionListener driven with exception {}", atomJMSExceptionRef.get()));
         }
     }
 
