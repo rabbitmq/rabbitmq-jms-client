@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Uses $1 and sets local RJMS_* vars:
+source bin/set-vars
+
+echo "Control RabbitMQ server (version ${RMQ_VERSION}) in Integration Tests"
+echo "rabbitmqctl $2 $3 $4 $5"
+
+if [[ ! -d "${RJMS_RABBITMQ_BASE}" ]] ; then
+  echo "Could not find a directory called '${RJMS_RABBITMQ_BASE}'"
+  exit 1
+fi
+
+(sudo ${RJMS_RABBITMQ_BASE}/sbin/rabbitmqctl -n ${RJMS_RABBITMQ_NODENAME} $2 $3 $4 $5 && echo 'controlled') || echo 'RabbitMQ server is not online'

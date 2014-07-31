@@ -37,8 +37,8 @@ public class TestUtil {
             uuidList.add(Util.generateUUID(""));
         }
 
-        Set<String> uuidSet = new HashSet<String>(uuidList);
-        assertEquals("Generated a duplicate uuid!", REPEAT_COUNT, uuidSet.size());
+        assertEquals("Generated a duplicate uuid!", REPEAT_COUNT, setOf(uuidList).size());
     }
 
+    private static <Obj> Set<Obj> setOf(List<Obj> list) { return new HashSet<Obj>(list); }
 }

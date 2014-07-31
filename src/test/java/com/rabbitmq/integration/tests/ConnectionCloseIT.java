@@ -89,7 +89,7 @@ public class ConnectionCloseIT extends AbstractITTopic {
         }
 
         if (atomBool.get()) {
-            fail(String.format("ExceptionListener driven with exception {}", atomJMSExceptionRef.get()));
+            fail(String.format("ExceptionListener driven with exception %s", atomJMSExceptionRef.get()));
         }
     }
 
