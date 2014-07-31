@@ -63,7 +63,7 @@ public class Completion {
 
     private class FutureBoolean {
         private final Object lock = new Object();
-        private boolean completed = false;
+        private boolean completed = false; // guardedBy(lock)
 
         public boolean get() throws InterruptedException {
             try {
@@ -75,7 +75,6 @@ public class Completion {
 
         public boolean get(TimeTracker tt) throws InterruptedException, TimeoutException {
             synchronized (this.lock) {
-                if (this.completed) return true;
                 while (!this.completed && !tt.timedOut()) {
                     tt.timedWait(this.lock);
                 }
