@@ -1,3 +1,4 @@
+/* Copyright (c) 2014 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.util;
 
 import java.io.BufferedReader;
@@ -7,7 +8,7 @@ import java.io.InputStreamReader;
  * Shell is a test utility class for issuing shell commands from integration tests.
  */
 public class Shell {
-    public String executeCommand(String command) {
+    public static String executeCommand(String command) {
         StringBuffer outputSb = new StringBuffer();
 
         Process process;

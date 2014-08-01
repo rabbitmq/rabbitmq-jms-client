@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
+import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.util.AbortableHolder;
 import com.rabbitmq.jms.util.AbortedException;
@@ -317,7 +318,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             try {
                 GetResponse resp = this.delayedReceiver.get(tt);
                 if (resp == null) return null; // nothing received in time or aborted
-                return getJmsMsg(this.isAutoAck(), this.session, this.destination, resp);
+                this.dealWithAcknowledgements(this.isAutoAck(), resp.getEnvelope().getDeliveryTag());
+                return RMQMessage.convertMessage(this.session, this.destination, resp);
             } finally {
                 this.receiveManager.exit();
             }
@@ -333,12 +335,12 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         }
     }
 
-    /** Convert response to RMQMessage, and acknowledge it if necessary, and remembering it if unacknowledged, if necessary */
-    private static final RMQMessage getJmsMsg(boolean ack, RMQSession session, RMQDestination dest, GetResponse resp) throws JMSException {
-        if (ack) session.explicitAck(resp.getEnvelope().getDeliveryTag());
-        RMQMessage msg = RMQMessage.convertMessage(session, dest, resp);
-        if (!ack) session.unackedMessageReceived(msg);
-        return msg;
+    void dealWithAcknowledgements(boolean ack, long dtag) {
+        if (ack) {
+            this.session.explicitAck(dtag);
+        } else {
+            this.session.unackedMessageReceived(dtag);
+        }
     }
 
     /**
@@ -507,18 +509,11 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         String qN = rmqQueueName();
         try {
             return getSession().getChannel().basicGet(qN, false);
-        } catch (IOException e) {
-            logger.error("basicGet for queue '{}' threw exception", qN, e);
-            // TODO: mark consumer broken, with error reason
-            return null;
+        } catch (Exception e) { // includes unchecked exceptions, e.g. ShutdownSignalException
+            if (!(e instanceof ShutdownSignalException) && !(e.getCause() instanceof ShutdownSignalException)) {
+                logger.error("basicGet for queue '{}' threw unexpected exception", qN, e);
+            }
         }
-    }
-
-    void explicitNack(long deliveryTag) {
-        this.session.explicitNack(deliveryTag);
-    }
-
-    void explicitAck(long deliveryTag) {
-        this.session.explicitAck(deliveryTag);
+        return null;
     }
 }

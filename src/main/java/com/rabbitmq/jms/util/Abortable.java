@@ -15,7 +15,7 @@ public interface Abortable {
     void abort();
 
     /**
-     * Cause any other implementing threads to halt temporarily.
+     * Cause any other implementing threads to stop temporarily.
      * <p>
      * Implementations of this method must be thread-safe, and throw no exceptions, except possibly {@link RuntimeException}s.
      * </p>
@@ -23,7 +23,7 @@ public interface Abortable {
     void stop();
 
     /**
-     * Cause any other halted threads to start.
+     * Cause any other stopped threads to start.
      * <p>
      * Implementations of this method must be thread-safe, and throw no exceptions, except possibly {@link RuntimeException}s.
      * </p>

@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
-import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.Envelope;
@@ -103,7 +102,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
         if (this.rejecting) {
             long dtag = envelope.getDeliveryTag();
             logger.debug("basicNack: dtag='{}'", dtag);
-            this.messageConsumer.explicitNack(dtag);
+            this.messageConsumer.getSession().explicitNack(dtag);
             return;
         }
         /* Wrap the incoming message in a GetResponse */
@@ -111,20 +110,13 @@ class MessageListenerConsumer implements Consumer, Abortable {
         try {
             long dtag = envelope.getDeliveryTag();
             if (this.messageListener != null) {
-                if (this.autoAck) { // we do the acknowledging
-                    /* Subscriptions do not autoAck with RabbitMQ, so we have to do this ourselves. */
-                    logger.debug("basicAck: dtag='{}'", dtag);
-                    this.messageConsumer.explicitAck(dtag);
-                }
-                // Create a javax.jms.Message object and deliver it to the listener
+                this.messageConsumer.dealWithAcknowledgements(this.autoAck, dtag);
                 RMQMessage msg = RMQMessage.convertMessage(this.messageConsumer.getSession(), this.messageConsumer.getDestination(), response);
-                if (!this.autoAck)
-                    this.messageConsumer.getSession().unackedMessageReceived(msg);
                 this.messageConsumer.getSession().deliverMessage(msg, this.messageListener);
             } else {
                 // We are unable to deliver the message, nack it
                 logger.debug("basicNack: dtag='{}' (null MessageListener)", dtag);
-                this.messageConsumer.explicitNack(dtag);
+                this.messageConsumer.getSession().explicitNack(dtag);
             }
         } catch (JMSException x) {
             x.printStackTrace();
@@ -182,11 +174,11 @@ class MessageListenerConsumer implements Consumer, Abortable {
             }
         } catch (TimeoutException te) {
             Thread.currentThread().interrupt();
-        } catch (AlreadyClosedException acx) {
+        } catch (ShutdownSignalException sse) {
             // TODO check if basicCancel really necessary in this case.
-            if (!acx.isInitiatedByApplication()) {
-                logger.error("basicCancel (consumerTag='{}') threw exception", cT, acx);
-                throw acx;
+            if (!sse.isInitiatedByApplication()) {
+                logger.error("basicCancel (consumerTag='{}') threw exception", cT, sse);
+                throw sse;
             }
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();

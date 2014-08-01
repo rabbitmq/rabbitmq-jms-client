@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
@@ -53,7 +54,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     /** The client ID for this connection */
     private String clientID;
     /** The exception listener */
-    private ExceptionListener exceptionListener = null;
+    private final AtomicReference<ExceptionListener> exceptionListener = new AtomicReference<ExceptionListener>();
     /** The list of all {@link RMQSession} objects created by this connection */
     private final List<RMQSession> sessions = Collections.<RMQSession> synchronizedList(new ArrayList<RMQSession>());
     /** value to see if this connection has been closed */
@@ -169,7 +170,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     public ExceptionListener getExceptionListener() throws JMSException {
         illegalStateExceptionIfClosed();
         freezeClientID();
-        return this.exceptionListener;
+        return this.exceptionListener.get();
     }
 
     /**
@@ -180,7 +181,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         logger.trace("set ExceptionListener ({}) on connection ({})", listener, this);
         illegalStateExceptionIfClosed();
         freezeClientID();
-        this.exceptionListener = listener;
+        this.exceptionListener.set(listener);
     }
 
     /**
@@ -232,25 +233,16 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     @Override
     public void close() throws JMSException {
         logger.trace("closing connection ({})", this);
-        if (this.closed) return;
 
-        String cID = getClientID();
+        if (this.closed) return;
         this.closed = true;
 
-        if (cID != null)
-            CLIENT_IDS.remove(cID);
+        removeClientID();
 
         // We null any exception listener since we don't want it driven during close().
-        this.exceptionListener = null;
+        this.exceptionListener.set(null);
 
-        for (RMQSession session : this.sessions) {
-            try {
-                session.internalClose();
-            } catch (Exception e) {
-                logger.error("exception closing session ({})", session, e);
-            }
-        }
-        this.sessions.clear();
+        closeAllSessions();
 
         try {
             this.rabbitConnection.close();
@@ -261,6 +253,27 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
                 throw new RMQJMSException(x);
             }
         }
+    }
+
+    private void removeClientID() throws JMSException {
+        String cID = this.clientID;  // even if closed!
+        if (cID != null)
+            CLIENT_IDS.remove(cID);
+    }
+
+    private void closeAllSessions() {
+        for (RMQSession session : this.sessions) {
+            try {
+                session.internalClose();
+            } catch (Exception e) {
+                if (e instanceof ShutdownSignalException) {
+                    // do nothing
+                } else {
+                    logger.error("exception closing session ({})", session, e);
+                }
+            }
+        }
+        this.sessions.clear();
     }
 
     Channel createRabbitChannel(boolean transactional) throws IOException {
@@ -362,9 +375,9 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private class RMQConnectionShutdownListener implements ShutdownListener {
         @Override
         public void shutdownCompleted(ShutdownSignalException cause) {
-            if ( null==exceptionListener || cause.isInitiatedByApplication() )
+            if ( null==exceptionListener.get() || cause.isInitiatedByApplication() )
                 return; // Ignore this
-//            exceptionListener.onException(new RMQJMSException(String.format("error in {}, connection closed", cause.getReference()), cause));
+            exceptionListener.get().onException(new RMQJMSException(String.format("error in {}, connection closed", cause.getReference()), cause));
         }
     }
 

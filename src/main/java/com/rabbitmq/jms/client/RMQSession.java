@@ -172,7 +172,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
         try {
             this.channel = connection.createRabbitChannel(transacted);
-        } catch (IOException x) {
+        } catch (Exception x) { // includes unchecked exceptions, e.g. ShutdownSignalException
             throw new RMQJMSException(x);
         }
     }
@@ -904,8 +904,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 this.browsingChannels.add(chan);
                 return chan;
             }
-        } catch (IOException ioe) {
-            throw new RMQJMSException("Cannot create browsing channel", ioe);
+        } catch (Exception e) { // includes unchecked exceptions, e.g. ShutdownSignalException
+            throw new RMQJMSException("Cannot create browsing channel", e);
         }
     }
 
@@ -1110,10 +1110,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
     }
 
-    void unackedMessageReceived(RMQMessage message) {
+    void unackedMessageReceived(long dTag) {
         if (!getTransactedNoException()) {
             synchronized (this.unackedMessageTags) {
-                this.unackedMessageTags.add(message.getRabbitDeliveryTag());
+                this.unackedMessageTags.add(dTag);
             }
         }
     }

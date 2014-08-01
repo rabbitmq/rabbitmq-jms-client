@@ -7,7 +7,7 @@ import javax.jms.JMSException;
  * Wraps an exception as a {@link JMSException}.
  */
 public class RMQJMSException extends JMSException {
-    /** TODO */
+    /** Default version ID */
     private static final long serialVersionUID = 1L;
 
     public RMQJMSException(String msg, Throwable x) {
