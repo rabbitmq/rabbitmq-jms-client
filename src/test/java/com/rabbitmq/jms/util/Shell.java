@@ -8,6 +8,10 @@ import java.io.InputStreamReader;
  * Shell is a test utility class for issuing shell commands from integration tests.
  */
 public class Shell {
+
+    private static final String CTLCMD = "bin/ctl " + System.getProperty("RABBITMQ_VERSION") + " ";
+
+
     public static String executeCommand(String command) {
         StringBuffer outputSb = new StringBuffer();
 
@@ -25,5 +29,9 @@ public class Shell {
             e.printStackTrace();
         }
         return outputSb.toString();
+    }
+
+    public static String executeControl(String cmd) {
+        return executeCommand(CTLCMD + cmd);
     }
 }

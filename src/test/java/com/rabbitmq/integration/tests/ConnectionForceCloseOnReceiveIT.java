@@ -66,10 +66,10 @@ public class ConnectionForceCloseOnReceiveIT extends AbstractITTopic {
         Thread.sleep(ONE_SECOND);
 
         t("breaking connection...");
-        t(Shell.executeCommand("bin/ctl 3.3.4 stop_app"));
-        t("returned from 'ctl stop_app' normally");
-        t(Shell.executeCommand("bin/ctl 3.3.4 start_app"));
-        t("returned from 'ctl start_app' normally");
+        t(Shell.executeControl("stop_app"));
+        t("returned from 'stop_app' normally");
+        t(Shell.executeControl("start_app"));
+        t("returned from 'start_app' normally");
 
         try {
             t("waiting for completion...");
