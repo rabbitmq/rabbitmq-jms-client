@@ -377,7 +377,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         public void shutdownCompleted(ShutdownSignalException cause) {
             if ( null==exceptionListener.get() || cause.isInitiatedByApplication() )
                 return; // Ignore this
-            exceptionListener.get().onException(new RMQJMSException(String.format("error in {}, connection closed", cause.getReference()), cause));
+            exceptionListener.get().onException(new RMQJMSException(String.format("error in %s, connection closed, with reason %s", cause.getReference(), cause.getReason()), cause));
         }
     }
 

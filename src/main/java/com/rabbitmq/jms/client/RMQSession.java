@@ -156,7 +156,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @throws JMSException if we fail to create a {@link Channel} object on the connection, or if the acknowledgement mode is incorrect
      */
     public RMQSession(RMQConnection connection, boolean transacted, int mode, Map<String, RMQMessageConsumer> subscriptions) throws JMSException {
-        if (mode<0 || mode>CLIENT_INDIVIDUAL_ACKNOWLEDGE) throw new JMSException(String.format("Cannot create session with acknowledgement mode = {}.", mode));
+        if (mode<0 || mode>CLIENT_INDIVIDUAL_ACKNOWLEDGE) throw new JMSException(String.format("cannot create session with acknowledgement mode = %d.", mode));
         this.connection = connection;
         this.transacted = transacted;
         this.subscriptions = subscriptions;
