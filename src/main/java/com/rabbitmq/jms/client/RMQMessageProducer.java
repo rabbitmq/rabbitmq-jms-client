@@ -38,10 +38,10 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     private final RMQSession session;
     /**
-     * Delivery mode
+     * The default delivery mode used when a message is sent.
      * @see javax.jms.DeliveryMode
      */
-    private int deliveryMode;
+    private int deliveryMode = Message.DEFAULT_DELIVERY_MODE;
     /**
      * Should we use message IDs or not.
      * In this implementation, this flag is ignored and we will
