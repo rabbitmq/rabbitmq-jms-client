@@ -3,7 +3,7 @@ package com.rabbitmq.integration.tests;
 
 import java.io.Serializable;
 
-import javax.jms.DeliveryMode;
+import javax.jms.Message;
 import javax.jms.Queue;
 import javax.jms.QueueReceiver;
 import javax.jms.QueueSender;
@@ -15,9 +15,9 @@ import org.junit.Test;
 /**
  * Integration test for simple browsing of a queue.
  */
-public class SimpleQueueMessageIT extends AbstractITQueue {
+public class SimpleQueueMessageDefaultsIT extends AbstractITQueue {
 
-    private static final String QUEUE_NAME = "test.queue."+SimpleQueueMessageIT.class.getCanonicalName();
+    private static final String QUEUE_NAME = "test.queue."+SimpleQueueMessageDefaultsIT.class.getCanonicalName();
     private static final long TEST_RECEIVE_TIMEOUT = 1000; // one second
 
     private void messageTestBase(MessageTestType mtt) throws Exception {
@@ -29,7 +29,6 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
             drainQueue(queueSession, queue);
 
             QueueSender queueSender = queueSession.createSender(queue);
-            queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
             queueSender.send(mtt.gen(queueSession, (Serializable)queue));
         } finally {
             reconnect();
@@ -39,7 +38,9 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         Queue queue = queueSession.createQueue(QUEUE_NAME);
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-        mtt.check(queueReceiver.receive(TEST_RECEIVE_TIMEOUT), (Serializable)queue);
+        Message m = queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
+        mtt.check(m, (Serializable)queue);
+        mtt.checkAttrs(m, Message.DEFAULT_DELIVERY_MODE, Message.DEFAULT_PRIORITY);
     }
 
     @Test

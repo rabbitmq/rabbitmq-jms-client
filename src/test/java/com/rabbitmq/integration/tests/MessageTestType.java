@@ -76,6 +76,10 @@ enum MessageTestType {
     };
     abstract Message gen(QueueSession s, Serializable obj) throws Exception;
     abstract void check(Message m, Serializable obj) throws Exception;
+    public void checkAttrs(Message m, int mode, int priority) throws Exception {
+        assertEquals("DeliveryMode incorrect", mode, m.getJMSDeliveryMode());
+        assertEquals("Priority incorrect", priority, m.getJMSPriority());
+    }
 
     private static final Message nonNull(Message m) throws Exception { assertNotNull("Message received is null", m); return m; }
 
