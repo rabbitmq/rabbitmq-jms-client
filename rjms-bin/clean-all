@@ -1,0 +1,24 @@
+#!/bin/bash
+## Clean all rabbit-jms repositories in situ
+
+# Set up local vars
+my_dir=`pwd`
+mvn=`which mvn`
+
+echo "Clean rabbit-jms Maven repositories"
+
+for repoDir in $(find . -type d -name 'rabbit-jms-*')
+do
+    repo=$repoDir
+
+    echo
+    echo '-----------------------------------------------------'
+    if [[ -f "$repo/pom.xml" ]] ; then
+        echo "===== cleaning $repo"
+        (cd $repo; $mvn clean)
+    else
+        echo "===== skipping $repo"
+    fi
+    echo '-----------------------------------------------------'
+
+done

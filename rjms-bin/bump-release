@@ -1,0 +1,44 @@
+#!/bin/bash
+## Update to next release
+##
+##  It is assumed that the current release is x-SNAPSHOT, where x is the release
+##  to be created.  The next release will not be created, but a preparitory -SNAPSHOT
+##  release will be.
+
+##  If the parameters are "bump-release current next", then current-SNAPSHOT
+##  must be the current build release name, current (unadorned) is the
+##  next real release to be created (and tagged) and next-SNAPSHOT will be
+##  created and committed.
+
+##  Two commits (in each repository under rjms) will be created, one of which is
+##  tagged with the current release tag: "vcurrent".
+
+set -o errexit
+set -o nounset
+
+if [ `PWD` != $HOME/dev/rjms ]; then
+    echo "Execute this command with the directory $HOME/dev/rjms as current."
+    exit 1
+fi
+
+if [[ $1 == $2 ]]; then
+    echo "Parameters must be distinct (and contain no spaces)"
+    exit 1
+fi
+
+new = $1
+current = ${release}-SNAPSHOT
+next = $2
+follow = ${next}-SNAPSHOT
+
+bin/update-rjms-versions ${current} ${new}
+bin/run-in-git 'git add .'
+bin/run-in-git "git commit -m RJMS-${new}"
+bin/run-in-git "git tag v${new}"
+
+bin/update-rjms-versions ${new} ${follow}
+bin/run-in-git 'git add .'
+bin/run-in-git "git commit -m RJMS-${follow}"
+
+bin/run-in-git 'git push origin master'
+bin/run-in-git 'git push origin : --tags'

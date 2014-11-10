@@ -1,0 +1,36 @@
+#!/bin/bash
+## update-tag $file $ltag $oldv $rtag $newv
+## Replace first occurrence of <$tag>$oldv</$tag> in $file by <$tag>newv</$tag>, if found
+## Parms must have no blanks or special characters except possibly periods.
+
+set -o errexit
+set -o nounset
+
+# Set up local vars
+file=$1
+ltag=$2
+oldv=$3
+rtag=$4
+newv=$5
+
+if [[ -z $newv ]] ; then
+    echo "Not enough parameters"
+    exit 1
+fi
+
+if [[ -f "$file" ]] ; then
+    if ! grep "$ltag$oldv$rtag" <$file >/dev/null ; then
+        echo "No $ltag$oldv$rtag line found in file '$file'."
+        exit 1
+    fi
+    echo "Replacing '$ltag$oldv$rtag' by '$ltag$newv$rtag' in file '$file'."
+    if sed -e "/$ltag$oldv$rtag/ { s/$oldv/$newv/; :rest" -e 'n;brest' -e '}' <$file >$file.new; then
+        mv -f $file.new $file
+    else
+        echo "sed FAILED: original '$file' unchanged"
+        exit 1
+    fi
+else
+    echo "File '$file' not found."
+    exit 1
+fi
