@@ -209,14 +209,6 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         return ref;
     }
 
-    /** For JNDI binding and Spring beans */
-    public void setQueueBrowserReadMax(int value) {
-        this.queueBrowserReadMax = value;
-    }
-    public int getQueueBrowserReadMax() {
-        return this.queueBrowserReadMax;
-    }
-
     /**
      * Adds a String valued property to a Reference (as a RefAddr)
      * @param ref - the reference to contain the value
@@ -309,7 +301,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * Sets the password to be used when creating a connection to the RabbitMQ broker
+     * Sets the <i>password</i> to be used when creating a connection to the RabbitMQ broker
      *
      * @param password - password to be used when creating a connection to the RabbitMQ broker
      */
@@ -328,7 +320,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * Sets the virtual host to be used when creating a connection to the RabbitMQ broker.
+     * Sets the <i>virtualHost</i> to be used when creating a connection to the RabbitMQ broker.
      * If the parameter is <code>null</code> the current <i>virtualHost</i> is not changed.
      *
      * @param virtualHost - virtual host to be used when creating a connection to the RabbitMQ broker
@@ -348,7 +340,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * Sets the host name of the RabbitMQ broker. The host name can be an IP address or a host name.
+     * Sets the <i>host</i> of the RabbitMQ broker. The host name can be an IP address or a host name.
      * If the parameter is <code>null</code> the current <i>host name</i> is not changed.
      *
      * @param host - IP address or a host name of the RabbitMQ broker, in String form
@@ -371,7 +363,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * Set the port to be used when making a connection to the RabbitMQ broker.  This is the port number the broker will listen on.
+     * Set the <i>port</i> to be used when making a connection to the RabbitMQ broker.  This is the port number the broker will listen on.
      * Setting this to -1 means take the RabbitMQ default (which depends on the type of connection).
      *
      * @param port - a TCP port number
@@ -381,7 +373,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * The time to wait in milliseconds when {@link Connection#close()} has been called for listeners and threads to
+     * Returns the time to wait in milliseconds when {@link Connection#close()} has been called for listeners and threads to
      * complete.
      *
      * @return the duration in milliseconds for which the {@link Connection#close()} waits before continuing shutdown sequence
@@ -391,7 +383,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * Sets the time in milliseconds a {@link Connection#close()} should wait for threads/tasks/listeners to complete
+     * Sets <i>terminationTimeout</i>: the time in milliseconds a {@link Connection#close()} should wait for threads/tasks/listeners to complete
      *
      * @param terminationTimeout - duration in milliseconds
      */
@@ -399,4 +391,22 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.terminationTimeout = terminationTimeout;
     }
 
+    /**
+     * Returns the maximum number of messages to read on a queue browser, or zero if there is no limit.
+     *
+     * @return the maximum number of messages to read on a queue browser
+     */
+    public int getQueueBrowserReadMax() {
+        return this.queueBrowserReadMax;
+    }
+
+    /**
+     * Sets <i>queueBrowserReadMax</i>: the maximum number of messages to read on a queue browser.
+     * Non-negative values (including zero) are set to zero, which means there is no limit.
+     *
+     * @param queueBrowserReadMax - read no more than this number of messages on a queue browser.
+     */
+    public void setQueueBrowserReadMax(int queueBrowserReadMax) {
+        this.queueBrowserReadMax = Math.max(0, queueBrowserReadMax);
+    }
 }
