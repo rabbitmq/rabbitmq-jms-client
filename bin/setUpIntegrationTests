@@ -3,7 +3,12 @@
 # uses $1 and sets local RJMS_* vars:
 source bin/set-vars
 
-echo "Start RabbitMQ server (version ${RMQ_VERSION}) for Integration Tests"
+echo "Start RabbitMQ server (version ${RMQ_VERSION}) for Integration Tests"; echo ""
+
+if [[ "${RMQ_VERSION}" == "" ]] ; then
+    echo "Call this script with RabbitMQ Version as parameter, e.g. 3.4.0"; echo ""
+    exit 1
+fi
 
 if [[ ! -d "${RJMS_RABBITMQ_BASE}" ]] ; then
   sudo ./bin/util/getRabbitVersion ${RMQ_VERSION} ${RJMS_SERVERS_BASE}

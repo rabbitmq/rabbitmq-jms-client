@@ -137,7 +137,6 @@ public class RMQObjectFactory implements ObjectFactory {
         } else {
             return createDestination(ref, name, topic);
         }
-
     }
 
     /**
@@ -151,16 +150,21 @@ public class RMQObjectFactory implements ObjectFactory {
         this.logger.trace("Creating connection factory ref '{}', name '{}'.", ref, name);
         RMQConnectionFactory f = new RMQConnectionFactory();
 
-        String uri = getStringProperty(ref, "uri", true, "amqp://guest:guest@127.0.0.1"); // default uri string is supplied
-
-        int terminationTimeout = getIntProperty(ref, "terminationTimeout", true, 15000);
-
-        try {
-            f.setUri(uri);
+        try { // set uri first, which may fail if it doesn't parse
+            f.setUri(getStringProperty(ref, "uri", true, f.getUri()));
         } catch (JMSException e) {
-            this.logger.warn("Failed to set RMQConnectionFactory properties by URI--defaults taken.", e);
+            this.logger.warn("Failed to set RMQConnectionFactory properties by URI--defaults taken initially.", e);
         }
-        f.setTerminationTimeout(terminationTimeout);
+
+        // explicit properties (these override the uri, if set)
+        f.setHost               (getStringProperty (ref, "host",                true, f.getHost()               ));
+        f.setPassword           (getStringProperty (ref, "password",            true, f.getPassword()           ));
+        f.setPort               (getIntProperty    (ref, "port",                true, f.getPort()               ));
+        f.setQueueBrowserReadMax(getIntProperty    (ref, "queueBrowserReadMax", true, f.getQueueBrowserReadMax()));
+        f.setSsl                (getBooleanProperty(ref, "ssl",                 true, f.isSsl()                 ));
+        f.setTerminationTimeout (getLongProperty   (ref, "terminationTimeout",  true, f.getTerminationTimeout() ));
+        f.setUsername           (getStringProperty (ref, "username",            true, f.getUsername()           ));
+        f.setVirtualHost        (getStringProperty (ref, "virtualHost",         true, f.getVirtualHost()        ));
 
         return f;
     }
@@ -200,18 +204,8 @@ public class RMQObjectFactory implements ObjectFactory {
                                      String propertyName,
                                      boolean mayBeNull,
                                      String defaultValue) throws NamingException {
-        RefAddr ra = ref.get(propertyName);
-        if (!mayBeNull && (ra == null || ra.getContent()==null)) {
-            throw new NamingException(String.format("Property [%s] may not be null.", propertyName));
-        }
-        String content = ra == null ? null : ra.getContent() == null ? null : ra.getContent().toString();
-        if (!mayBeNull && (content == null)) {
-            throw new NamingException(String.format("Property [%s] is present but is lacking a value.", propertyName));
-        }
-
-        if (content == null && mayBeNull) {
-            content = defaultValue;
-        }
+        String content = propertyContent(ref, propertyName, mayBeNull);
+        if (content == null) return defaultValue;
         return content;
     }
 
@@ -228,18 +222,8 @@ public class RMQObjectFactory implements ObjectFactory {
                                        String propertyName,
                                        boolean mayBeNull,
                                        boolean defaultValue) throws NamingException {
-        RefAddr ra = ref.get(propertyName);
-        if (!mayBeNull && (ra == null || ra.getContent()==null)) {
-            throw new NamingException(String.format("Property [%s] may not be null.", propertyName));
-        }
-        String content = ra == null ? null : ra.getContent() == null ? null : ra.getContent().toString();
-        if (!mayBeNull && (content == null)) {
-            throw new NamingException(String.format("Property [%s] is present but is lacking a value.", propertyName));
-        }
-
-        if (content == null && mayBeNull) {
-            return defaultValue;
-        }
+        String content = propertyContent(ref, propertyName, mayBeNull);
+        if (content == null) return defaultValue;
         return Boolean.valueOf(content);
     }
 
@@ -249,32 +233,61 @@ public class RMQObjectFactory implements ObjectFactory {
      * @param propertyName the name of the property
      * @param mayBeNull true if the property may be missing, in which case <code>defaultValue</code> will be returned
      * @param defaultValue the default value to return if <code>mayBeNull</code> is set to true
-     * @return the int value representing the property value
+     * @return the integer value representing the property value
      * @throws NamingException if the property is missing while mayBeNull is set to false, or a number format exception happened
      */
     private int getIntProperty(Reference ref,
                                String propertyName,
                                boolean mayBeNull,
                                int defaultValue) throws NamingException {
+        String content = propertyContent(ref, propertyName, mayBeNull);
+        if (content == null) return defaultValue;
+        try {
+            return Integer.parseInt(content);
+        } catch (Exception x) {
+            NamingException nx = new NamingException(String.format("Property [%s] is present but is not an integer value [%s]", propertyName, content));
+            nx.setRootCause(x);
+            throw nx;
+        }
+    }
+
+    /**
+     * Reads a property from the reference and returns the long integer value it represents
+     * @param ref the reference
+     * @param propertyName the name of the property
+     * @param mayBeNull true if the property may be missing, in which case <code>defaultValue</code> will be returned
+     * @param defaultValue the default value to return if <code>mayBeNull</code> is set to true
+     * @return the long integer value representing the property value
+     * @throws NamingException if the property is missing while mayBeNull is set to false, or a number format exception happened
+     */
+    private long getLongProperty(Reference ref,
+                                 String propertyName,
+                                 boolean mayBeNull,
+                                 long defaultValue) throws NamingException {
+        String content = propertyContent(ref, propertyName, mayBeNull);
+        if (content == null) return defaultValue;
+        try {
+            return Long.parseLong(content);
+        } catch (Exception x) {
+            NamingException nx = new NamingException(String.format("Property [%s] is present but is not a long integer value [%s]", propertyName, content));
+            nx.setRootCause(x);
+            throw nx;
+        }
+    }
+
+    private static String propertyStringContent(RefAddr ra) {
+        return (ra == null ? null : ra.getContent() == null ? null : ra.getContent().toString());
+    }
+
+    private static String propertyContent(Reference ref, String propertyName, boolean mayBeNull) throws NamingException {
         RefAddr ra = ref.get(propertyName);
         if (!mayBeNull && ra == null) {
             throw new NamingException(String.format("Property [%s] may not be null.", propertyName));
         }
-        String content = ra == null ? null : ra.getContent() == null ? null : ra.getContent().toString();
+        String content = propertyStringContent(ra);
         if (content == null && !mayBeNull) {
             throw new NamingException(String.format("Property [%s] is present but is lacking a value.", propertyName));
         }
-        int result = defaultValue;
-        try {
-            result = Integer.parseInt(content);
-        } catch (Exception x) {
-            if (!mayBeNull) {
-                NamingException nx = new NamingException(String.format("Property [%s] is present but is not an integer value [%s]", propertyName, content));
-                nx.setRootCause(x);
-                throw nx;
-            }
-        }
-
-        return result;
+        return content;
     }
 }
