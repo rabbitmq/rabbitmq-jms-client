@@ -47,8 +47,8 @@ import org.slf4j.LoggerFactory;
  * </p>
  * <pre>
  * &lt;Resource name=&quot;jms/Queue&quot; type=&quot;javax.jms.Queue&quot;
-           factory=&quot;com.rabbitmq.jms.admin.RMQObjectFactory&quot;
-           destinationName=&quot;queueName&quot;/&gt;
+ *           factory=&quot;com.rabbitmq.jms.admin.RMQObjectFactory&quot;
+ *           destinationName=&quot;queueName&quot;/&gt;
  * </pre>
  * <p>
  * and a {@link Topic} would be created thus:
@@ -72,15 +72,19 @@ import org.slf4j.LoggerFactory;
  * Valid properties for a {@link ConnectionFactory} are:
  * </p>
  * <ul>
- * <li>username</li>
- * <li>password</li>
- * <li>virtualHost</li>
- * <li>host</li>
- * <li>port</li>
- * <li>ssl</li>
  * <li>uri</li>
+ * <li>host</li>
+ * <li>password</li>
+ * <li>port</li>
+ * <li>queueBrowserReadMax</li>
+ * <li>ssl</li>
  * <li>terminationTimeout</li>
+ * <li>username</li>
+ * <li>virtualHost</li>
  * </ul>
+ * and are applied in this order, if they are present. If a property is not present, or is not set by means of the
+ * <code>uri</code> attribute, the default value is the same as that obtained by instantiating a
+ * {@link RMQConnectionFactory} object with the default constructor.
  * <p>
  * Properties for a {@link Topic} or a {@link Queue} are:
  * </p>
