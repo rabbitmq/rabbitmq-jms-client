@@ -14,12 +14,15 @@ echo "Get and unpack rabbit generic unix version '${rmq_version}' into '${target
 [[ ! -d ${target_dir} ]] && (echo "Target not a directory"; exit 1)
 
 echo "Fetching rabbitmq-generic-unix version ${rmq_version} from www.rabbitmq.com into temporary tar file ..."
-sudo curl http://www.rabbitmq.com/releases/rabbitmq-server/v${rmq_version}/rabbitmq-server-generic-unix-${rmq_version}.tar.gz -O || (echo "fetch failed"; exit 1)
+sudo curl http://www.rabbitmq.com/releases/rabbitmq-server/v${rmq_version}/rabbitmq-server-generic-unix-${rmq_version}.tar.gz -O \
+|| (echo "fetch failed"; exit 1)
 
 echo ""
 echo "Unpacking tar file rabbitmq-server-generic-unix-${rmq_version}.tar.gz into ${target_dir} ..."
-sudo tar -C ${target_dir} -xf rabbitmq-server-generic-unix-${rmq_version}.tar.gz || (echo "tar -xf failed"; exit 1)
+sudo tar -C ${target_dir} -xf rabbitmq-server-generic-unix-${rmq_version}.tar.gz \
+|| (echo "tar -xf failed"; exit 1)
 
 echo ""
 echo "Removing temporary tar file ..."
-sudo rm rabbitmq-server-generic-unix-${rmq_version}.tar.gz || (echo "tar file not removed"; exit 1)
+sudo rm rabbitmq-server-generic-unix-${rmq_version}.tar.gz \
+|| (echo "tar file not removed"; exit 1)

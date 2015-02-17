@@ -11,7 +11,7 @@ if [[ "${RMQ_VERSION}" == "" ]] ; then
 fi
 
 if [[ ! -d "${RJMS_RABBITMQ_BASE}" ]] ; then
-  sudo ./bin/util/getRabbitVersion ${RMQ_VERSION} ${RJMS_SERVERS_BASE}
+  sudo ./bin/util/installRabbitVersion ${RMQ_VERSION} ${RJMS_SERVERS_BASE}
   if [[ ! -d "${RJMS_RABBITMQ_BASE}" ]] ; then
     echo "Could not find and could not generate a directory '${RJMS_RABBITMQ_BASE}'"
     exit 1

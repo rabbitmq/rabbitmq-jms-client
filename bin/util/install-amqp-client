@@ -7,21 +7,30 @@ rmq_version=$1
 echo "Get, unpack and install amqp-client version '$1' into local Maven cache"
 
 [[ "${MAVENEXE}" == "" ]] && MAVENEXE=`which mvn 2>/dev/null`
-[[ "${MAVENEXE}" == "" ]] && (echo 'Either include ''mvn'' in PATH or define variable $MAVENEXE to point to Maven executable'; exit 1)
+[[ "${MAVENEXE}" == "" ]] && (echo 'Either include ''mvn'' in PATH or define variable $MAVENEXE as path to Maven executable'; exit 1)
 
 [[ "${rmq_version}" == "" ]] && (echo "Must supply a version number parameter"; exit 1)
 
 echo "Fetching rabbitmq-java-client version ${rmq_version} from www.rabbitmq.com ..."
-sudo curl http://www.rabbitmq.com/releases/rabbitmq-java-client/v${rmq_version}/rabbitmq-java-client-bin-${rmq_version}.tar.gz -O || (echo "fetch failed"; exit 1)
+sudo curl http://www.rabbitmq.com/releases/rabbitmq-java-client/v${rmq_version}/rabbitmq-java-client-bin-${rmq_version}.tar.gz -O \
+|| (echo "fetch failed"; exit 1)
 
 echo ""
 echo "Unpacking tar file rabbitmq-java-client-bin-${rmq_version}.tar.gz into current directory ..."
-sudo tar -xf rabbitmq-java-client-bin-${rmq_version}.tar.gz || (echo "tar -xf failed"; exit 1)
+sudo tar -xf rabbitmq-java-client-bin-${rmq_version}.tar.gz \
+|| (echo "tar -xf failed"; exit 1)
 
 echo ""
 echo "Installing into local Maven cache as amqp-client-${rmq_version} ..."
-${MAVENEXE} install:install-file -Dfile=rabbitmq-java-client-bin-${rmq_version}/rabbitmq-client.jar -DgroupId=com.rabbitmq -DartifactId=amqp-client -Dversion=${rmq_version} -Dpackaging=jar || (echo "mvn install-file failed"; exit 1)
+${MAVENEXE} install:install-file \
+    -Dfile=rabbitmq-java-client-bin-${rmq_version}/rabbitmq-client.jar \
+    -DgroupId=com.rabbitmq \
+    -DartifactId=amqp-client \
+    -Dversion=${rmq_version} \
+    -Dpackaging=jar \
+|| (echo "mvn install-file failed"; exit 1)
 
 echo ""
 echo "Removing tar file and contents ..."
-sudo rm -rf rabbitmq-java-client-bin-${rmq_version} rabbitmq-java-client-bin-${rmq_version}.tar.gz || (echo "tar file not removed"; exit 1)
+sudo rm -rf rabbitmq-java-client-bin-${rmq_version} rabbitmq-java-client-bin-${rmq_version}.tar.gz \
+|| (echo "tar file not removed"; exit 1)
