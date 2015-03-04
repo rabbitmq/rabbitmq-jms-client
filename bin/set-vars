@@ -1,7 +1,0 @@
-# Set up vars for Rabbitmq JMS running.
-NODENAME=`hostname -s`
-RMQ_VERSION=$1
-RJMS_SERVERS_BASE=/opt/vmware
-RJMS_RABBITMQ_BASE=${RJMS_SERVERS_BASE}/rabbitmq_server-${RMQ_VERSION}
-RJMS_RABBITMQ_NODENAME=rabbit@${NODENAME}
-RJMS_RABBITMQ_PLUGINS=${RJMS_RABBITMQ_BASE}/plugins
