@@ -193,7 +193,7 @@
               <goal>exec</goal>
             </goals>
             <configuration>
-              <executable>bin/setUpIntegrationTests</executable>
+              <executable>../bin/setUpIntegrationTests</executable>
             </configuration>
           </execution>
 
@@ -204,7 +204,7 @@
               <goal>exec</goal>
             </goals>
             <configuration>
-              <executable>bin/tearDownIntegrationTests</executable>
+              <executable>../bin/tearDownIntegrationTests</executable>
             </configuration>
           </execution>
         </executions>

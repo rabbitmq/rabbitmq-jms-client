@@ -9,7 +9,7 @@ import java.io.InputStreamReader;
  */
 public class Shell {
 
-    private static final String CTLCMD = "bin/ctl " + System.getProperty("RABBITMQ_VERSION") + " ";
+    private static final String CTLCMD = "../bin/ctl " + System.getProperty("RABBITMQ_VERSION") + " ";
 
 
     public static String executeCommand(String command) {
