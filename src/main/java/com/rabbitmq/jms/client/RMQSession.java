@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.TimeoutException;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
@@ -464,6 +465,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 this.logger.warn("RabbitMQ channel({}) failed to close on session {}", this.channel, this, x);
                 throw new RMQJMSException(x);
             }
+        } catch (TimeoutException x) {
+            this.logger.warn("RabbitMQ channel({}) timed out trying to close session {}", this.channel, this, x);
+            throw new RMQJMSException(x);
         }
     }
 
@@ -920,6 +924,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                         chan.close();
                 } catch (IOException e) {
                     // ignore any failures, we are clearing up
+                } catch (TimeoutException te) {
+                    // ignore any failures, we are clearing up
                 }
             }
             this.browsingChannels.clear();
@@ -939,6 +945,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             }
         } catch (IOException ioe) {
 //            throw new RMQJMSException("Cannot close browsing channel", ioe);
+            // ignore errors in clearing up
+        } catch (TimeoutException te) {
             // ignore errors in clearing up
         }
     }
