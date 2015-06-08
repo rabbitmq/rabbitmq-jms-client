@@ -7,6 +7,7 @@ import static com.rabbitmq.jms.util.UriCodec.encUserinfo;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.concurrent.TimeoutException;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -104,6 +105,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
                     throw new RMQJMSException("RabbitMQ connection was refused. RabbitMQ broker may not be available.", x);
             }
             throw new RMQJMSException(x);
+        } catch (TimeoutException te) {
+            throw new RMQJMSException("Timed out establishing RabbitMQ Connection", te);
         }
     }
 
