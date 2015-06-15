@@ -455,19 +455,26 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private void closeRabbitChannels() throws JMSException {
         this.clearBrowsingChannels(); // does not throw exception
-        if (this.channel==null) return;
+        if (this.channel == null)
+            return;
         try {
             this.channel.close();
         } catch (ShutdownSignalException x) {
             // nothing to do
-        } catch (IOException x) {
-            if (!(x.getCause() instanceof ShutdownSignalException)) {
-                this.logger.warn("RabbitMQ channel({}) failed to close on session {}", this.channel, this, x);
-                throw new RMQJMSException(x);
+        } catch (Exception x) {
+            if (x instanceof IOException) {
+                IOException ioe = (IOException) x;
+                if (!(ioe.getCause() instanceof ShutdownSignalException)) {
+                    this.logger.warn("RabbitMQ channel({}) failed to close on session {}", this.channel, this, ioe);
+                    throw new RMQJMSException(ioe);
+                }
+            } else if (x instanceof TimeoutException) {
+                TimeoutException te = (TimeoutException) x;
+                this.logger.warn("RabbitMQ channel({}) timed out trying to close session {}", this.channel, this, te);
+                throw new RMQJMSException(te);
+            } else {
+                throw new RMQJMSException("Unexpected exception from channel.close()", x);
             }
-        } catch (TimeoutException x) {
-            this.logger.warn("RabbitMQ channel({}) timed out trying to close session {}", this.channel, this, x);
-            throw new RMQJMSException(x);
         }
     }
 
@@ -922,9 +929,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 try {
                     if (chan.isOpen())
                         chan.close();
-                } catch (IOException e) {
-                    // ignore any failures, we are clearing up
-                } catch (TimeoutException te) {
+                } catch (Exception _) {
                     // ignore any failures, we are clearing up
                 }
             }
@@ -943,10 +948,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                         chan.close();
                 }
             }
-        } catch (IOException ioe) {
-//            throw new RMQJMSException("Cannot close browsing channel", ioe);
-            // ignore errors in clearing up
-        } catch (TimeoutException te) {
+        } catch (Exception _) {
+            // throw new RMQJMSException("Cannot close browsing channel", _);
             // ignore errors in clearing up
         }
     }
