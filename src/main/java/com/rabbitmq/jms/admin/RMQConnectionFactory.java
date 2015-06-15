@@ -96,17 +96,23 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             return factory.newConnection();
         } catch (SSLException ssle) {
             throw new RMQJMSSecurityException("SSL Exception establishing RabbitMQ Connection", ssle);
-        } catch (IOException x) {
-            String msg = x.getMessage();
-            if (msg!=null) {
-                if (msg.contains("authentication failure") || msg.contains("refused using authentication"))
-                    throw new RMQJMSSecurityException(x);
-                else if (msg.contains("Connection refused"))
-                    throw new RMQJMSException("RabbitMQ connection was refused. RabbitMQ broker may not be available.", x);
+        } catch (Exception x) {
+            if (x instanceof IOException) {
+                IOException ioe = (IOException) x;
+                String msg = ioe.getMessage();
+                if (msg!=null) {
+                    if (msg.contains("authentication failure") || msg.contains("refused using authentication"))
+                        throw new RMQJMSSecurityException(ioe);
+                    else if (msg.contains("Connection refused"))
+                        throw new RMQJMSException("RabbitMQ connection was refused. RabbitMQ broker may not be available.", ioe);
+                }
+                throw new RMQJMSException(ioe);
+            } else if (x instanceof TimeoutException) {
+                TimeoutException te = (TimeoutException) x;
+                throw new RMQJMSException("Timed out establishing RabbitMQ Connection", te);
+            } else {
+                throw new RMQJMSException("Unexpected exception thrown by newConnection()", x);
             }
-            throw new RMQJMSException(x);
-        } catch (TimeoutException te) {
-            throw new RMQJMSException("Timed out establishing RabbitMQ Connection", te);
         }
     }
 
