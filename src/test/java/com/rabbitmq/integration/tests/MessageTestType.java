@@ -44,6 +44,15 @@ enum MessageTestType {
         @Override
         void check(Message m, Serializable obj) throws Exception { TestMessages.readBytesMessage(goodBytes(m)); }
     },
+    LONG_BYTES {
+        @Override
+        Message gen(QueueSession s, Serializable obj) throws Exception {
+            BytesMessage message = s.createBytesMessage();
+            TestMessages.writeLongBytesMessage(message);
+            return message; }
+        @Override
+        void check(Message m, Serializable obj) throws Exception { TestMessages.readLongBytesMessage(goodBytes(m)); }
+    },
     MAP {
         @Override
         Message gen(QueueSession s, Serializable obj) throws Exception {
@@ -92,7 +101,7 @@ enum MessageTestType {
     private static final String MESSAGE = "Hello " + MessageTestType.class.getName();
     private static final char[] CHAR = new char[]{' ', ';', '…', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
     private static final int CHARLEN = CHAR.length;
-    private static final String LONG_TEXT_BODY = generateLongString(65535);
+    private static final String LONG_TEXT_BODY = generateLongString(655350);
     private static final String generateLongString(int len) {
         StringBuilder sb = new StringBuilder("Long String length>="+len);
         for (int i=0; i<len; ++i) {
