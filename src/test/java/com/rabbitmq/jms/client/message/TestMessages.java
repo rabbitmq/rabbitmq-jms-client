@@ -21,7 +21,17 @@ import org.junit.Test;
 
 public class TestMessages {
 
+    private static final byte[] largeByteArray(final int len) {
+        byte[] bytes = new byte[len];
+        for (int i=0; i<len; ++i) {
+            bytes[i] = (byte)i;
+        }
+        return bytes;
+    }
+
+    private static final int LARGE_BYTES_LEN = 1<<18;
     private static final byte[] BYTE_ARRAY = { (byte) -2, (byte) -3 };
+    private static final byte[] LARGE_BYTE_ARRAY = largeByteArray(LARGE_BYTES_LEN);
 
     @Test
     public void testBytesMessageDebug() throws Exception {
@@ -200,6 +210,42 @@ public class TestMessages {
         message.writeByte((byte) (255 & 0xFF)); // unsigned
         message.writeBytes(BYTE_ARRAY);
         message.writeBytes(BYTE_ARRAY, 1, 1);
+        message.writeChar('X');
+        message.writeDouble(2.35d);
+        message.writeFloat(1.54f);
+        message.writeInt(Integer.MAX_VALUE);
+        message.writeLong(Long.MAX_VALUE);
+        message.writeShort(Short.MAX_VALUE);
+        message.writeShort((short) 0xFFFF);
+        message.writeUTF("TEST");
+    }
+
+    public static void readLongBytesMessage(BytesMessage message) throws JMSException {
+        assertTrue(message.readBoolean());
+        assertEquals(-1, message.readByte());
+        assertEquals(255, message.readUnsignedByte());
+        byte[] b1 = new byte[1];
+        byte[] b2 = new byte[LARGE_BYTES_LEN];
+        message.readBytes(b2);
+        assertTrue(Arrays.equals(LARGE_BYTE_ARRAY, b2));
+        message.readBytes(b1, 1);
+        assertEquals(LARGE_BYTE_ARRAY[1], b1[0]);
+        assertEquals('X', message.readChar());
+        assertEquals(2.35d, message.readDouble(), 1e-20D);
+        assertEquals(1.54f, message.readFloat(), 1e-20D);
+        assertEquals(Integer.MAX_VALUE, message.readInt());
+        assertEquals(Long.MAX_VALUE, message.readLong());
+        assertEquals(Short.MAX_VALUE, message.readShort());
+        assertEquals(0xFFFF, message.readUnsignedShort());
+        assertEquals("TEST", message.readUTF());
+    }
+
+    public static void writeLongBytesMessage(BytesMessage message) throws JMSException {
+        message.writeBoolean(true);
+        message.writeByte((byte) -1); // signed
+        message.writeByte((byte) (255 & 0xFF)); // unsigned
+        message.writeBytes(LARGE_BYTE_ARRAY);
+        message.writeBytes(LARGE_BYTE_ARRAY, 1, 1);
         message.writeChar('X');
         message.writeDouble(2.35d);
         message.writeFloat(1.54f);

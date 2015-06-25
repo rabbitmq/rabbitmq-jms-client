@@ -58,6 +58,11 @@ public class SimpleQueueMessageIT extends AbstractITQueue {
     }
 
     @Test
+    public void testSendAndReceiveLongBytesMessage() throws Exception {
+        messageTestBase(MessageTestType.LONG_BYTES);
+    }
+
+    @Test
     public void testSendAndReceiveMapMessage() throws Exception {
         messageTestBase(MessageTestType.MAP);
     }
