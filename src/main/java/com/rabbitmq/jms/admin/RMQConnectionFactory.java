@@ -411,7 +411,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     /**
      * Sets <i>queueBrowserReadMax</i>: the maximum number of messages to read on a queue browser.
-     * Non-negative values (including zero) are set to zero, which means there is no limit.
+     * Non-positive values are set to zero, which is interpreted as no limit.
      *
      * @param queueBrowserReadMax - read no more than this number of messages on a queue browser.
      */

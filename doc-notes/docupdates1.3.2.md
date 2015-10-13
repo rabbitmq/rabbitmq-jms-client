@@ -94,7 +94,7 @@ Here is a complete list of the attributes/properties available:
     <td>queueBrowserReadMax</td>
     <td>&nbsp;</td>
     <td>
-      The maximum number of messages to read on a queue browser. Non-negative values (including zero) are set to zero, which
+      The maximum number of messages to read on a queue browser. Non-positive values are set to zero, which
       means there is no limit. The default is zero.
     </td>
   </tr>
