@@ -1344,7 +1344,12 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
 
     static final boolean isAmqpTextMessage(Map<String, Object> hdrs) {
-        return (hdrs!=null && "TextMessage".equals(hdrs.get("JMSType").toString()));
+        boolean isTextMessage = false;
+        if(hdrs != null) {
+            Object headerJMSType = hdrs.get("JMSType");
+            isTextMessage = (headerJMSType != null && "TextMessage".equals(headerJMSType.toString()));
+        }
+        return isTextMessage;
     }
 
     private static final long objectToLong(Object val, long dft) {
