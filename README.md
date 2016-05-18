@@ -1,6 +1,6 @@
-## Java JMS Client based on RabbitMQ
+# Java JMS Client based on RabbitMQ
 
-### Overview
+## Overview
 
 This Java code (forming a single `jar`) is the heart of the RabbitMQ JMS Client.  It is a Maven project, with parent `rabbitmq-jms-parent` whose source is in the repository named `rabbit-jms-parent`.
 
@@ -50,3 +50,13 @@ A sample RabbitMQ JMS Client application, completely self-contained. Built with 
 
 A sample very small RabbitMQ JMS Client application, using Spring and with both `groovy` and Java stand-alone invocations. Suitable for development trial.
 No artefact from this repository is distributed.
+
+## License and Copyright
+
+(c) Pivotal Software, Inc., 2007-2016.
+
+This package, the RabbitMQ JMS client library, is triple-licensed
+under the Apache License version 2 ("ASL"), the Mozilla Public License
+1.1 ("MPL"), and the GNU General Public License version 2 ("GPL").
+
+See [LICENSE](./LICENSE).
