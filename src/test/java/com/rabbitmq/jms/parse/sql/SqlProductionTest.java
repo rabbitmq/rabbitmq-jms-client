@@ -245,12 +245,20 @@ public class SqlProductionTest {
                    );
     }
 
-    private static final int STACKFRAME_NESTED_PARENS_LIMIT = 350;
+    private static final int STACKFRAME_NESTED_PARENS_LIMIT = 150;
 
     @Test
-    public void stackDepth() throws Exception {
+    public void deeplyNestedParenthesesParsingDoesNotOverflowUpToALimit() throws Exception {
         assertParse(SqlProduction.simple,
-                    parens(STACKFRAME_NESTED_PARENS_LIMIT,"1")
+                    parens(STACKFRAME_NESTED_PARENS_LIMIT, "1")
+                   , "LEAF: integer: 1"
+                   );
+    }
+
+    @Test(expected = StackOverflowError.class)
+    public void deeplyNestedParenthesesParsingOverflowsAboveALimit() throws Exception {
+        assertParse(SqlProduction.simple,
+                    parens(STACKFRAME_NESTED_PARENS_LIMIT * 10, "1")
                    , "LEAF: integer: 1"
                    );
     }
