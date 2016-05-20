@@ -175,40 +175,6 @@
             </configuration>
           </execution>
         </executions>
-
-      </plugin>
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-
-        <configuration>
-          <commandlineArgs>${rabbitmq.version}</commandlineArgs>
-        </configuration>
-        <executions>
-          <execution>
-            <id>set-up-rabbit</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <configuration>
-              <executable>../bin/setUpIntegrationTests</executable>
-            </configuration>
-          </execution>
-
-          <execution>
-            <id>tear-down-rabbit</id>
-            <phase>post-integration-test</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <configuration>
-              <executable>../bin/tearDownIntegrationTests</executable>
-            </configuration>
-          </execution>
-        </executions>
-
       </plugin>
 
     </plugins>
