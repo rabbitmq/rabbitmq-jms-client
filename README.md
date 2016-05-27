@@ -1,55 +1,39 @@
-# Java JMS Client based on RabbitMQ
+# Java JMS Client for RabbitMQ
 
 ## Overview
 
-This Java code (forming a single `jar`) is the heart of the RabbitMQ JMS Client.  It is a Maven project, with parent `rabbitmq-jms-parent` whose source is in the repository named `rabbit-jms-parent`.
+This is a JMS 1.1 client library for RabbitMQ, working in concert with [rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-jms-topic-exchange),
+a RabbitMQ server plugin.
 
-The complete list of RabbitMQ JMS project repositories is:
+## Installation
 
-* [`rabbit-jms-client`](#rabbit-jms-client) this repository, a `jar` project
-* [`rabbit-jms-parent`](#rabbit-jms-parent) the common parent `pom` project with dependency information
-* [`rabbit-jms-cts`](#rabbit-jms-cts) a JMS integration test suite, a `jar` project
-* [`rabbit-jms-package`](#rabbit-jms-package) a `pom` project that builds snapshots and releases
-* [`rabbit-jms-topic-exchange`](#rabbit-jms-topic-exchange) a specialised `pom` project that builds a RabbitMQ plugin
-* [`rabbit-jms-trader`](#rabbit-jms-trader) a specialised `pom` project that builds a sample application using the RabbitMQ JMS client.
-* [`rabbit-jms-boot-demo`](#rabbit-jms-boot-demo) a very small RJMS client app, using Spring, with Groovy and Java invocations.
+### From Maven
 
-Only `rabbit-jms-client`, `rabbit-jms-topic-exchange`, and `rabbit-jms-trader` contribute artefacts which are packaged and distributed by `rabbit-jms-package`.
+This repository is in the process of being prepared for open sourcing. It is not yet available
+from any public Maven repository.
 
-### <a name="rabbit-jms-client"></a> `rabbit-jms-client`
 
-This repository. The jar is built, and installed into the local Maven repository, using
+### Building from Source
+
+This project is managed by Maven, so use
 
     mvn clean install
 
-as usual, but requires access to pre-built `rabbit-jms-parent` and `rabbit-jms-topic-exchange` projects at the same version level. The client jar is distributed from this repository.
+to build it from source and install into the local repository.
 
-### <a name="rabbit-jms-parent"></a> `rabbit-jms-parent`
 
-The holder of the master version, the (Maven) plugin and package dependencies and their versions, and certain globally used property settings. It can be built and deployed locally for private use (using `install`). No artefact from this repository is distributed.
+## Running Tests
 
-### <a name="rabbit-jms-cts"></a> `rabbit-jms-cts`
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for an overview of the development process.
 
-A fork of a compliance test suite, adjusted to test this client to its functional limits. No artefact from this repository is distributed.
+### Unit Tests
 
-### <a name="rabbit-jms-package"></a> `rabbit-jms-package`
+    mvn clean test
 
-The master distribution build project — this knows what pieces, and what versions of pieces, to build and package for distribution.
+### Integration Tests
 
-### <a name="rabbit-jms-topic-exchange"></a> `rabbit-jms-topic-exchange`
+TBD: open sourcing the compliance test suite is a work-in-progress.
 
-This is an Erlang coded RabbitMQ plugin (_the Plugin_) which defines a new exchange type for RabbitMQ Server. Exchanges of this type can piggy-back onto topic exchanges (by exchange to exchange binding) to filter out messages based upon their properties and a selector expression (written in a JMS SQL syntax). The selector expression can either be in the JMS spec (modified) SQL or in a compiled `erlang` form. It is not a _topic_ exchange, despite its name.
-
-The plugin is distributed as an `.ez` file, in the main _packaged_ artefact.
-
-### <a name="rabbit-jms-trader"></a> `rabbit-jms-trader`
-
-A sample RabbitMQ JMS Client application, completely self-contained. Built with `play` and comes with a tomcat container for demonstration purposes. This artefact is distributed with the main _packaged_ artefacts.
-
-### <a name="rabbit-jms-boot-demo"></a> `rabbit-jms-boot-demo`
-
-A sample very small RabbitMQ JMS Client application, using Spring and with both `groovy` and Java stand-alone invocations. Suitable for development trial.
-No artefact from this repository is distributed.
 
 ## License and Copyright
 
