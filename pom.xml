@@ -11,8 +11,26 @@
 
   <packaging>jar</packaging>
 
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+    <license>
+      <name>MPL 1.1</name>
+      <url>http://www.mozilla.org/MPL/MPL-1.1.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <url>https://github.com/rabbitmq/rabbitmq-jms-client</url>
+    <connection>scm:git:git://github.com/rabbitmq/rabbitmq-jms-client.git</connection>
+    <developerConnection>scm:git:git@github.com:rabbitmq/rabbitmq-jms-client.git</developerConnection>
+  </scm>
+
   <properties>
-    <!-- overridable parameter -->
     <rabbitmq.version>3.6.2</rabbitmq.version>
 
     <java-compile-version>1.6</java-compile-version>
