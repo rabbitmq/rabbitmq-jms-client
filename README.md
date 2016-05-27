@@ -43,8 +43,8 @@ TBD: open sourcing the compliance test suite is a work-in-progress.
 
 (c) Pivotal Software, Inc., 2007-2016.
 
-This package, the RabbitMQ JMS client library, is triple-licensed
-under the Apache License version 2 ("ASL"), the Mozilla Public License
-1.1 ("MPL"), and the GNU General Public License version 2 ("GPL").
+This package, the RabbitMQ JMS client library, is double-licensed
+under the Apache License version 2 ("ASL") and the Mozilla Public License
+1.1 ("MPL").
 
 See [LICENSE](./LICENSE).

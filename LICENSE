@@ -1,12 +1,12 @@
-This package, the RabbitMQ JMS client library, is triple-licensed under
-the Mozilla Public License 1.1 ("MPL"), the GNU General Public License
-version 2 ("GPL") and the Apache License version 2 ("ASL"). For the MPL,
-please see LICENSE-MPL-RabbitMQ. For the GPL, please see LICENSE-GPL2.
-For the ASL, please see LICENSE-APACHE2.
+This package, the RabbitMQ JMS client library, is double-licensed
+under the Mozilla Public License 1.1 ("MPL") and the Apache License
+version 2 ("ASL"). For the MPL, please see LICENSE-MPL-RabbitMQ. For
+the ASL, please see LICENSE-APACHE2.
 
-The RabbitMQ Java client library includes third-party software under the
-ASL. For this license, please see LICENSES.txt. For attribution of
-copyright and other details of provenance, please refer to the source code.
+The RabbitMQ JMS client library includes third-party software under
+the ASL, MPL, and BSD- and MIT-style licenses. For more details,
+please see LICENSES.txt. For attribution of copyright and other
+details of provenance, please refer to the source code.
 
-If you have any questions regarding licensing, please contact us at 
+If you have any questions regarding licensing, please contact us at
 info@rabbitmq.com.
