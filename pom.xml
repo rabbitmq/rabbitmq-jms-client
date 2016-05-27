@@ -30,7 +30,7 @@
     <dependency>
       <groupId>com.rabbitmq</groupId>
       <artifactId>amqp-client</artifactId>
-      <version>3.5.7</version>
+      <version>3.6.2</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -233,6 +233,16 @@
   </build>
 
   <repositories>
+    <repository>
+      <id>sonatype</id>
+      <url>http://oss.sonatype.org/content/repositories/releases</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+    </repository>
     <repository>
       <id>jboss.org</id>
       <name>Jboss Maven 2 Repository</name>
