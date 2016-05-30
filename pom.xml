@@ -48,7 +48,7 @@
     <surefire.reports.dir>target/surefire-reports</surefire.reports.dir>
     <failsafe.reports.dir>target/failsafe-reports</failsafe.reports.dir>
 
-    <gpg.keyname>6026DFCA</gpg.keyname>
+    <gpg.keyname>BA058EF7</gpg.keyname>
   </properties>
 
   <dependencies>
