@@ -1,7 +1,7 @@
 # Java JMS Client for RabbitMQ
 
 **WIP warning**: open sourcing of RabbitMQ JMS repositories is a
-work-in-progress. There are currently no publicly released Maven
+work-in-progress. There are currently no publicly released non-snapshot Maven
 artifacts and compliance test suite is still not open source.
 
 ## Overview
