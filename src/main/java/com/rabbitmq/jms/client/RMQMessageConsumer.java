@@ -224,7 +224,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * </blockquote>
      * <p>
      * For synchronous gets, we potentially have to block on the way in.
-     * <p/>
+     * </p>
      * {@inheritDoc}
      *
      * @param timeout - (in milliseconds) zero means wait forever; {@inheritDoc}
@@ -323,10 +323,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             } finally {
                 this.receiveManager.exit();
             }
-        } catch (AbortedException _) {
+        } catch (AbortedException e) {
             /* If we were aborted (closed) we return null, too. */
             return null;
-        } catch (InterruptedException _) {
+        } catch (InterruptedException e) {
             /* Someone interrupted us -- we ought to terminate */
             Thread.currentThread().interrupt(); // reset interrupt status
             return null;

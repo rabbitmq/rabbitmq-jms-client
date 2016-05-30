@@ -146,7 +146,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /** The channels we use for browsing queues (there may be more than one in operation at a time) */
     private Set<Channel> browsingChannels = new HashSet<Channel>(); // @GuardedBy(bcLock)
-    private Object bcLock = new Object();
+    private final Object bcLock = new Object();
 
     /**
      * Creates a session object associated with a connection
@@ -929,7 +929,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 try {
                     if (chan.isOpen())
                         chan.close();
-                } catch (Exception _) {
+                } catch (Exception e) {
                     // ignore any failures, we are clearing up
                 }
             }
@@ -948,7 +948,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                         chan.close();
                 }
             }
-        } catch (Exception _) {
+        } catch (Exception e) {
             // throw new RMQJMSException("Cannot close browsing channel", _);
             // ignore errors in clearing up
         }
@@ -960,8 +960,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public TemporaryQueue createTemporaryQueue() throws JMSException {
         illegalStateExceptionIfClosed();
-        RMQDestination result = new RMQDestination(Util.generateUUID("jms-temp-queue-"), true, true);
-        return result;
+        return new RMQDestination(Util.generateUUID("jms-temp-queue-"), true, true);
     }
 
     /**
@@ -970,8 +969,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public TemporaryTopic createTemporaryTopic() throws JMSException {
         illegalStateExceptionIfClosed();
-        RMQDestination result = new RMQDestination(Util.generateUUID("jms-temp-topic-"), false, true);
-        return result;
+        return new RMQDestination(Util.generateUUID("jms-temp-topic-"), false, true);
     }
 
     /**

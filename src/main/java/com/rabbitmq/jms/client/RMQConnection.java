@@ -38,10 +38,11 @@ import com.rabbitmq.jms.util.RMQJMSException;
 /**
  * Implementation of the {@link Connection}, {@link QueueConnection} and {@link TopicConnection} interfaces.
  * A {@link RMQConnection} object holds a list of {@link RMQSession} objects as well as the actual
- * {link com.rabbitmq.client.Connection} object that represents the TCP connection to the RabbitMQ broker. <br/>
+ * {link com.rabbitmq.client.Connection} object that represents the TCP connection to the RabbitMQ broker.
+ * <p>
  * This implementation also holds a reference to the executor service that is used by the connection so that we
  * can pause incoming messages.
- *
+ * </p>
  */
 public class RMQConnection implements Connection, QueueConnection, TopicConnection {
 
@@ -228,7 +229,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      * receive or message listener in progress has completed. A blocked message consumer receive call returns null when
      * this message consumer is closed.</p>
      * </blockquote>
-     * <p/>{@inheritDoc}
+     * {@inheritDoc}
      */
     @Override
     public void close() throws JMSException {

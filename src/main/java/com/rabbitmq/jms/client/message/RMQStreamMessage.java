@@ -535,7 +535,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         while(!endOfStream) {
             try {
                 rmqSMsg.writeObject(msg.readObject());
-            } catch (MessageEOFException _) {
+            } catch (MessageEOFException e) {
                 endOfStream = true;
             }
         }

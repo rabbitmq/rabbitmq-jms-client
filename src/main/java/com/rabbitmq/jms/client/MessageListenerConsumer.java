@@ -180,7 +180,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
                 logger.error("basicCancel (consumerTag='{}') threw exception", cT, sse);
                 throw sse;
             }
-        } catch (InterruptedException _) {
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } catch (IOException e) {
             if (! e.getMessage().equals("Unknown consumerTag")) {

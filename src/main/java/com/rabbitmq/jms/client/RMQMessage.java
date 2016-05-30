@@ -201,7 +201,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     /**
      * Sets the session this object was received by
      * @see RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse)
-     * @see RMQSession#acknowledgeMessages()
+     * @see RMQSession#acknowledgeMessage(RMQMessage)
      * @param session
      */
     protected void setSession(RMQSession session) {
@@ -793,7 +793,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
 
     /**
-     * Invoked when {@link #toByteArray(RMQMessage)} is called to create
+     * Invoked when {@link RMQMessage#toByteArray()} is called to create
      * a byte[] from a message. Each subclass must implement this, but ONLY
      * write its specific body. All the properties defined in {@link Message}
      * will be written by the parent class.
@@ -804,7 +804,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     protected abstract void writeBody(ObjectOutput out, ByteArrayOutputStream bout) throws IOException;
 
     /**
-     * Invoked when {@link #toAmqpMessage(RMQMessage)} is called to create
+     * Invoked when {@link RMQMessage#toAmqpByteArray()} is called to create
      * a byte[] from a message. Each subclass must implement this, but ONLY
      * write its specific body.
      * @param out - the output stream to which the message body is written
@@ -1343,7 +1343,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         }
     }
 
-    static final boolean isAmqpTextMessage(Map<String, Object> hdrs) {
+    static boolean isAmqpTextMessage(Map<String, Object> hdrs) {
         boolean isTextMessage = false;
         if(hdrs != null) {
             Object headerJMSType = hdrs.get("JMSType");
@@ -1352,21 +1352,21 @@ public abstract class RMQMessage implements Message, Cloneable {
         return isTextMessage;
     }
 
-    private static final long objectToLong(Object val, long dft) {
+    private static long objectToLong(Object val, long dft) {
         if (val==null) return dft;
         if (val instanceof Number) return ((Number) val).longValue();
         try {
             if (val instanceof CharSequence) return Long.valueOf(val.toString());
-        } catch (NumberFormatException _) { /*ignore*/ }
+        } catch (NumberFormatException e) { /*ignore*/ }
         return dft;
     }
 
-    private static final int objectToInt(Object val, int dft) {
+    private static int objectToInt(Object val, int dft) {
         if (val==null) return dft;
         if (val instanceof Number) return ((Number) val).intValue();
         try {
             if (val instanceof CharSequence) return Integer.valueOf(val.toString());
-        } catch (NumberFormatException _) { /*ignore*/ }
+        } catch (NumberFormatException e) { /*ignore*/ }
         return dft;
     }
 
@@ -1389,7 +1389,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @param rmqMessage message filled in with attributes
      * @param message message from which attributes are gained.
      */
-    protected static final void copyAttributes(RMQMessage rmqMessage, Message message) throws JMSException {
+    protected static void copyAttributes(RMQMessage rmqMessage, Message message) throws JMSException {
         try {
             rmqMessage.setJMSCorrelationID(message.getJMSCorrelationID());
             rmqMessage.setJMSType(message.getJMSType());
@@ -1401,7 +1401,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         }
     }
 
-    private static final void copyProperties(RMQMessage rmqMsg, Message msg) throws JMSException {
+    private static void copyProperties(RMQMessage rmqMsg, Message msg) throws JMSException {
         @SuppressWarnings("unchecked")
         Enumeration<String> propNames = msg.getPropertyNames();
 

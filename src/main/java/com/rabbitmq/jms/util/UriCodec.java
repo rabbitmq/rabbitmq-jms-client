@@ -55,88 +55,6 @@ import java.util.Arrays;
  * solidus ‘<code><b>/</b></code>’ (alternative) operator by the graphemically more pleasing vertical
  * bar ‘<code><b>|</b></code>’.]
  * </p>
- * <pre>
- *    URI           = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
- *
- *    hier-part     = "//" authority path-abempty
- *                  | path-absolute
- *                  | path-rootless
- *                  | path-empty
- *
- *    URI-reference = URI | relative-ref
- *
- *    absolute-URI  = scheme ":" hier-part [ "?" query ]
- *
- *    relative-ref  = relative-part [ "?" query ] [ "#" fragment ]
- *
- *    relative-part = "//" authority path-abempty
- *                  | path-absolute
- *                  | path-noscheme
- *                  | path-empty
- *
- *    scheme        = ALPHA *( ALPHA | DIGIT | "+" | "-" | "." )
- *
- *    authority     = [ userinfo "@" ] host [ ":" port ]
- *    userinfo      = *( unreserved | pct-encoded | sub-delims | ":" )
- *    host          = IP-literal | IPv4address | reg-name
- *    port          = *DIGIT
- *
- *    IP-literal    = "[" ( IPv6address | IPvFuture  ) "]"
- *
- *    IPvFuture     = "v" 1*HEXDIG "." 1*( unreserved | sub-delims | ":" )
- *
- *    IPv6address   =                            6( h16 ":" ) ls32
- *                  |                       "::" 5( h16 ":" ) ls32
- *                  | [               h16 ] "::" 4( h16 ":" ) ls32
- *                  | [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
- *                  | [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
- *                  | [ *3( h16 ":" ) h16 ] "::"    h16 ":"   ls32
- *                  | [ *4( h16 ":" ) h16 ] "::"              ls32
- *                  | [ *5( h16 ":" ) h16 ] "::"              h16
- *                  | [ *6( h16 ":" ) h16 ] "::"
- *
- *    h16           = 1*4HEXDIG
- *    ls32          = ( h16 ":" h16 ) | IPv4address
- *    IPv4address   = dec-octet "." dec-octet "." dec-octet "." dec-octet
- *
- *    dec-octet     = DIGIT                 ; 0-9
- *                  | %x31-39 DIGIT         ; 10-99
- *                  | "1" 2DIGIT            ; 100-199
- *                  | "2" %x30-34 DIGIT     ; 200-249
- *                  | "25" %x30-35          ; 250-255
- *
- *    reg-name      = *( unreserved | pct-encoded | sub-delims )
- *
- *    path          = path-abempty    ; begins with "/" or is empty
- *                  | path-absolute   ; begins with "/" but not "//"
- *                  | path-noscheme   ; begins with a no-colon non-empty segment
- *                  | path-rootless   ; begins with a segment
- *                  | path-empty      ; zero characters
- *
- *    path-abempty  = *( "/" segment )                      ; begins with "/" or is empty
- *    path-absolute = "/" [ segment-nz *( "/" segment ) ]   ; begins with "/" but not "//"
- *    path-noscheme = segment-nz-nc *( "/" segment )        ; begins with a no-colon non-empty segment
- *    path-rootless = segment-nz *( "/" segment )           ; begins with a segment
- *    path-empty    = 0<pchar>                              ; zero characters
- *
- *    segment       = *pchar
- *    segment-nz    = 1*pchar
- *    segment-nz-nc = 1*( unreserved | pct-encoded | sub-delims | "@" ) ; no-colon non-empty segment
- *
- *    pchar         = unreserved | pct-encoded | sub-delims | ":" | "@"
- *
- *    query         = *( pchar | "/" | "?" )
- *
- *    fragment      = *( pchar | "/" | "?" )
- *
- *    pct-encoded   = "%" HEXDIG HEXDIG
- *
- *    unreserved    = ALPHA | DIGIT | "-" | "." | "_" | "~"
- *    reserved      = gen-delims | sub-delims
- *    gen-delims    = ":" | "/" | "?" | "#" | "[" | "]" | "@"
- *    sub-delims    = "!" | "$" | "&" | "'" | "(" | ")" | "*" | "+" | "," | ";" | "="
- *
- * </pre>
  */
 public abstract class UriCodec {  // Prevent me declaring instances.
     private UriCodec() {}         // Prevent anyone else declaring instances; also prohibits extensions.
@@ -147,7 +65,7 @@ public abstract class UriCodec {  // Prevent me declaring instances.
      * @param encodingScheme - must be one of "UTF-8" or "US-ASCII"
      * @return ui encoded (with % encodings if necessary)
      */
-    public static final String encUserinfo(String ui, String encodingScheme) {
+    public static String encUserinfo(String ui, String encodingScheme) {
         return genericEncode(USERINFO_C_BA, ui, encodingScheme);
     }
 
@@ -156,7 +74,7 @@ public abstract class UriCodec {  // Prevent me declaring instances.
      * @param encodingScheme - must be one of "UTF-8" of "US-ASCII"
      * @return rawui decoded (with % encodings replaced by characters they represent)
      */
-    public static final String decUserinfo(String rawui, String encodingScheme) {
+    public static String decUserinfo(String rawui, String encodingScheme) {
         return genericDecode(rawui, encodingScheme);
     }
 
@@ -166,7 +84,7 @@ public abstract class UriCodec {  // Prevent me declaring instances.
      * @param encodingScheme - must be one of "UTF-8" or "US-ASCII"
      * @return ui encoded (with % encodings if necessary)
      */
-    public static final String encScheme(String ui, String encodingScheme) {
+    public static String encScheme(String ui, String encodingScheme) {
         return genericEncode(SCHEME_C_BA, ui, encodingScheme);
     }
 
@@ -175,7 +93,7 @@ public abstract class UriCodec {  // Prevent me declaring instances.
      * @param encodingScheme - must be one of "UTF-8" of "US-ASCII"
      * @return rawui decoded (with % encodings replaced by characters they represent)
      */
-    public static final String decScheme(String rawui, String encodingScheme) {
+    public static String decScheme(String rawui, String encodingScheme) {
         return genericDecode(rawui, encodingScheme);
     }
 
@@ -185,7 +103,7 @@ public abstract class UriCodec {  // Prevent me declaring instances.
      * @param encodingScheme - must be one of "UTF-8" or "US-ASCII"
      * @return ui encoded (with % encodings if necessary)
      */
-    public static final String encSegment(String ui, String encodingScheme) {
+    public static String encSegment(String ui, String encodingScheme) {
         return genericEncode(SEGMENT_C_BA, ui, encodingScheme);
     }
 
@@ -194,7 +112,7 @@ public abstract class UriCodec {  // Prevent me declaring instances.
      * @param encodingScheme - must be one of "UTF-8" of "US-ASCII"
      * @return rawui decoded (with % encodings replaced by characters they represent)
      */
-    public static final String decSegment(String rawui, String encodingScheme) {
+    public static String decSegment(String rawui, String encodingScheme) {
         return genericDecode(rawui, encodingScheme);
     }
 
@@ -204,7 +122,7 @@ public abstract class UriCodec {  // Prevent me declaring instances.
      * @param encodingScheme - must be one of "UTF-8" or "US-ASCII"
      * @return ui encoded (with % encodings if necessary)
      */
-    public static final String encHost(String ui, String encodingScheme) {
+    public static String encHost(String ui, String encodingScheme) {
         return genericEncode(HOST_C_BA, ui, encodingScheme);
     }
 
@@ -213,7 +131,7 @@ public abstract class UriCodec {  // Prevent me declaring instances.
      * @param encodingScheme - must be one of "UTF-8" of "US-ASCII"
      * @return rawui decoded (with % encodings replaced by characters they represent)
      */
-    public static final String decHost(String rawui, String encodingScheme) {
+    public static String decHost(String rawui, String encodingScheme) {
         return genericDecode(rawui, encodingScheme);
     }
 
@@ -223,7 +141,7 @@ public abstract class UriCodec {  // Prevent me declaring instances.
      * @param encodingScheme - must be one of "UTF-8" or "US-ASCII"
      * @return ui encoded (with % encodings if necessary)
      */
-    public static final String encPath(String ui, String encodingScheme) {
+    public static String encPath(String ui, String encodingScheme) {
         return genericEncode(PATH_C_BA, ui, encodingScheme);
     }
 
@@ -232,11 +150,11 @@ public abstract class UriCodec {  // Prevent me declaring instances.
      * @param encodingScheme - must be one of "UTF-8" of "US-ASCII"
      * @return rawui decoded (with % encodings replaced by characters they represent)
      */
-    public static final String decPath(String rawui, String encodingScheme) {
+    public static String decPath(String rawui, String encodingScheme) {
         return genericDecode(rawui, encodingScheme);
     }
 
-    private static final String genericDecode(String rawstr, String encodingScheme) {
+    private static String genericDecode(String rawstr, String encodingScheme) {
         try {
             int starState = 0;
             int n=0; int hiHex = 0;
@@ -256,7 +174,7 @@ public abstract class UriCodec {  // Prevent me declaring instances.
         }
     }
 
-    private static final int hex(int b) {
+    private static int hex(int b) {
         return  (b < 48)  ? 0
                :(b < 58)  ? (b-48)  // 48..57  ->  0..9
                :(b < 65)  ? 0
@@ -266,7 +184,7 @@ public abstract class UriCodec {  // Prevent me declaring instances.
                :            0;
     }
 
-    private static final String genericEncode(byte[] charClass, String str, String encodingScheme) {
+    private static String genericEncode(byte[] charClass, String str, String encodingScheme) {
         try {
             StringBuilder sb = new StringBuilder();
             for (byte b : str.getBytes(encodingScheme)) {
@@ -279,31 +197,22 @@ public abstract class UriCodec {  // Prevent me declaring instances.
         }
     }
 
-    private static final void addEscaped(StringBuilder sb, int b) {
+    private static void addEscaped(StringBuilder sb, int b) {
         int ind = (b+256)%256; // to range 0<=ind<=255
         sb.append('%').append(HIHEX[ind]).append(LOHEX[ind]);
     }
 
-    private static final boolean inClass(byte b, byte[] sortedBytes) {
+    private static boolean inClass(byte b, byte[] sortedBytes) {
         return Arrays.binarySearch(sortedBytes, b) >= 0;
     }
 
     private static final String DIGIT  = "0123456789";
-//    private static final String HEXDIG = DIGIT + "abcdefABCDEF";
     private static final String ALPHA  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-//    private static final String GEN_DELIMS = ":/?#[]@";                         // gen-delims
     private static final String SUB_DELIMS = "!$&'()*+,;=";                     // sub-delims
-
     private static final String UNRESERVED = ALPHA + DIGIT + "-._~";            // unreserved
-//    private static final String RESERVED   = GEN_DELIMS + SUB_DELIMS;           // reserved
-
     private static final String SCHEME_C = ALPHA + DIGIT + "+-.";               // scheme
-
     private static final String PCHAR_C = UNRESERVED + SUB_DELIMS + ":@";       // pchar
-
-//    private static final String QUERY_C    = PCHAR_C + "/?";                    // query
-//    private static final String FRAGMENT_C = PCHAR_C + "/?";                    // fragment
     private static final String SEGMENT_C  = PCHAR_C;                           // segment
     private static final String PATH_C     = SEGMENT_C + "/";                   // path
 
@@ -311,10 +220,6 @@ public abstract class UriCodec {  // Prevent me declaring instances.
     private static final String HOST_C     = UNRESERVED + SUB_DELIMS + ":[].";  // host
 
     // sorted array optimisations
-//    private static final byte[] DIGIT_BA      = bytesOf(DIGIT);
-//    private static final byte[] HEXDIG_BA     = bytesOf(HEXDIG);
-//    private static final byte[] ALPHA_BA      = bytesOf(ALPHA);
-//    private static final byte[] UNRESERVED_BA = bytesOf(UNRESERVED);
     private static final byte[] SCHEME_C_BA   = bytesOf(SCHEME_C);
     private static final byte[] USERINFO_C_BA = bytesOf(USERINFO_C);
     private static final byte[] HOST_C_BA     = bytesOf(HOST_C);

@@ -8,8 +8,6 @@ import java.util.Map;
  * <p>
  * An evaluator takes a set of values (the environment) and evaluates an expression in it, returning a <code>Result</code>.
  * For example, it might evaluate a (previously given) boolean expression given a set of values assigned to variables.
- *
- * @param <Result> -- the type of result the evaluated expression will return
  */
 public interface Evaluator {
 

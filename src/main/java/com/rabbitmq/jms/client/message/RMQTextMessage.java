@@ -79,7 +79,7 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
     protected void readAmqpBody(byte[] barr) {
         try {
             this.text = new String(barr, "UTF-8");
-        } catch (UnsupportedEncodingException _) {
+        } catch (UnsupportedEncodingException e) {
             // Will not happen: UTF-8 is supported everywhere
         }
     }
@@ -89,7 +89,7 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
         out.write((this.text!=null ? this.text : "").getBytes("UTF-8"));
     }
 
-    public static final RMQMessage recreate(TextMessage msg) throws JMSException {
+    public static RMQMessage recreate(TextMessage msg) throws JMSException {
         RMQTextMessage rmqTMsg = new RMQTextMessage();
         RMQMessage.copyAttributes(rmqTMsg, msg);
 

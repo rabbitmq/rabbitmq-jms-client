@@ -59,7 +59,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     /**
      * Creates a destination for RJMS
-     * @param destinationName the name of the topic or queue
+     * @param destName the name of the topic or queue
      * @param isQueue true if this represent a queue
      * @param isTemporary true if this is a temporary destination
      */
@@ -86,7 +86,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * least one of these three parameters must be non-<code>null</code>.
      * </p>
      *
-     * @param destinationName the name of the queue destination
+     * @param destName the name of the queue destination
      * @param amqpExchangeName - the exchange name for the mapped resource
      * @param amqpRoutingKey - the routing key for the mapped resource
      * @param amqpQueueName - the queue name of the mapped resource
@@ -103,7 +103,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * <code>amqpRoutingKey</code> and <code>amqpQueueName</code> must be non-<code>null</code>.
      * </p>
      *
-     * @param destinationName - the name of the topic or the queue
+     * @param destName - the name of the topic or the queue
      * @param amqp - <code>true</code> if this is bound to an AMQP resource, <code>false</code> if it is a RJMS resource
      * @param exchangeName - the RabbitMQ exchange name we will publish to and bind to (which may be an amqp resource
      *            exchange)
@@ -306,7 +306,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     /**
      * This method is for {@link TemporaryQueue}s only — deletion currently occurs automatically on session close.
-     * <p/>{@inheritDoc}
+     * {@inheritDoc}
      */
     @Override
     public void delete() throws JMSException {

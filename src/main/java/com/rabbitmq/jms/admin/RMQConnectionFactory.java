@@ -143,7 +143,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     /**
      * Set connection factory parameters by URI String.
-     * @param uriString
+     * @param uriString URI to use for instantiated connection
      * @throws JMSException
      */
     public void setUri(String uriString) throws JMSException {

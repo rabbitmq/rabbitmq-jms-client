@@ -10,9 +10,9 @@ import com.rabbitmq.jms.parse.Visitor;
  * This visitor sets the type of the expression at a node of a tree, using the type of node
  * and the {@link SqlExpressionType} of the children nodes.
  * <p>
- * To type a whole tree this can be applied to it by visiting the subtrees in ‘postorder’; each node visited
+ * To type a whole tree this can be applied to it by visiting the subtrees in ‘post-order’; each node visited
  * then has its child nodes already visited and therefore typed. In consequence, this visitor does nothing in
- * its {@link #visitBefore()} implementation.
+ * its {@link #visitBefore(Object, Object[])} implementation.
  * </p>
  * <p>
  * The visitor has a (final) map state which pre-specifies the {@link SqlExpressionType} of some identifiers,

@@ -35,7 +35,7 @@ public class SqlTokenStream implements TokenStream<SqlToken, Integer> {
      * and return most of the original sequence in {@link #getResidue()}.
      * </p>
      * @see SqlTokenType
-     * @see #tokenize()
+     * @see #tokenize(CharSequence)
      * @param cseq - the sequence of characters (for example a {@link String}) which is tokenized
      */
     public SqlTokenStream(CharSequence cseq) {
