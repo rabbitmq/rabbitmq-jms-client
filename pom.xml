@@ -44,6 +44,11 @@
 
     <java-compile-version>1.6</java-compile-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <surefire.reports.dir>target/surefire-reports</surefire.reports.dir>
+    <failsafe.reports.dir>target/failsafe-reports</failsafe.reports.dir>
+
+    <gpg.keyname>6026DFCA</gpg.keyname>
   </properties>
 
   <dependencies>
@@ -255,11 +260,12 @@
             </goals>
             <configuration>
               <target>
-                <junitreport todir="target/surefire-reports">
-                  <fileset dir="target/surefire-reports">
+                <mkdir dir="${surefire.reports.dir}" />
+                <junitreport todir="${surefire.reports.dir}">
+                  <fileset dir="${surefire.reports.dir}">
                     <include name="**/*.xml"/>
                   </fileset>
-                  <report format="noframes" todir="target/surefire-reports"/>
+                  <report format="noframes" todir="${surefire.reports.dir}"/>
                 </junitreport>
               </target>
             </configuration>
@@ -273,11 +279,12 @@
             </goals>
             <configuration>
               <target>
-                <junitreport todir="target/failsafe-reports">
-                  <fileset dir="target/failsafe-reports">
+                <mkdir dir="${failsafe.reports.dir}" />
+                <junitreport todir="${failsafe.reports.dir}">
+                  <fileset dir="${failsafe.reports.dir}">
                     <include name="**/*.xml"/>
                   </fileset>
-                  <report format="noframes" todir="target/failsafe-reports"/>
+                  <report format="noframes" todir="${failsafe.reports.dir}" />
                 </junitreport>
               </target>
             </configuration>
