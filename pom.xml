@@ -49,6 +49,7 @@
     <failsafe.reports.dir>target/failsafe-reports</failsafe.reports.dir>
 
     <gpg.keyname>BA058EF7</gpg.keyname>
+    <nexus-staging-maven-plugin.version>1.6.4</nexus-staging-maven-plugin.version>
   </properties>
 
   <dependencies>
@@ -307,13 +308,13 @@
 
   <profiles>
     <profile>
-      <id>releases</id>
+      <id>local-release</id>
       <build>
         <plugins>
           <plugin>
             <groupId>org.sonatype.plugins</groupId>
             <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>1.6.4</version>
+            <version>${nexus-staging-maven-plugin.version}</version>
             <executions>
               <execution>
                 <id>default-deploy</id>
@@ -331,6 +332,53 @@
           </plugin>
         </plugins>
       </build>
+      <distributionManagement>
+        <snapshotRepository>
+          <id>local-snapshots</id>
+          <url>http://localhost:8081/repository/maven-snapshots/</url>
+        </snapshotRepository>
+        <repository>
+          <id>local-releases</id>
+          <url>http://localhost:8081/repository/maven-releases/</url>
+        </repository>
+      </distributionManagement>
+    </profile>
+
+    <profile>
+      <id>public-release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.sonatype.plugins</groupId>
+            <artifactId>nexus-staging-maven-plugin</artifactId>
+            <version>${nexus-staging-maven-plugin.version}</version>
+            <executions>
+              <execution>
+                <id>default-deploy</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>deploy</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <serverId>ossrh</serverId>
+              <nexusUrl>https://oss.sonatype.org/service/local/staging/deploy/maven2/</nexusUrl>
+              <skipStaging>false</skipStaging>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+      <distributionManagement>
+        <snapshotRepository>
+          <id>ossrh</id>
+          <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+          <id>ossrh</id>
+          <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+      </distributionManagement>
     </profile>
   </profiles>
 
@@ -351,16 +399,4 @@
       <url>http://repository.jboss.org/nexus/content/groups/public-jboss/</url>
     </repository>
   </repositories>
-
-
-  <distributionManagement>
-    <snapshotRepository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </snapshotRepository>
-    <repository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-    </repository>
-  </distributionManagement>
 </project>
