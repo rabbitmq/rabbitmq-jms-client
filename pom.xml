@@ -260,7 +260,7 @@
             </goals>
             <configuration>
               <target>
-                <mkdir dir="${surefire.reports.dir}" />
+                <mkdir dir="${surefire.reports.dir}"/>
                 <junitreport todir="${surefire.reports.dir}">
                   <fileset dir="${surefire.reports.dir}">
                     <include name="**/*.xml"/>
@@ -279,12 +279,12 @@
             </goals>
             <configuration>
               <target>
-                <mkdir dir="${failsafe.reports.dir}" />
+                <mkdir dir="${failsafe.reports.dir}"/>
                 <junitreport todir="${failsafe.reports.dir}">
                   <fileset dir="${failsafe.reports.dir}">
                     <include name="**/*.xml"/>
                   </fileset>
-                  <report format="noframes" todir="${failsafe.reports.dir}" />
+                  <report format="noframes" todir="${failsafe.reports.dir}"/>
                 </junitreport>
               </target>
             </configuration>
