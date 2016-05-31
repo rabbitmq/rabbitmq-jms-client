@@ -3,15 +3,9 @@ JMS Client for RabbitMQ
 ===========================================================================
 
 The following copyright statements and licenses apply to various open
-source software packages (or portions thereof) that are distributed with
-this Pivotal Software, Inc. Product.
+source software packages (or portions thereof) that this package depends on.
 
-The Pivotal Product may also include other Pivotal components, which may
-contain additional open source software packages. One or more such
-open_source_licenses.txt files may therefore accompany this Pivotal
-Product.
-
-The Pivotal Product that includes this file does not necessarily use all
+The package that includes this file does not necessarily use all
 the open source software packages referred to below and may also only
 use portions of a given package.
 
