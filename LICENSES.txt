@@ -1,4 +1,4 @@
-JMS Client for Pivotal RabbitMQ
+JMS Client for RabbitMQ
 
 ===========================================================================
 
