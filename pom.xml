@@ -41,7 +41,7 @@
   </scm>
 
   <properties>
-    <rabbitmq.version>3.6.2</rabbitmq.version>
+    <rabbitmq.version>3.6.3</rabbitmq.version>
 
     <java-compile-version>1.6</java-compile-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
