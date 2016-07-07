@@ -34,7 +34,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         if (o == null)
             return false;
         else if (o instanceof Boolean)
-            return ((Boolean) o).booleanValue();
+            return (Boolean) o;
         else if (o instanceof String)
             return Boolean.parseBoolean((String) o);
         else
@@ -47,7 +47,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         if (o == null)
             throw new NumberFormatException(String.format(UNABLE_TO_CAST, o, "byte"));
         else if (o instanceof Byte)
-            return ((Byte) o).byteValue();
+            return (Byte) o;
         else if (o instanceof String)
             return Byte.parseByte((String) o);
         else
@@ -60,9 +60,9 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         if (o == null)
             throw new NumberFormatException(String.format(UNABLE_TO_CAST, o, "short"));
         else if (o instanceof Byte)
-            return ((Byte) o).byteValue();
+            return (Byte) o;
         else if (o instanceof Short)
-            return ((Short) o).shortValue();
+            return (Short) o;
         else if (o instanceof String)
             return Short.parseShort((String) o);
         else
@@ -75,7 +75,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         if (o == null)
             throw new NumberFormatException(String.format(UNABLE_TO_CAST, o, "char"));
         else if (o instanceof Character)
-            return ((Character) o).charValue();
+            return (Character) o;
         else
             throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "char"));
     }
@@ -86,11 +86,11 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         if (o == null)
             throw new NumberFormatException(String.format(UNABLE_TO_CAST, o, "int"));
         else if (o instanceof Byte)
-            return ((Byte) o).byteValue();
+            return (Byte) o;
         else if (o instanceof Short)
-            return ((Short) o).shortValue();
+            return (Short) o;
         else if (o instanceof Integer)
-            return ((Integer) o).intValue();
+            return (Integer) o;
         else if (o instanceof String)
             return Integer.parseInt((String) o);
         else
@@ -103,13 +103,13 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         if (o == null)
             throw new NumberFormatException(String.format(UNABLE_TO_CAST, o, "long"));
         else if (o instanceof Byte)
-            return ((Byte) o).byteValue();
+            return (Byte) o;
         else if (o instanceof Short)
-            return ((Short) o).shortValue();
+            return (Short) o;
         else if (o instanceof Integer)
-            return ((Integer) o).intValue();
+            return (Integer) o;
         else if (o instanceof Long)
-            return ((Long) o).longValue();
+            return (Long) o;
         else if (o instanceof String)
             return Long.parseLong((String) o);
         else
@@ -122,7 +122,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         if (o == null)
             throw new NumberFormatException(String.format(UNABLE_TO_CAST, o, "float"));
         else if (o instanceof Float) {
-            return ((Float) o).floatValue();
+            return (Float) o;
         } else if (o instanceof String)
             return Float.parseFloat((String) o);
         else
@@ -135,9 +135,9 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         if (o == null)
             throw new NumberFormatException(String.format(UNABLE_TO_CAST, o, "double"));
         else if (o instanceof Float)
-            return ((Float) o).floatValue();
+            return (Float) o;
         else if (o instanceof Double) {
-            return ((Double) o).doubleValue();
+            return (Double) o;
         } else if (o instanceof String)
             return Double.parseDouble((String) o);
         else
@@ -263,8 +263,8 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
     @Override
     public void setObject(String name, Object value) throws JMSException {
         checkNotReadonlyBody();
-        if (name==null && value==null) {
-        } else if (value==null) {
+        if (name == null && value == null) {
+        } else if (value == null) {
             this.data.remove(name);
         } else if (!(value instanceof Serializable)) {
             throw new MessageFormatException(String.format(UNABLE_TO_CAST, value, Serializable.class.getName()));
@@ -335,25 +335,23 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         if(s==null) {
             throw new NullPointerException();
         } else if (s instanceof Boolean) {
-            out.writeBoolean(((Boolean) s).booleanValue());
+            out.writeBoolean((Boolean) s);
         } else if (s instanceof Byte) {
-            out.writeByte(((Byte) s).byteValue());
+            out.writeByte((Byte) s);
         } else if (s instanceof Short) {
-            out.writeShort((((Short) s).shortValue()));
+            out.writeShort(((Short) s));
         } else if (s instanceof Integer) {
-            out.writeInt(((Integer) s).intValue());
+            out.writeInt((Integer) s);
         } else if (s instanceof Long) {
-            out.writeLong(((Long) s).longValue());
+            out.writeLong((Long) s);
         } else if (s instanceof Float) {
-            out.writeFloat(((Float) s).floatValue());
+            out.writeFloat((Float) s);
         } else if (s instanceof Double) {
-            out.writeDouble(((Double) s).doubleValue());
+            out.writeDouble((Double) s);
         } else if (s instanceof String) {
             out.writeUTF((String) s);
         } else if (s instanceof Character) {
-            out.writeChar(((Character) s).charValue());
-        } else if (s instanceof Character) {
-            out.writeChar(((Character) s).charValue());
+            out.writeChar((Character) s);
         } else if (allowSerializable && s instanceof Serializable) {
             out.writeObject(s);
         } else if (s instanceof byte[]) {
@@ -372,7 +370,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         throw new UnsupportedOperationException();
     }
 
-    public static final RMQMessage recreate(MapMessage msg) throws JMSException {
+    public static RMQMessage recreate(MapMessage msg) throws JMSException {
         RMQMapMessage rmqMMsg = new RMQMapMessage();
         RMQMessage.copyAttributes(rmqMMsg, msg);
 
@@ -380,7 +378,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         return rmqMMsg;
     }
 
-    private static final void copyMapObjects(RMQMapMessage rmqMsg, MapMessage msg) throws JMSException {
+    private static void copyMapObjects(RMQMapMessage rmqMsg, MapMessage msg) throws JMSException {
         @SuppressWarnings("unchecked")
         Enumeration<String> mapNames = (Enumeration<String>) msg.getMapNames();
         while (mapNames.hasMoreElements()) {

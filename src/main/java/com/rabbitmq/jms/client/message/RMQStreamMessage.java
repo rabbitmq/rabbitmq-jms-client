@@ -80,17 +80,17 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
             this.bin.mark(0);
             Object o = RMQMessage.readPrimitive(in);
             if (o instanceof byte[]) {
-                if (type==ByteArray.class || type==Object.class) {
+                if (type == ByteArray.class || type == Object.class) {
                     return o;
                 } else {
                     throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "byte[]"));
                 }
-            } else if (type==ByteArray.class) {
+            } else if (type == ByteArray.class) {
                 if (o==null) {
                     return null;
                 }
                 throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "byte[]"));
-            } else if (type==Boolean.class) {
+            } else if (type == Boolean.class) {
                 if (o == null) {
                     return Boolean.FALSE;
                 } else if (o instanceof Boolean) {
@@ -100,7 +100,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
                 } else {
                     throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "boolean"));
                 }
-            } else if (type==Byte.class) {
+            } else if (type == Byte.class) {
                 if (o instanceof Byte) {
                     return o;
                 } else if (o instanceof String) {
@@ -108,9 +108,9 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
                 } else {
                     throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "byte"));
                 }
-            } else if (type==Short.class) {
+            } else if (type == Short.class) {
                 if (o instanceof Byte) {
-                    return (short)((Byte)o).byteValue();
+                    return (short) (Byte) o;
                 } else if (o instanceof Short) {
                     return o;
                 } else if (o instanceof String) {
@@ -118,11 +118,11 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
                 } else {
                     throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "byte"));
                 }
-            } else if (type==Integer.class) {
+            } else if (type == Integer.class) {
                 if (o instanceof Byte) {
-                    return (int)((Byte)o).byteValue();
+                    return (int) (Byte) o;
                 } else if (o instanceof Short) {
-                    return (int)((Short)o).shortValue();
+                    return (int) (Short) o;
                 } else if (o instanceof Integer){
                     return o;
                 } else if (o instanceof String) {
@@ -130,19 +130,19 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
                 } else {
                     throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "int"));
                 }
-            } else if (type==Character.class) {
+            } else if (type == Character.class) {
                 if (o instanceof Character) {
                     return o;
                 } else {
                     throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "char"));
                 }
-            } else if (type==Long.class) {
+            } else if (type == Long.class) {
                 if (o instanceof Byte) {
-                    return (long)((Byte)o).byteValue();
+                    return (long) (Byte) o;
                 } else if (o instanceof Short) {
-                    return (long)((Short)o).shortValue();
+                    return (long) (Short) o;
                 } else if (o instanceof Integer){
-                    return (long)((Integer)o).intValue();
+                    return (long) (Integer) o;
                 } else if (o instanceof Long){
                     return o;
                 } else if (o instanceof String) {
@@ -150,25 +150,25 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
                 } else {
                     throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "long"));
                 }
-            } else if (type==Float.class) {
+            } else if (type == Float.class) {
                 if (o instanceof Float) {
-                    return ((Float)o).floatValue();
+                    return (Float) o;
                 } else if (o instanceof String) {
                     return Float.parseFloat((String)o);
                 } else {
                     throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "float"));
                 }
-            } else if (type==Double.class) {
+            } else if (type == Double.class) {
                 if (o instanceof Float) {
-                    return (double)((Float)o).floatValue();
+                    return (double) (Float) o;
                 } else if (o instanceof Double) {
-                    return ((Double)o).doubleValue();
+                    return (Double) o;
                 } else if (o instanceof String) {
                     return Double.parseDouble((String)o);
                 } else {
                     throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, "double"));
                 }
-            } else if (type==String.class) {
+            } else if (type == String.class) {
                 if (o == null) {
                     return null;
                 } else if (o instanceof byte[]) {
@@ -176,7 +176,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
                 } else {
                     return o.toString();
                 }
-            } else if (type==Object.class) {
+            } else if (type == Object.class) {
                 return o;
             } else {
                 throw new MessageFormatException(String.format(UNABLE_TO_CAST, o, type.toString()));

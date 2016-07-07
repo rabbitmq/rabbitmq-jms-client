@@ -413,7 +413,7 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         this.reading = false;
     }
 
-    private final byte[] getByteArray() {
+    private byte[] getByteArray() {
         if (reading) return this.buf;
         else return this.bout.toByteArray();
     }
@@ -457,34 +457,30 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
      * Utility method to write an object as a primitive or as an object
      * @param s the object to write
      * @param out the output (normally a stream) to write it to
-     * @param allowSerializable true if we allow {@link Serializable} objects
-     * @throws IOException from write primitives
      * @throws MessageFormatException if s is not a recognised type for writing
      * @throws NullPointerException if s is null
      */
-    private static final void writePrimitiveData(Object s, RMQByteArrayOutputStream out) throws JMSException {
+    private static void writePrimitiveData(Object s, RMQByteArrayOutputStream out) throws JMSException {
         if(s==null) {
             throw new NullPointerException();
         } else if (s instanceof Boolean) {
-            out.writeBoolean(((Boolean) s).booleanValue());
+            out.writeBoolean((Boolean) s);
         } else if (s instanceof Byte) {
-            out.writeByte(((Byte) s).byteValue());
+            out.writeByte((Byte) s);
         } else if (s instanceof Short) {
-            out.writeShort((((Short) s).shortValue()));
+            out.writeShort(((Short) s));
         } else if (s instanceof Integer) {
-            out.writeInt(((Integer) s).intValue());
+            out.writeInt((Integer) s);
         } else if (s instanceof Long) {
-            out.writeLong(((Long) s).longValue());
+            out.writeLong((Long) s);
         } else if (s instanceof Float) {
-            out.writeFloat(((Float) s).floatValue());
+            out.writeFloat((Float) s);
         } else if (s instanceof Double) {
-            out.writeDouble(((Double) s).doubleValue());
+            out.writeDouble((Double) s);
         } else if (s instanceof String) {
             out.writeUTF((String) s);
         } else if (s instanceof Character) {
-            out.writeChar(((Character) s).charValue());
-        } else if (s instanceof Character) {
-            out.writeChar(((Character) s).charValue());
+            out.writeChar((Character) s);
         } else if (s instanceof byte[]) {
             out.write((byte[])s, 0, ((byte[]) s).length);
         } else
@@ -504,55 +500,55 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
          * given offsets.
          */
 
-        public static final int NUM_BYTES_IN_BOOLEAN = 1;
-        public static boolean getBoolean(byte[] b, int off) {
+        static final int NUM_BYTES_IN_BOOLEAN = 1;
+        static boolean getBoolean(byte[] b, int off) {
             return b[off] != 0;
         }
 
-        public static final int NUM_BYTES_IN_CHAR = 2;
-        public static char getChar(byte[] b, int off) {
-            return (char) (((b[off + 1] & 0xFF) << 0) +
-                           ((b[off + 0]) << 8));
+        static final int NUM_BYTES_IN_CHAR = 2;
+        static char getChar(byte[] b, int off) {
+            return (char) (((b[off + 1] & 0xFF)) +
+                           ((b[off]) << 8));
         }
 
-        public static final int NUM_BYTES_IN_SHORT = 2;
-        public static short getShort(byte[] b, int off) {
-            return (short) (((b[off + 1] & 0xFF) << 0) +
-                            ((b[off + 0]) << 8));
+        static final int NUM_BYTES_IN_SHORT = 2;
+        static short getShort(byte[] b, int off) {
+            return (short) (((b[off + 1] & 0xFF)) +
+                            ((b[off]) << 8));
         }
 
-        public static final int NUM_BYTES_IN_INT = 4;
-        public static int getInt(byte[] b, int off) {
-            return ((b[off + 3] & 0xFF) << 0) +
+        static final int NUM_BYTES_IN_INT = 4;
+        static int getInt(byte[] b, int off) {
+            return ((b[off + 3] & 0xFF)) +
                    ((b[off + 2] & 0xFF) << 8) +
                    ((b[off + 1] & 0xFF) << 16) +
-                   ((b[off + 0]) << 24);
+                   ((b[off]) << 24);
         }
 
-        public static final int NUM_BYTES_IN_FLOAT = 4;
-        public static float getFloat(byte[] b, int off) {
+        static final int NUM_BYTES_IN_FLOAT = 4;
+        static float getFloat(byte[] b, int off) {
             return Float.intBitsToFloat(getInt(b, off));
         }
 
-        public static final int NUM_BYTES_IN_LONG = 8;
-        public static long getLong(byte[] b, int off) {
-            return ((b[off + 7] & 0xFFL) << 0) +
+        static final int NUM_BYTES_IN_LONG = 8;
+        static long getLong(byte[] b, int off) {
+            return ((b[off + 7] & 0xFFL)) +
                     ((b[off + 6] & 0xFFL) << 8) +
                     ((b[off + 5] & 0xFFL) << 16) +
                     ((b[off + 4] & 0xFFL) << 24) +
                     ((b[off + 3] & 0xFFL) << 32) +
                     ((b[off + 2] & 0xFFL) << 40) +
                     ((b[off + 1] & 0xFFL) << 48) +
-                    (((long) b[off + 0]) << 56);
+                    (((long) b[off]) << 56);
         }
 
-        public static final int NUM_BYTES_IN_DOUBLE = 8;
-        public static double getDouble(byte[] b, int off) {
+        static final int NUM_BYTES_IN_DOUBLE = 8;
+        static double getDouble(byte[] b, int off) {
             return Double.longBitsToDouble(getLong(b, off));
         }
     }
 
-    public static final RMQMessage recreate(BytesMessage msg) throws JMSException {
+    public static RMQMessage recreate(BytesMessage msg) throws JMSException {
         msg.reset();
         long bodyLength = msg.getBodyLength();
         int bodySize = (int) Math.min(Math.max(0L, bodyLength), Integer.MAX_VALUE);

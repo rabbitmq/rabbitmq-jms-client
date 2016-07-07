@@ -110,7 +110,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         throw new UnsupportedOperationException();
     }
 
-    public static final RMQMessage recreate(ObjectMessage msg) throws JMSException {
+    public static RMQMessage recreate(ObjectMessage msg) throws JMSException {
         RMQObjectMessage rmqOMsg = new RMQObjectMessage();
         RMQMessage.copyAttributes(rmqOMsg, msg);
 
