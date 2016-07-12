@@ -227,7 +227,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             deliveryMode = javax.jms.DeliveryMode.NON_PERSISTENT;
 
         /* Normalise message to internal form */
-        RMQMessage rmqMessage = RMQMessage.normalise(message);
+        RMQMessage rmqMessage = RMQMessage.normalise(message, session.getTrustedPackages());
 
         /* Set known JMS message properties that need to be set during this call */
         long currentTime = System.currentTimeMillis();

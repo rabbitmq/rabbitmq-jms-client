@@ -22,40 +22,40 @@ public class ForeignBytesMessageTest {
     public void testBytesMessage() throws Exception {
         BytesMessage testMsg = new ForeignBytesMessage();
         populateBytesMessage(testMsg);
-        BytesMessage rmqMsg = (BytesMessage) RMQMessage.normalise(testMsg);
+        BytesMessage rmqMsg = (BytesMessage) RMQMessage.normalise(testMsg, Collections.singletonList("*"));
         rmqMsg.reset();
         inspectBytesMessage(rmqMsg);
     }
 
     private static final byte[] BYTE_ARRAY = new byte[]{ 0,1,2, (byte) -1 };
     private static final float DELTA = 1.0e-10f;
-    public void populateBytesMessage(BytesMessage message) throws Exception {
+    private void populateBytesMessage(BytesMessage message) throws Exception {
         message.writeBoolean(Boolean.TRUE);
-        message.writeByte(new Byte(Byte.MIN_VALUE));
-        message.writeByte(new Byte((byte) 0xFF));
+        message.writeByte(Byte.MIN_VALUE);
+        message.writeByte((byte) 0xFF);
         message.writeBytes(BYTE_ARRAY);
 
-        message.writeShort(new Short(Short.MIN_VALUE));
-        message.writeShort(new Short((short) 0xFFFF));
-        message.writeChar(new Character(Character.MIN_VALUE));
-        message.writeInt(new Integer(Integer.MIN_VALUE));
-        message.writeLong(new Long(Long.MIN_VALUE));
-        message.writeFloat(new Float(Float.MIN_VALUE));
-        message.writeDouble(new Double(Double.MIN_VALUE));
+        message.writeShort(Short.MIN_VALUE);
+        message.writeShort((short) 0xFFFF);
+        message.writeChar(Character.MIN_VALUE);
+        message.writeInt(Integer.MIN_VALUE);
+        message.writeLong(Long.MIN_VALUE);
+        message.writeFloat(Float.MIN_VALUE);
+        message.writeDouble(Double.MIN_VALUE);
         message.writeUTF("ABC");
 
         message.writeObject(Boolean.TRUE);
-        message.writeObject(new Byte(Byte.MAX_VALUE));
-        message.writeObject(new Short(Short.MAX_VALUE));
-        message.writeObject(new Character(Character.MAX_VALUE));
-        message.writeObject(new Integer(Integer.MAX_VALUE));
-        message.writeObject(new Long(Long.MAX_VALUE));
-        message.writeObject(new Float(Float.MAX_VALUE));
-        message.writeObject(new Double(Double.MAX_VALUE));
+        message.writeObject(Byte.MAX_VALUE);
+        message.writeObject(Short.MAX_VALUE);
+        message.writeObject(Character.MAX_VALUE);
+        message.writeObject(Integer.MAX_VALUE);
+        message.writeObject(Long.MAX_VALUE);
+        message.writeObject(Float.MAX_VALUE);
+        message.writeObject(Double.MAX_VALUE);
         message.writeObject("ABC");
     }
 
-    public void inspectBytesMessage(BytesMessage message) throws Exception {
+    private void inspectBytesMessage(BytesMessage message) throws Exception {
         assertEquals(message.readBoolean(), Boolean.TRUE);
         assertEquals(message.readByte(), Byte.MIN_VALUE);
         assertEquals(message.readByte(), (byte) 0xFF);
@@ -141,10 +141,10 @@ public class ForeignBytesMessageTest {
         @Override public long                   getBodyLength() throws JMSException { return len; }
         @Override public void                   reset() throws JMSException { pos = 0; }
 
-        private static final int ub(byte b) { return (int)b | 0xff; }
-        private final byte nb() { assertTrue(pos<len); return body[pos++]; }
-        private final int pb() { return ub(nb()); }
-        private final long lb() { return pb(); }
+        private static int ub(byte b) { return (int)b | 0xff; }
+        private byte nb() { assertTrue(pos<len); return body[pos++]; }
+        private int pb() { return ub(nb()); }
+        private long lb() { return pb(); }
 
         @Override public boolean                readBoolean() throws JMSException { return nb()!=0; }
         @Override public byte                   readByte() throws JMSException { return nb(); }
@@ -198,13 +198,13 @@ public class ForeignBytesMessageTest {
             else throw new MessageFormatException("Invalid type on writeObject() for TestForeignBytesMessage");
         }
 
-        private static final void writeUTF(ForeignBytesMessage fbmsg, String value) throws JMSException {
+        private static void writeUTF(ForeignBytesMessage fbmsg, String value) throws JMSException {
             byte[] btArr = value.getBytes(UTF8_CHARSET);
             fbmsg.writeShort((short)btArr.length);
             fbmsg.writeBytes(btArr);
         }
 
-        private static final String readUTF(ForeignBytesMessage fbmsg) throws JMSException {
+        private static String readUTF(ForeignBytesMessage fbmsg) throws JMSException {
             int utflen = fbmsg.readUnsignedShort();
 
             byte[] byteArr = new byte[utflen];

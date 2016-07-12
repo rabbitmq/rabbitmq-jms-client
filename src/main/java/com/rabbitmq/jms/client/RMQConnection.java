@@ -27,6 +27,7 @@ import javax.jms.Topic;
 import javax.jms.TopicConnection;
 import javax.jms.TopicSession;
 
+import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,6 +79,13 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private volatile boolean canSetClientID = true;
 
     /**
+     * Classes in these packages can be transferred via ObjectMessage.
+     *
+     * @see WhiteListObjectInputStream
+     */
+    private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
+
+    /**
      * Creates an RMQConnection object.
      * @param rabbitConnection the TCP connection wrapper to the RabbitMQ broker
      * @param terminationTimeout timeout for close in milliseconds
@@ -113,6 +121,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         illegalStateExceptionIfClosed();
         freezeClientID();
         RMQSession session = new RMQSession(this, transacted, acknowledgeMode, this.subscriptions);
+        session.setTrustedPackages(this.trustedPackages);
         this.sessions.add(session);
         return session;
     }
@@ -152,6 +161,19 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             throw new IllegalStateException("Client ID already set.");
         }
 
+    }
+
+    public List<String> getTrustedPackages() {
+        return trustedPackages;
+    }
+
+    /**
+     * @param value list of trusted package prefixes
+     *
+     * @see com.rabbitmq.jms.admin.RMQConnectionFactory#setTrustedPackages(List)
+     */
+    public void setTrustedPackages(List<String> value) {
+        this.trustedPackages = value;
     }
 
     /**

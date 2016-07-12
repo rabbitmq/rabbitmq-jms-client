@@ -5,10 +5,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
@@ -17,11 +19,12 @@ import javax.jms.ObjectMessage;
 import javax.jms.StreamMessage;
 import javax.jms.TextMessage;
 
+import com.rabbitmq.jms.util.RMQJMSException;
 import org.junit.Test;
 
 public class TestMessages {
 
-    private static final byte[] largeByteArray(final int len) {
+    private static byte[] largeByteArray(final int len) {
         byte[] bytes = new byte[len];
         for (int i=0; i<len; ++i) {
             bytes[i] = (byte)i;
@@ -82,6 +85,13 @@ public class TestMessages {
         readObjectMessage(message);
     }
 
+    @Test(expected = RMQJMSException.class)
+    public void testObjectMessageWithUntrustedPayload() throws Exception {
+        RMQObjectMessage message = new RMQObjectMessage();
+        writeObjectMessage(message, Color.WHITE);
+        readObjectMessage(message, Color.WHITE, Arrays.asList("java.lang", "com.rabbitmq"));
+    }
+
     @Test
     public void testTextMessage() throws Exception {
         RMQTextMessage message = new RMQTextMessage();
@@ -93,7 +103,7 @@ public class TestMessages {
     private static final int CHARLEN = CHAR.length;
     private static final String LONG_STRING_BODY = generateLongString(65535);
 
-    private final static String generateLongString(int len) {
+    private static String generateLongString(int len) {
         StringBuilder sb = new StringBuilder("Long String length>="+len);
         for (int i=0; i<len; ++i) {
             sb.append(CHAR[i % CHARLEN]);
@@ -113,8 +123,16 @@ public class TestMessages {
         message.setObject(new TestSerializable(8, "Test object"));
     }
 
+    public static void writeObjectMessage(ObjectMessage message, Object obj) throws JMSException {
+        message.setObject((Serializable) obj);
+    }
+
     public static void readObjectMessage(ObjectMessage message) throws JMSException {
         assertEquals(new TestSerializable(8, "Test object"), message.getObject());
+    }
+
+    public static void readObjectMessage(RMQObjectMessage message, Object obj, List<String> trustedPackages) throws JMSException {
+        assertEquals(obj, message.getObject(trustedPackages));
     }
 
     public static void writeMapMessage(MapMessage message) throws JMSException {
@@ -273,8 +291,7 @@ public class TestMessages {
         try {
             message.writeObject(new TestNonSerializable());
             fail("Did not throw exception trying to send non-serializable object");
-        } catch (Exception x) {
-
+        } catch (Exception ignored) {
         }
     }
 
@@ -306,7 +323,7 @@ public class TestMessages {
 
     }
 
-    private static class TestSerializable implements Serializable {
+    public static class TestSerializable implements Serializable {
         /** TODO */
         private static final long serialVersionUID = 3725702565209476472L;
         private int i;

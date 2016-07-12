@@ -7,6 +7,7 @@ import static com.rabbitmq.jms.util.UriCodec.encUserinfo;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import javax.jms.Connection;
@@ -23,6 +24,7 @@ import javax.naming.Referenceable;
 import javax.naming.StringRefAddr;
 import javax.net.ssl.SSLException;
 
+import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +65,13 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     /** The time to wait for threads/messages to terminate during {@link Connection#close()} */
     private volatile long terminationTimeout = Long.getLong("rabbit.jms.terminationTimeout", 15000);
+
+    /**
+     * Classes in these packages can be transferred via ObjectMessage.
+     *
+     * @see WhiteListObjectInputStream
+     */
+    private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
 
     /**
      * {@inheritDoc}
@@ -144,7 +153,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     /**
      * Set connection factory parameters by URI String.
      * @param uriString URI to use for instantiated connection
-     * @throws JMSException
+     * @throws JMSException if connection URI is invalid
      */
     public void setUri(String uriString) throws JMSException {
         logger.trace("Set connection factory parameters by URI '{}'", uriString);
@@ -160,7 +169,14 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.virtualHost = factory.getVirtualHost();
     }
 
-    private static final void setRabbitUri(Logger logger, RMQConnectionFactory rmqFactory, com.rabbitmq.client.ConnectionFactory factory, String uriString) throws RMQJMSException {
+    /**
+     * @param value list of trusted package prefixes
+     */
+    public void setTrustedPackages(List<String> value) {
+        this.trustedPackages = value;
+    }
+
+    private static void setRabbitUri(Logger logger, RMQConnectionFactory rmqFactory, com.rabbitmq.client.ConnectionFactory factory, String uriString) throws RMQJMSException {
         if (uriString != null) { // we get the defaults if the uri is null
             try {
                 factory.setUri(uriString);
@@ -189,21 +205,21 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.ssl = ssl;
     }
 
-    private static final String scheme(boolean isSsl) {
+    private static String scheme(boolean isSsl) {
         return (isSsl ? "amqps" : "amqp");
     }
 
-    private static final String uriUInfoEscape(String user, String pass) {
-        if (null==user) return null;
-        if (null==pass) return encUserinfo(user, "UTF-8");
+    private static String uriUInfoEscape(String user, String pass) {
+        if (null == user) return null;
+        if (null == pass) return encUserinfo(user, "UTF-8");
         return encUserinfo(user + ":" + pass, "UTF-8");
     }
 
-    private static final String uriHostEscape(String host) {
+    private static String uriHostEscape(String host) {
         return encHost(host, "UTF-8");
     }
 
-    private static final String uriVirtualHostEscape(String vHost) {
+    private static String uriVirtualHostEscape(String vHost) {
         return encSegment(vHost, "UTF-8");
     }
 
@@ -224,9 +240,9 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * @param propertyName - the name of the property
      * @param value - the value to store with the property
      */
-    private static final void addStringRefProperty(Reference ref,
-                                                   String propertyName,
-                                                   String value) {
+    private static void addStringRefProperty(Reference ref,
+                                             String propertyName,
+                                             String value) {
         if (value==null || propertyName==null) return;
         RefAddr ra = new StringRefAddr(propertyName, value);
         ref.add(ra);
@@ -238,10 +254,10 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * @param propertyName - the name of the property
      * @param value - the value to store with the property
      */
-    private static final void addIntegerRefProperty(Reference ref,
-                                                    String propertyName,
-                                                    Integer value) {
-        if (value==null || propertyName==null) return;
+    private static void addIntegerRefProperty(Reference ref,
+                                              String propertyName,
+                                              Integer value) {
+        if (value == null || propertyName == null) return;
         RefAddr ra = new StringRefAddr(propertyName, String.valueOf(value));
         ref.add(ra);
     }

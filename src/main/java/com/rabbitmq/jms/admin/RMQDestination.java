@@ -142,12 +142,16 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     /**
-     * @return <code>true</code> if this is an AMQP mapped resource, <code>false</code> otherwise
+     * @return <code>true</code> if this is an AMQP 0-9-1 mapped resource, <code>false</code> otherwise
      */
     public boolean isAmqp() {
         return this.amqp;
     }
-    /** For JNDI binding and Spring beans */
+
+    /**
+     * For JNDI binding and Spring beans
+     * @param amqp set to <code>true</code> if this is an AMQP 0-9-1 mapped resource, <code>false</code> otherwise
+     */
     public void setAmqp(boolean amqp) {
         if (this.isDeclared())
             throw new IllegalStateException();
@@ -158,7 +162,10 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     public String getAmqpQueueName() {
         return this.amqpQueueName;
     }
-    /** For JNDI binding and Spring beans */
+    /**
+     * For JNDI binding and Spring beans
+     * @param amqpQueueName AMQP 0-9-1 queue name
+     */
     public void setAmqpQueueName(String amqpQueueName) {
         if (this.isDeclared())
             throw new IllegalStateException();
@@ -167,7 +174,10 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     public String getAmqpExchangeName() {
         return this.amqpExchangeName;
     }
-    /** For JNDI binding and Spring beans */
+    /**
+     * For JNDI binding and Spring beans
+     * @param amqpExchangeName AMQP 0-9-1 exchange name to use
+     */
     public void setAmqpExchangeName(String amqpExchangeName) {
         if (this.isDeclared())
             throw new IllegalStateException();
@@ -176,23 +186,36 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     public String getDestinationName() {
         return this.destinationName;
     }
-    /** For JNDI binding and Spring beans */
+    /**
+     * For JNDI binding and Spring beans
+     * @param destinationName JMS destination name
+     */
     public void setDestinationName(String destinationName) {
         if (isDeclared())
             throw new IllegalStateException();
         this.destinationName = destinationName;
     }
+
+    /**
+     * @return AMQP 0-9-1 routing key
+     */
     public String getAmqpRoutingKey() {
         return this.amqpRoutingKey;
     }
-    /** For JNDI binding and Spring beans */
+    /**
+     * For JNDI binding and Spring beans
+     * @param routingKey AMQP 0-9-1 routing key
+     */
     public void setAmqpRoutingKey(String routingKey) {
         if (isDeclared())
             throw new IllegalStateException();
         this.amqpRoutingKey = routingKey;
     }
 
-    /** Internal use only */
+    /**
+     * Internal use only
+     * @return AMQP 0-9-1 exchange type used
+     */
     public String amqpExchangeType() {
         return queueOrTopicExchangeType(this.isQueue);
     }
