@@ -96,6 +96,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         com.rabbitmq.client.Connection rabbitConnection = getRabbitConnection(factory);
 
         RMQConnection conn = new RMQConnection(rabbitConnection, getTerminationTimeout(), getQueueBrowserReadMax());
+        conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
         return conn;
     }
