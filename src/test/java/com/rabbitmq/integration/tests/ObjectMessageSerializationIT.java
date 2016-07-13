@@ -70,13 +70,17 @@ public class ObjectMessageSerializationIT extends AbstractITQueue {
     }
 
     @Test(expected = RMQJMSException.class)
-    public void testReceiveObjectMessageWithUntrustedPayload() throws Exception {
+    public void testReceiveObjectMessageWithUntrustedPayload1() throws Exception {
         // It makes little sense to use ObjectMessage for maps
         // but someone somewhere certainly does it.
         // Note: java.util is not on the trusted package list
         Map<String, String> m = new HashMap<String, String>();
         m.put("key", "value");
         testReceiveObjectMessageWithPayload(m);
+    }
+    @Test(expected = RMQJMSException.class)
+    public void testReceiveObjectMessageWithUntrustedPayload2() throws Exception {
+        // java.awt is not on the trusted package list
         testReceiveObjectMessageWithPayload(Color.WHITE);
     }
 }
