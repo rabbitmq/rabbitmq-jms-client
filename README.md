@@ -36,7 +36,13 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for an overview of the development proc
 
 ### Integration Tests
 
-TBD: open sourcing the compliance test suite is a work-in-progress.
+Assuming a node with [rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-jms-topic-exchange/) is running on localhost
+with all defaults:
+
+    mvn clean verify
+
+The easiest way to run a test node is to clone
+[rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-jms-topic-exchange/) and use `make run-broker`.
 
 
 ## License and Copyright
