@@ -221,9 +221,9 @@ public class WhiteListObjectInputStream extends ObjectInputStream {
             }
 
             if (!result) {
-                throw new ClassNotFoundException(
-                                                        "Class " + clazz + " is not trusted to be serialized as ObjectMessage payload. "
-                                                                + "Trusted packages can be configured via RMQConnectionFactory.");
+                throw new ClassNotFoundException("Class " + clazz + " is not trusted to be deserialized as ObjectMessage payload. "
+                                                 + "Trusted packages can be configured via -Dcom.rabbitmq.jms.TrustedPackagesPrefixes "
+                                                 + " or RMQConnectionFactory#setTrustedPackages.");
             }
         }
     }
