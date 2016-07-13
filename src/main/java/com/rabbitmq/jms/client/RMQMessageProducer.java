@@ -2,6 +2,7 @@
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.jms.Destination;
 import javax.jms.InvalidDestinationException;
@@ -62,6 +63,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      * The default TTL value is 0 (zero), meaning indefinite (no time-out).
      */
     private long ttl = Message.DEFAULT_TIME_TO_LIVE;
+    private List<String> trustedPackages;
 
     /**
      * Create a producer of messages.
@@ -71,6 +73,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     public RMQMessageProducer(RMQSession session, RMQDestination destination) {
         this.session = session;
         this.destination = destination;
+
+        this.trustedPackages = session.getTrustedPackages();
     }
 
     /**
@@ -227,7 +231,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             deliveryMode = javax.jms.DeliveryMode.NON_PERSISTENT;
 
         /* Normalise message to internal form */
-        RMQMessage rmqMessage = RMQMessage.normalise(message, session.getTrustedPackages());
+        RMQMessage rmqMessage = RMQMessage.normalise(message, this.trustedPackages);
 
         /* Set known JMS message properties that need to be set during this call */
         long currentTime = System.currentTimeMillis();
