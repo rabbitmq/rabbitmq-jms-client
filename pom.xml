@@ -402,7 +402,7 @@
             <configuration>
               <serverId>spring-repo</serverId>
               <nexusUrl>http://repo.spring.io/artifactory/</nexusUrl>
-              <skipStaging>false</skipStaging>
+              <skipStaging>true</skipStaging>
             </configuration>
           </plugin>
         </plugins>
