@@ -9,8 +9,10 @@ Classes that can be deserialized from `javax.jms.ObjectMessage`
 now can be limited via a package prefix white list.
 There are two ways to do it:
 
- * Via the `com.rabbitmq.jms.TrustedPackagesPrefixes` JVM property, for example, `java,com.rabbitmq,com.mycompany`
+ * Via the `com.rabbitmq.jms.TrustedPackagesPrefixes` JVM property which accepts
+   a comma separated list of prefixes, for example, `java,com.rabbitmq,com.mycompany`
  * Using `RMQConnectionFactory#setTrustedPackages`, `RMQConnection#setTrustedPackages`, or `RMQSession#setTrustedPackages`
+   which accept lists of package prefixes
 
 All options take a list of package name prefixes, e.g. `java` will make all classes
 in `java.lang`, `java.util`, and other packages starting with `java` trusted.
