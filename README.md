@@ -11,11 +11,23 @@ a RabbitMQ server plugin.
 
 ## Installation
 
-### From Maven
+### With Maven
 
-This repository is in the process of being prepared for open sourcing. It is not yet available
-from any public Maven repository.
+This package is published to several Maven package repositories:
 
+ * [oss.sonatype.org](https://oss.sonatype.org/#nexus-search;quick~rabbitmq-jms)
+ * [repo.spring.io](https://repo.spring.io/libs-release-local/com/rabbitmq/jms/rabbitmq-jms/)
+ * Maven Central (via eventual promotion from the first one)
+
+Add the following dependency to `pom.xml`:
+
+``` xml
+<dependency>
+  <groupId>com.rabbitmq.jms</groupId>
+  <artifactId>rabbitmq-jms</artifactId>
+  <version>1.5.0</version>
+</dependency>
+```
 
 ### Building from Source
 
