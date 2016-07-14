@@ -10,7 +10,8 @@ now can be limited via a package prefix white list.
 
 GH issue: [rabbitmq-jms-client#3](https://github.com/rabbitmq/rabbitmq-jms-client/issues/3).
 
-This fixes `CVE-2016-6194`.
+This fixes `CVE-2016-6194` (note: attacker must be authenticated
+with RabbitMQ in order to carry out the attack).
 
 
 ## RabbitMQ Java Client Dependency Update
