@@ -177,6 +177,13 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.trustedPackages = value;
     }
 
+    /**
+     * @return list of package prefixes that are whitelisted for transfer over {@link javax.jms.ObjectMessage}
+     */
+    public List<String> getTrustedPackages() {
+        return trustedPackages;
+    }
+
     private static void setRabbitUri(Logger logger, RMQConnectionFactory rmqFactory, com.rabbitmq.client.ConnectionFactory factory, String uriString) throws RMQJMSException {
         if (uriString != null) { // we get the defaults if the uri is null
             try {
