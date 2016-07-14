@@ -7,6 +7,14 @@ for `CVE-2016-6194`.
 
 Classes that can be deserialized from `javax.jms.ObjectMessage`
 now can be limited via a package prefix white list.
+There are two ways to do it:
+
+ * Via the `com.rabbitmq.jms.TrustedPackagesPrefixes` JVM property, for example, `java,com.rabbitmq,com.mycompany`
+ * Using `RMQConnectionFactory#setTrustedPackages`, `RMQConnection#setTrustedPackages`, or `RMQSession#setTrustedPackages`
+
+All options take a list of package name prefixes, e.g. `java` will make all classes
+in `java.lang`, `java.util`, and other packages starting with `java` trusted.
+Deserialization attempt for untrusted classes will throw an exception.
 
 GH issue: [rabbitmq-jms-client#3](https://github.com/rabbitmq/rabbitmq-jms-client/issues/3).
 
