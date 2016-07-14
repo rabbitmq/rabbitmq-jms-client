@@ -53,7 +53,9 @@ public class DeliveryExecutor {
      * only one <code>onMessage</code> call being executed at any one time.
      *
      * @param rmqMessage the message to deliver
+     * @param messageListener JMS message listener that will handle the delivery
      * @throws JMSException if the delivery takes too long and is aborted
+     * @throws InterruptedException if executing thread is interrupted
      */
     public void deliverMessageWithProtection(RMQMessage rmqMessage, MessageListener messageListener) throws JMSException, InterruptedException {
         try {

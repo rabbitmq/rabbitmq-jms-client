@@ -22,6 +22,7 @@ public class Completion {
 
     /**
      * Non-blocking snapshot test for completion.
+     * @return <code>true</code> if this operation has completed, <code>false</code> otherwise
      */
     public boolean isComplete() {
         return this.fb.isComplete();
