@@ -5,14 +5,15 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -28,6 +29,7 @@ import javax.jms.ObjectMessage;
 import javax.jms.StreamMessage;
 import javax.jms.TextMessage;
 
+import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,7 +92,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     /**
      * We store all the JMS hard coded values, such as {@link #setJMSMessageID(String)}, as properties instead of hard
      * coded fields. This way we can create a structure later on that the rabbit MQ broker can read by just changing the
-     * {@link #toByteArray(RMQMessage)} and {@link #fromMessage(byte[])}.
+     * {@link #toByteArray()}} and {@link #fromMessage(byte[], List)}.
      */
     private static final String PREFIX = "rmq.";
     private static final String JMS_MESSAGE_ID = PREFIX + "jms.message.id";
@@ -134,18 +136,18 @@ public abstract class RMQMessage implements Message, Cloneable {
      * be modified
      * @return true if the message is read only
      */
-    public boolean isReadonlyBody() {
+    protected boolean isReadonlyBody() {
         return this.readonlyBody;
     }
 
-    public boolean isReadOnlyProperties() {
+    protected boolean isReadOnlyProperties() {
         return this.readonlyProperties;
     }
 
     /**
      * Sets the read only flag on this message
      * @see RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse)
-     * @param readonly
+     * @param readonly read only flag value
      */
     protected void setReadonly(boolean readonly) {
         this.readonlyBody = readonly;
@@ -164,13 +166,13 @@ public abstract class RMQMessage implements Message, Cloneable {
      * When a message is received, it has a delivery tag
      * We use this delivery tag when we ack
      * a single message
-     * @see RMQSession#acknowledgeMessages()
+     * @see RMQSession#acknowledgeMessage(RMQMessage)
      * @see RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse)
      */
     private long rabbitDeliveryTag = -1;
     /**
      * returns the delivery tag for this message
-     * @return
+     * @return the delivery tag for this message
      */
     public long getRabbitDeliveryTag() {
         return this.rabbitDeliveryTag;
@@ -179,7 +181,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * Sets the RabbitMQ delivery tag for this message.
       * @see RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse)
 
-     * @param rabbitDeliveryTag
+     * @param rabbitDeliveryTag RabbitMQ delivery tag
      */
     protected void setRabbitDeliveryTag(long rabbitDeliveryTag) {
         this.rabbitDeliveryTag = rabbitDeliveryTag;
@@ -188,12 +190,12 @@ public abstract class RMQMessage implements Message, Cloneable {
     /**
      * The Message must hold a reference to the session itself
      * So that it can ack itself. Ack belongs to the session
-     * @see RMQSession#acknowledgeMessages()
+     * @see RMQSession#acknowledgeMessage(RMQMessage)
      */
     private volatile transient RMQSession session = null;
     /**
      * Returns the session this object belongs to
-     * @return
+     * @return the session this object belongs to
      */
     public RMQSession getSession() {
         return this.session;
@@ -202,7 +204,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * Sets the session this object was received by
      * @see RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse)
      * @see RMQSession#acknowledgeMessage(RMQMessage)
-     * @param session
+     * @param session the session this object was received by
      */
     protected void setSession(RMQSession session) {
         this.session = session;
@@ -424,8 +426,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         } else if (o instanceof String) {
             return Boolean.parseBoolean((String) o);
         } else if (o instanceof Boolean) {
-            Boolean b = (Boolean) o;
-            return b.booleanValue();
+            return (Boolean) o;
         } else {
             throw new MessageFormatException(String.format("Unable to convert from class [%s]", o.getClass().getName()));
         }
@@ -442,8 +443,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         else if (o instanceof String) {
             return Byte.parseByte((String) o);
         } else if (o instanceof Byte) {
-            Byte b = (Byte) o;
-            return b.byteValue();
+            return (Byte) o;
         } else
             throw new MessageFormatException(String.format("Unable to convert from class [%s]", o.getClass().getName()));
     }
@@ -459,11 +459,9 @@ public abstract class RMQMessage implements Message, Cloneable {
         else if (o instanceof String) {
             return Short.parseShort((String) o);
         } else if (o instanceof Byte) {
-            Byte b = (Byte) o;
-            return b.byteValue();
+            return (Byte) o;
         } else if (o instanceof Short) {
-            Short b = (Short) o;
-            return b.shortValue();
+            return (Short) o;
         } else
             throw new MessageFormatException(String.format("Unable to convert from class [%s]", o.getClass().getName()));
     }
@@ -479,14 +477,11 @@ public abstract class RMQMessage implements Message, Cloneable {
         else if (o instanceof String) {
             return Integer.parseInt((String) o);
         } else if (o instanceof Byte) {
-            Byte b = (Byte) o;
-            return b.byteValue();
+            return (Byte) o;
         } else if (o instanceof Short) {
-            Short b = (Short) o;
-            return b.shortValue();
+            return (Short) o;
         } else if (o instanceof Integer) {
-            Integer b = (Integer) o;
-            return b.intValue();
+            return (Integer) o;
         } else
             throw new MessageFormatException(String.format("Unable to convert from class [%s]", o.getClass().getName()));
     }
@@ -502,17 +497,13 @@ public abstract class RMQMessage implements Message, Cloneable {
         else if (o instanceof String) {
             return Long.parseLong((String) o);
         } else if (o instanceof Byte) {
-            Byte b = (Byte) o;
-            return b.byteValue();
+            return (Byte) o;
         } else if (o instanceof Short) {
-            Short b = (Short) o;
-            return b.shortValue();
+            return (Short) o;
         } else if (o instanceof Integer) {
-            Integer b = (Integer) o;
-            return b.intValue();
+            return (Integer) o;
         } else if (o instanceof Long) {
-            Long b = (Long) o;
-            return b.longValue();
+            return (Long) o;
         } else
             throw new MessageFormatException(String.format("Unable to convert from class [%s]", o.getClass().getName()));
     }
@@ -528,8 +519,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         else if (o instanceof String) {
             return Float.parseFloat((String) o);
         } else if (o instanceof Float) {
-            Float b = (Float) o;
-            return b.floatValue();
+            return (Float) o;
         } else
             throw new MessageFormatException(String.format("Unable to convert from class [%s]", o.getClass().getName()));
     }
@@ -545,11 +535,9 @@ public abstract class RMQMessage implements Message, Cloneable {
         else if (o instanceof String) {
             return Double.parseDouble((String) o);
         } else if (o instanceof Float) {
-            Float b = (Float) o;
-            return b.floatValue();
+            return (Float) o;
         } else if (o instanceof Double) {
-            Double b = (Double) o;
-            return b.doubleValue();
+            return (Double) o;
         } else
             throw new MessageFormatException(String.format("Unable to convert from class [%s]", o.getClass().getName()));
     }
@@ -657,27 +645,27 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @throws JMSException if the name contains invalid characters
      * @throws IllegalArgumentException if the name parameter is null
      */
-    protected void checkName(String name) throws JMSException {
+    private void checkName(String name) throws JMSException {
         if (name==null || name.trim().length()==0) {
             throw new IllegalArgumentException("Invalid identifier:null");
         } else {
             //check start letters
             char c = name.charAt(0);
-            for (int i=0; i<INVALID_STARTS_WITH.length; i++) {
-                if (c == INVALID_STARTS_WITH[i]) {
+            for (char aINVALID_STARTS_WITH : INVALID_STARTS_WITH) {
+                if (c == aINVALID_STARTS_WITH) {
                     throw new JMSException(String.format("Identifier may not start with character [%s]", c));
                 }
             }
             //check funky chars inside the string
-            for (int i=0; i<MAY_NOT_CONTAIN.length; i++) {
-                if (name.indexOf(MAY_NOT_CONTAIN[i])>=0) {
-                    throw new JMSException(String.format("Identifier may not contain character [%s]", MAY_NOT_CONTAIN[i]));
+            for (char aMAY_NOT_CONTAIN : MAY_NOT_CONTAIN) {
+                if (name.indexOf(aMAY_NOT_CONTAIN) >= 0) {
+                    throw new JMSException(String.format("Identifier may not contain character [%s]", aMAY_NOT_CONTAIN));
                 }
             }
             //check reserverd names
-            for (int i=0; i<RESERVED_NAMES.length; i++) {
-                if (name.equalsIgnoreCase(RESERVED_NAMES[i])) {
-                    throw new JMSException(String.format("Invalid identifier [%s]", RESERVED_NAMES[i]));
+            for (String RESERVED_NAME : RESERVED_NAMES) {
+                if (name.equalsIgnoreCase(RESERVED_NAME)) {
+                    throw new JMSException(String.format("Invalid identifier [%s]", RESERVED_NAME));
                 }
             }
 
@@ -699,7 +687,7 @@ public abstract class RMQMessage implements Message, Cloneable {
                 if (!(value instanceof Integer)) {
                     throw new MessageFormatException(String.format("Property [%s] can only be of type int", RMQConnectionMetaData.JMSX_GROUP_SEQ_LABEL));
                 } else {
-                    int val = ((Integer)value).intValue();
+                    int val = (Integer) value;
                     if (val<=0) throw new JMSException(String.format("Property [%s] must be >0", RMQConnectionMetaData.JMSX_GROUP_SEQ_LABEL));
                 }
             } else if (RMQConnectionMetaData.JMSX_GROUP_ID_LABEL.equals(name)) {
@@ -736,8 +724,8 @@ public abstract class RMQMessage implements Message, Cloneable {
 
     /**
      * Only certain types are allowed as property value types (excluding our own types).
-     * @param value
-     * @return
+     * @param value property value type
+     * @return true if the type is valid
      */
     private boolean validPropertyValueType(Object value) {
         return (value instanceof String
@@ -788,7 +776,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     protected abstract void clearBodyInternal() throws JMSException;
 
     /** @return the {@link Charset} used to convert a {@link TextMessage} to <code>byte[]</code> */
-    private static final Charset getCharset() {
+    private static Charset getCharset() {
         return CHARSET;
     }
 
@@ -903,8 +891,9 @@ public abstract class RMQMessage implements Message, Cloneable {
         }
     }
 
-    private static RMQMessage convertJmsMessage(RMQSession session, RMQDestination dest, GetResponse response) throws JMSException {
-        RMQMessage message = RMQMessage.fromMessage(response.getBody());        // Deserialize the message payload from the byte[] body
+    static RMQMessage convertJmsMessage(RMQSession session, RMQDestination dest, GetResponse response) throws JMSException {
+        // Deserialize the message payload from the byte[] body
+        RMQMessage message = fromMessage(response.getBody(), session.getTrustedPackages());
 
         message.setSession(session);                                            // Insert session in received message for Message.acknowledge
         message.setJMSRedelivered(response.getEnvelope().isRedeliver());        // Set the redelivered flag
@@ -1000,7 +989,7 @@ public abstract class RMQMessage implements Message, Cloneable {
 
     /**
      * Generates an AMQP byte array body for this message.
-     * This method invokes the {@link #writeAmqpBody(ObjectOutput)} method
+     * This method invokes the {@link #writeAmqpBody(ByteArrayOutputStream)}} method
      * on the message subclass.
      * @return the body in a byte array
      * @throws IOException if conversion fails
@@ -1016,7 +1005,7 @@ public abstract class RMQMessage implements Message, Cloneable {
 
     /**
      * Generates a JMS byte array body for this message.
-     * This method invokes the {@link #writeBody(ObjectOutput)} method
+     * This method invokes the {@link #writeBody(ObjectOutput, ByteArrayOutputStream)} method
      * on the class that is being serialized
      * @return the body in a byte array
      * @throws IOException if serialization fails
@@ -1048,28 +1037,25 @@ public abstract class RMQMessage implements Message, Cloneable {
 
     /**
      * Deserializes a {@link RMQMessage} from a JMS generated byte array
-     * This method invokes the {@link #readBody(ObjectInput)} method
+     * This method invokes the {@link #readBody(ObjectInput, ByteArrayInputStream)} method
      * on the deserialized class
      * @param b - the message bytes
+     * @param trustedPackages prefixes of packages that are trusted to be safe to deserialize
      * @return a RMQMessage object
-     * @throws ClassNotFoundException - if the class to be deserialized wasn't found
-     * @throws IOException if an exception occurs during deserialization
-     * @throws IllegalAccessException if an exception occurs during class instantiation
-     * @throws InstantiationException if an exception occurs during class instantiation
      * @throws RMQJMSException if RJMS class-related errors occur
      */
-    static RMQMessage fromMessage(byte[] b) throws RMQJMSException {
+    static RMQMessage fromMessage(byte[] b, List<String> trustedPackages) throws RMQJMSException {
         /* If we don't recognise the message format this throws an exception */
         try {
             ByteArrayInputStream bin = new ByteArrayInputStream(b);
-            ObjectInputStream in = new ObjectInputStream(bin);
-            //read the classname from the stream
+            WhiteListObjectInputStream in = new WhiteListObjectInputStream(bin, trustedPackages);
+            // read the class name from the stream
             String clazz = in.readUTF();
             //instantiate the message object with the thread context classloader
             RMQMessage msg = (RMQMessage) Class.forName(clazz, true, Thread.currentThread().getContextClassLoader()).newInstance();
-            //read the message id
+            // read the message id
             msg.internalMessageID = in.readUTF();
-            //read JMS properties
+            // read JMS properties
             int propsize = in.readInt();
             for (int i = 0; i < propsize; i++) {
                 String name = in.readUTF();
@@ -1103,12 +1089,9 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @param b - the message bytes
      * @param msg - a pre-created skeleton message object
      * @return a RMQMessage object, with the correct body
-     * @throws ClassNotFoundException - if the class to be deserialized wasn't found
      * @throws IOException if an exception occurs during deserialization
-     * @throws IllegalAccessException if an exception occurs during class instantiation
-     * @throws InstantiationException if an exception occurs during class instantiation
      */
-    static RMQMessage fromAmqpMessage(byte[] b, RMQMessage msg) throws IOException {
+    private static RMQMessage fromAmqpMessage(byte[] b, RMQMessage msg) throws IOException {
         msg.readAmqpBody(b);
         return msg;
     }
@@ -1117,7 +1100,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @param deliveryMode JMS delivery mode value
      * @return RabbitMQ delivery mode value
      */
-    static final int rmqDeliveryMode(int deliveryMode) {
+    static int rmqDeliveryMode(int deliveryMode) {
         return (deliveryMode == javax.jms.DeliveryMode.PERSISTENT ? 2 : 1);
     }
 
@@ -1125,7 +1108,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @param rmqDeliveryMode rabbitmq delivery mode value
      * @return JMS delivery mode String
      */
-    static final int jmsDeliveryMode(Integer rmqDeliveryMode) {
+    private static int jmsDeliveryMode(Integer rmqDeliveryMode) {
         return ( ( rmqDeliveryMode != null
                 && rmqDeliveryMode == 2
                  ) ? javax.jms.DeliveryMode.PERSISTENT
@@ -1136,14 +1119,14 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @param rmqExpiration rabbitmq expiration value
      * @return JMS expiration long value
      */
-    static final long jmsExpiration(String rmqExpiration, Date da) {
-        if (null==da) da = new Date(); // assume now -- wrong nearly always
-        if (null==rmqExpiration)
-            return (0l);
+    private static long jmsExpiration(String rmqExpiration, Date da) {
+        if (null == da) da = new Date(); // assume now -- wrong nearly always
+        if (null == rmqExpiration)
+            return (0L);
         try {
             return da.getTime() + Long.valueOf(rmqExpiration);
         } catch (NumberFormatException e) { // ignore it if conversion problems */ }
-            return (0l);
+            return (0L);
         }
     }
 
@@ -1174,7 +1157,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     /**
      * Returns the unique ID for this message.
      * This will return null unless the message has been sent on the wire
-     * @return
+     * @return internal message ID
      */
     public String getInternalID() {
         return this.internalMessageID;
@@ -1183,7 +1166,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     /**
      * Called when a message is sent so that each message is unique
      */
-    public void generateInternalID() {
+    void generateInternalID() {
         this.internalMessageID = Util.generateUUID("");
         this.rmqProperties.put(JMS_MESSAGE_ID, "ID:" + this.internalMessageID);
     }
@@ -1200,47 +1183,46 @@ public abstract class RMQMessage implements Message, Cloneable {
 	 * value to the stream.
 	 * </p>
 	 *
-	 * @param s
-	 *            the primitive to be written
-	 * @param out
-	 *            the stream to write the primitive to.
-	 * @throws IOException
-	 *             if an IOException occurs.
+	 * @param s the primitive to be written
+	 * @param out the stream to write the primitive to.
+	 * @throws IOException if an I/O error occurs
+     * @throws MessageFormatException if message cannot be parsed
+     *
 	 */
-    public static void writePrimitive(Object s, ObjectOutput out) throws IOException, MessageFormatException {
+    protected static void writePrimitive(Object s, ObjectOutput out) throws IOException, MessageFormatException {
         writePrimitive(s, out, false);
     }
 
-    public static void writePrimitive(Object s, ObjectOutput out, boolean allowSerializable) throws IOException, MessageFormatException {
+    protected static void writePrimitive(Object s, ObjectOutput out, boolean allowSerializable) throws IOException, MessageFormatException {
         if (s == null) {
             out.writeByte(-1);
         } else if (s instanceof Boolean) {
             out.writeByte(1);
-            out.writeBoolean(((Boolean) s).booleanValue());
+            out.writeBoolean((Boolean) s);
         } else if (s instanceof Byte) {
             out.writeByte(2);
-            out.writeByte(((Byte) s).byteValue());
+            out.writeByte((Byte) s);
         } else if (s instanceof Short) {
             out.writeByte(3);
-            out.writeShort((((Short) s).shortValue()));
+            out.writeShort(((Short) s));
         } else if (s instanceof Integer) {
             out.writeByte(4);
-            out.writeInt(((Integer) s).intValue());
+            out.writeInt((Integer) s);
         } else if (s instanceof Long) {
             out.writeByte(5);
-            out.writeLong(((Long) s).longValue());
+            out.writeLong((Long) s);
         } else if (s instanceof Float) {
             out.writeByte(6);
-            out.writeFloat(((Float) s).floatValue());
+            out.writeFloat((Float) s);
         } else if (s instanceof Double) {
             out.writeByte(7);
-            out.writeDouble(((Double) s).doubleValue());
+            out.writeDouble((Double) s);
         } else if (s instanceof String) {
             out.writeByte(8);
             out.writeUTF((String) s);
         } else if (s instanceof Character) {
             out.writeByte(9);
-            out.writeChar(((Character) s).charValue());
+            out.writeChar((Character) s);
         } else if (s instanceof byte[]) {
             out.writeByte(10);
             out.writeInt(((byte[]) s).length);
@@ -1259,10 +1241,10 @@ public abstract class RMQMessage implements Message, Cloneable {
      * deserialization will fail and an IOException will be thrown
      * @param in the stream to read from
      * @return the Object read
-     * @throws IOException
-     * @throws ClassNotFoundException
+     * @throws IOException if an I/O error occurs
+     * @throws ClassNotFoundException if a class of serialized object cannot be found
      */
-    public static Object readPrimitive(ObjectInput in) throws IOException, ClassNotFoundException {
+    protected static Object readPrimitive(ObjectInput in) throws IOException, ClassNotFoundException {
         byte b = in.readByte();
         switch (b) {
         case -1:
@@ -1304,7 +1286,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         return super.clone();
     }
 
-    void setJMSPropertiesFromAmqpProperties(BasicProperties props) throws JMSException {
+    private void setJMSPropertiesFromAmqpProperties(BasicProperties props) throws JMSException {
         this.setJMSDeliveryMode(jmsDeliveryMode(props.getDeliveryMode())); // derive delivery mode from Rabbit delivery mode
 
         Date da = props.getTimestamp();
@@ -1343,7 +1325,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         }
     }
 
-    static boolean isAmqpTextMessage(Map<String, Object> hdrs) {
+    private static boolean isAmqpTextMessage(Map<String, Object> hdrs) {
         boolean isTextMessage = false;
         if(hdrs != null) {
             Object headerJMSType = hdrs.get("JMSType");
@@ -1370,16 +1352,15 @@ public abstract class RMQMessage implements Message, Cloneable {
         return dft;
     }
 
-    static final RMQMessage normalise(Message msg) throws JMSException {
-        if (msg instanceof RMQMessage) return (RMQMessage) msg;
-
-        /* If not one of our own, copy it into an RMQMessage */
-             if (msg instanceof BytesMessage ) return RMQBytesMessage.recreate((BytesMessage)msg);
-        else if (msg instanceof MapMessage   ) return RMQMapMessage.recreate((MapMessage)msg);
-        else if (msg instanceof ObjectMessage) return RMQObjectMessage.recreate((ObjectMessage)msg);
-        else if (msg instanceof StreamMessage) return RMQStreamMessage.recreate((StreamMessage)msg);
-        else if (msg instanceof TextMessage  ) return RMQTextMessage.recreate((TextMessage)msg);
-        else                                   return RMQNullMessage.recreate(msg);
+    static RMQMessage normalise(Message msg, List<String> trustedPackages) throws JMSException {
+             if (msg instanceof BytesMessage )    return RMQBytesMessage.recreate((BytesMessage)msg);
+        else if (msg instanceof MapMessage   )    return RMQMapMessage.recreate((MapMessage)msg);
+        else if (msg instanceof RMQObjectMessage) return RMQObjectMessage.recreate((RMQObjectMessage)msg, trustedPackages);
+        else if (msg instanceof RMQMessage)       return (RMQMessage) msg;
+        else if (msg instanceof ObjectMessage)    return RMQObjectMessage.recreate((ObjectMessage) msg);
+        else if (msg instanceof StreamMessage)    return RMQStreamMessage.recreate((StreamMessage)msg);
+        else if (msg instanceof TextMessage  )    return RMQTextMessage.recreate((TextMessage)msg);
+        else                                      return RMQNullMessage.recreate(msg);
     }
 
     /** Assign generic attributes.
@@ -1388,6 +1369,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * <p>With conversion as appropriate.</p>
      * @param rmqMessage message filled in with attributes
      * @param message message from which attributes are gained.
+     * @throws JMSException if attributes cannot be copied
      */
     protected static void copyAttributes(RMQMessage rmqMessage, Message message) throws JMSException {
         try {

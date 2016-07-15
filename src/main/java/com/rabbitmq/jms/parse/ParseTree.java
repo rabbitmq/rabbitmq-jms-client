@@ -22,8 +22,7 @@ package com.rabbitmq.jms.parse;
 public interface ParseTree<Node> {
 
     /**
-     * The node at the root of the tree.
-     * @return
+     * @return the node at the root of the tree.
      */
     Node getNode();
 

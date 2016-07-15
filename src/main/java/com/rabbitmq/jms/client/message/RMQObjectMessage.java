@@ -9,6 +9,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
 
 import javax.jms.JMSException;
 import javax.jms.MessageNotWriteableException;
@@ -16,14 +18,24 @@ import javax.jms.ObjectMessage;
 
 import com.rabbitmq.jms.client.RMQMessage;
 import com.rabbitmq.jms.util.RMQJMSException;
+import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 
 /**
  * Implements {@link ObjectMessage} interface.
  */
 public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
 
+    private final List<String> trustedPackages;
     /** Buffer to hold serialised object */
     private volatile byte[] buf = null;
+
+    public RMQObjectMessage() {
+        this(WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES);
+    }
+
+    public RMQObjectMessage(List<String> trustedPackages) {
+        this.trustedPackages = trustedPackages;
+    }
 
     @Override
     public void setObject(Serializable object) throws JMSException {
@@ -49,17 +61,21 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
 
     @Override
     public Serializable getObject() throws JMSException {
-        if (buf==null) {
+        return this.getObject(this.trustedPackages);
+    }
+
+    public Serializable getObject(List<String> trustedPackages) throws JMSException {
+        if (buf == null) {
             return null;
         } else {
             this.loggerDebugByteArray("Deserialising object from buffer {} for {}", this.buf, "RMQObjectMessage");
             ByteArrayInputStream bin = new ByteArrayInputStream(buf);
             try {
-                ObjectInputStream in = new ObjectInputStream(bin);
+                WhiteListObjectInputStream in = new WhiteListObjectInputStream(bin, trustedPackages);
                 return (Serializable)in.readObject();
-            }catch (ClassNotFoundException x) {
+            } catch (ClassNotFoundException x) {
                 throw new RMQJMSException(x);
-            }catch (IOException x) {
+            } catch (IOException x) {
                 throw new RMQJMSException(x);
             }
         }
@@ -110,11 +126,23 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         throw new UnsupportedOperationException();
     }
 
-    public static final RMQMessage recreate(ObjectMessage msg) throws JMSException {
+    public static RMQMessage recreate(ObjectMessage msg) throws JMSException {
         RMQObjectMessage rmqOMsg = new RMQObjectMessage();
         RMQMessage.copyAttributes(rmqOMsg, msg);
 
+        // note: ObjectMessage here comes from the outside and may
+        //       be an implementation not provided by us, so we cannot
+        //       enforce class name validation.
         rmqOMsg.setObject(msg.getObject());
+
+        return rmqOMsg;
+    }
+
+    public static RMQMessage recreate(RMQObjectMessage msg, List<String> patterns) throws JMSException {
+        RMQObjectMessage rmqOMsg = new RMQObjectMessage(patterns);
+        RMQMessage.copyAttributes(rmqOMsg, msg);
+
+        rmqOMsg.setObject(msg.getObject(patterns));
 
         return rmqOMsg;
     }

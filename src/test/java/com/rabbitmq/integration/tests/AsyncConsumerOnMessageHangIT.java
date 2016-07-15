@@ -73,7 +73,7 @@ public class AsyncConsumerOnMessageHangIT extends AbstractITQueue {
             this.success = true;
             try {
                 Thread.sleep(3000);
-            } catch (InterruptedException _) {
+            } catch (InterruptedException _ignored) {
                 // this must happen
                 this.interrupted = true;
             }

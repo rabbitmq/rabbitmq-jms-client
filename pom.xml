@@ -7,7 +7,7 @@
 
   <name>rabbitmq-jms</name>
   <description>RabbitMQ JMS Client</description>
-  <version>1.4.8-SNAPSHOT</version>
+  <version>1.6.0-SNAPSHOT</version>
   <url>http://www.rabbitmq.com</url>
 
   <packaging>jar</packaging>
@@ -41,7 +41,7 @@
   </scm>
 
   <properties>
-    <rabbitmq.version>3.6.2</rabbitmq.version>
+    <rabbitmq.version>3.6.3</rabbitmq.version>
 
     <java-compile-version>1.6</java-compile-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -402,7 +402,7 @@
             <configuration>
               <serverId>spring-repo</serverId>
               <nexusUrl>http://repo.spring.io/artifactory/</nexusUrl>
-              <skipStaging>false</skipStaging>
+              <skipStaging>true</skipStaging>
             </configuration>
           </plugin>
         </plugins>

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -39,6 +40,7 @@ import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
+import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -147,6 +149,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     /** The channels we use for browsing queues (there may be more than one in operation at a time) */
     private Set<Channel> browsingChannels = new HashSet<Channel>(); // @GuardedBy(bcLock)
     private final Object bcLock = new Object();
+
+    /**
+     * Classes in these packages can be transferred via ObjectMessage.
+     *
+     * @see WhiteListObjectInputStream
+     */
+    private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
 
     /**
      * Creates a session object associated with a connection
@@ -283,6 +292,15 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public int getAcknowledgeMode() throws JMSException {
         illegalStateExceptionIfClosed();
         return getAcknowledgeModeNoException();
+    }
+
+    @SuppressWarnings("unused")
+    public List<String> getTrustedPackages() {
+        return trustedPackages;
+    }
+
+    public void setTrustedPackages(List<String> trustedPackages) {
+        this.trustedPackages = trustedPackages;
     }
 
     /**

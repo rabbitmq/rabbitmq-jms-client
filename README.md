@@ -1,8 +1,7 @@
 # Java JMS Client for RabbitMQ
 
-**WIP warning**: open sourcing of RabbitMQ JMS repositories is a
-work-in-progress. There are currently no publicly released non-snapshot Maven
-artifacts and compliance test suite is still not open source.
+**WIP warning**: open sourcing of RabbitMQ JMS repositories is not yet
+100% complete. Most notably the docs are not yet ready.
 
 ## Overview
 
@@ -11,11 +10,23 @@ a RabbitMQ server plugin.
 
 ## Installation
 
-### From Maven
+### With Maven
 
-This repository is in the process of being prepared for open sourcing. It is not yet available
-from any public Maven repository.
+This package is published to several Maven package repositories:
 
+ * [oss.sonatype.org](https://oss.sonatype.org/#nexus-search;quick~rabbitmq-jms)
+ * [repo.spring.io](https://repo.spring.io/libs-release-local/com/rabbitmq/jms/rabbitmq-jms/)
+ * Maven Central (via eventual promotion from the first one)
+
+Add the following dependency to `pom.xml`:
+
+``` xml
+<dependency>
+  <groupId>com.rabbitmq.jms</groupId>
+  <artifactId>rabbitmq-jms</artifactId>
+  <version>1.5.0</version>
+</dependency>
+```
 
 ### Building from Source
 
@@ -36,7 +47,13 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for an overview of the development proc
 
 ### Integration Tests
 
-TBD: open sourcing the compliance test suite is a work-in-progress.
+Assuming a node with [rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-jms-topic-exchange/) is running on localhost
+with all defaults:
+
+    mvn clean verify
+
+The easiest way to run a test node is to clone
+[rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-jms-topic-exchange/) and use `make run-broker`.
 
 
 ## License and Copyright

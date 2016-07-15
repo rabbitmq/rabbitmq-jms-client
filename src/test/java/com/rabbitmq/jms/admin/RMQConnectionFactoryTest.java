@@ -21,7 +21,7 @@ public class RMQConnectionFactoryTest {
         defaultProps.setProperty("queueBrowserReadMax", "0");
     }
 
-    private static final Properties getProps(Reference ref) {
+    private static Properties getProps(Reference ref) {
         Enumeration<RefAddr> refEnum = ref.getAll();
         Properties props = new Properties();
         while (refEnum.hasMoreElements()) {
@@ -37,9 +37,9 @@ public class RMQConnectionFactoryTest {
      * @param propertyName - the name of the property
      * @param value - the value to store with the property
      */
-    private static final void addStringRefProperty(Reference ref,
-                                                   String propertyName,
-                                                   String value) {
+    private static void addStringRefProperty(Reference ref,
+                                             String propertyName,
+                                             String value) {
         if (value==null || propertyName==null) return;
         removeRefProperty(ref, propertyName);
         RefAddr ra = new StringRefAddr(propertyName, value);
@@ -51,8 +51,8 @@ public class RMQConnectionFactoryTest {
      * @param ref - the reference
      * @param propertyName - the name of the property to remove
      */
-    private static final void removeRefProperty(Reference ref,
-                                                String propertyName) {
+    private static void removeRefProperty(Reference ref,
+                                          String propertyName) {
         if (propertyName==null) return;
         int numProps = ref.size();
         for (int i=0; i < numProps; ++i) {

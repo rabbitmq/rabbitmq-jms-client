@@ -14,7 +14,7 @@ import org.junit.After;
 import org.junit.Before;
 
 public abstract class AbstractITQueue {
-    protected QueueConnectionFactory connFactory;
+    QueueConnectionFactory connFactory;
     protected QueueConnection queueConn;
 
     @Before
@@ -24,7 +24,7 @@ public abstract class AbstractITQueue {
         this.queueConn = connFactory.createQueueConnection();
     }
 
-    protected static final void drainQueue(QueueSession session, Queue queue) throws Exception {
+    protected static void drainQueue(QueueSession session, Queue queue) throws Exception {
         QueueReceiver receiver = session.createReceiver(queue);
         int n=0;
         Message msg = receiver.receiveNoWait();
@@ -32,7 +32,9 @@ public abstract class AbstractITQueue {
             ++n;
             msg = receiver.receiveNoWait();
         }
-        if (n>0) System.out.println(">> INFO >> Drained messages (n="+n+") from queue "+queue+" prior to test.");
+        if (n > 0) {
+            System.out.println(">> INFO >> Drained messages (n=" + n + ") from queue " + queue + " prior to test.");
+        }
     }
 
     protected void reconnect() throws Exception {
