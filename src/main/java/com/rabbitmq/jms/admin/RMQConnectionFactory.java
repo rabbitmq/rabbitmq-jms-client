@@ -1,6 +1,7 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
+import com.rabbitmq.client.Address;
 import com.rabbitmq.jms.client.RMQConnection;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.RMQJMSSecurityException;
@@ -72,6 +73,10 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         return this.createConnection(username, password);
     }
 
+    public Connection createConnection(List<Address> endpoints) throws JMSException {
+        return this.createConnection(username, password, endpoints);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -84,7 +89,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
         maybeEnableTLS(factory);
         setRabbitUri(logger, this, factory, this.getUri());
-        com.rabbitmq.client.Connection rabbitConnection = getRabbitConnection(factory);
+        com.rabbitmq.client.Connection rabbitConnection = instantiateNodeConnection(factory);
 
         RMQConnection conn = new RMQConnection(rabbitConnection, getTerminationTimeout(), getQueueBrowserReadMax());
         conn.setTrustedPackages(this.trustedPackages);
@@ -92,9 +97,51 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         return conn;
     }
 
-    private com.rabbitmq.client.Connection getRabbitConnection(com.rabbitmq.client.ConnectionFactory factory) throws JMSException {
+    public Connection createConnection(String username, String password, List<Address> endpoints)
+        throws JMSException {
+        logger.trace("Creating a connection for username '{}', password 'xxxxxxxx'.", username);
+        this.username = username;
+        this.password = password;
+        com.rabbitmq.client.ConnectionFactory cf = new com.rabbitmq.client.ConnectionFactory();
+        maybeEnableTLS(cf);
+        com.rabbitmq.client.Connection rabbitConnection = instantiateNodeConnection(cf, endpoints);
+
+        RMQConnection conn = new RMQConnection(rabbitConnection, getTerminationTimeout(), getQueueBrowserReadMax());
+        conn.setTrustedPackages(this.trustedPackages);
+        logger.debug("Connection {} created.", conn);
+        return conn;
+    }
+
+    private com.rabbitmq.client.Connection instantiateNodeConnection(com.rabbitmq.client.ConnectionFactory cf)
+        throws JMSException {
         try {
-            return factory.newConnection();
+            return cf.newConnection();
+        } catch (SSLException ssle) {
+            throw new RMQJMSSecurityException("SSL Exception establishing RabbitMQ Connection", ssle);
+        } catch (Exception x) {
+            if (x instanceof IOException) {
+                IOException ioe = (IOException) x;
+                String msg = ioe.getMessage();
+                if (msg!=null) {
+                    if (msg.contains("authentication failure") || msg.contains("refused using authentication"))
+                        throw new RMQJMSSecurityException(ioe);
+                    else if (msg.contains("Connection refused"))
+                        throw new RMQJMSException("RabbitMQ connection was refused. RabbitMQ broker may not be available.", ioe);
+                }
+                throw new RMQJMSException(ioe);
+            } else if (x instanceof TimeoutException) {
+                TimeoutException te = (TimeoutException) x;
+                throw new RMQJMSException("Timed out establishing RabbitMQ Connection", te);
+            } else {
+                throw new RMQJMSException("Unexpected exception thrown by newConnection()", x);
+            }
+        }
+    }
+
+    private com.rabbitmq.client.Connection instantiateNodeConnection(
+        com.rabbitmq.client.ConnectionFactory cf, List<Address> endpoints) throws JMSException {
+        try {
+            return cf.newConnection(endpoints);
         } catch (SSLException ssle) {
             throw new RMQJMSSecurityException("SSL Exception establishing RabbitMQ Connection", ssle);
         } catch (Exception x) {
@@ -206,21 +253,42 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         return this.ssl;
     }
 
+    /**
+     * @deprecated Use {@link #useSslProtocol()}, {@link #useSslProtocol(String)}
+     *             or {@link #useSslProtocol(SSLContext)}.
+     * @param ssl if true, enables TLS for connections opened
+     */
+    @Deprecated
     public void setSsl(boolean ssl) {
         this.ssl = ssl;
     }
 
+    /**
+     * Enables TLS on opened connections with the highest TLS
+     * version available.
+     * @throws NoSuchAlgorithmException see {@link NoSuchAlgorithmException}
+     */
     public void useSslProtocol() throws NoSuchAlgorithmException {
         this.useSslProtocol(
             com.rabbitmq.client.ConnectionFactory.computeDefaultTlsProcotol(
                 SSLContext.getDefault().getSupportedSSLParameters().getProtocols()));
     }
 
+    /**
+     * Enables TLS on opened connections using the provided TLS protocol
+     * version.
+     * @param protocol TLS or SSL protocol version.
+     * @see <a href="http://docs.oracle.com/javase/7/docs/technotes/guides/security/SunProviders.html#SunJSSEProvider">JDK documentation on protocol names</a>
+     */
     public void useSslProtocol(String protocol)
     {
         this.tlsProtocol = protocol;
     }
 
+    /**
+     * Enables TLS on opened connections using the provided {@link SSLContext}.
+     * @param context {@link SSLContext} to use
+     */
     public void useSslProtocol(SSLContext context) {
         this.sslContext = context;
     }
