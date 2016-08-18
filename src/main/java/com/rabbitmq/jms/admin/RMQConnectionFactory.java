@@ -1,36 +1,24 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
-import static com.rabbitmq.jms.util.UriCodec.encHost;
-import static com.rabbitmq.jms.util.UriCodec.encSegment;
-import static com.rabbitmq.jms.util.UriCodec.encUserinfo;
-
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.List;
-import java.util.concurrent.TimeoutException;
-
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSException;
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
-import javax.jms.TopicConnection;
-import javax.jms.TopicConnectionFactory;
-import javax.naming.NamingException;
-import javax.naming.RefAddr;
-import javax.naming.Reference;
-import javax.naming.Referenceable;
-import javax.naming.StringRefAddr;
-import javax.net.ssl.SSLException;
-
+import com.rabbitmq.jms.client.RMQConnection;
+import com.rabbitmq.jms.util.RMQJMSException;
+import com.rabbitmq.jms.util.RMQJMSSecurityException;
 import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rabbitmq.jms.client.RMQConnection;
-import com.rabbitmq.jms.util.RMQJMSException;
-import com.rabbitmq.jms.util.RMQJMSSecurityException;
+import javax.jms.*;
+import javax.naming.*;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import java.io.IOException;
+import java.io.Serializable;
+import java.security.NoSuchAlgorithmException;
+import java.util.List;
+import java.util.concurrent.TimeoutException;
+
+import static com.rabbitmq.jms.util.UriCodec.*;
 
 /**
  * RabbitMQ Implementation of JMS {@link ConnectionFactory}
@@ -46,8 +34,6 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     private static final int DEFAULT_RABBITMQ_PORT = com.rabbitmq.client.ConnectionFactory.DEFAULT_AMQP_PORT;
 
-    /** Default not to use ssl */
-    private boolean ssl = false;
     /** Default username to RabbitMQ broker */
     private String username = "guest";
     /** Default password to RabbitMQ broker */
@@ -58,6 +44,11 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private String host = "localhost";
     /** Default port NOT SET - determined by the type of connection (ssl or non-ssl) */
     private int port = -1;
+
+    /** Default not to use ssl */
+    private boolean ssl = false;
+    private String tlsProtocol;
+    private SSLContext sslContext;
 
     /** The maximum number of messages to read on a queue browser, which must be non-negative;
      *  0 means unlimited and is the default; negative values are interpreted as 0. */
@@ -91,7 +82,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.password = password;
         // Create a new factory and set the properties
         com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
-        resetSsl(factory);
+        maybeEnableTLS(factory);
         setRabbitUri(logger, this, factory, this.getUri());
         com.rabbitmq.client.Connection rabbitConnection = getRabbitConnection(factory);
 
@@ -195,14 +186,20 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         }
     }
 
-    private void resetSsl(com.rabbitmq.client.ConnectionFactory factory) {
+    private void maybeEnableTLS(com.rabbitmq.client.ConnectionFactory factory) {
         if (this.ssl)
-        try {
-            factory.useSslProtocol();
-        } catch (Exception e1) {
-            this.logger.warn("Could not set SSL protocol on connection factory, {}. SSL set off.", this, e1);
-            this.ssl=false;
-        }
+            try {
+                if (this.sslContext != null) {
+                    factory.useSslProtocol(this.sslContext);
+                } else if (this.tlsProtocol != null) {
+                    factory.useSslProtocol(this.tlsProtocol);
+                } else {
+                    factory.useSslProtocol();
+                }
+            } catch (Exception e) {
+                this.logger.warn("Could not set SSL protocol on connection factory, {}. SSL set off.", this, e);
+                this.ssl = false;
+            }
     }
 
     public boolean isSsl() {
@@ -211,6 +208,21 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     public void setSsl(boolean ssl) {
         this.ssl = ssl;
+    }
+
+    public void useSslProtocol() throws NoSuchAlgorithmException {
+        this.useSslProtocol(
+            com.rabbitmq.client.ConnectionFactory.computeDefaultTlsProcotol(
+                SSLContext.getDefault().getSupportedSSLParameters().getProtocols()));
+    }
+
+    public void useSslProtocol(String protocol)
+    {
+        this.tlsProtocol = protocol;
+    }
+
+    public void useSslProtocol(SSLContext context) {
+        this.sslContext = context;
     }
 
     private static String scheme(boolean isSsl) {
