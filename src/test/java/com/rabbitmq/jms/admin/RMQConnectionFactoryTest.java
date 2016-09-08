@@ -19,6 +19,7 @@ public class RMQConnectionFactoryTest {
         RMQConnectionFactory defaultFact = new RMQConnectionFactory();
         defaultProps.setProperty("uri", defaultFact.getUri());
         defaultProps.setProperty("queueBrowserReadMax", "0");
+        defaultProps.setProperty("onMessageTimeoutMs", "2000");
     }
 
     private static Properties getProps(Reference ref) {
@@ -79,6 +80,7 @@ public class RMQConnectionFactoryTest {
         connFactory.setPassword("my-password");
         connFactory.setPort(42);
         connFactory.setQueueBrowserReadMax(52);
+        connFactory.setOnMessageTimeoutMs(62);
         connFactory.setSsl(true);
         connFactory.setTerminationTimeout(1234567890123456789L);
         connFactory.setUsername("fred");
@@ -89,6 +91,7 @@ public class RMQConnectionFactoryTest {
 
         assertEquals("Not the correct uri", "amqps://fred:my-password@sillyHost:42/bill", newProps.getProperty("uri"));
         assertEquals("Not the correct queueBrowserReadMax", "52", newProps.getProperty("queueBrowserReadMax"));
+        assertEquals("Not the correct onMessageTimeoutMs", "62", newProps.getProperty("onMessageTimeoutMs"));
     }
 
     @Test
@@ -133,6 +136,7 @@ public class RMQConnectionFactoryTest {
         addStringRefProperty(ref, "password", "my-password");
         addStringRefProperty(ref, "port", "42");
         addStringRefProperty(ref, "queueBrowserReadMax", "52"); // duplicates don't overwrite
+        addStringRefProperty(ref, "onMessageTimeoutMs", "62");
         addStringRefProperty(ref, "ssl", "true");
         addStringRefProperty(ref, "terminationTimeout","1234567890123456789");
         addStringRefProperty(ref, "username", "fred");
@@ -144,6 +148,7 @@ public class RMQConnectionFactoryTest {
         assertEquals("Not the correct password", "my-password", newFactory.getPassword());
         assertEquals("Not the correct port", 42, newFactory.getPort());
         assertEquals("Not the correct queueBrowserReadMax", 52, newFactory.getQueueBrowserReadMax());
+        assertEquals("Not the correct onMessageTimeoutMs", 62, newFactory.getOnMessageTimeoutMs());
         assertEquals("Not the correct ssl", true, newFactory.isSsl());
 
         assertEquals("Not the correct terminationTimeout", 1234567890123456789L, newFactory.getTerminationTimeout());

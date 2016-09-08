@@ -70,6 +70,9 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     /** max number of messages to read from a browsed queue */
     private final int queueBrowserReadMax;
 
+    /** How long to wait for onMessage to return, in milliseconds */
+    private final int onMessageTimeoutMs;
+
     private static ConcurrentHashMap<String, String> CLIENT_IDS = new ConcurrentHashMap<String, String>();
 
     /** List of all our durable subscriptions so we can track them on a per connection basis (maintained by sessions).*/
@@ -90,23 +93,26 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      * @param rabbitConnection the TCP connection wrapper to the RabbitMQ broker
      * @param terminationTimeout timeout for close in milliseconds
      * @param queueBrowserReadMax maximum number of messages to read from a QueueBrowser (before filtering)
+     * @param onMessageTimeoutMs how long to wait for onMessage to return, in milliseconds
      */
-    public RMQConnection(com.rabbitmq.client.Connection rabbitConnection, long terminationTimeout, int queueBrowserReadMax) {
+    public RMQConnection(com.rabbitmq.client.Connection rabbitConnection, long terminationTimeout, int queueBrowserReadMax, int onMessageTimeoutMs) {
 
         rabbitConnection.addShutdownListener(new RMQConnectionShutdownListener());
 
         this.rabbitConnection = rabbitConnection;
         this.terminationTimeout = terminationTimeout;
         this.queueBrowserReadMax = queueBrowserReadMax;
+        this.onMessageTimeoutMs = onMessageTimeoutMs;
     }
 
     private static final long FIFTEEN_SECONDS_MS = 15000;
+    private static final int TWO_SECONDS_MS = 2000;
     /**
-     * Creates an RMQConnection object, with default termination timeout of 15 seconds, and unlimited reads from QueueBrowsers.
+     * Creates an RMQConnection object, with default termination timeout of 15 seconds, a 2 seconds timeout for onMessage, and unlimited reads from QueueBrowsers.
      * @param rabbitConnection the TCP connection wrapper to the RabbitMQ broker
      */
     public RMQConnection(com.rabbitmq.client.Connection rabbitConnection) {
-        this(rabbitConnection, FIFTEEN_SECONDS_MS, 0);
+        this(rabbitConnection, FIFTEEN_SECONDS_MS, 0, TWO_SECONDS_MS);
     }
 
     /** For RMQSession to retrieve */
@@ -120,7 +126,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         logger.trace("transacted={}, acknowledgeMode={}", transacted, acknowledgeMode);
         illegalStateExceptionIfClosed();
         freezeClientID();
-        RMQSession session = new RMQSession(this, transacted, acknowledgeMode, this.subscriptions);
+        RMQSession session = new RMQSession(this, transacted, onMessageTimeoutMs, acknowledgeMode, this.subscriptions);
         session.setTrustedPackages(this.trustedPackages);
         this.sessions.add(session);
         return session;
