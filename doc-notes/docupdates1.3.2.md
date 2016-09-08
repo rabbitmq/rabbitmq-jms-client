@@ -91,6 +91,13 @@ Here is a complete list of the attributes/properties available:
     <td>RabbitMQ port used for connections. The default is “5672” unless this is an SSL connection, in which case the default is “5671”.</td>
   </tr>
   <tr>
+    <td>onMessageTimeoutMs</td>
+    <td>&nbsp;</td>
+    <td>
+       How long to wait for onMessage to return, in milliseconds. Non-positive values are rejected. The default is “2000”.
+    </td>
+  </tr>
+  <tr>
     <td>queueBrowserReadMax</td>
     <td>&nbsp;</td>
     <td>

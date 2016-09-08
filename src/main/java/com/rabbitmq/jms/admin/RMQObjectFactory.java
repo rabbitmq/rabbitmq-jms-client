@@ -77,6 +77,7 @@ import org.slf4j.LoggerFactory;
  * <li>password</li>
  * <li>port</li>
  * <li>queueBrowserReadMax</li>
+ * <li>onMessageTimeoutMs</li>
  * <li>ssl</li>
  * <li>terminationTimeout</li>
  * <li>username</li>
@@ -165,6 +166,7 @@ public class RMQObjectFactory implements ObjectFactory {
         f.setPassword           (getStringProperty (ref, "password",            true, f.getPassword()           ));
         f.setPort               (getIntProperty    (ref, "port",                true, f.getPort()               ));
         f.setQueueBrowserReadMax(getIntProperty    (ref, "queueBrowserReadMax", true, f.getQueueBrowserReadMax()));
+        f.setOnMessageTimeoutMs (getIntProperty    (ref, "onMessageTimeoutMs",  true, f.getOnMessageTimeoutMs() ));
         f.setSsl                (getBooleanProperty(ref, "ssl",                 true, f.isSsl()                 ));
         f.setTerminationTimeout (getLongProperty   (ref, "terminationTimeout",  true, f.getTerminationTimeout() ));
         f.setUsername           (getStringProperty (ref, "username",            true, f.getUsername()           ));

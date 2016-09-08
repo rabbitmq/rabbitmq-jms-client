@@ -142,9 +142,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private static final String JMS_TOPIC_SELECTOR_EXCHANGE_TYPE = "x-jms-topic";
 
-    private static final long ON_MESSAGE_EXECUTOR_TIMEOUT_MS = 2000; // 2 seconds
-
-    private final DeliveryExecutor deliveryExecutor = new DeliveryExecutor(ON_MESSAGE_EXECUTOR_TIMEOUT_MS);
+    private final DeliveryExecutor deliveryExecutor;
 
     /** The channels we use for browsing queues (there may be more than one in operation at a time) */
     private Set<Channel> browsingChannels = new HashSet<Channel>(); // @GuardedBy(bcLock)
@@ -161,15 +159,18 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * Creates a session object associated with a connection
      * @param connection the connection that we will send data on
      * @param transacted whether this session is transacted or not
+     * @param onMessageTimeoutMs how long to wait for onMessage to return, in milliseconds
      * @param mode the (fixed) acknowledgement mode for this session
      * @param subscriptions the connection's subscriptions, shared with all sessions
      * @throws JMSException if we fail to create a {@link Channel} object on the connection, or if the acknowledgement mode is incorrect
      */
-    public RMQSession(RMQConnection connection, boolean transacted, int mode, Map<String, RMQMessageConsumer> subscriptions) throws JMSException {
+    public RMQSession(RMQConnection connection, boolean transacted, int onMessageTimeoutMs, int mode, Map<String, RMQMessageConsumer> subscriptions) throws JMSException {
         if (mode<0 || mode>CLIENT_INDIVIDUAL_ACKNOWLEDGE) throw new JMSException(String.format("cannot create session with acknowledgement mode = %d.", mode));
         this.connection = connection;
         this.transacted = transacted;
         this.subscriptions = subscriptions;
+        this.deliveryExecutor = new DeliveryExecutor(onMessageTimeoutMs);
+
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;
             this.isIndividualAck = false;

@@ -45,6 +45,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private String host = "localhost";
     /** Default port NOT SET - determined by the type of connection (ssl or non-ssl) */
     private int port = -1;
+    /** How long to wait for onMessage to return, in milliseconds */
+    private int onMessageTimeoutMs = 2000;
 
     /** Default not to use ssl */
     private boolean ssl = false;
@@ -91,7 +93,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         setRabbitUri(logger, this, factory, this.getUri());
         com.rabbitmq.client.Connection rabbitConnection = instantiateNodeConnection(factory);
 
-        RMQConnection conn = new RMQConnection(rabbitConnection, getTerminationTimeout(), getQueueBrowserReadMax());
+        RMQConnection conn = new RMQConnection(rabbitConnection, getTerminationTimeout(), getQueueBrowserReadMax(), getOnMessageTimeoutMs());
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
         return conn;
@@ -106,7 +108,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         maybeEnableTLS(cf);
         com.rabbitmq.client.Connection rabbitConnection = instantiateNodeConnection(cf, endpoints);
 
-        RMQConnection conn = new RMQConnection(rabbitConnection, getTerminationTimeout(), getQueueBrowserReadMax());
+        RMQConnection conn = new RMQConnection(rabbitConnection, getTerminationTimeout(), getQueueBrowserReadMax(), getOnMessageTimeoutMs());
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
         return conn;
@@ -185,7 +187,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         .append(", host='").append(this.host)
         .append("', port=").append(this.getPort())
         .append(", virtualHost='").append(this.virtualHost)
-        .append("', queueBrowserReadMax=").append(this.queueBrowserReadMax)
+        .append("', onMessageTimeoutMs=").append(this.onMessageTimeoutMs)
+        .append(", queueBrowserReadMax=").append(this.queueBrowserReadMax)
         .append('}').toString();
     }
 
@@ -319,6 +322,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         Reference ref = new Reference(RMQConnectionFactory.class.getName());
         addStringRefProperty(ref, "uri", this.getUri());
         addIntegerRefProperty(ref, "queueBrowserReadMax", this.getQueueBrowserReadMax());
+        addIntegerRefProperty(ref, "onMessageTimeoutMs", this.getOnMessageTimeoutMs());
         return ref;
     }
 
@@ -521,5 +525,21 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     public void setQueueBrowserReadMax(int queueBrowserReadMax) {
         this.queueBrowserReadMax = Math.max(0, queueBrowserReadMax);
+    }
+
+    /**
+     * Returns the time in milliseconds {@link MessageListener#onMessage(Message)} can take to process a message
+     * @return the time in milliseconds {@link MessageListener#onMessage(Message)} can take to process a message
+     */
+    public int getOnMessageTimeoutMs() { return this.onMessageTimeoutMs; }
+
+    /**
+     * Sets <i>onMessageTimeoutMs</i>: the time in milliseconds {@link MessageListener#onMessage(Message)} can take to process a message.
+     * Non-positive values are rejected.
+     * @param onMessageTimeoutMs - duration in milliseconds
+     */
+    public void setOnMessageTimeoutMs(int onMessageTimeoutMs){
+        if (onMessageTimeoutMs > 0) this.onMessageTimeoutMs = onMessageTimeoutMs;
+        else this.logger.warn("Cannot set onMessageTimeoutMs to non-positive value {} (on {})", onMessageTimeoutMs, this);
     }
 }
