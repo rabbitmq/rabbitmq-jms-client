@@ -1,9 +1,18 @@
-# Changes Between 1.4.7 and 1.5.0
+## Changes Between 1.5.x and 1.6.0
+
+### Configurable On Message Timeout
+
+Contributed by Guillaume Mornet.
+
+GitHub issue: [rabbitmq-jms-client#5](https://github.com/rabbitmq/rabbitmq-jms-client/issues/5)
+
+
+## Changes Between 1.4.7 and 1.5.0
 
 `1.5.0` is a maintainence release that includes a fix
 for `CVE-2016-6194`.
 
-## Limited ObjectMessage Deserialization
+### Limited ObjectMessage Deserialization
 
 Classes that can be deserialized from `javax.jms.ObjectMessage`
 now can be limited via a package prefix white list.
