@@ -59,7 +59,7 @@ launching the `verify` command:
     mvn clean verify
 
 You can also provide your own broker node. To disable the
-automatic test cluster setup, disable the `setup-test-node` Maven
+automatic test node setup, disable the `setup-test-node` Maven
 profile:
 
     mvn clean verify -P '!setup-test-node'
