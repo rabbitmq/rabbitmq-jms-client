@@ -1,25 +1,17 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import static org.junit.Assert.fail;
+import com.rabbitmq.jms.client.Completion;
+import com.rabbitmq.jms.util.Shell;
+import org.junit.Test;
 
+import javax.jms.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.jms.ExceptionListener;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
-import javax.jms.Topic;
-import javax.jms.TopicSession;
-
-import org.junit.Test;
-
-import com.rabbitmq.jms.client.Completion;
-import com.rabbitmq.jms.util.Shell;
+import static org.junit.Assert.fail;
 
 /**
  * Integration test of broker close while waiting for receive on a Topic destination.
@@ -65,11 +57,8 @@ public class ConnectionForceCloseOnReceiveIT extends AbstractITTopic {
 
         Thread.sleep(ONE_SECOND);
 
-        t("breaking connection...");
-        t(Shell.executeControl("stop_app"));
-        t("returned from 'stop_app' normally");
-        t(Shell.executeControl("start_app"));
-        t("returned from 'start_app' normally");
+        Shell.invokeMakeTarget("stop-rabbit-on-node start-rabbit-on-node");
+
 
         try {
             t("waiting for completion...");

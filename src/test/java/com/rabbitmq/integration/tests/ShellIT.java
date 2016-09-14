@@ -10,7 +10,7 @@ public class ShellIT extends AbstractITQueue {
 
     @Test
     public void issueSimpleCommand() throws Exception {
-        String result = Shell.executeCommand("pwd");
+        String result = Shell.executeSimpleCommand("pwd");
         System.out.println("Result of pwd is '"+result+"'");
     }
 

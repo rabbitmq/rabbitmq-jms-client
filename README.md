@@ -47,10 +47,22 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for an overview of the development proc
 
 ### Integration Tests
 
-Assuming a node with [rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-jms-topic-exchange/) is running on localhost
-with all defaults:
+The integration tests assume a RabbitMQ node 
+with [rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-jms-topic-exchange/)
+listening on localhost:5672 (the default settings).
+
+Connection recovery tests need `rabbitmqctl` to control the running node.
+
+Maven will start this node with the appropriate configuration by default when
+launching the `verify` command:
 
     mvn clean verify
+
+You can also provide your own broker node. To disable the
+automatic test cluster setup, disable the `setup-test-node` Maven
+profile:
+
+    mvn clean verify -P '!setup-test-node'
 
 The easiest way to run a test node is to clone
 [rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-jms-topic-exchange/) and use `make run-broker`.
