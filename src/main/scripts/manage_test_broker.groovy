@@ -14,22 +14,21 @@ case ~/^start-test-broker-.*/:
 
   command = [
     properties['make.bin'],
-    '-C', properties['rabbitmq.dir'],
+    '-C', "${properties['deps.dir']}/rabbitmq_jms_topic_exchange",
     '--no-print-directory',
     'virgin-node-tmpdir',
     'start-background-broker',
     "DEPS_DIR=${properties['deps.dir']}",
     "RABBITMQ_NODENAME=${nodename}",
     "RABBITMQ_NODE_PORT=${node_port}",
-    "RABBITMQ_CONFIG_FILE=${project.build.directory}/test-classes/${nodename}",
-    "PLUGINS=rabbitmq_jms_topic_exchange"
+    "RABBITMQ_CONFIG_FILE=${project.build.directory}/test-classes/${nodename}"
   ]
   break
 
 case ~/^stop-test-broker-.*/:
   command = [
     properties['make.bin'],
-    '-C', properties['rabbitmq.dir'],
+    '-C', "${properties['deps.dir']}/rabbitmq_jms_topic_exchange",
     '--no-print-directory',
     'stop-node',
     "DEPS_DIR=${properties['deps.dir']}",
