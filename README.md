@@ -1,3 +1,5 @@
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.rabbitmq.jms/rabbitmq-jms/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.rabbitmq.jms/rabbitmq-jms)
+
 # Java JMS Client for RabbitMQ
 
 **WIP warning**: open sourcing of RabbitMQ JMS repositories is not yet
