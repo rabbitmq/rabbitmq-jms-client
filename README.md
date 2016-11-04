@@ -2,9 +2,6 @@
 
 # Java JMS Client for RabbitMQ
 
-**WIP warning**: open sourcing of RabbitMQ JMS repositories is not yet
-100% complete. Most notably the docs are not yet ready.
-
 ## Overview
 
 This is a JMS 1.1 client library for RabbitMQ, working in concert with [rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-jms-topic-exchange),
