@@ -1,7 +1,6 @@
-# Java JMS Client for RabbitMQ
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.rabbitmq.jms/rabbitmq-jms/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.rabbitmq.jms/rabbitmq-jms)
 
-**WIP warning**: open sourcing of RabbitMQ JMS repositories is not yet
-100% complete. Most notably the docs are not yet ready.
+# Java JMS Client for RabbitMQ
 
 ## Overview
 
