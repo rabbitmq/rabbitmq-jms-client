@@ -2,6 +2,7 @@
 package com.rabbitmq.jms.admin;
 
 import com.rabbitmq.client.Address;
+import com.rabbitmq.jms.client.ConnectionParams;
 import com.rabbitmq.jms.client.RMQConnection;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.RMQJMSSecurityException;
@@ -93,7 +94,12 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         setRabbitUri(logger, this, factory, this.getUri());
         com.rabbitmq.client.Connection rabbitConnection = instantiateNodeConnection(factory);
 
-        RMQConnection conn = new RMQConnection(rabbitConnection, getTerminationTimeout(), getQueueBrowserReadMax(), getOnMessageTimeoutMs());
+        RMQConnection conn = new RMQConnection(new ConnectionParams()
+            .setRabbitConnection(rabbitConnection)
+            .setTerminationTimeout(getTerminationTimeout())
+            .setQueueBrowserReadMax(getQueueBrowserReadMax())
+            .setOnMessageTimeoutMs(getOnMessageTimeoutMs())
+        );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
         return conn;
@@ -108,7 +114,12 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         maybeEnableTLS(cf);
         com.rabbitmq.client.Connection rabbitConnection = instantiateNodeConnection(cf, endpoints);
 
-        RMQConnection conn = new RMQConnection(rabbitConnection, getTerminationTimeout(), getQueueBrowserReadMax(), getOnMessageTimeoutMs());
+        RMQConnection conn = new RMQConnection(new ConnectionParams()
+            .setRabbitConnection(rabbitConnection)
+            .setTerminationTimeout(getTerminationTimeout())
+            .setQueueBrowserReadMax(getQueueBrowserReadMax())
+            .setOnMessageTimeoutMs(getOnMessageTimeoutMs())
+        );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
         return conn;

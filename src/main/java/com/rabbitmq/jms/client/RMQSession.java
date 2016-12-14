@@ -157,6 +157,37 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * Creates a session object associated with a connection
+     * @param sessionParams parameters for this session
+     * @throws JMSException if we fail to create a {@link Channel} object on the connection, or if the acknowledgement mode is incorrect
+     */
+    public RMQSession(SessionParams sessionParams) throws JMSException {
+        if (sessionParams.getMode() < 0 || sessionParams.getMode() > CLIENT_INDIVIDUAL_ACKNOWLEDGE) {
+            throw new JMSException(String.format("cannot create session with acknowledgement mode = %d.", sessionParams.getMode()));
+        }
+        this.connection = sessionParams.getConnection();
+        this.transacted = sessionParams.isTransacted();
+        this.subscriptions = sessionParams.getSubscriptions();
+        this.deliveryExecutor = new DeliveryExecutor(sessionParams.getOnMessageTimeoutMs());
+
+        if (transacted) {
+            this.acknowledgeMode = Session.SESSION_TRANSACTED;
+            this.isIndividualAck = false;
+        } else if (sessionParams.getMode() == CLIENT_INDIVIDUAL_ACKNOWLEDGE) {
+            this.acknowledgeMode = Session.CLIENT_ACKNOWLEDGE;
+            this.isIndividualAck = true;
+        } else {
+            this.acknowledgeMode = sessionParams.getMode();
+            this.isIndividualAck = false;
+        }
+        try {
+            this.channel = connection.createRabbitChannel(transacted);
+        } catch (Exception x) { // includes unchecked exceptions, e.g. ShutdownSignalException
+            throw new RMQJMSException(x);
+        }
+    }
+
+    /**
+     * Creates a session object associated with a connection
      * @param connection the connection that we will send data on
      * @param transacted whether this session is transacted or not
      * @param onMessageTimeoutMs how long to wait for onMessage to return, in milliseconds
@@ -165,27 +196,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @throws JMSException if we fail to create a {@link Channel} object on the connection, or if the acknowledgement mode is incorrect
      */
     public RMQSession(RMQConnection connection, boolean transacted, int onMessageTimeoutMs, int mode, Map<String, RMQMessageConsumer> subscriptions) throws JMSException {
-        if (mode<0 || mode>CLIENT_INDIVIDUAL_ACKNOWLEDGE) throw new JMSException(String.format("cannot create session with acknowledgement mode = %d.", mode));
-        this.connection = connection;
-        this.transacted = transacted;
-        this.subscriptions = subscriptions;
-        this.deliveryExecutor = new DeliveryExecutor(onMessageTimeoutMs);
-
-        if (transacted) {
-            this.acknowledgeMode = Session.SESSION_TRANSACTED;
-            this.isIndividualAck = false;
-        } else if (mode==CLIENT_INDIVIDUAL_ACKNOWLEDGE) {
-            this.acknowledgeMode = Session.CLIENT_ACKNOWLEDGE;
-            this.isIndividualAck = true;
-        } else {
-            this.acknowledgeMode = mode;
-            this.isIndividualAck = false;
-        }
-        try {
-            this.channel = connection.createRabbitChannel(transacted);
-        } catch (Exception x) { // includes unchecked exceptions, e.g. ShutdownSignalException
-            throw new RMQJMSException(x);
-        }
+        this(new SessionParams()
+            .setConnection(connection)
+            .setTransacted(transacted)
+            .setOnMessageTimeoutMs(onMessageTimeoutMs)
+            .setMode(mode)
+            .setSubscriptions(subscriptions)
+        );
     }
 
     /**

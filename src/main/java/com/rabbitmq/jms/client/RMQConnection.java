@@ -90,19 +90,32 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
     /**
      * Creates an RMQConnection object.
+     * @param connectionParams parameters for this connection
+     */
+    public RMQConnection(ConnectionParams connectionParams) {
+
+        connectionParams.getRabbitConnection().addShutdownListener(new RMQConnectionShutdownListener());
+
+        this.rabbitConnection = connectionParams.getRabbitConnection();
+        this.terminationTimeout = connectionParams.getTerminationTimeout();
+        this.queueBrowserReadMax = connectionParams.getQueueBrowserReadMax();
+        this.onMessageTimeoutMs = connectionParams.getOnMessageTimeoutMs();
+    }
+
+    /**
+     * Creates an RMQConnection object.
      * @param rabbitConnection the TCP connection wrapper to the RabbitMQ broker
      * @param terminationTimeout timeout for close in milliseconds
      * @param queueBrowserReadMax maximum number of messages to read from a QueueBrowser (before filtering)
      * @param onMessageTimeoutMs how long to wait for onMessage to return, in milliseconds
      */
     public RMQConnection(com.rabbitmq.client.Connection rabbitConnection, long terminationTimeout, int queueBrowserReadMax, int onMessageTimeoutMs) {
-
-        rabbitConnection.addShutdownListener(new RMQConnectionShutdownListener());
-
-        this.rabbitConnection = rabbitConnection;
-        this.terminationTimeout = terminationTimeout;
-        this.queueBrowserReadMax = queueBrowserReadMax;
-        this.onMessageTimeoutMs = onMessageTimeoutMs;
+        this(new ConnectionParams()
+            .setRabbitConnection(rabbitConnection)
+            .setTerminationTimeout(terminationTimeout)
+            .setQueueBrowserReadMax(queueBrowserReadMax)
+            .setOnMessageTimeoutMs(onMessageTimeoutMs)
+        );
     }
 
     private static final long FIFTEEN_SECONDS_MS = 15000;
@@ -126,7 +139,13 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         logger.trace("transacted={}, acknowledgeMode={}", transacted, acknowledgeMode);
         illegalStateExceptionIfClosed();
         freezeClientID();
-        RMQSession session = new RMQSession(this, transacted, onMessageTimeoutMs, acknowledgeMode, this.subscriptions);
+        RMQSession session = new RMQSession(new SessionParams()
+            .setConnection(this)
+            .setTransacted(transacted)
+            .setOnMessageTimeoutMs(onMessageTimeoutMs)
+            .setMode(acknowledgeMode)
+            .setSubscriptions(this.subscriptions)
+        );
         session.setTrustedPackages(this.trustedPackages);
         this.sessions.add(session);
         return session;
