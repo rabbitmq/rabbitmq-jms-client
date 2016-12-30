@@ -47,7 +47,9 @@ import com.rabbitmq.jms.util.RMQJMSException;
  */
 public class RMQConnection implements Connection, QueueConnection, TopicConnection {
 
-    private final Logger logger = LoggerFactory.getLogger(RMQConnection.class);;
+    public static final int NO_CHANNEL_QOS = -1;
+
+    private final Logger logger = LoggerFactory.getLogger(RMQConnection.class);
 
     /** the TCP connection wrapper to the RabbitMQ broker */
     private final com.rabbitmq.client.Connection rabbitConnection;
@@ -82,6 +84,13 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private volatile boolean canSetClientID = true;
 
     /**
+     * QoS setting for channels created by this connection.
+     *
+     * @see com.rabbitmq.client.Channel#basicQos(int)
+     */
+    private final int channelsQos;
+
+    /**
      * Classes in these packages can be transferred via ObjectMessage.
      *
      * @see WhiteListObjectInputStream
@@ -100,6 +109,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.terminationTimeout = connectionParams.getTerminationTimeout();
         this.queueBrowserReadMax = connectionParams.getQueueBrowserReadMax();
         this.onMessageTimeoutMs = connectionParams.getOnMessageTimeoutMs();
+        this.channelsQos = connectionParams.getChannelsQos();
     }
 
     /**
@@ -326,6 +336,9 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
     Channel createRabbitChannel(boolean transactional) throws IOException {
         Channel channel = this.rabbitConnection.createChannel();
+        if(this.channelsQos != NO_CHANNEL_QOS) {
+            channel.basicQos(channelsQos);
+        }
         if (transactional) {
             channel.txSelect();
         }
