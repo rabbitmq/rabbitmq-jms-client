@@ -17,6 +17,7 @@ import java.security.cert.X509Certificate;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 public class SslContextIT {
@@ -40,7 +41,7 @@ public class SslContextIT {
         sslContext.init(null, new TrustManager[] {trustManager}, null);
         connectionFactory.useSslProtocol(sslContext);
         connection = connectionFactory.createConnection();
-        assertEquals(1, trustManager.checkServerTrustedCallCount.get());
+        assertTrue("TrustManager#checkServerTrusted must be called", trustManager.checkServerTrustedCallCount.get() >= 1);
     }
 
     @Test public void useDefaultSslContextWhenOptionIsEnabled() throws Exception {
@@ -52,7 +53,7 @@ public class SslContextIT {
         SSLContext.setDefault(defaultSslContext);
         connectionFactory.useDefaultSslContext(true);
         connection = connectionFactory.createConnection();
-        assertEquals(1, defaultTrustManager.checkServerTrustedCallCount.get());
+        assertTrue("TrustManager#checkServerTrusted must be called", defaultTrustManager.checkServerTrustedCallCount.get() >= 1);
     }
 
     @Test public void defaultSslContextOverridesSetSslContext() throws Exception {
@@ -70,7 +71,7 @@ public class SslContextIT {
         connectionFactory.useSslProtocol(sslContext);
 
         connection = connectionFactory.createConnection();
-        assertEquals(1, defaultTrustManager.checkServerTrustedCallCount.get());
+        assertTrue("TrustManager#checkServerTrusted must be called", defaultTrustManager.checkServerTrustedCallCount.get() >= 1);
         assertEquals(0, trustManager.checkServerTrustedCallCount.get());
     }
 
