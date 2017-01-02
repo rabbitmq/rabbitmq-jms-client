@@ -319,8 +319,6 @@
         <version>2.5</version>
         <configuration>
           <tagNameFormat>v@{project.version}</tagNameFormat>
-          <autoVersionSubmodules>true</autoVersionSubmodules>
-          <releaseProfiles>releases</releaseProfiles>
         </configuration>
       </plugin>
       <plugin>
