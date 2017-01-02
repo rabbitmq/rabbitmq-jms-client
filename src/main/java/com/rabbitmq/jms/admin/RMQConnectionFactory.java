@@ -62,6 +62,13 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private volatile long terminationTimeout = Long.getLong("rabbit.jms.terminationTimeout", 15000);
 
     /**
+     * QoS setting for channels created by this connection factory.
+     *
+     * @see com.rabbitmq.client.Channel#basicQos(int)
+     */
+    private int channelsQos = RMQConnection.NO_CHANNEL_QOS;
+
+    /**
      * Classes in these packages can be transferred via ObjectMessage.
      *
      * @see WhiteListObjectInputStream
@@ -99,6 +106,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setTerminationTimeout(getTerminationTimeout())
             .setQueueBrowserReadMax(getQueueBrowserReadMax())
             .setOnMessageTimeoutMs(getOnMessageTimeoutMs())
+            .setChannelsQos(channelsQos)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
@@ -552,5 +560,25 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     public void setOnMessageTimeoutMs(int onMessageTimeoutMs){
         if (onMessageTimeoutMs > 0) this.onMessageTimeoutMs = onMessageTimeoutMs;
         else this.logger.warn("Cannot set onMessageTimeoutMs to non-positive value {} (on {})", onMessageTimeoutMs, this);
+    }
+
+    /**
+     * QoS setting for channels created by this connection factory.
+     *
+     * @see com.rabbitmq.client.Channel#basicQos(int)
+     */
+    public int getChannelsQos() {
+        return channelsQos;
+    }
+
+    /**
+     * QoS setting for channels created by this connection factory.
+     *
+     * @see com.rabbitmq.client.Channel#basicQos(int)
+     * @param channelsQos maximum number of messages that the server
+     * will deliver, 0 if unlimited
+     */
+    public void setChannelsQos(int channelsQos) {
+        this.channelsQos = channelsQos;
     }
 }

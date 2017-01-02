@@ -20,6 +20,13 @@ public class ConnectionParams {
     /** How long to wait for onMessage to return, in milliseconds */
     private int onMessageTimeoutMs;
 
+    /**
+     * QoS setting for channels
+     *
+     * @see com.rabbitmq.client.Channel#basicQos(int)
+     */
+    private int channelsQos = RMQConnection.NO_CHANNEL_QOS;
+
     public Connection getRabbitConnection() {
         return rabbitConnection;
     }
@@ -53,6 +60,15 @@ public class ConnectionParams {
 
     public ConnectionParams setOnMessageTimeoutMs(int onMessageTimeoutMs) {
         this.onMessageTimeoutMs = onMessageTimeoutMs;
+        return this;
+    }
+
+    public int getChannelsQos() {
+        return channelsQos;
+    }
+
+    public ConnectionParams setChannelsQos(int channelsQos) {
+        this.channelsQos = channelsQos;
         return this;
     }
 }
