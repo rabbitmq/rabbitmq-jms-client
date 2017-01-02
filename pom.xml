@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.rabbitmq.jms</groupId>
@@ -7,7 +6,7 @@
 
   <name>rabbitmq-jms</name>
   <description>RabbitMQ JMS Client</description>
-  <version>1.6.0-SNAPSHOT</version>
+  <version>1.6.0.RC1</version>
   <url>http://www.rabbitmq.com</url>
 
   <packaging>jar</packaging>
@@ -38,6 +37,7 @@
     <url>https://github.com/rabbitmq/rabbitmq-jms-client</url>
     <connection>scm:git:git://github.com/rabbitmq/rabbitmq-jms-client.git</connection>
     <developerConnection>scm:git:git@github.com:rabbitmq/rabbitmq-jms-client.git</developerConnection>
+    <tag>v1.6.0.RC1</tag>
   </scm>
 
   <properties>
@@ -281,12 +281,12 @@
             </goals>
             <configuration>
               <target>
-                <mkdir dir="${surefire.reports.dir}"/>
+                <mkdir dir="${surefire.reports.dir}" />
                 <junitreport todir="${surefire.reports.dir}">
                   <fileset dir="${surefire.reports.dir}">
-                    <include name="**/*.xml"/>
+                    <include name="**/*.xml" />
                   </fileset>
-                  <report format="noframes" todir="${surefire.reports.dir}"/>
+                  <report format="noframes" todir="${surefire.reports.dir}" />
                 </junitreport>
               </target>
             </configuration>
@@ -300,12 +300,12 @@
             </goals>
             <configuration>
               <target>
-                <mkdir dir="${failsafe.reports.dir}"/>
+                <mkdir dir="${failsafe.reports.dir}" />
                 <junitreport todir="${failsafe.reports.dir}">
                   <fileset dir="${failsafe.reports.dir}">
-                    <include name="**/*.xml"/>
+                    <include name="**/*.xml" />
                   </fileset>
-                  <report format="noframes" todir="${failsafe.reports.dir}"/>
+                  <report format="noframes" todir="${failsafe.reports.dir}" />
                 </junitreport>
               </target>
             </configuration>
