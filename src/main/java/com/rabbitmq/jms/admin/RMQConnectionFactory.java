@@ -53,6 +53,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private boolean ssl = false;
     private String tlsProtocol;
     private SSLContext sslContext;
+    private boolean useDefaultSslContext = false;
 
     /** The maximum number of messages to read on a queue browser, which must be non-negative;
      *  0 means unlimited and is the default; negative values are interpreted as 0. */
@@ -250,12 +251,16 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private void maybeEnableTLS(com.rabbitmq.client.ConnectionFactory factory) {
         if (this.ssl)
             try {
-                if (this.sslContext != null) {
-                    factory.useSslProtocol(this.sslContext);
-                } else if (this.tlsProtocol != null) {
-                    factory.useSslProtocol(this.tlsProtocol);
+                if(this.useDefaultSslContext) {
+                    factory.useSslProtocol(SSLContext.getDefault());
                 } else {
-                    factory.useSslProtocol();
+                    if (this.sslContext != null) {
+                        factory.useSslProtocol(this.sslContext);
+                    } else if (this.tlsProtocol != null) {
+                        factory.useSslProtocol(this.tlsProtocol);
+                    } else {
+                        factory.useSslProtocol();
+                    }
                 }
             } catch (Exception e) {
                 this.logger.warn("Could not set SSL protocol on connection factory, {}. SSL set off.", this, e);
@@ -297,6 +302,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     public void useSslProtocol(String protocol)
     {
         this.tlsProtocol = protocol;
+        this.ssl = true;
     }
 
     /**
@@ -305,6 +311,47 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     public void useSslProtocol(SSLContext context) {
         this.sslContext = context;
+        this.ssl = true;
+    }
+
+    /**
+     * Whether to use the default {@link SSLContext} or not.
+     * Default is false.
+     *
+     * When this option is enabled, the default {@link SSLContext}
+     * will always be used and will override any other {@link SSLContext}
+     * set.
+     *
+     * @param useDefaultSslContext
+     * @see SSLContext#getDefault()
+     */
+    public void useDefaultSslContext(boolean useDefaultSslContext) {
+        this.useDefaultSslContext = useDefaultSslContext;
+        this.ssl = true;
+    }
+
+    /**
+     * Whether to use the default {@link SSLContext} or not.
+     *
+     * @see SSLContext#getDefault()
+     */
+    public boolean isUseDefaultSslContext() {
+        return useDefaultSslContext;
+    }
+
+    /**
+     * Whether to use the default {@link SSLContext} or not.
+     * Default is false.
+     *
+     * When this option is enabled, the default {@link SSLContext}
+     * will always be used and will override any other {@link SSLContext}
+     * set.
+     *
+     * @param useDefaultSslContext
+     * @see SSLContext#getDefault()
+     */
+    public void setUseDefaultSslContext(boolean useDefaultSslContext) {
+        this.useDefaultSslContext(useDefaultSslContext);
     }
 
     private static String scheme(boolean isSsl) {
