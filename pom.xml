@@ -70,6 +70,10 @@
     <rabbitmq.dir>${deps.dir}/rabbit</rabbitmq.dir>
     <rabbitmqctl.bin>${rabbitmq.dir}/scripts/rabbitmqctl</rabbitmqctl.bin>
 
+    <test-keystore.ca>${project.build.directory}/ca.keystore</test-keystore.ca>
+    <test-keystore.empty>${project.build.directory}/empty.keystore</test-keystore.empty>
+    <test-keystore.password>bunnies</test-keystore.password>
+
     <test-broker.A.nodename>rabbit@localhost</test-broker.A.nodename>
     <test-broker.A.node_port>5672</test-broker.A.node_port>
     <test-broker.A.config_file>${project.build.directory}/test-classes/${test-broker.A.nodename}</test-broker.A.config_file>
@@ -126,6 +130,17 @@
   </dependencies>
 
   <build>
+    <!--
+    Those resources are a Java properties file and RabbitMQ
+    configuration files for the test brokers.
+    -->
+    <testResources>
+      <testResource>
+        <directory>${basedir}/src/test/resources</directory>
+        <filtering>true</filtering>
+      </testResource>
+    </testResources>
+
     <plugins>
 
       <plugin>
@@ -168,6 +183,13 @@
             <make.bin>${make.bin}</make.bin>
             <rabbitmq.dir>${rabbitmq.dir}</rabbitmq.dir>
             <rabbitmqctl.bin>${rabbitmqctl.bin}</rabbitmqctl.bin>
+
+            <test-keystore.ca>${test-keystore.ca}</test-keystore.ca>
+            <test-keystore.empty>${test-keystore.empty}</test-keystore.empty>
+            <test-keystore.password>${test-keystore.password}</test-keystore.password>
+            <test-client-cert.path>${test-tls-certs.dir}/client/keycert.p12</test-client-cert.path>
+            <test-client-cert.password>changeme</test-client-cert.password>
+
             <test-broker.A.nodename>${test-broker.A.nodename}</test-broker.A.nodename>
             <test-broker.A.node_port>${test-broker.A.node_port}</test-broker.A.node_port>
             <test-broker.A.config_file>${test-broker.A.config_file}</test-broker.A.config_file>
@@ -300,6 +322,70 @@
           <autoVersionSubmodules>true</autoVersionSubmodules>
           <releaseProfiles>releases</releaseProfiles>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.gmaven</groupId>
+        <artifactId>groovy-maven-plugin</artifactId>
+        <version>2.0</version>
+        <executions>
+          <!--
+              We always remove the generated Java keystores because
+              keytool(1) complains if the destination file already exists
+              with the content we want to import.
+          -->
+          <execution>
+            <phase>generate-test-resources</phase>
+            <id>remove-old-test-keystores</id>
+            <goals>
+              <goal>execute</goal>
+            </goals>
+            <configuration>
+              <source>
+                ${groovy-scripts.dir}/remove_old_test_keystores.groovy
+              </source>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Generate two Java keystores for the SSLTests testsuite. -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>keytool-maven-plugin</artifactId>
+        <version>1.5</version>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+        <executions>
+          <execution>
+            <id>generate-test-ca-keystore</id>
+            <phase>generate-test-resources</phase>
+            <goals>
+              <goal>importCertificate</goal>
+            </goals>
+            <configuration>
+              <file>${test-tls-certs.dir}/testca/cacert.pem</file>
+              <keystore>${test-keystore.ca}</keystore>
+              <storepass>${test-keystore.password}</storepass>
+              <noprompt>true</noprompt>
+              <alias>server1</alias>
+            </configuration>
+          </execution>
+          <execution>
+            <id>generate-test-empty-keystore</id>
+            <phase>generate-test-resources</phase>
+            <goals>
+              <goal>importCertificate</goal>
+              <goal>deleteAlias</goal>
+            </goals>
+            <configuration>
+              <file>${test-tls-certs.dir}/testca/cacert.pem</file>
+              <keystore>${test-keystore.empty}</keystore>
+              <storepass>${test-keystore.password}</storepass>
+              <noprompt>true</noprompt>
+              <alias>server1</alias>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
@@ -762,6 +848,22 @@
             <version>2.0</version>
             <executions>
               <!--
+              We use "${rabbitmq.dir}/Makefile" to query the location of
+              the test TLS certificates.
+              -->
+              <execution>
+                <phase>generate-test-resources</phase>
+                <id>query-test-tls-certs-dir</id>
+                <goals>
+                  <goal>execute</goal>
+                </goals>
+                <configuration>
+                  <source>
+                    ${groovy-scripts.dir}/query_test_tls_certs_dir.groovy
+                  </source>
+                </configuration>
+              </execution>
+              <!--
               Start a broker.
 
               Currently, this test broker will listen to the default
@@ -805,7 +907,45 @@
               </execution>
             </executions>
           </plugin>
+          <!--
+          Generate two Java keystores from the test TLS certificates.
+          Here, we only enable the plugin. The actual configuration is
+          in the main <build /> element.
+          -->
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>keytool-maven-plugin</artifactId>
+            <configuration>
+              <skip>false</skip>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <!--
+      If the caller decided to provide an external RabbitMQ
+      broker/cluster, he can specify the path to his test TLS
+      certificates with the ${test-tls-certs.dir} property.
 
+      Thus, if the CA certificate exists, we also enable the generation
+      of the two Java keystores.
+      -->
+      <id>use-provided-test-keystores</id>
+      <activation>
+        <file>
+          <exists>${test-tls-certs.dir}/testca/cacert.pem</exists>
+        </file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>keytool-maven-plugin</artifactId>
+            <configuration>
+              <skip>false</skip>
+            </configuration>
+          </plugin>
         </plugins>
       </build>
     </profile>

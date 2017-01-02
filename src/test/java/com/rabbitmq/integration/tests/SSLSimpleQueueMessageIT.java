@@ -10,7 +10,6 @@ import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -20,11 +19,6 @@ public class SSLSimpleQueueMessageIT extends AbstractITQueueSSL {
 
     private static final String QUEUE_NAME = "test.queue."+SSLSimpleQueueMessageIT.class.getCanonicalName();
     private static final long TEST_RECEIVE_TIMEOUT = 1000; // one second
-
-    @Before
-    public void beforeTests() throws Exception {
-        org.junit.Assume.assumeTrue(Boolean.getBoolean("com.rabbitmq.jms.TLSTests"));
-    }
 
     private void messageTestBase(MessageTestType mtt) throws Exception {
         try {

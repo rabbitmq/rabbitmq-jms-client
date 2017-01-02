@@ -13,7 +13,6 @@ public abstract class AbstractITTopicSSL {
 
     @Before
     public void beforeTests() throws Exception {
-        org.junit.Assume.assumeTrue(Boolean.getBoolean("com.rabbitmq.jms.TLSTests"));
         this.connFactory =
                 (TopicConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory(true, 0)
                                                                       .getConnectionFactory();
