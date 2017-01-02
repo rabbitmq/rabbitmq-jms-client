@@ -90,8 +90,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.password = password;
         // Create a new factory and set the properties
         com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
-        maybeEnableTLS(factory);
         setRabbitUri(logger, this, factory, this.getUri());
+        maybeEnableTLS(factory);
         com.rabbitmq.client.Connection rabbitConnection = instantiateNodeConnection(factory);
 
         RMQConnection conn = new RMQConnection(new ConnectionParams()

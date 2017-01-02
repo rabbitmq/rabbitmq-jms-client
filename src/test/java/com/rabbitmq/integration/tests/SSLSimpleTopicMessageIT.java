@@ -11,7 +11,6 @@ import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -19,11 +18,6 @@ import org.junit.Test;
  */
 public class SSLSimpleTopicMessageIT extends AbstractITTopicSSL {
     private static final String TOPIC_NAME = "test.topic." + SSLSimpleTopicMessageIT.class.getCanonicalName();
-
-    @Before
-    public void beforeTests() throws Exception {
-        org.junit.Assume.assumeTrue(Boolean.getBoolean("com.rabbitmq.jms.TLSTests"));
-    }
 
     @Test
     public void testSendAndReceiveTextMessage() throws Exception {
