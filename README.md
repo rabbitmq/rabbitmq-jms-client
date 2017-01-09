@@ -13,9 +13,9 @@ a RabbitMQ server plugin.
 
 This package is published to several Maven package repositories:
 
- * [oss.sonatype.org](https://oss.sonatype.org/#nexus-search;quick~rabbitmq-jms)
- * [repo.spring.io](https://repo.spring.io/libs-release-local/com/rabbitmq/jms/rabbitmq-jms/)
- * Maven Central (via eventual promotion from the first one)
+ * [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.rabbitmq.jms%22%20AND%20a%3A%22rabbitmq-jms%22)
+ * [Bintray RabbitMQ Maven Release repository](https://bintray.com/rabbitmq/maven)
+ 
 
 Add the following dependency to `pom.xml`:
 
