@@ -1,5 +1,3 @@
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.rabbitmq.jms/rabbitmq-jms/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.rabbitmq.jms/rabbitmq-jms)
-
 # Java JMS Client for RabbitMQ
 
 ## Overview
@@ -13,8 +11,8 @@ a RabbitMQ server plugin.
 
 This package is published to several Maven package repositories:
 
- * [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.rabbitmq.jms%22%20AND%20a%3A%22rabbitmq-jms%22)
- * [Bintray RabbitMQ Maven Release repository](https://bintray.com/rabbitmq/maven)
+ * [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.rabbitmq.jms%22%20AND%20a%3A%22rabbitmq-jms%22): [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.rabbitmq.jms/rabbitmq-jms/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.rabbitmq.jms/rabbitmq-jms)
+ * [RabbitMQ Maven Release repository](https://bintray.com/rabbitmq/maven) on Bintray
  
 
 Add the following dependency to `pom.xml`:
