@@ -1,11 +1,6 @@
 ## Changes Between 1.5.x and 1.6.0
 
-### Configurable On Message Timeout
-
-Contributed by Guillaume Mornet.
-
-GitHub issue: [rabbitmq-jms-client#5](https://github.com/rabbitmq/rabbitmq-jms-client/issues/5)
-
+See https://github.com/rabbitmq/rabbitmq-jms-client/releases/tag/v1.6.0.
 
 ## Changes Between 1.4.7 and 1.5.0
 
