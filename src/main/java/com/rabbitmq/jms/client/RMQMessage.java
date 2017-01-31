@@ -1,52 +1,23 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.nio.charset.Charset;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.jms.BytesMessage;
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
-import javax.jms.Message;
-import javax.jms.MessageFormatException;
-import javax.jms.MessageNotWriteableException;
-import javax.jms.ObjectMessage;
-import javax.jms.StreamMessage;
-import javax.jms.TextMessage;
-
-import com.rabbitmq.jms.util.WhiteListObjectInputStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.rabbitmq.client.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
-import com.rabbitmq.jms.client.message.RMQBytesMessage;
-import com.rabbitmq.jms.client.message.RMQMapMessage;
-import com.rabbitmq.jms.client.message.RMQObjectMessage;
-import com.rabbitmq.jms.client.message.RMQStreamMessage;
-import com.rabbitmq.jms.client.message.RMQTextMessage;
-import com.rabbitmq.jms.util.HexDisplay;
-import com.rabbitmq.jms.util.IteratorEnum;
-import com.rabbitmq.jms.util.RMQJMSException;
-import com.rabbitmq.jms.util.Util;
+import com.rabbitmq.jms.client.message.*;
+import com.rabbitmq.jms.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.jms.*;
+import java.io.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.Charset;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * Base class for RMQ*Message classes. This is abstract and cannot be instantiated independently.
@@ -1051,8 +1022,9 @@ public abstract class RMQMessage implements Message, Cloneable {
             WhiteListObjectInputStream in = new WhiteListObjectInputStream(bin, trustedPackages);
             // read the class name from the stream
             String clazz = in.readUTF();
-            //instantiate the message object with the thread context classloader
-            RMQMessage msg = (RMQMessage) Class.forName(clazz, true, Thread.currentThread().getContextClassLoader()).newInstance();
+            // instantiate the message object
+            RMQMessage msg = instantiateRmqMessage(clazz, trustedPackages);
+
             // read the message id
             msg.internalMessageID = in.readUTF();
             // read JMS properties
@@ -1076,10 +1048,46 @@ public abstract class RMQMessage implements Message, Cloneable {
             throw new RMQJMSException(x);
         } catch (ClassNotFoundException x) {
             throw new RMQJMSException(x);
-        } catch (IllegalAccessException x) {
-            throw new RMQJMSException(x);
-        } catch (InstantiationException x) {
-            throw new RMQJMSException(x);
+        }
+    }
+
+    private static RMQMessage instantiateRmqMessage(String messageClass, List<String> trustedPackages) throws RMQJMSException {
+        if(isRmqObjectMessageClass(messageClass)) {
+            return instantiateRmqObjectMessageWithTrustedPackages(trustedPackages);
+        } else {
+            try {
+                // instantiate the message object with the thread context classloader
+                return (RMQMessage) Class.forName(messageClass, true, Thread.currentThread().getContextClassLoader()).newInstance();
+            } catch (InstantiationException e) {
+                throw new RMQJMSException(e);
+            } catch (IllegalAccessException e) {
+                throw new RMQJMSException(e);
+            } catch (ClassNotFoundException e) {
+                throw new RMQJMSException(e);
+            }
+        }
+    }
+
+    private static boolean isRmqObjectMessageClass(String clazz) {
+        return RMQObjectMessage.class.getName().equals(clazz);
+    }
+
+    private static RMQObjectMessage instantiateRmqObjectMessageWithTrustedPackages(List<String> trustedPackages) throws RMQJMSException {
+        try {
+            // instantiate the message object with the thread context classloader
+            Class<?> messageClass = Class.forName(RMQObjectMessage.class.getName(), true, Thread.currentThread().getContextClassLoader());
+            Constructor<?> constructor = messageClass.getConstructor(List.class);
+            return (RMQObjectMessage) constructor.newInstance(trustedPackages);
+        } catch (NoSuchMethodException e) {
+            throw new RMQJMSException(e);
+        } catch (InvocationTargetException e) {
+            throw new RMQJMSException(e);
+        } catch (IllegalAccessException e) {
+            throw new RMQJMSException(e);
+        } catch (InstantiationException e) {
+            throw new RMQJMSException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RMQJMSException(e);
         }
     }
 
@@ -1353,10 +1361,11 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
 
     static RMQMessage normalise(Message msg, List<String> trustedPackages) throws JMSException {
+        if (msg instanceof RMQMessage) return (RMQMessage) msg;
+
+        /* If not one of our own, copy it into an RMQMessage */
              if (msg instanceof BytesMessage )    return RMQBytesMessage.recreate((BytesMessage)msg);
         else if (msg instanceof MapMessage   )    return RMQMapMessage.recreate((MapMessage)msg);
-        else if (msg instanceof RMQObjectMessage) return RMQObjectMessage.recreate((RMQObjectMessage)msg, trustedPackages);
-        else if (msg instanceof RMQMessage)       return (RMQMessage) msg;
         else if (msg instanceof ObjectMessage)    return RMQObjectMessage.recreate((ObjectMessage) msg);
         else if (msg instanceof StreamMessage)    return RMQStreamMessage.recreate((StreamMessage)msg);
         else if (msg instanceof TextMessage  )    return RMQTextMessage.recreate((TextMessage)msg);
