@@ -64,10 +64,15 @@ profile:
 The easiest way to run a test node is to clone
 [rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-jms-topic-exchange/) and use `make run-broker`.
 
+### JMS 1.1 Compliance Test Suite
+
+[JMS 1.1 compliance test suite](https://github.com/rabbitmq/rabbitmq-jms-cts) for this client is available
+in a separate repository.
+
 
 ## License and Copyright
 
-(c) Pivotal Software, Inc., 2007-2016.
+(c) Pivotal Software, Inc., 2007-2017.
 
 This package, the RabbitMQ JMS client library, is double-licensed
 under the Apache License version 2 ("ASL") and the Mozilla Public License
