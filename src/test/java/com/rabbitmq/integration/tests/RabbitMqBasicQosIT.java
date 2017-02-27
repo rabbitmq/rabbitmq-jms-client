@@ -3,17 +3,12 @@ package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.client.RMQConnection;
-import org.awaitility.Awaitility;
-import org.awaitility.Duration;
-import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import javax.jms.*;
-import java.lang.IllegalStateException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.awaitility.Awaitility.*;
@@ -106,7 +101,7 @@ public class RabbitMqBasicQosIT extends AbstractITQueue {
             // ack first message
             ackLatch.countDown();
             // second message should be delivered to first listener
-            waitAtMost(ONE_SECOND).untilCall(to(listener).getMessageCount(), equalTo(2));
+            waitAtMost(ONE_SECOND).until(new MessageListenerMessageCountCallable(listener), equalTo(2));
 
             assertEquals(2, listener.getMessageCount());
             assertEquals(0, listener2.getMessageCount());
@@ -164,6 +159,20 @@ public class RabbitMqBasicQosIT extends AbstractITQueue {
         }
         public int getMessageCount() {
             return this.messageCount.get();
+        }
+    }
+
+    private static class MessageListenerMessageCountCallable implements Callable<Integer> {
+
+        private final MessageListener listener;
+
+        private MessageListenerMessageCountCallable(MessageListener listener) {
+            this.listener = listener;
+        }
+
+        @Override
+        public Integer call() throws Exception {
+            return listener.getMessageCount();
         }
     }
 }
