@@ -33,6 +33,23 @@ or a Spring bean example:
   </bean>
 ```
 
+or a Wildfly xml configuration example:
+
+```xml
+<bindings>
+    <object-factory name="java:global/jms/ConnectionFactory" module="org.jboss.genericjms.provider" class="com.rabbitmq.jms.admin.RMQObjectFactory">
+        <environment>
+            <property name="className" value="javax.jms.ConnectionFactory"/>
+            <property name="username" value="guest"/>
+            <property name="password" value="guest"/>
+            <property name="virtualHost" value="/"/>
+            <property name="host" value="localhost"/>
+            <property name="ssl" value="true"/>
+        </environment>
+    </object-factory>
+</bindings>
+```
+
 Here is a complete list of the attributes/properties available:
 
 ----
