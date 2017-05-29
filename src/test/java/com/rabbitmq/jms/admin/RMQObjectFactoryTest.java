@@ -117,6 +117,7 @@ public class RMQObjectFactoryTest {
 
         try {
             rmqObjectFactory.getObjectInstance("anything but a javax.naming.Reference", new CompositeName("java:global/jms/TestConnectionFactory"), null, environment);
+            fail("Should have thrown a NamingException");
         } catch (NamingException ne) {
             assertEquals("Property [amqpExchangeName] may not be null.", ne.getMessage());
         }
@@ -134,6 +135,7 @@ public class RMQObjectFactoryTest {
 
         try {
             rmqObjectFactory.getObjectInstance("anything but a javax.naming.Reference", new CompositeName("java:global/jms/TestConnectionFactory"), null, null);
+            fail("Should have thrown a NamingException");
         } catch (NamingException ne) {
             assertEquals("Unable to instantiate object: obj is not a Reference instance and environment table is empty", ne.getMessage());
         }
@@ -144,6 +146,7 @@ public class RMQObjectFactoryTest {
 
         try {
             rmqObjectFactory.getObjectInstance("anything but a javax.naming.Reference", new CompositeName("java:global/jms/TestConnectionFactory"), null, new Hashtable<Object, Object>());
+            fail("Should have thrown a NamingException");
         } catch (NamingException ne) {
             assertEquals("Unable to instantiate object: obj is not a Reference instance and environment table is empty", ne.getMessage());
         }
@@ -157,6 +160,7 @@ public class RMQObjectFactoryTest {
                 put("anything but className", "some value");
             }};
             rmqObjectFactory.getObjectInstance("anything but a javax.naming.Reference", new CompositeName("java:global/jms/TestConnectionFactory"), null, environment);
+            fail("Should have thrown a NamingException");
         } catch (NamingException ne) {
             assertEquals("Unable to instantiate object: type has not been specified", ne.getMessage());
         }
