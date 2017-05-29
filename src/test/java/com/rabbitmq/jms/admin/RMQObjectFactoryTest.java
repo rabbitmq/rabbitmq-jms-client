@@ -20,7 +20,7 @@ public class RMQObjectFactoryTest {
     private RMQObjectFactory rmqObjectFactory = new RMQObjectFactory();
 
     @Test
-    public void getObjectInstance_should_create_a_RMQConnectionFactory_via_Reference() throws Exception {
+    public void getObjectInstanceShouldCreateARMQConnectionFactoryViaReference() throws Exception {
 
         Reference ref = new Reference(ConnectionFactory.class.getName());
 
@@ -40,7 +40,7 @@ public class RMQObjectFactoryTest {
 
 
     @Test
-    public void getObjectInstance_should_create_a_RMQConnectionFactory_via_environment() throws Exception {
+    public void getObjectInstanceShouldCreateARMQConnectionFactoryViaEnvironment() throws Exception {
 
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
             put("className", "javax.jms.ConnectionFactory");
@@ -65,7 +65,7 @@ public class RMQObjectFactoryTest {
     }
 
     @Test
-    public void getObjectInstance_should_create_a_RMQDestination_QUEUE_via_environment() throws Exception {
+    public void getObjectInstanceShouldCreateARMQDestinationQUEUEViaEnvironment() throws Exception {
 
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
             put("className", "javax.jms.Queue");
@@ -86,7 +86,7 @@ public class RMQObjectFactoryTest {
 
 
     @Test
-    public void getObjectInstance_should_create_a_RMQDestination_TOPIC_via_environment() throws Exception {
+    public void getObjectInstanceShouldCreateARMQDestinationTOPICViaEnvironment() throws Exception {
 
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
             put("className", "javax.jms.Topic");
@@ -107,7 +107,7 @@ public class RMQObjectFactoryTest {
 
 
     @Test
-    public void getObjectInstance_should_throw_NamingException_when_missing_required_property_via_environment() throws Exception {
+    public void getObjectInstanceShouldThrowNamingExceptionWhenMissingRequiredPropertyViaEnvironment() throws Exception {
 
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
             put("className", "javax.jms.Queue");
@@ -124,13 +124,13 @@ public class RMQObjectFactoryTest {
     }
 
     @Test
-    public void getObjectInstance_should_return_null_object_arg_is_null() throws Exception {
+    public void getObjectInstanceShouldReturnNullObjectWhenObjectArgIsNull() throws Exception {
 
         assertNull(rmqObjectFactory.getObjectInstance(null, new CompositeName("java:global/jms/TestConnectionFactory"), null, null));
     }
 
     @Test
-    public void getObjectInstance_should_throw_NamingException_when_object_arg_is_not_a_Reference_and_environment_is_null() throws Exception {
+    public void getObjectInstanceShouldThrowNamingExceptionWhenObjectArgIsNotAReferenceAndEnvironmentIsNull() throws Exception {
 
         try {
             rmqObjectFactory.getObjectInstance("anything but a javax.naming.Reference", new CompositeName("java:global/jms/TestConnectionFactory"), null, null);
@@ -140,7 +140,7 @@ public class RMQObjectFactoryTest {
     }
 
     @Test
-    public void getObjectInstance_should_throw_NamingException_when_object_arg_is_not_a_Reference_and_environment_is_empty() throws Exception {
+    public void getObjectInstanceShouldThrowNamingExceptionWhenObjectArgIsNotAReferenceAndEnvironmentIsempty() throws Exception {
 
         try {
             rmqObjectFactory.getObjectInstance("anything but a javax.naming.Reference", new CompositeName("java:global/jms/TestConnectionFactory"), null, new Hashtable<Object, Object>());
@@ -150,7 +150,7 @@ public class RMQObjectFactoryTest {
     }
 
     @Test
-    public void getObjectInstance_should_throw_NamingException_when_object_arg_is_not_a_Reference_and_environment_className_is_missing() throws Exception {
+    public void getObjectInstanceShouldThrowNamingExceptionWhenObjectArgIsNotAReferenceAndEnvironmentClassNameIsMissing() throws Exception {
 
         try {
             Hashtable<Object, Object> environment = new Hashtable<Object, Object>() {{
