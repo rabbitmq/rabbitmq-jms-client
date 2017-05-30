@@ -1,4 +1,4 @@
-# Java JMS Client Documentation Changes for RJMS 1.3.3
+# Java JMS Client Documentation Changes for RJMS 1.7.0
 
 ----
 

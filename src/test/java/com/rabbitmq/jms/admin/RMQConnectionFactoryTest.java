@@ -3,6 +3,7 @@ package com.rabbitmq.jms.admin;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Properties;
 
 import javax.naming.CompositeName;
@@ -15,6 +16,7 @@ import org.junit.Test;
 public class RMQConnectionFactoryTest {
 
     private static final Properties defaultProps = new Properties();
+
     static {
         RMQConnectionFactory defaultFact = new RMQConnectionFactory();
         defaultProps.setProperty("uri", defaultFact.getUri());
@@ -27,21 +29,22 @@ public class RMQConnectionFactoryTest {
         Properties props = new Properties();
         while (refEnum.hasMoreElements()) {
             RefAddr ra = refEnum.nextElement();
-            props.setProperty(ra.getType(), (String)ra.getContent());
+            props.setProperty(ra.getType(), (String) ra.getContent());
         }
         return props;
     }
 
     /**
      * Adds a String valued property to a Reference (as a RefAddr)
-     * @param ref - the reference to contain the value
+     *
+     * @param ref          - the reference to contain the value
      * @param propertyName - the name of the property
-     * @param value - the value to store with the property
+     * @param value        - the value to store with the property
      */
     private static void addStringRefProperty(Reference ref,
                                              String propertyName,
                                              String value) {
-        if (value==null || propertyName==null) return;
+        if (value == null || propertyName == null) return;
         removeRefProperty(ref, propertyName);
         RefAddr ra = new StringRefAddr(propertyName, value);
         ref.add(ra);
@@ -49,17 +52,19 @@ public class RMQConnectionFactoryTest {
 
     /**
      * Remove property from a Reference (as a RefAddr)
-     * @param ref - the reference
+     *
+     * @param ref          - the reference
      * @param propertyName - the name of the property to remove
      */
     private static void removeRefProperty(Reference ref,
                                           String propertyName) {
-        if (propertyName==null) return;
+        if (propertyName == null) return;
         int numProps = ref.size();
-        for (int i=0; i < numProps; ++i) {
+        for (int i = 0; i < numProps; ++i) {
             RefAddr ra = ref.get(i);
             if (ra.getType().equals(propertyName)) {
-                ref.remove(i--); numProps--;
+                ref.remove(i--);
+                numProps--;
             }
         }
     }
@@ -109,7 +114,7 @@ public class RMQConnectionFactoryTest {
 
         Reference ref = connFactory.getReference();
 
-        RMQConnectionFactory newFactory = (RMQConnectionFactory) new RMQObjectFactory().createConnectionFactory(ref, new CompositeName("newOne"));
+        RMQConnectionFactory newFactory = (RMQConnectionFactory) new RMQObjectFactory().createConnectionFactory(ref, new Hashtable<Object, Object>(), new CompositeName("newOne"));
 
         assertEquals("Not the correct uri", "amqps://fred:my-password@sillyHost:42/bill", newFactory.getUri());
 
@@ -120,6 +125,37 @@ public class RMQConnectionFactoryTest {
         assertEquals("Not the correct ssl", true, newFactory.isSsl());
 
         assertEquals("Not the correct terminationTimeout", 15000L, newFactory.getTerminationTimeout());
+
+        assertEquals("Not the correct username", "fred", newFactory.getUsername());
+        assertEquals("Not the correct virtualHost", "bill", newFactory.getVirtualHost());
+    }
+
+    @Test
+    public void testConnectionFactoryRegenerationViaEnvironmentProperties() throws Exception {
+
+        Hashtable<Object, Object> environment = new Hashtable<Object, Object>();
+
+
+        environment.put("host", "sillyHost");
+        environment.put("password", "my-password");
+        environment.put("port", 42);
+        environment.put("queueBrowserReadMax", 52);
+        environment.put("ssl", true);
+        environment.put("terminationTimeout", 1234567890123456789L);
+        environment.put("username", "fred");
+        environment.put("virtualHost", "bill");
+
+        RMQConnectionFactory newFactory = (RMQConnectionFactory) new RMQObjectFactory().createConnectionFactory(null, environment, new CompositeName("newOne"));
+
+        assertEquals("Not the correct uri", "amqps://fred:my-password@sillyHost:42/bill", newFactory.getUri());
+
+        assertEquals("Not the correct host", "sillyHost", newFactory.getHost());
+        assertEquals("Not the correct password", "my-password", newFactory.getPassword());
+        assertEquals("Not the correct port", 42, newFactory.getPort());
+        assertEquals("Not the correct queueBrowserReadMax", 52, newFactory.getQueueBrowserReadMax());
+        assertEquals("Not the correct ssl", true, newFactory.isSsl());
+
+        assertEquals("Not the correct terminationTimeout", 1234567890123456789L, newFactory.getTerminationTimeout());
 
         assertEquals("Not the correct username", "fred", newFactory.getUsername());
         assertEquals("Not the correct virtualHost", "bill", newFactory.getVirtualHost());
@@ -138,11 +174,11 @@ public class RMQConnectionFactoryTest {
         addStringRefProperty(ref, "queueBrowserReadMax", "52"); // duplicates don't overwrite
         addStringRefProperty(ref, "onMessageTimeoutMs", "62");
         addStringRefProperty(ref, "ssl", "true");
-        addStringRefProperty(ref, "terminationTimeout","1234567890123456789");
+        addStringRefProperty(ref, "terminationTimeout", "1234567890123456789");
         addStringRefProperty(ref, "username", "fred");
         addStringRefProperty(ref, "virtualHost", "bill");
 
-        RMQConnectionFactory newFactory = (RMQConnectionFactory) new RMQObjectFactory().createConnectionFactory(ref, new CompositeName("newOne"));
+        RMQConnectionFactory newFactory = (RMQConnectionFactory) new RMQObjectFactory().createConnectionFactory(ref, new Hashtable<Object, Object>(), new CompositeName("newOne"));
 
         assertEquals("Not the correct host", "sillyHost", newFactory.getHost());
         assertEquals("Not the correct password", "my-password", newFactory.getPassword());
