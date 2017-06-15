@@ -1,7 +1,10 @@
-/* Copyright (c) 2016 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2016-2017 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.Connection;
+
+import javax.jms.Message;
+import javax.jms.MessageProducer;
 
 /**
  * Holder for {@link RMQConnection} constructor arguments.
@@ -26,6 +29,14 @@ public class ConnectionParams {
      * @see com.rabbitmq.client.Channel#basicQos(int)
      */
     private int channelsQos = RMQConnection.NO_CHANNEL_QOS;
+
+    /**
+     * Whether {@link MessageProducer} properties (delivery mode,
+     * priority, TTL) take precedence over respective {@link Message}
+     * properties or not.
+     * Default is true.
+     */
+    private boolean preferProducerMessageProperty = true;
 
     public Connection getRabbitConnection() {
         return rabbitConnection;
@@ -69,6 +80,15 @@ public class ConnectionParams {
 
     public ConnectionParams setChannelsQos(int channelsQos) {
         this.channelsQos = channelsQos;
+        return this;
+    }
+
+    public boolean willPreferProducerMessageProperty() {
+        return preferProducerMessageProperty;
+    }
+
+    public ConnectionParams setPreferProducerMessageProperty(boolean preferProducerMessageProperty) {
+        this.preferProducerMessageProperty = preferProducerMessageProperty;
         return this;
     }
 }

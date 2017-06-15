@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2017 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
 import com.rabbitmq.client.Address;
@@ -48,6 +48,13 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private int port = -1;
     /** How long to wait for onMessage to return, in milliseconds */
     private int onMessageTimeoutMs = 2000;
+    /**
+     * Whether {@link MessageProducer} properties (delivery mode,
+     * priority, TTL) take precedence over respective {@link Message}
+     * properties or not.
+     * Default is true (which is compliant to the JMS specification).
+     */
+    private boolean preferProducerMessageProperty = true;
 
     /** Default not to use ssl */
     private boolean ssl = false;
@@ -108,6 +115,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setQueueBrowserReadMax(getQueueBrowserReadMax())
             .setOnMessageTimeoutMs(getOnMessageTimeoutMs())
             .setChannelsQos(channelsQos)
+            .setPreferProducerMessageProperty(preferProducerMessageProperty)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
@@ -128,6 +136,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setTerminationTimeout(getTerminationTimeout())
             .setQueueBrowserReadMax(getQueueBrowserReadMax())
             .setOnMessageTimeoutMs(getOnMessageTimeoutMs())
+            .setChannelsQos(channelsQos)
+            .setPreferProducerMessageProperty(preferProducerMessageProperty)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
@@ -627,5 +637,19 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     public void setChannelsQos(int channelsQos) {
         this.channelsQos = channelsQos;
+    }
+
+    /**
+     * Whether {@link MessageProducer} properties (delivery mode,
+     * priority, TTL) take precedence over respective {@link Message}
+     * properties or not.
+     * Default is true (which is compliant to the JMS specification).
+     */
+    public void setPreferProducerMessageProperty(boolean preferProducerMessageProperty) {
+        this.preferProducerMessageProperty = preferProducerMessageProperty;
+    }
+
+    public boolean isPreferProducerMessageProperty() {
+        return preferProducerMessageProperty;
     }
 }

@@ -71,11 +71,15 @@ public abstract class RMQMessage implements Message, Cloneable {
     private static final String JMS_MESSAGE_CORR_ID = PREFIX + "jms.message.correlation.id";
     private static final String JMS_MESSAGE_REPLY_TO = PREFIX + "jms.message.reply.to";
     private static final String JMS_MESSAGE_DESTINATION = PREFIX + "jms.message.destination";
-    private static final String JMS_MESSAGE_DELIVERY_MODE = PREFIX + "jms.message.delivery.mode";
     private static final String JMS_MESSAGE_REDELIVERED = PREFIX + "jms.message.redelivered";
     private static final String JMS_MESSAGE_TYPE = PREFIX + "jms.message.type";
-    private static final String JMS_MESSAGE_EXPIRATION = PREFIX + "jms.message.expiration";
-    private static final String JMS_MESSAGE_PRIORITY = PREFIX + "jms.message.priority";
+
+    /**
+     * Those needs to be checked in the producer
+     */
+    static final String JMS_MESSAGE_DELIVERY_MODE = PREFIX + "jms.message.delivery.mode";
+    static final String JMS_MESSAGE_EXPIRATION = PREFIX + "jms.message.expiration";
+    static final String JMS_MESSAGE_PRIORITY = PREFIX + "jms.message.priority";
 
     /**
      * For turning {@link String}s into <code>byte[]</code> and back we use this {@link Charset} instance.
