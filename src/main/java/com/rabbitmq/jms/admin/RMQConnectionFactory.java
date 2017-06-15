@@ -54,7 +54,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * properties or not.
      * Default is true (which is compliant to the JMS specification).
      */
-    private boolean preferMessagePropertiesFromProducer = true;
+    private boolean preferProducerMessageProperty = true;
 
     /** Default not to use ssl */
     private boolean ssl = false;
@@ -115,7 +115,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setQueueBrowserReadMax(getQueueBrowserReadMax())
             .setOnMessageTimeoutMs(getOnMessageTimeoutMs())
             .setChannelsQos(channelsQos)
-            .setPreferProducerMessageProperty(preferMessagePropertiesFromProducer)
+            .setPreferProducerMessageProperty(preferProducerMessageProperty)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
@@ -137,7 +137,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setQueueBrowserReadMax(getQueueBrowserReadMax())
             .setOnMessageTimeoutMs(getOnMessageTimeoutMs())
             .setChannelsQos(channelsQos)
-            .setPreferProducerMessageProperty(preferMessagePropertiesFromProducer)
+            .setPreferProducerMessageProperty(preferProducerMessageProperty)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
@@ -645,11 +645,11 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * properties or not.
      * Default is true (which is compliant to the JMS specification).
      */
-    public void setPreferMessagePropertiesFromProducer(boolean preferMessagePropertiesFromProducer) {
-        this.preferMessagePropertiesFromProducer = preferMessagePropertiesFromProducer;
+    public void setPreferProducerMessageProperty(boolean preferProducerMessageProperty) {
+        this.preferProducerMessageProperty = preferProducerMessageProperty;
     }
 
-    public boolean isPreferMessagePropertiesFromProducer() {
-        return preferMessagePropertiesFromProducer;
+    public boolean isPreferProducerMessageProperty() {
+        return preferProducerMessageProperty;
     }
 }
