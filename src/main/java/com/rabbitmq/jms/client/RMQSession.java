@@ -85,7 +85,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * properties or not.
      * Default is true.
      */
-    private boolean messageProducerPropertyPrioritary = true;
+    private boolean preferProducerMessageProperty = true;
 
     /** The main RabbitMQ channel we use under the hood */
     private final Channel channel;
@@ -176,7 +176,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.transacted = sessionParams.isTransacted();
         this.subscriptions = sessionParams.getSubscriptions();
         this.deliveryExecutor = new DeliveryExecutor(sessionParams.getOnMessageTimeoutMs());
-        this.messageProducerPropertyPrioritary = sessionParams.isMessageProducerPropertyPrioritary();
+        this.preferProducerMessageProperty = sessionParams.willPreferProducerMessageProperty();
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;
@@ -586,7 +586,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         illegalStateExceptionIfClosed();
         RMQDestination dest = (RMQDestination) destination;
         declareDestinationIfNecessary(dest);
-        RMQMessageProducer producer = new RMQMessageProducer(this, dest, this.messageProducerPropertyPrioritary);
+        RMQMessageProducer producer = new RMQMessageProducer(this, dest, this.preferProducerMessageProperty);
         this.producers.add(producer);
         return producer;
     }

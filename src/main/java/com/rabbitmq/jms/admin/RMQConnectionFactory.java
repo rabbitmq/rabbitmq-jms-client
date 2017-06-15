@@ -115,7 +115,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setQueueBrowserReadMax(getQueueBrowserReadMax())
             .setOnMessageTimeoutMs(getOnMessageTimeoutMs())
             .setChannelsQos(channelsQos)
-            .setMessageProducerPropertyPrioritary(preferMessagePropertiesFromProducer)
+            .setPreferProducerMessageProperty(preferMessagePropertiesFromProducer)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
@@ -137,7 +137,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setQueueBrowserReadMax(getQueueBrowserReadMax())
             .setOnMessageTimeoutMs(getOnMessageTimeoutMs())
             .setChannelsQos(channelsQos)
-            .setMessageProducerPropertyPrioritary(preferMessagePropertiesFromProducer)
+            .setPreferProducerMessageProperty(preferMessagePropertiesFromProducer)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);

@@ -82,7 +82,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      * properties or not.
      * Default is true.
      */
-    private boolean messageProducerPropertyPrioritary;
+    private boolean preferProducerMessageProperty;
 
     /**
      * Classes in these packages can be transferred via ObjectMessage.
@@ -104,7 +104,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.queueBrowserReadMax = connectionParams.getQueueBrowserReadMax();
         this.onMessageTimeoutMs = connectionParams.getOnMessageTimeoutMs();
         this.channelsQos = connectionParams.getChannelsQos();
-        this.messageProducerPropertyPrioritary = connectionParams.isMessageProducerPropertyPrioritary();
+        this.preferProducerMessageProperty = connectionParams.willPreferProducerMessageProperty();
     }
 
     /**
@@ -150,7 +150,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setOnMessageTimeoutMs(onMessageTimeoutMs)
             .setMode(acknowledgeMode)
             .setSubscriptions(this.subscriptions)
-            .setMessageProducerPropertyPrioritary(this.messageProducerPropertyPrioritary)
+            .setPreferProducerMessageProperty(this.preferProducerMessageProperty)
         );
         session.setTrustedPackages(this.trustedPackages);
         this.sessions.add(session);

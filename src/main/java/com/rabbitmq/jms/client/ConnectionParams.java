@@ -36,7 +36,7 @@ public class ConnectionParams {
      * properties or not.
      * Default is true.
      */
-    private boolean messageProducerPropertyPrioritary = true;
+    private boolean preferProducerMessageProperty = true;
 
     public Connection getRabbitConnection() {
         return rabbitConnection;
@@ -83,12 +83,12 @@ public class ConnectionParams {
         return this;
     }
 
-    public boolean isMessageProducerPropertyPrioritary() {
-        return messageProducerPropertyPrioritary;
+    public boolean willPreferProducerMessageProperty() {
+        return preferProducerMessageProperty;
     }
 
-    public ConnectionParams setMessageProducerPropertyPrioritary(boolean messageProducerPropertyPrioritary) {
-        this.messageProducerPropertyPrioritary = messageProducerPropertyPrioritary;
+    public ConnectionParams setPreferProducerMessageProperty(boolean preferProducerMessageProperty) {
+        this.preferProducerMessageProperty = preferProducerMessageProperty;
         return this;
     }
 }

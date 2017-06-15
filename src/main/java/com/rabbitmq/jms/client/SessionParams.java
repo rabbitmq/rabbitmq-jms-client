@@ -31,7 +31,7 @@ public class SessionParams {
      * properties or not.
      * Default is true.
      */
-    private boolean messageProducerPropertyPrioritary = true;
+    private boolean preferProducerMessageProperty = true;
 
     public RMQConnection getConnection() {
         return connection;
@@ -78,12 +78,12 @@ public class SessionParams {
         return this;
     }
 
-    public boolean isMessageProducerPropertyPrioritary() {
-        return messageProducerPropertyPrioritary;
+    public boolean willPreferProducerMessageProperty() {
+        return preferProducerMessageProperty;
     }
 
-    public SessionParams setMessageProducerPropertyPrioritary(boolean messageProducerPropertyPrioritary) {
-        this.messageProducerPropertyPrioritary = messageProducerPropertyPrioritary;
+    public SessionParams setPreferProducerMessageProperty(boolean preferProducerMessageProperty) {
+        this.preferProducerMessageProperty = preferProducerMessageProperty;
         return this;
     }
 }

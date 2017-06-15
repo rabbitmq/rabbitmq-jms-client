@@ -29,7 +29,7 @@ public class RMQMessageProducerTest {
         destination = Mockito.mock(RMQDestination.class);
     }
 
-    @Test public void producerPropertyPrioritaryNoMessagePropertySpecified() throws Exception {
+    @Test public void preferProducerPropertyNoMessagePropertySpecified() throws Exception {
         StubRMQMessageProducer producer = new StubRMQMessageProducer(
             session, destination, true
         );
@@ -44,7 +44,7 @@ public class RMQMessageProducerTest {
         assertTrue(message.getJMSExpiration() > System.currentTimeMillis());
     }
 
-    @Test public void producerPropertyPrioritaryMessagePropertiesSpecified() throws Exception {
+    @Test public void preferProducerPropertyMessagePropertiesSpecified() throws Exception {
         StubRMQMessageProducer producer = new StubRMQMessageProducer(
             session, destination, true
         );
@@ -62,7 +62,7 @@ public class RMQMessageProducerTest {
         assertTrue(message.getJMSExpiration() > System.currentTimeMillis());
     }
 
-    @Test public void producerPropertyNotPrioritaryNoMessagePropertySpecified() throws Exception {
+    @Test public void preferMessagePropertyNoMessagePropertySpecified() throws Exception {
         StubRMQMessageProducer producer = new StubRMQMessageProducer(
             session, destination, false
         );
@@ -77,7 +77,7 @@ public class RMQMessageProducerTest {
         assertTrue(message.getJMSExpiration() > System.currentTimeMillis());
     }
 
-    @Test public void producerPropertyNotPrioritaryMessagePropertiesSpecified() throws Exception {
+    @Test public void preferMessagePropertyMessagePropertiesSpecified() throws Exception {
         StubRMQMessageProducer producer = new StubRMQMessageProducer(
             session, destination, false
         );
@@ -100,8 +100,8 @@ public class RMQMessageProducerTest {
 
         RMQMessage message;
 
-        public StubRMQMessageProducer(RMQSession session, RMQDestination destination, boolean producerPropertyPrioritary) {
-            super(session, destination, producerPropertyPrioritary);
+        public StubRMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty) {
+            super(session, destination, preferProducerMessageProperty);
         }
 
         @Override

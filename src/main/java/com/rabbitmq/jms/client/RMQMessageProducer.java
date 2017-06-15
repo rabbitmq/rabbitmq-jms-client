@@ -73,15 +73,15 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      * Create a producer of messages.
      * @param session which this producer uses
      * @param destination to which this producer sends messages.
-     * @param producerPropertyPrioritary properties take precedence over respective message properties
+     * @param preferProducerMessageProperty properties take precedence over respective message properties
      */
-    public RMQMessageProducer(RMQSession session, RMQDestination destination, boolean producerPropertyPrioritary) {
+    public RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty) {
         this.session = session;
         this.destination = destination;
-        if (producerPropertyPrioritary) {
-            sendingStrategy = new MessageProducerPropertyPrioritarySendingStategy();
+        if (preferProducerMessageProperty) {
+            sendingStrategy = new PreferMessageProducerPropertySendingStategy();
         } else {
-            sendingStrategy = new MessagePropertyPrioritarySendingStrategy();
+            sendingStrategy = new PreferMessagePropertySendingStrategy();
         }
     }
 
@@ -422,7 +422,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      * This implementation ignores message properties (delivery mode, priority, and expiration)
      * in favor of the message producer's properties.
      */
-    private class MessageProducerPropertyPrioritarySendingStategy implements SendingStrategy {
+    private class PreferMessageProducerPropertySendingStategy implements SendingStrategy {
 
         @Override
         public void send(Destination destination, Message message) throws JMSException {
@@ -440,7 +440,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      * This implementation uses message properties (delivery mode, priority, and expiration)
      * if they've been set up. It falls back to the message producer's properties.
      */
-    private class MessagePropertyPrioritarySendingStrategy implements SendingStrategy {
+    private class PreferMessagePropertySendingStrategy implements SendingStrategy {
 
         @Override
         public void send(Destination destination, Message message) throws JMSException {
