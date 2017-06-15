@@ -10,22 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionConsumer;
-import javax.jms.ConnectionMetaData;
-import javax.jms.Destination;
-import javax.jms.ExceptionListener;
+import javax.jms.*;
 import javax.jms.IllegalStateException;
-import javax.jms.InvalidClientIDException;
-import javax.jms.JMSException;
-import javax.jms.Queue;
-import javax.jms.QueueConnection;
-import javax.jms.QueueSession;
-import javax.jms.ServerSessionPool;
-import javax.jms.Session;
-import javax.jms.Topic;
-import javax.jms.TopicConnection;
-import javax.jms.TopicSession;
 
 import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 import org.slf4j.Logger;
@@ -91,6 +77,14 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private final int channelsQos;
 
     /**
+     * Whether {@link MessageProducer} properties (delivery mode,
+     * priority, TTL) take precedence over respective {@link Message}
+     * properties or not.
+     * Default is true.
+     */
+    private boolean messageProducerPropertyPrioritary;
+
+    /**
      * Classes in these packages can be transferred via ObjectMessage.
      *
      * @see WhiteListObjectInputStream
@@ -110,6 +104,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.queueBrowserReadMax = connectionParams.getQueueBrowserReadMax();
         this.onMessageTimeoutMs = connectionParams.getOnMessageTimeoutMs();
         this.channelsQos = connectionParams.getChannelsQos();
+        this.messageProducerPropertyPrioritary = connectionParams.isMessageProducerPropertyPrioritary();
     }
 
     /**
@@ -155,6 +150,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setOnMessageTimeoutMs(onMessageTimeoutMs)
             .setMode(acknowledgeMode)
             .setSubscriptions(this.subscriptions)
+            .setMessageProducerPropertyPrioritary(this.messageProducerPropertyPrioritary)
         );
         session.setTrustedPackages(this.trustedPackages);
         this.sessions.add(session);

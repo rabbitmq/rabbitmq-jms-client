@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2017 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
@@ -21,6 +21,10 @@ import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.util.RMQJMSException;
+
+import static com.rabbitmq.jms.client.RMQMessage.JMS_MESSAGE_DELIVERY_MODE;
+import static com.rabbitmq.jms.client.RMQMessage.JMS_MESSAGE_EXPIRATION;
+import static com.rabbitmq.jms.client.RMQMessage.JMS_MESSAGE_PRIORITY;
 
 /**
  *
@@ -63,14 +67,31 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     private long ttl = Message.DEFAULT_TIME_TO_LIVE;
 
+    private final SendingStrategy sendingStrategy;
+
+    /**
+     * Create a producer of messages.
+     * @param session which this producer uses
+     * @param destination to which this producer sends messages.
+     * @param producerPropertyPrioritary properties take precedence over respective message properties
+     */
+    public RMQMessageProducer(RMQSession session, RMQDestination destination, boolean producerPropertyPrioritary) {
+        this.session = session;
+        this.destination = destination;
+        if (producerPropertyPrioritary) {
+            sendingStrategy = new MessageProducerPropertyPrioritarySendingStategy();
+        } else {
+            sendingStrategy = new MessagePropertyPrioritarySendingStrategy();
+        }
+    }
+
     /**
      * Create a producer of messages.
      * @param session which this producer uses
      * @param destination to which this producer sends messages.
      */
     public RMQMessageProducer(RMQSession session, RMQDestination destination) {
-        this.session = session;
-        this.destination = destination;
+        this(session, destination, true);
     }
 
     /**
@@ -182,7 +203,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void send(Message message) throws JMSException {
-        this.internalSend(this.destination, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
+        this.sendingStrategy.send(this.destination, message);
     }
 
     /**
@@ -190,7 +211,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void send(Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        this.internalSend(this.destination, message, deliveryMode, priority, timeToLive);
+        this.sendingStrategy.send(this.destination, message, deliveryMode, priority, timeToLive);
     }
 
     /**
@@ -199,7 +220,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     @Override
     public void send(Destination destination, Message message) throws JMSException {
         this.checkUnidentifiedMessageProducer(destination);
-        this.internalSend((RMQDestination)destination, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
+        this.sendingStrategy.send(this.destination, message);
     }
 
     private void checkUnidentifiedMessageProducer(Destination destination) {
@@ -213,11 +234,11 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         this.checkUnidentifiedMessageProducer(destination);
-        this.internalSend((RMQDestination)destination, message, deliveryMode, priority, timeToLive);
+        this.sendingStrategy.send(destination, message, deliveryMode, priority, timeToLive);
     }
 
-    private void internalSend(RMQDestination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        logger.trace("send/publish message({}) to destination({}) with properties deliveryMode({}), priority({}), timeToLive({})", message, destination, deliveryMode, priority, timeToLive);
+    private void internalSend(RMQDestination destination, Message message, int deliveryMode, int priority, long timeToLiveOrExpiration, MessageExpirationType messageExpirationType) throws JMSException {
+        logger.trace("send/publish message({}) to destination({}) with properties deliveryMode({}), priority({}), timeToLive({})", message, destination, deliveryMode, priority, timeToLiveOrExpiration);
 
         if (destination == null)
             destination = this.destination;
@@ -231,7 +252,15 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
         /* Set known JMS message properties that need to be set during this call */
         long currentTime = System.currentTimeMillis();
-        long expiration = timeToLive == 0L ? 0L : currentTime + timeToLive;
+        long expiration;
+        long ttl;
+        if (messageExpirationType == MessageExpirationType.TTL) {
+            expiration = timeToLiveOrExpiration == 0L ? 0L : currentTime + timeToLiveOrExpiration;
+            ttl = timeToLiveOrExpiration;
+        } else {
+            expiration = timeToLiveOrExpiration;
+            ttl = timeToLiveOrExpiration - currentTime;
+        }
 
         rmqMessage.setJMSDeliveryMode(deliveryMode);
         rmqMessage.setJMSPriority(priority);
@@ -242,9 +271,9 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
         /* Now send it */
         if (destination.isAmqp()) {
-            sendAMQPMessage(destination, rmqMessage, deliveryMode, priority, timeToLive);
+            sendAMQPMessage(destination, rmqMessage, deliveryMode, priority, ttl);
         } else {
-            sendJMSMessage(destination, rmqMessage, deliveryMode, priority, timeToLive);
+            sendJMSMessage(destination, rmqMessage, deliveryMode, priority, ttl);
         }
     }
 
@@ -275,7 +304,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         }
     }
 
-    private void sendJMSMessage(RMQDestination destination, RMQMessage msg, int deliveryMode, int priority, long timeToLive) throws JMSException {
+    // protected for testing
+    protected void sendJMSMessage(RMQDestination destination, RMQMessage msg, int deliveryMode, int priority, long timeToLive) throws JMSException {
         this.session.declareDestinationIfNecessary(destination);
         try {
             AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
@@ -326,7 +356,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void send(Queue queue, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        this.internalSend((RMQDestination) queue, message, deliveryMode, priority, timeToLive);
+        this.sendingStrategy.send(queue, message, deliveryMode, priority, timeToLive);
     }
 
     /**
@@ -334,7 +364,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void send(Queue queue, Message message) throws JMSException {
-        this.internalSend((RMQDestination) queue, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
+        this.sendingStrategy.send(this.destination, message);
     }
 
     /**
@@ -350,7 +380,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void publish(Message message) throws JMSException {
-        this.internalSend((RMQDestination) this.getTopic(), message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
+        this.sendingStrategy.send(this.getTopic(), message);
     }
 
     /**
@@ -358,7 +388,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void publish(Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        this.internalSend((RMQDestination) this.getTopic(), message, deliveryMode, priority, timeToLive);
+        this.sendingStrategy.send(this.getTopic(), message, deliveryMode, priority, timeToLive);
     }
 
     /**
@@ -366,7 +396,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void publish(Topic topic, Message message) throws JMSException {
-        this.internalSend((RMQDestination) topic, message, this.getDeliveryMode(), this.getPriority(), this.getTimeToLive());
+        this.sendingStrategy.send(topic, message);
     }
 
     /**
@@ -374,7 +404,61 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void publish(Topic topic, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        this.internalSend((RMQDestination) topic, message, deliveryMode, priority, timeToLive);
+        this.sendingStrategy.send(topic, message, deliveryMode, priority, timeToLive);
     }
 
+    /**
+     * Strategy interface for sending messages.
+     */
+    private interface SendingStrategy {
+
+        void send(Destination destination, Message message) throws JMSException;
+
+        void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException;
+
+    }
+
+    /**
+     * This implementation ignores message properties (delivery mode, priority, and expiration)
+     * in favor of the message producer's properties.
+     */
+    private class MessageProducerPropertyPrioritarySendingStategy implements SendingStrategy {
+
+        @Override
+        public void send(Destination destination, Message message) throws JMSException {
+            internalSend((RMQDestination) destination, message, getDeliveryMode(), getPriority(), getTimeToLive(), MessageExpirationType.TTL);
+        }
+
+        @Override
+        public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+            internalSend((RMQDestination) destination, message, deliveryMode, priority, timeToLive, MessageExpirationType.TTL);
+        }
+
+    }
+
+    /**
+     * This implementation uses message properties (delivery mode, priority, and expiration)
+     * if they've been set up. It falls back to the message producer's properties.
+     */
+    private class MessagePropertyPrioritarySendingStrategy implements SendingStrategy {
+
+        @Override
+        public void send(Destination destination, Message message) throws JMSException {
+            internalSend((RMQDestination) destination, message,
+                message.propertyExists(JMS_MESSAGE_DELIVERY_MODE) ? message.getJMSDeliveryMode() : getDeliveryMode(),
+                message.propertyExists(JMS_MESSAGE_PRIORITY) ? message.getJMSPriority() : getPriority(),
+                message.propertyExists(JMS_MESSAGE_EXPIRATION) ? message.getJMSExpiration() : getTimeToLive(),
+                message.propertyExists(JMS_MESSAGE_EXPIRATION) ? MessageExpirationType.EXPIRATION : MessageExpirationType.TTL);
+        }
+
+        @Override
+        public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+            internalSend((RMQDestination) destination, message, deliveryMode, priority, timeToLive, MessageExpirationType.TTL);
+        }
+
+    }
+
+    private enum MessageExpirationType {
+        TTL, EXPIRATION
+    }
 }

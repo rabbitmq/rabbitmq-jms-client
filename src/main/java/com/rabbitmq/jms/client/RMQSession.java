@@ -1,4 +1,4 @@
-/* Copyright (c) 2013, 2014 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2017 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
@@ -78,6 +78,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private final int acknowledgeMode;
     /** Flag to remember if session is {@link #CLIENT_INDIVIDUAL_ACKNOWLEDGE} */
     private final boolean isIndividualAck;
+
+    /**
+     * Whether {@link MessageProducer} properties (delivery mode,
+     * priority, TTL) take precedence over respective {@link Message}
+     * properties or not.
+     * Default is true.
+     */
+    private boolean messageProducerPropertyPrioritary = true;
 
     /** The main RabbitMQ channel we use under the hood */
     private final Channel channel;
@@ -168,6 +176,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.transacted = sessionParams.isTransacted();
         this.subscriptions = sessionParams.getSubscriptions();
         this.deliveryExecutor = new DeliveryExecutor(sessionParams.getOnMessageTimeoutMs());
+        this.messageProducerPropertyPrioritary = sessionParams.isMessageProducerPropertyPrioritary();
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;
@@ -577,7 +586,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         illegalStateExceptionIfClosed();
         RMQDestination dest = (RMQDestination) destination;
         declareDestinationIfNecessary(dest);
-        RMQMessageProducer producer = new RMQMessageProducer(this, dest);
+        RMQMessageProducer producer = new RMQMessageProducer(this, dest, this.messageProducerPropertyPrioritary);
         this.producers.add(producer);
         return producer;
     }
