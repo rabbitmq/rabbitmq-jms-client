@@ -54,7 +54,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * properties or not.
      * Default is true (which is compliant to the JMS specification).
      */
-    private boolean messageProducerPropertyPrioritary = true;
+    private boolean preferMessagePropertiesFromProducer = true;
 
     /** Default not to use ssl */
     private boolean ssl = false;
@@ -115,7 +115,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setQueueBrowserReadMax(getQueueBrowserReadMax())
             .setOnMessageTimeoutMs(getOnMessageTimeoutMs())
             .setChannelsQos(channelsQos)
-            .setMessageProducerPropertyPrioritary(messageProducerPropertyPrioritary)
+            .setMessageProducerPropertyPrioritary(preferMessagePropertiesFromProducer)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
@@ -137,7 +137,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setQueueBrowserReadMax(getQueueBrowserReadMax())
             .setOnMessageTimeoutMs(getOnMessageTimeoutMs())
             .setChannelsQos(channelsQos)
-            .setMessageProducerPropertyPrioritary(messageProducerPropertyPrioritary)
+            .setMessageProducerPropertyPrioritary(preferMessagePropertiesFromProducer)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
@@ -645,11 +645,11 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * properties or not.
      * Default is true (which is compliant to the JMS specification).
      */
-    public void setMessageProducerPropertyPrioritary(boolean messageProducerPropertyPrioritary) {
-        this.messageProducerPropertyPrioritary = messageProducerPropertyPrioritary;
+    public void setPreferMessagePropertiesFromProducer(boolean preferMessagePropertiesFromProducer) {
+        this.preferMessagePropertiesFromProducer = preferMessagePropertiesFromProducer;
     }
 
-    public boolean isMessageProducerPropertyPrioritary() {
-        return messageProducerPropertyPrioritary;
+    public boolean isPreferMessagePropertiesFromProducer() {
+        return preferMessagePropertiesFromProducer;
     }
 }
