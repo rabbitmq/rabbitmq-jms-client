@@ -557,8 +557,10 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             RMQBytesMessage rmqBMsg = new RMQBytesMessage();
             RMQMessage.copyAttributes(rmqBMsg, msg);
             byte[] byteArray = new byte[bodySize];
-            if (bodySize != msg.readBytes(byteArray, bodySize)) // must read the whole body at once
-                throw new MessageEOFException("Cannot read all of non-RMQ Message body.");
+            if (bodyLength > 0) {
+                if (bodySize != msg.readBytes(byteArray, bodySize)) // must read the whole body at once
+                    throw new MessageEOFException("Cannot read all of non-RMQ Message body.");
+            }
             rmqBMsg.writeBytes(byteArray);
             rmqBMsg.reset();  // make body read-only and set pointer to start.
             return rmqBMsg;

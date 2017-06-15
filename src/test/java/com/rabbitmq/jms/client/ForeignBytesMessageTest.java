@@ -14,6 +14,8 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageFormatException;
 
+import com.rabbitmq.jms.client.message.RMQBytesMessage;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class ForeignBytesMessageTest {
@@ -22,9 +24,17 @@ public class ForeignBytesMessageTest {
     public void testBytesMessage() throws Exception {
         BytesMessage testMsg = new ForeignBytesMessage();
         populateBytesMessage(testMsg);
-        BytesMessage rmqMsg = (BytesMessage) RMQMessage.normalise(testMsg, Collections.singletonList("*"));
+        BytesMessage rmqMsg = (BytesMessage) RMQMessage.normalise(testMsg);
         rmqMsg.reset();
         inspectBytesMessage(rmqMsg);
+    }
+
+    @Test
+    public void testEmptyBytesMessage() throws Exception {
+        BytesMessage testMsg = new RMQBytesMessage();
+        assertEquals(0, testMsg.getBodyLength());
+        BytesMessage rmqMsg = (BytesMessage) RMQBytesMessage.recreate(testMsg);
+        assertEquals(0, rmqMsg.getBodyLength());
     }
 
     private static final byte[] BYTE_ARRAY = new byte[]{ 0,1,2, (byte) -1 };

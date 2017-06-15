@@ -1360,7 +1360,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         return dft;
     }
 
-    static RMQMessage normalise(Message msg, List<String> trustedPackages) throws JMSException {
+    static RMQMessage normalise(Message msg) throws JMSException {
         if (msg instanceof RMQMessage) return (RMQMessage) msg;
 
         /* If not one of our own, copy it into an RMQMessage */
