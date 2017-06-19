@@ -41,7 +41,7 @@
   </scm>
 
   <properties>
-    <rabbitmq.version>4.1.0</rabbitmq.version>
+    <rabbitmq.version>4.1.1</rabbitmq.version>
     <awaitility.version>2.0.0</awaitility.version>
 
     <java-compile-version>1.6</java-compile-version>
