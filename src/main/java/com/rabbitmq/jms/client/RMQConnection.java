@@ -85,6 +85,13 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private boolean preferProducerMessageProperty;
 
     /**
+     * Whether requeue message on {@link RuntimeException} in the
+     * {@link javax.jms.MessageListener} or not.
+     * Default is false.
+     */
+    private boolean requeueOnMessageListenerException;
+
+    /**
      * Classes in these packages can be transferred via ObjectMessage.
      *
      * @see WhiteListObjectInputStream
@@ -105,6 +112,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.onMessageTimeoutMs = connectionParams.getOnMessageTimeoutMs();
         this.channelsQos = connectionParams.getChannelsQos();
         this.preferProducerMessageProperty = connectionParams.willPreferProducerMessageProperty();
+        this.requeueOnMessageListenerException = connectionParams.willRequeueOnMessageListenerException();
     }
 
     /**
@@ -151,6 +159,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setMode(acknowledgeMode)
             .setSubscriptions(this.subscriptions)
             .setPreferProducerMessageProperty(this.preferProducerMessageProperty)
+            .setRequeueOnMessageListenerException(this.requeueOnMessageListenerException)
         );
         session.setTrustedPackages(this.trustedPackages);
         this.sessions.add(session);

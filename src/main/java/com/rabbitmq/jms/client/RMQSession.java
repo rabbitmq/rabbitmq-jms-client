@@ -87,6 +87,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private boolean preferProducerMessageProperty = true;
 
+    /**
+     * Whether requeue message on {@link RuntimeException} in the
+     * {@link javax.jms.MessageListener} or not.
+     * Default is false.
+     */
+    private boolean requeueOnMessageListenerException = false;
+
     /** The main RabbitMQ channel we use under the hood */
     private final Channel channel;
     /** Set to true if close() has been called and completed */
@@ -177,6 +184,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.subscriptions = sessionParams.getSubscriptions();
         this.deliveryExecutor = new DeliveryExecutor(sessionParams.getOnMessageTimeoutMs());
         this.preferProducerMessageProperty = sessionParams.willPreferProducerMessageProperty();
+        this.requeueOnMessageListenerException = sessionParams.willRequeueOnMessageListenerException();
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;
@@ -663,7 +671,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 throw new RMQJMSException("RabbitMQ Exception creating Consumer", x);
             }
         }
-        RMQMessageConsumer consumer = new RMQMessageConsumer(this, dest, consumerTag, getConnection().isStopped(), jmsSelector);
+        RMQMessageConsumer consumer = new RMQMessageConsumer(this, dest, consumerTag, getConnection().isStopped(), jmsSelector, this.requeueOnMessageListenerException);
         this.consumers.add(consumer);
         return consumer;
     }

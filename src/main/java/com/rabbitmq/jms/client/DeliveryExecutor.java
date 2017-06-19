@@ -64,7 +64,7 @@ public class DeliveryExecutor {
             this.closeAbruptly();
             throw new RMQJMSException("onMessage took too long and was interrupted", null);
         } catch (ExecutionException e) {
-            throw new RMQJMSException("onMessage threw exception", e.getCause());
+            throw new RMQMessageListenerExecutionJMSException("onMessage threw exception", e.getCause());
         }
     }
 

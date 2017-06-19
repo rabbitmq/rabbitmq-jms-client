@@ -38,6 +38,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
     private volatile Completion completion;
     private final long terminationTimeout;
     private volatile boolean rejecting;
+    private final boolean requeueOnMessageListenerException;
 
     /**
      * Constructor
@@ -46,7 +47,8 @@ class MessageListenerConsumer implements Consumer, Abortable {
      * @param messageListener to call {@link MessageListener#onMessage(javax.jms.Message) onMessage(Message)} with received messages
      * @param terminationTimeout wait time (in nanoseconds) for cancel to take effect
      */
-    public MessageListenerConsumer(RMQMessageConsumer messageConsumer, Channel channel, MessageListener messageListener, long terminationTimeout) {
+    public MessageListenerConsumer(RMQMessageConsumer messageConsumer, Channel channel, MessageListener messageListener, long terminationTimeout,
+                boolean requeueOnMessageListenerException) {
         this.messageConsumer = messageConsumer;
         this.channel = channel;
         this.messageListener = messageListener;
@@ -54,6 +56,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
         this.terminationTimeout = terminationTimeout;
         this.completion = new Completion();  // completed when cancelled.
         this.rejecting = this.messageConsumer.getSession().getConnection().isStopped();
+        this.requeueOnMessageListenerException = requeueOnMessageListenerException;
     }
 
     private String getConsTag() {
@@ -110,19 +113,42 @@ class MessageListenerConsumer implements Consumer, Abortable {
         try {
             long dtag = envelope.getDeliveryTag();
             if (this.messageListener != null) {
-                this.messageConsumer.dealWithAcknowledgements(this.autoAck, dtag);
-                RMQMessage msg = RMQMessage.convertMessage(this.messageConsumer.getSession(), this.messageConsumer.getDestination(), response);
-                this.messageConsumer.getSession().deliverMessage(msg, this.messageListener);
+                if (this.requeueOnMessageListenerException) {
+                    // requeuing in case of RuntimeException from the listener
+                    // see https://github.com/rabbitmq/rabbitmq-jms-client/issues/23
+                    // see section 4.5.2 of JMS 1.1 specification
+                    RMQMessage msg = RMQMessage.convertMessage(this.messageConsumer.getSession(), this.messageConsumer.getDestination(), response);
+                    boolean runtimeExceptionInListener = false;
+                    try {
+                        this.messageConsumer.getSession().deliverMessage(msg, this.messageListener);
+                    } catch(RMQMessageListenerExecutionJMSException e) {
+                        if (e.getCause() instanceof RuntimeException) {
+                            runtimeExceptionInListener = true;
+                            this.messageConsumer.getSession().explicitNack(dtag);
+                            this.abort();
+                        } else {
+                            throw e;
+                        }
+                    }
+                    if (!runtimeExceptionInListener) {
+                        this.messageConsumer.dealWithAcknowledgements(this.autoAck, dtag);
+                    }
+                } else {
+                    // this is the "historical" behavior, not compliant with the spec
+                    this.messageConsumer.dealWithAcknowledgements(this.autoAck, dtag);
+                    RMQMessage msg = RMQMessage.convertMessage(this.messageConsumer.getSession(), this.messageConsumer.getDestination(), response);
+                    this.messageConsumer.getSession().deliverMessage(msg, this.messageListener);
+                }
             } else {
                 // We are unable to deliver the message, nack it
                 logger.debug("basicNack: dtag='{}' (null MessageListener)", dtag);
                 this.messageConsumer.getSession().explicitNack(dtag);
             }
         } catch (JMSException x) {
-            x.printStackTrace();
+            logger.error("Error while delivering message", x);
             throw new IOException(x);
         } catch (InterruptedException ie) {
-            ie.printStackTrace();
+            logger.warn("Message delivery has been interrupted", ie);
             throw new IOException("Interrupted while delivering message", ie);
         }
     }
