@@ -56,6 +56,13 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     private boolean preferProducerMessageProperty = true;
 
+    /**
+     * Whether requeue message on {@link RuntimeException} in the
+     * {@link javax.jms.MessageListener} or not.
+     * Default is false.
+     */
+    private boolean requeueOnMessageListenerException = false;
+
     /** Default not to use ssl */
     private boolean ssl = false;
     private String tlsProtocol;
@@ -116,6 +123,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setOnMessageTimeoutMs(getOnMessageTimeoutMs())
             .setChannelsQos(channelsQos)
             .setPreferProducerMessageProperty(preferProducerMessageProperty)
+            .setRequeueOnMessageListenerException(requeueOnMessageListenerException)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
@@ -138,6 +146,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setOnMessageTimeoutMs(getOnMessageTimeoutMs())
             .setChannelsQos(channelsQos)
             .setPreferProducerMessageProperty(preferProducerMessageProperty)
+            .setRequeueOnMessageListenerException(requeueOnMessageListenerException)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
@@ -652,4 +661,18 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     public boolean isPreferProducerMessageProperty() {
         return preferProducerMessageProperty;
     }
+
+    /**
+     * Whether requeue message on {@link RuntimeException} in the
+     * {@link javax.jms.MessageListener} or not.
+     * Default is false.
+     */
+    public void setRequeueOnMessageListenerException(boolean requeueOnMessageListenerException) {
+        this.requeueOnMessageListenerException = requeueOnMessageListenerException;
+    }
+
+    public boolean isRequeueOnMessageListenerException() {
+        return requeueOnMessageListenerException;
+    }
 }
+

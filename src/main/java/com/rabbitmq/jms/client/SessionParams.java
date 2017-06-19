@@ -33,6 +33,13 @@ public class SessionParams {
      */
     private boolean preferProducerMessageProperty = true;
 
+    /**
+     * Whether requeue message on {@link RuntimeException} in the
+     * {@link javax.jms.MessageListener} or not.
+     * Default is false.
+     */
+    private boolean requeueOnMessageListenerException = false;
+
     public RMQConnection getConnection() {
         return connection;
     }
@@ -84,6 +91,15 @@ public class SessionParams {
 
     public SessionParams setPreferProducerMessageProperty(boolean preferProducerMessageProperty) {
         this.preferProducerMessageProperty = preferProducerMessageProperty;
+        return this;
+    }
+
+    public boolean willRequeueOnMessageListenerException() {
+        return requeueOnMessageListenerException;
+    }
+
+    public SessionParams setRequeueOnMessageListenerException(boolean requeueOnMessageListenerException) {
+        this.requeueOnMessageListenerException = requeueOnMessageListenerException;
         return this;
     }
 }

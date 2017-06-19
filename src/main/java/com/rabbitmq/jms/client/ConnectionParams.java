@@ -38,6 +38,13 @@ public class ConnectionParams {
      */
     private boolean preferProducerMessageProperty = true;
 
+    /**
+     * Whether requeue message on {@link RuntimeException} in the
+     * {@link javax.jms.MessageListener} or not.
+     * Default is false.
+     */
+    private boolean requeueOnMessageListenerException = false;
+
     public Connection getRabbitConnection() {
         return rabbitConnection;
     }
@@ -89,6 +96,15 @@ public class ConnectionParams {
 
     public ConnectionParams setPreferProducerMessageProperty(boolean preferProducerMessageProperty) {
         this.preferProducerMessageProperty = preferProducerMessageProperty;
+        return this;
+    }
+
+    public boolean willRequeueOnMessageListenerException() {
+        return requeueOnMessageListenerException;
+    }
+
+    public ConnectionParams setRequeueOnMessageListenerException(boolean requeueOnMessageListenerException) {
+        this.requeueOnMessageListenerException = requeueOnMessageListenerException;
         return this;
     }
 }

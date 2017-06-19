@@ -78,6 +78,12 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private final AtomicInteger numberOfReceives = new AtomicInteger(0);
 
     /**
+     * Whether requeue message on {@link RuntimeException} in the
+     * {@link javax.jms.MessageListener} or not.
+     */
+    private final boolean requeueOnMessageListenerException;
+
+    /**
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
      *
      * @param session - the session object that created this consume
@@ -85,8 +91,9 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @param uuidTag - when creating queues to a topic, we need a unique queue name for each consumer. This is the
      *            unique name.
      * @param paused - true if the connection is {@link javax.jms.Connection#stop}ped, false otherwise.
+     * @param requeueOnMessageListenerException true to requeue message on RuntimeException in listener, false otherwise
      */
-    RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag, boolean paused, String messageSelector) {
+    RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag, boolean paused, String messageSelector, boolean requeueOnMessageListenerException) {
         this.session = session;
         this.destination = destination;
         this.uuidTag = uuidTag;
@@ -95,6 +102,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         if (!paused)
             this.receiveManager.openGate();
         this.autoAck = session.isAutoAck();
+        this.requeueOnMessageListenerException = requeueOnMessageListenerException;
     }
 
     /**
@@ -186,7 +194,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                                           getSession().getChannel(),
                                           messageListener,
                                           TimeUnit.MILLISECONDS.toNanos(this.session.getConnection()
-                                                                                    .getTerminationTimeout()));
+                                                                                    .getTerminationTimeout()),
+                                          this.requeueOnMessageListenerException);
             if (this.listenerConsumer.compareAndSet(null, mlConsumer)) {
                 this.abortables.add(mlConsumer);
                 if (!this.getSession().getConnection().isStopped()) {
