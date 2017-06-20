@@ -220,7 +220,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     @Override
     public void send(Destination destination, Message message) throws JMSException {
         this.checkUnidentifiedMessageProducer(destination);
-        this.sendingStrategy.send(this.destination, message);
+        this.sendingStrategy.send(destination, message);
     }
 
     private void checkUnidentifiedMessageProducer(Destination destination) {
@@ -364,7 +364,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void send(Queue queue, Message message) throws JMSException {
-        this.sendingStrategy.send(this.destination, message);
+        this.sendingStrategy.send(queue, message);
     }
 
     /**
