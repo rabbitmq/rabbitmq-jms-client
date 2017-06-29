@@ -727,12 +727,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector) throws JMSException {
         illegalStateExceptionIfClosed();
-        if (nullOrEmpty(messageSelector)) {
-            return createConsumer(destination);
-        } else {
-            // we are not implementing this method yet
-            throw new UnsupportedOperationException();
-        }
+        return createConsumerInternal((RMQDestination) destination, null, false, messageSelector);
     }
 
     private static boolean nullOrEmpty(String str) {
@@ -746,14 +741,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean noLocal) throws JMSException {
         illegalStateExceptionIfClosed();
-        if (nullOrEmpty(messageSelector)) {
-            RMQMessageConsumer consumer = (RMQMessageConsumer)createConsumer(destination);
-            consumer.setNoLocal(noLocal);
-            return consumer;
-        } else {
-            // we are not implementing this method yet
-            throw new UnsupportedOperationException();
-        }
+        RMQMessageConsumer consumer = (RMQMessageConsumer)createConsumerInternal((RMQDestination) destination, null, noLocal, messageSelector);
+        consumer.setNoLocal(noLocal);
+        return consumer;
     }
 
     /**
