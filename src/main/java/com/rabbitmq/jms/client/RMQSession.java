@@ -1,6 +1,6 @@
-/* Copyright (c) 2013-2017 Pivotal Software, Inc. All rights reserved. */
+/** <a href="http://www.cpupk.com/decompiler">Eclipse Class Decompiler</a> plugin, Copyright (c) 2017 Chen Chao. */
+/* Copyright (c) 2013, 2014 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -78,21 +78,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private final int acknowledgeMode;
     /** Flag to remember if session is {@link #CLIENT_INDIVIDUAL_ACKNOWLEDGE} */
     private final boolean isIndividualAck;
-
-    /**
-     * Whether {@link MessageProducer} properties (delivery mode,
-     * priority, TTL) take precedence over respective {@link Message}
-     * properties or not.
-     * Default is true.
-     */
-    private boolean preferProducerMessageProperty = true;
-
-    /**
-     * Whether requeue message on {@link RuntimeException} in the
-     * {@link javax.jms.MessageListener} or not.
-     * Default is false.
-     */
-    private boolean requeueOnMessageListenerException = false;
 
     /** The main RabbitMQ channel we use under the hood */
     private final Channel channel;
@@ -183,8 +168,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.transacted = sessionParams.isTransacted();
         this.subscriptions = sessionParams.getSubscriptions();
         this.deliveryExecutor = new DeliveryExecutor(sessionParams.getOnMessageTimeoutMs());
-        this.preferProducerMessageProperty = sessionParams.willPreferProducerMessageProperty();
-        this.requeueOnMessageListenerException = sessionParams.willRequeueOnMessageListenerException();
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;
@@ -594,7 +577,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         illegalStateExceptionIfClosed();
         RMQDestination dest = (RMQDestination) destination;
         declareDestinationIfNecessary(dest);
-        RMQMessageProducer producer = new RMQMessageProducer(this, dest, this.preferProducerMessageProperty);
+        RMQMessageProducer producer = new RMQMessageProducer(this, dest);
         this.producers.add(producer);
         return producer;
     }
@@ -671,7 +654,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 throw new RMQJMSException("RabbitMQ Exception creating Consumer", x);
             }
         }
-        RMQMessageConsumer consumer = new RMQMessageConsumer(this, dest, consumerTag, getConnection().isStopped(), jmsSelector, this.requeueOnMessageListenerException);
+        RMQMessageConsumer consumer = new RMQMessageConsumer(this, dest, consumerTag, getConnection().isStopped(), jmsSelector);
         this.consumers.add(consumer);
         return consumer;
     }
@@ -727,12 +710,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector) throws JMSException {
         illegalStateExceptionIfClosed();
-        if (nullOrEmpty(messageSelector)) {
-            return createConsumer(destination);
-        } else {
-            // we are not implementing this method yet
-            throw new UnsupportedOperationException();
-        }
+        return createConsumerInternal((RMQDestination) destination, null, false, messageSelector);
     }
 
     private static boolean nullOrEmpty(String str) {
@@ -746,14 +724,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean noLocal) throws JMSException {
         illegalStateExceptionIfClosed();
-        if (nullOrEmpty(messageSelector)) {
-            RMQMessageConsumer consumer = (RMQMessageConsumer)createConsumer(destination);
-            consumer.setNoLocal(noLocal);
-            return consumer;
-        } else {
-            // we are not implementing this method yet
-            throw new UnsupportedOperationException();
-        }
+        RMQMessageConsumer consumer = createConsumerInternal((RMQDestination) destination, null, false, messageSelector);
+        consumer.setNoLocal(noLocal);
+        return consumer;
     }
 
     /**
