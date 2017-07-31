@@ -80,7 +80,7 @@
 
     <!-- to sign artifacts when releasing -->
     <gpg.keyname>6026DFCA</gpg.keyname>
-    <nexus-staging-maven-plugin.version>1.6.4</nexus-staging-maven-plugin.version>
+    <nexus-staging-maven-plugin.version>1.6.8</nexus-staging-maven-plugin.version>
   </properties>
 
   <dependencies>
@@ -419,15 +419,6 @@
             <groupId>org.sonatype.plugins</groupId>
             <artifactId>nexus-staging-maven-plugin</artifactId>
             <version>${nexus-staging-maven-plugin.version}</version>
-            <executions>
-              <execution>
-                <id>default-deploy</id>
-                <phase>deploy</phase>
-                <goals>
-                  <goal>deploy</goal>
-                </goals>
-              </execution>
-            </executions>
             <configuration>
               <serverId>local-release</serverId>
               <nexusUrl>http://localhost:8081/nexus/</nexusUrl>
@@ -501,15 +492,6 @@
             <groupId>org.sonatype.plugins</groupId>
             <artifactId>nexus-staging-maven-plugin</artifactId>
             <version>${nexus-staging-maven-plugin.version}</version>
-            <executions>
-              <execution>
-                <id>default-deploy</id>
-                <phase>deploy</phase>
-                <goals>
-                  <goal>deploy</goal>
-                </goals>
-              </execution>
-            </executions>
             <configuration>
               <serverId>ossrh</serverId>
               <nexusUrl>https://oss.sonatype.org/</nexusUrl>
@@ -583,15 +565,6 @@
             <groupId>org.sonatype.plugins</groupId>
             <artifactId>nexus-staging-maven-plugin</artifactId>
             <version>${nexus-staging-maven-plugin.version}</version>
-            <executions>
-              <execution>
-                <id>default-deploy</id>
-                <phase>deploy</phase>
-                <goals>
-                  <goal>deploy</goal>
-                </goals>
-              </execution>
-            </executions>
             <configuration>
               <serverId>spring-repo</serverId>
               <nexusUrl>http://repo.spring.io/artifactory/</nexusUrl>
