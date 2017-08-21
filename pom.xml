@@ -689,7 +689,7 @@
         <repository>
           <id>bintray-rabbitmq-maven</id>
           <name>rabbitmq-maven</name>
-          <url>https://api.bintray.com/maven/rabbitmq/maven/jms-client/;publish=1</url>
+          <url>https://api.bintray.com/maven/rabbitmq/maven/com.rabbitmq.jms:rabbitmq-jms/;publish=1</url>
         </repository>
       </distributionManagement>
     </profile>
@@ -753,7 +753,7 @@
         <repository>
           <id>bintray-rabbitmq-maven-milestones</id>
           <name>rabbitmq-maven-milestones</name>
-          <url>https://api.bintray.com/maven/rabbitmq/maven-milestones/jms-client-milestone/;publish=1</url>
+          <url>https://api.bintray.com/maven/rabbitmq/maven-milestones/com.rabbitmq.jms:rabbitmq-jms/;publish=1</url>
         </repository>
       </distributionManagement>
     </profile>
