@@ -243,6 +243,9 @@
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
               <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
             </manifest>
+            <manifestEntries>
+              <Automatic-Module-Name>com.rabbitmq.jms</Automatic-Module-Name>
+            </manifestEntries>
           </archive>
         </configuration>
       </plugin>
