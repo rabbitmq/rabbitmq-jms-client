@@ -822,7 +822,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             this.channel.queueDeclare(queueName,
                                       durable,
                                       exclusive,
-                                      false,    // autoDelete - exclusive takes care of this
+                                      /* broker queues declared for a non-durable topic that have an auto-generated name must go down with
+                                         consumer/producer or the broker will leak them until the connection is brought down
+                                       */ 
+                                      !durable && queueNameOverride != null && !dest.isQueue(), // autoDelete
                                       options); // object properties
 
             /* Temporary or 'topic queues' are exclusive and therefore get deleted by RabbitMQ on close */
