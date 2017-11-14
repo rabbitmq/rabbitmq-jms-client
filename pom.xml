@@ -41,7 +41,7 @@
   </scm>
 
   <properties>
-    <rabbitmq.version>4.1.1</rabbitmq.version>
+    <rabbitmq.version>5.0.0</rabbitmq.version>
     <slf4j-api.version>1.7.12</slf4j-api.version>
     <junit.version>4.12</junit.version>
     <mockito-core.version>1.9.5</mockito-core.version>
