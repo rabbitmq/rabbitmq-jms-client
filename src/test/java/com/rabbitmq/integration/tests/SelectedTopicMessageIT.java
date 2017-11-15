@@ -9,10 +9,12 @@ import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.rabbitmq.jms.client.message.RMQTextMessage;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Integration test
@@ -47,7 +49,7 @@ public class SelectedTopicMessageIT extends AbstractITTopic {
 
         String t1 = tmsg1.getText();
         String t2 = tmsg2.getText();
-        Assert.assertEquals(MESSAGE1, t1);
-        Assert.assertEquals(MESSAGE2, t2);
+        assertEquals(MESSAGE1, t1);
+        assertEquals(MESSAGE2, t2);
     }
 }

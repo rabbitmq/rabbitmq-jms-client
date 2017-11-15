@@ -1,8 +1,8 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Queue;
@@ -12,7 +12,7 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Integration test

@@ -3,9 +3,9 @@ package com.rabbitmq.integration.tests;
 
 import java.io.IOException;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -26,7 +26,7 @@ public class SimpleServerConnectionIT {
     private volatile int port = 5672;
     private volatile Connection connection = null;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setUsername(this.getUsername());
@@ -37,7 +37,7 @@ public class SimpleServerConnectionIT {
         this.connection = factory.newConnection();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         Connection conn = this.getConnection();
         this.connection = null;

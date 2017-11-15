@@ -43,8 +43,9 @@
   <properties>
     <rabbitmq.version>5.0.0</rabbitmq.version>
     <slf4j-api.version>1.7.12</slf4j-api.version>
-    <junit.version>4.12</junit.version>
-    <mockito-core.version>1.9.5</mockito-core.version>
+    <junit.jupiter.version>5.0.2</junit.jupiter.version>
+    <junit.platform.version>1.0.2</junit.platform.version>
+    <mockito-core.version>2.12.0</mockito-core.version>
     <awaitility.version>3.0.0</awaitility.version>
 
     <maven.dependency.plugin.version>2.8</maven.dependency.plugin.version>
@@ -56,7 +57,7 @@
     <maven.antrun.plugin.version>1.8</maven.antrun.plugin.version>
     <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
     <groovy.maven.plugin.version>2.0</groovy.maven.plugin.version>
-    <groovy.all.version>2.4.8</groovy.all.version>
+    <groovy.all.version>2.4.12</groovy.all.version>
     <keytool.maven.plugin.version>1.5</keytool.maven.plugin.version>
     <maven.sources.plugin.version>3.0.1</maven.sources.plugin.version>
     <maven.javadoc.plugin.version>3.0.0-M1</maven.javadoc.plugin.version>
@@ -121,9 +122,16 @@
 
     <!-- test scope -->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>${junit.jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- To avoid compiler warnings about @API annotations in JUnit code -->
+    <dependency>
+      <groupId>org.apiguardian</groupId>
+      <artifactId>apiguardian-api</artifactId>
+      <version>1.0.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -187,6 +195,13 @@
             <RABBITMQ_VERSION>${rabbitmq.version}</RABBITMQ_VERSION>
           </systemPropertyVariables>
         </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-surefire-provider</artifactId>
+            <version>${junit.platform.version}</version>
+          </dependency>
+        </dependencies>
       </plugin>
 
       <plugin>
@@ -216,6 +231,13 @@
             <DEPS_DIR>${deps.dir}</DEPS_DIR>
           </environmentVariables>
         </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-surefire-provider</artifactId>
+            <version>${junit.platform.version}</version>
+          </dependency>
+        </dependencies>
 
         <executions>
           <execution>

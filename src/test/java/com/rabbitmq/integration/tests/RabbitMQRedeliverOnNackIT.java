@@ -1,9 +1,9 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Queue;
@@ -13,7 +13,7 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 /**
@@ -49,16 +49,16 @@ public class RabbitMQRedeliverOnNackIT  extends AbstractITQueue {
         Queue queue = queueSession.createQueue(QUEUE_NAME);
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
         TextMessage message = (TextMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
-        assertNotNull("No message delivered initially", message);
-        assertEquals("Wrong message delivered initially", MESSAGE, message.getText());
+        assertNotNull(message, "No message delivered initially");
+        assertEquals(MESSAGE, message.getText(), "Wrong message delivered initially");
 
         queueSession.rollback();
 
         message = (TextMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
 
-        assertNotNull("No message delivered after rollback", message);
-        assertEquals("Wrong message redelivered", MESSAGE, message.getText());
-        assertTrue("Message not marked 'redelivered'", message.getJMSRedelivered());
+        assertNotNull(message, "No message delivered after rollback");
+        assertEquals(MESSAGE, message.getText(), "Wrong message redelivered");
+        assertTrue(message.getJMSRedelivered(), "Message not marked 'redelivered'");
 
         queueSession.commit();
     }

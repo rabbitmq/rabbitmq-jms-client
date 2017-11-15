@@ -5,8 +5,8 @@ import com.rabbitmq.jms.client.RMQConnection;
 import com.rabbitmq.jms.client.message.RMQObjectMessage;
 import com.rabbitmq.jms.client.message.TestMessages;
 import com.rabbitmq.jms.util.RMQJMSException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.jms.Queue;
 import javax.jms.QueueReceiver;
@@ -19,7 +19,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ObjectMessageSerializationIT extends AbstractITQueue {
 
@@ -27,7 +28,7 @@ public class ObjectMessageSerializationIT extends AbstractITQueue {
     private static final long TEST_RECEIVE_TIMEOUT = 1000; // one second
     private static final java.util.List<String> TRUSTED_PACKAGES = Arrays.asList("java.lang", "com.rabbitmq.jms");
 
-    @Before
+    @BeforeEach
     public void configureTrustedPackages() {
         ((RMQConnection) queueConn).setTrustedPackages(
                 TRUSTED_PACKAGES);
@@ -69,19 +70,23 @@ public class ObjectMessageSerializationIT extends AbstractITQueue {
         testReceiveObjectMessageWithPayload(new TestMessages.TestSerializable(8, "An object"));
     }
 
-    @Test(expected = RMQJMSException.class)
+    @Test
     public void testReceiveObjectMessageWithUntrustedPayload1() throws Exception {
         // It makes little sense to use ObjectMessage for maps
         // but someone somewhere certainly does it.
         // Note: java.util is not on the trusted package list
-        Map<String, String> m = new HashMap<String, String>();
-        m.put("key", "value");
-        testReceiveObjectMessageWithPayload(m);
+        assertThrows(RMQJMSException.class, () -> {
+            Map<String, String> m = new HashMap<String, String>();
+            m.put("key", "value");
+            testReceiveObjectMessageWithPayload(m);
+        });
     }
-    @Test(expected = RMQJMSException.class)
+    @Test
     public void testReceiveObjectMessageWithUntrustedPayload2() throws Exception {
         // java.awt is not on the trusted package list
-        testReceiveObjectMessageWithPayload(Color.WHITE);
+        assertThrows(RMQJMSException.class, () -> {
+            testReceiveObjectMessageWithPayload(Color.WHITE);
+        });
     }
 }
 

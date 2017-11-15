@@ -1,6 +1,6 @@
 package com.rabbitmq.jms.admin;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -11,7 +11,7 @@ import javax.naming.RefAddr;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class RMQConnectionFactoryTest {
 
@@ -74,7 +74,7 @@ public class RMQConnectionFactoryTest {
         RMQConnectionFactory connFactory = new RMQConnectionFactory();
         Reference ref = connFactory.getReference();
 
-        assertEquals("Not the default properties", defaultProps, getProps(ref));
+        assertEquals(defaultProps, getProps(ref), "Not the default properties");
     }
 
     @Test
@@ -94,9 +94,9 @@ public class RMQConnectionFactoryTest {
         Reference ref = connFactory.getReference();
         Properties newProps = getProps(ref);
 
-        assertEquals("Not the correct uri", "amqps://fred:my-password@sillyHost:42/bill", newProps.getProperty("uri"));
-        assertEquals("Not the correct queueBrowserReadMax", "52", newProps.getProperty("queueBrowserReadMax"));
-        assertEquals("Not the correct onMessageTimeoutMs", "62", newProps.getProperty("onMessageTimeoutMs"));
+        assertEquals("amqps://fred:my-password@sillyHost:42/bill", newProps.getProperty("uri"), "Not the correct uri");
+        assertEquals("52", newProps.getProperty("queueBrowserReadMax"), "Not the correct queueBrowserReadMax");
+        assertEquals("62", newProps.getProperty("onMessageTimeoutMs"), "Not the correct onMessageTimeoutMs");
     }
 
     @Test
@@ -116,18 +116,18 @@ public class RMQConnectionFactoryTest {
 
         RMQConnectionFactory newFactory = (RMQConnectionFactory) new RMQObjectFactory().createConnectionFactory(ref, new Hashtable<Object, Object>(), new CompositeName("newOne"));
 
-        assertEquals("Not the correct uri", "amqps://fred:my-password@sillyHost:42/bill", newFactory.getUri());
+        assertEquals("amqps://fred:my-password@sillyHost:42/bill", newFactory.getUri(), "Not the correct uri");
 
-        assertEquals("Not the correct host", "sillyHost", newFactory.getHost());
-        assertEquals("Not the correct password", "my-password", newFactory.getPassword());
-        assertEquals("Not the correct port", 42, newFactory.getPort());
-        assertEquals("Not the correct queueBrowserReadMax", 52, newFactory.getQueueBrowserReadMax());
-        assertEquals("Not the correct ssl", true, newFactory.isSsl());
+        assertEquals("sillyHost", newFactory.getHost(), "Not the correct host");
+        assertEquals("my-password", newFactory.getPassword(), "Not the correct password");
+        assertEquals(42, newFactory.getPort(), "Not the correct port");
+        assertEquals(52, newFactory.getQueueBrowserReadMax(), "Not the correct queueBrowserReadMax");
+        assertEquals(true, newFactory.isSsl(), "Not the correct ssl");
 
-        assertEquals("Not the correct terminationTimeout", 15000L, newFactory.getTerminationTimeout());
+        assertEquals(15000L, newFactory.getTerminationTimeout(), "Not the correct terminationTimeout");
 
-        assertEquals("Not the correct username", "fred", newFactory.getUsername());
-        assertEquals("Not the correct virtualHost", "bill", newFactory.getVirtualHost());
+        assertEquals("fred", newFactory.getUsername(), "Not the correct username");
+        assertEquals("bill", newFactory.getVirtualHost(), "Not the correct virtualHost");
     }
 
     @Test
@@ -147,18 +147,18 @@ public class RMQConnectionFactoryTest {
 
         RMQConnectionFactory newFactory = (RMQConnectionFactory) new RMQObjectFactory().createConnectionFactory(null, environment, new CompositeName("newOne"));
 
-        assertEquals("Not the correct uri", "amqps://fred:my-password@sillyHost:42/bill", newFactory.getUri());
+        assertEquals("amqps://fred:my-password@sillyHost:42/bill", newFactory.getUri(), "Not the correct uri");
 
-        assertEquals("Not the correct host", "sillyHost", newFactory.getHost());
-        assertEquals("Not the correct password", "my-password", newFactory.getPassword());
-        assertEquals("Not the correct port", 42, newFactory.getPort());
-        assertEquals("Not the correct queueBrowserReadMax", 52, newFactory.getQueueBrowserReadMax());
-        assertEquals("Not the correct ssl", true, newFactory.isSsl());
+        assertEquals("sillyHost", newFactory.getHost(), "Not the correct host");
+        assertEquals("my-password", newFactory.getPassword(), "Not the correct password");
+        assertEquals(42, newFactory.getPort(), "Not the correct port");
+        assertEquals(52, newFactory.getQueueBrowserReadMax(), "Not the correct queueBrowserReadMax");
+        assertEquals(true, newFactory.isSsl(), "Not the correct ssl");
 
-        assertEquals("Not the correct terminationTimeout", 1234567890123456789L, newFactory.getTerminationTimeout());
+        assertEquals(1234567890123456789L, newFactory.getTerminationTimeout(), "Not the correct terminationTimeout");
 
-        assertEquals("Not the correct username", "fred", newFactory.getUsername());
-        assertEquals("Not the correct virtualHost", "bill", newFactory.getVirtualHost());
+        assertEquals("fred", newFactory.getUsername(), "Not the correct username");
+        assertEquals("bill", newFactory.getVirtualHost(), "Not the correct virtualHost");
     }
 
     @Test
@@ -180,18 +180,18 @@ public class RMQConnectionFactoryTest {
 
         RMQConnectionFactory newFactory = (RMQConnectionFactory) new RMQObjectFactory().createConnectionFactory(ref, new Hashtable<Object, Object>(), new CompositeName("newOne"));
 
-        assertEquals("Not the correct host", "sillyHost", newFactory.getHost());
-        assertEquals("Not the correct password", "my-password", newFactory.getPassword());
-        assertEquals("Not the correct port", 42, newFactory.getPort());
-        assertEquals("Not the correct queueBrowserReadMax", 52, newFactory.getQueueBrowserReadMax());
-        assertEquals("Not the correct onMessageTimeoutMs", 62, newFactory.getOnMessageTimeoutMs());
-        assertEquals("Not the correct ssl", true, newFactory.isSsl());
+        assertEquals("sillyHost", newFactory.getHost(), "Not the correct host");
+        assertEquals("my-password", newFactory.getPassword(), "Not the correct password");
+        assertEquals(42, newFactory.getPort(), "Not the correct port");
+        assertEquals(52, newFactory.getQueueBrowserReadMax(), "Not the correct queueBrowserReadMax");
+        assertEquals(62, newFactory.getOnMessageTimeoutMs(), "Not the correct onMessageTimeoutMs");
+        assertEquals(true, newFactory.isSsl(), "Not the correct ssl");
 
-        assertEquals("Not the correct terminationTimeout", 1234567890123456789L, newFactory.getTerminationTimeout());
+        assertEquals(1234567890123456789L, newFactory.getTerminationTimeout(), "Not the correct terminationTimeout");
 
-        assertEquals("Not the correct username", "fred", newFactory.getUsername());
-        assertEquals("Not the correct virtualHost", "bill", newFactory.getVirtualHost());
+        assertEquals("fred", newFactory.getUsername(), "Not the correct username");
+        assertEquals("bill", newFactory.getVirtualHost(), "Not the correct virtualHost");
 
-        assertEquals("Not the correct uri", "amqps://fred:my-password@sillyHost:42/bill", newFactory.getUri());
+        assertEquals("amqps://fred:my-password@sillyHost:42/bill", newFactory.getUri());
     }
 }

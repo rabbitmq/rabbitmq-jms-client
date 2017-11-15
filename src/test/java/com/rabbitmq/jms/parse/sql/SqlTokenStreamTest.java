@@ -1,13 +1,13 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.parse.sql;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SqlTokenStreamTest {
 
@@ -69,18 +69,18 @@ public class SqlTokenStreamTest {
 
     private void assertTokenise(String inStr, String ...strs) {
         SqlTokenStream stream = new SqlTokenStream(inStr);
-        assertEquals("Residue not empty", "", stream.getResidue());
+        assertEquals("", stream.getResidue(), "Residue not empty");
         List<String> listOut = new ArrayList<String>();
         while (stream.moreTokens()) {
             SqlToken t = stream.getNext();
             listOut.add(t.toString());
         }
-        assertEquals("Parse failure", resultList(strs), listOut);
+        assertEquals(resultList(strs), listOut, "Parse failure");
     }
 
     private void assertTokeniseFailure(String inStr, String ...strs) {
         SqlTokenStream stream = new SqlTokenStream(inStr);
-        assertNotEquals("Residue empty", "", stream.getResidue());
+        assertNotEquals("", stream.getResidue(), "Residue empty");
     }
 
     private static List<String> resultList(String ... strs) {

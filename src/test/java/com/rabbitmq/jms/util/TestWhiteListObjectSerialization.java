@@ -2,7 +2,8 @@
 package com.rabbitmq.jms.util;
 
 import com.rabbitmq.jms.client.message.RMQObjectMessage;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import javax.jms.JMSException;
 import java.io.IOException;
@@ -11,7 +12,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static junit.framework.TestCase.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestWhiteListObjectSerialization {
     @Test

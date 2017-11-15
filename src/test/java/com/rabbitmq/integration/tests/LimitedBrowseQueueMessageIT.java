@@ -1,7 +1,7 @@
 /* Copyright (c) 2014 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.Serializable;
 import java.util.Enumeration;
@@ -15,7 +15,7 @@ import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Integration test for browsing a queue with limits. Limit is fixed in {@link AbstractITLimitedQueue#QBR_MAX}.
@@ -60,7 +60,7 @@ public class LimitedBrowseQueueMessageIT extends AbstractITLimitedQueue {
                 msg = (Message) e.nextElement();
             mtt.check(msg, (Serializable) queue);
         }
-            assertEquals("Wrong number of messages on browse queue", numExpected, numE);
+            assertEquals(numExpected, numE, "Wrong number of messages on browse queue");
         }
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
 
