@@ -1,13 +1,13 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestTimeTracker {
 
@@ -37,12 +37,12 @@ public class TestTimeTracker {
     }
 
     private void assertNotTimedOut(TimeTracker tt, String description) {
-        assertFalse("TimeTracker "+description+" timed out!", tt.timedOut());
-        assertFalse("TimeTracker "+description+" run out!", 0L >= tt.remainingMillis());
+        assertFalse(tt.timedOut(), "TimeTracker "+description+" timed out!");
+        assertFalse(0L >= tt.remainingMillis(), "TimeTracker "+description+" run out!");
     }
 
     private void assertZero(TimeTracker tt, String description) throws Exception {
-        assertEquals("TimeTracker "+description+" not a 0L timeout.", 0L, tt.timeoutNanos());
+        assertEquals(0L, tt.timeoutNanos(), "TimeTracker "+description+" not a 0L timeout.");
         assertTimedOut(tt, description);
     }
 
@@ -53,9 +53,9 @@ public class TestTimeTracker {
     }
 
     private void assertTimedOutOnce(TimeTracker tt, String description) {
-        assertTrue("TimeTracker "+description+" not timed out!", tt.timedOut());
-        assertEquals("TimeTracker "+description+" not zero remaining Millis!", 0l, tt.remainingMillis());
-        assertEquals("TimeTracker "+description+" not zero remaining Nanos!", 0l, tt.remainingNanos());
+        assertTrue(tt.timedOut(), "TimeTracker "+description+" not timed out!");
+        assertEquals(0l, tt.remainingMillis(), "TimeTracker "+description+" not zero remaining Millis!");
+        assertEquals(0l, tt.remainingNanos(), "TimeTracker "+description+" not zero remaining Nanos!");
         Object lock = new Object();
         long startNanos = System.nanoTime();
         synchronized(lock) {
@@ -66,6 +66,6 @@ public class TestTimeTracker {
             }
         }
         long intervalNanos = System.nanoTime() - startNanos;
-        assertTrue("TimeTracker "+description+" waited too long ("+intervalNanos+" nanos)!", intervalNanos<QUANTUM_TIME_NANOS);
+        assertTrue(intervalNanos<QUANTUM_TIME_NANOS, "TimeTracker "+description+" waited too long ("+intervalNanos+" nanos)!");
     }
 }

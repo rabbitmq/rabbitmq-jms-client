@@ -3,18 +3,18 @@ package com.rabbitmq.jms.client;
 
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import javax.jms.Message;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  *
@@ -24,7 +24,7 @@ public class RMQMessageProducerTest {
     RMQSession session;
     RMQDestination destination;
 
-    @Before public void init() {
+    @BeforeEach public void init() {
         session = Mockito.mock(RMQSession.class);
         destination = Mockito.mock(RMQDestination.class);
     }

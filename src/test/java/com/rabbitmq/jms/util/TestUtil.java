@@ -1,15 +1,15 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestUtil {
 
@@ -20,8 +20,8 @@ public class TestUtil {
      */
     @Test
     public void generateUUIDPrefix() throws Exception {
-        assertTrue("Prefix '"+PREFIX+"' not added correctly", Util.generateUUID(PREFIX).startsWith(PREFIX));
-        assertTrue("Null case doesn't start with null", Util.generateUUID(null).startsWith("null")); // special case
+        assertTrue(Util.generateUUID(PREFIX).startsWith(PREFIX), "Prefix '"+PREFIX+"' not added correctly");
+        assertTrue(Util.generateUUID(null).startsWith("null"), "Null case doesn't start with null"); // special case
     }
 
     private static final int REPEAT_COUNT = 1000;
@@ -37,7 +37,7 @@ public class TestUtil {
             uuidList.add(Util.generateUUID(""));
         }
 
-        assertEquals("Generated a duplicate uuid!", REPEAT_COUNT, setOf(uuidList).size());
+        assertEquals(REPEAT_COUNT, setOf(uuidList).size(), "Generated a duplicate uuid!");
     }
 
     private static <Obj> Set<Obj> setOf(List<Obj> list) { return new HashSet<Obj>(list); }

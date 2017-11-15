@@ -1,7 +1,7 @@
 /* Copyright (c) 2014 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.rabbitmq.jms.util.Shell;
 

@@ -3,11 +3,11 @@ package com.rabbitmq.integration.tests;
 
 import javax.jms.QueueConnectionFactory;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 public abstract class AbstractITQueueSSL extends AbstractITQueue {
 
-    @Before
+    @BeforeEach
     public void beforeTests() throws Exception {
         this.connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory(true, 0)
                 .getConnectionFactory();
