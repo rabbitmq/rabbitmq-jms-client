@@ -94,6 +94,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private boolean requeueOnMessageListenerException = false;
 
+    /**
+     * Whether using auto-delete for server-named queues for non-durable topics.
+     * If set to true, those queues will be deleted when the session is closed.
+     * If set to false, queues will be deleted when the owning connection is closed.
+     * Default is false.
+     */
+    private boolean cleanUpServerNamedQueuesForNonDurableTopics = false;
+
     /** The main RabbitMQ channel we use under the hood */
     private final Channel channel;
     /** Set to true if close() has been called and completed */
@@ -819,7 +827,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         /* broker queues declared for a non-durable topic that have an auto-generated name must go down with
            consumer/producer or the broker will leak them until the connection is brought down
         */
-        boolean autoDelete = !durable && queueNameOverride != null && !dest.isQueue();
+        boolean autoDelete = cleanUpServerNamedQueuesForNonDurableTopics ?
+            !durable && queueNameOverride != null && !dest.isQueue() : false;
+
         try { /* Declare the queue to RabbitMQ -- this creates it if it doesn't already exist */
             this.logger.debug("declare RabbitMQ queue name({}), durable({}), exclusive({}), auto-delete({}), properties({})",
                               queueName, durable, exclusive, false, options);
