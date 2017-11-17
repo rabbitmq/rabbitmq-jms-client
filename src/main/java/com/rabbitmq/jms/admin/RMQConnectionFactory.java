@@ -63,6 +63,15 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     private boolean requeueOnMessageListenerException = false;
 
+    /**
+     * Whether using auto-delete for server-named queues for non-durable topics.
+     * If set to true, those queues will be deleted when the session is closed.
+     * If set to false, queues will be deleted when the owning connection is closed.
+     * Default is false.
+     * @since 1.8.0
+     */
+    private boolean cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose = false;
+
     /** Default not to use ssl */
     private boolean ssl = false;
     private String tlsProtocol;
@@ -124,6 +133,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setChannelsQos(channelsQos)
             .setPreferProducerMessageProperty(preferProducerMessageProperty)
             .setRequeueOnMessageListenerException(requeueOnMessageListenerException)
+            .setCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose(this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
@@ -147,6 +157,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setChannelsQos(channelsQos)
             .setPreferProducerMessageProperty(preferProducerMessageProperty)
             .setRequeueOnMessageListenerException(requeueOnMessageListenerException)
+            .setCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose(this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
@@ -673,6 +684,14 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     public boolean isRequeueOnMessageListenerException() {
         return requeueOnMessageListenerException;
+    }
+
+    public void setCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose(boolean cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose) {
+        this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose = cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose;
+    }
+
+    public boolean isCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose() {
+        return this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose;
     }
 }
 
