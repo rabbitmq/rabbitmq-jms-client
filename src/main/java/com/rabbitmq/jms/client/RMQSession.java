@@ -99,8 +99,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * If set to true, those queues will be deleted when the session is closed.
      * If set to false, queues will be deleted when the owning connection is closed.
      * Default is false.
+     * @since 1.8.0
      */
-    private boolean cleanUpServerNamedQueuesForNonDurableTopics = false;
+    private final boolean cleanUpServerNamedQueuesForNonDurableTopics;
 
     /** The main RabbitMQ channel we use under the hood */
     private final Channel channel;
@@ -193,6 +194,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.deliveryExecutor = new DeliveryExecutor(sessionParams.getOnMessageTimeoutMs());
         this.preferProducerMessageProperty = sessionParams.willPreferProducerMessageProperty();
         this.requeueOnMessageListenerException = sessionParams.willRequeueOnMessageListenerException();
+        this.cleanUpServerNamedQueuesForNonDurableTopics = sessionParams.isCleanUpServerNamedQueuesForNonDurableTopics();
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;

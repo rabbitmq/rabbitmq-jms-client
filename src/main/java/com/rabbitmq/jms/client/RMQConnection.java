@@ -92,6 +92,15 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private boolean requeueOnMessageListenerException;
 
     /**
+     * Whether using auto-delete for server-named queues for non-durable topics.
+     * If set to true, those queues will be deleted when the session is closed.
+     * If set to false, queues will be deleted when the owning connection is closed.
+     * Default is false.
+     * @since 1.8.0
+     */
+    private final boolean cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose;
+
+    /**
      * Classes in these packages can be transferred via ObjectMessage.
      *
      * @see WhiteListObjectInputStream
@@ -113,6 +122,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.channelsQos = connectionParams.getChannelsQos();
         this.preferProducerMessageProperty = connectionParams.willPreferProducerMessageProperty();
         this.requeueOnMessageListenerException = connectionParams.willRequeueOnMessageListenerException();
+        this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose = connectionParams.isCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose();
     }
 
     /**
@@ -160,6 +170,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setSubscriptions(this.subscriptions)
             .setPreferProducerMessageProperty(this.preferProducerMessageProperty)
             .setRequeueOnMessageListenerException(this.requeueOnMessageListenerException)
+            .setCleanUpServerNamedQueuesForNonDurableTopics(this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose)
         );
         session.setTrustedPackages(this.trustedPackages);
         this.sessions.add(session);

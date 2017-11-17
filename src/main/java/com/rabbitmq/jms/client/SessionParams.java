@@ -40,6 +40,15 @@ public class SessionParams {
      */
     private boolean requeueOnMessageListenerException = false;
 
+    /**
+     * Whether using auto-delete for server-named queues for non-durable topics.
+     * If set to true, those queues will be deleted when the session is closed.
+     * If set to false, queues will be deleted when the owning connection is closed.
+     * Default is false.
+     * @since 1.8.0
+     */
+    private boolean cleanUpServerNamedQueuesForNonDurableTopics = false;
+
     public RMQConnection getConnection() {
         return connection;
     }
@@ -100,6 +109,15 @@ public class SessionParams {
 
     public SessionParams setRequeueOnMessageListenerException(boolean requeueOnMessageListenerException) {
         this.requeueOnMessageListenerException = requeueOnMessageListenerException;
+        return this;
+    }
+
+    public boolean isCleanUpServerNamedQueuesForNonDurableTopics() {
+        return cleanUpServerNamedQueuesForNonDurableTopics;
+    }
+
+    public SessionParams setCleanUpServerNamedQueuesForNonDurableTopics(boolean cleanUpServerNamedQueuesForNonDurableTopics) {
+        this.cleanUpServerNamedQueuesForNonDurableTopics = cleanUpServerNamedQueuesForNonDurableTopics;
         return this;
     }
 }
