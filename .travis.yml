@@ -21,6 +21,5 @@ before_script:
 script: ./mvnw clean verify -P '!setup-test-node' -Djunit5.exclude.tags='tls,need-rabbitmqctl'
 cache:
   directories:
-    - $HOME/.gradle/caches/
-    - $HOME/.gradle/wrapper/
+    - $HOME/.m2
 install: true
