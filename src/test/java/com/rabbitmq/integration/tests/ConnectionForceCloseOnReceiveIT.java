@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Integration test of broker close while waiting for receive on a Topic destination.
  */
-@Tag(TestTags.NEED_RABBITMQCTL)
+@Tag("need-rabbitmqctl")
 public class ConnectionForceCloseOnReceiveIT extends AbstractITTopic {
 
     private static final boolean TRACING = false;

@@ -210,6 +210,7 @@
 
         <configuration>
           <properties>
+            <!-- does not work on JDK9 -->
             <excludeTags>${junit5.exclude.tags}</excludeTags>
           </properties>
           <encoding>UTF-8</encoding>

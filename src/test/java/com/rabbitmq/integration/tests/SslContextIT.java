@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tag(TestTags.TLS)
+@Tag("tls")
 public class SslContextIT {
 
     Connection connection = null;

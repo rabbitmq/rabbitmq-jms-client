@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Integration test
  */
-@Tag(TestTags.TLS)
+@Tag("tls")
 public class SSLSimpleTopicMessageIT extends AbstractITTopicSSL {
     private static final String TOPIC_NAME = "test.topic." + SSLSimpleTopicMessageIT.class.getCanonicalName();
 
