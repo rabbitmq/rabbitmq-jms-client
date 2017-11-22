@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Integration test for simple point-to-point messaging.
  */
-@Tag("tls")
+@Tag(TestTags.TLS)
 public class SSLSimpleQueueMessageIT extends AbstractITQueueSSL {
 
     private static final String QUEUE_NAME = "test.queue."+SSLSimpleQueueMessageIT.class.getCanonicalName();

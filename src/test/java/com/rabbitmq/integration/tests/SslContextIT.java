@@ -4,6 +4,7 @@ package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import javax.jms.Connection;
@@ -19,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-
+@Tag(TestTags.TLS)
 public class SslContextIT {
 
     Connection connection = null;
