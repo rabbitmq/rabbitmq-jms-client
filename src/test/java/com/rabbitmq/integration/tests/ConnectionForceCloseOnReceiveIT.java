@@ -3,6 +3,7 @@ package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.jms.client.Completion;
 import com.rabbitmq.jms.util.Shell;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import javax.jms.*;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Integration test of broker close while waiting for receive on a Topic destination.
  */
+@Tag("need-rabbitmqctl")
 public class ConnectionForceCloseOnReceiveIT extends AbstractITTopic {
 
     private static final boolean TRACING = false;

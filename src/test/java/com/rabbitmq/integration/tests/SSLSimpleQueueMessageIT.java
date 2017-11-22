@@ -10,11 +10,13 @@ import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
  * Integration test for simple point-to-point messaging.
  */
+@Tag("tls")
 public class SSLSimpleQueueMessageIT extends AbstractITQueueSSL {
 
     private static final String QUEUE_NAME = "test.queue."+SSLSimpleQueueMessageIT.class.getCanonicalName();

@@ -1,0 +1,22 @@
+dist: trusty
+sudo: required
+
+language: java
+jdk:
+  - oraclejdk8
+  - oraclejdk9
+
+notifications:
+  email:
+    - acogoluegnes@pivotal.io
+services:
+  - rabbitmq
+branches:
+  only:
+    - master
+before_script:
+  - ./bin/install_on_debian.sh
+  - ./bin/before_build.sh
+
+script: ./mavenw clean verify -P '!setup-test-node' -Djunit5.exclude.tags='tls,need-rabbitmqctl'
+install: true

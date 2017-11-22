@@ -209,6 +209,9 @@
         <version>${maven.failsafe.plugin.version}</version>
 
         <configuration>
+          <properties>
+            <excludeTags>${junit5.exclude.tags}</excludeTags>
+          </properties>
           <encoding>UTF-8</encoding>
           <systemPropertyVariables>
             <RABBITMQ_VERSION>${rabbitmq.version}</RABBITMQ_VERSION>

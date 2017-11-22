@@ -11,11 +11,13 @@ import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
  * Integration test
  */
+@Tag("tls")
 public class SSLSimpleTopicMessageIT extends AbstractITTopicSSL {
     private static final String TOPIC_NAME = "test.topic." + SSLSimpleTopicMessageIT.class.getCanonicalName();
 
