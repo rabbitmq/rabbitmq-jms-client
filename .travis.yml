@@ -18,5 +18,5 @@ before_script:
   - ./bin/install_on_debian.sh
   - ./bin/before_build.sh
 
-script: ./mavenw clean verify -P '!setup-test-node' -Djunit5.exclude.tags='tls,need-rabbitmqctl'
+script: ./mvnw clean verify -P '!setup-test-node' -Djunit5.exclude.tags='tls,need-rabbitmqctl'
 install: true
