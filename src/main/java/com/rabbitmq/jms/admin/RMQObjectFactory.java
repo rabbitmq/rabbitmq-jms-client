@@ -194,6 +194,7 @@ public class RMQObjectFactory implements ObjectFactory {
         f.setTerminationTimeout (getLongProperty   (ref, environment, "terminationTimeout",  true, f.getTerminationTimeout() ));
         f.setUsername           (getStringProperty (ref, environment, "username",            true, f.getUsername()           ));
         f.setVirtualHost        (getStringProperty (ref, environment, "virtualHost",         true, f.getVirtualHost()        ));
+        f.setCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose(getBooleanProperty(ref, environment, "cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose",                 true, f.isCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose()                 ));
 
         return f;
     }
