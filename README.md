@@ -31,7 +31,7 @@ Add the following dependency to `pom.xml`:
 
 This project is managed by Maven, so use
 
-    mvn clean install
+    ./mvnw clean install
 
 to build it from source and install into the local repository.
 
@@ -42,7 +42,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for an overview of the development proc
 
 ### Unit Tests
 
-    mvn clean test
+    ./mvnw clean test
 
 ### Integration Tests
 
@@ -55,13 +55,13 @@ Connection recovery tests need `rabbitmqctl` to control the running node.
 Maven will start this node with the appropriate configuration by default when
 launching the `verify` command:
 
-    mvn clean verify
+    ./mvnw clean verify
 
 You can also provide your own broker node. To disable the
 automatic test node setup, disable the `setup-test-node` Maven
 profile:
 
-    mvn clean verify -P '!setup-test-node'
+    ./mvn clean verify -P '!setup-test-node'
 
 The easiest way to run a test node is to clone
 [rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-jms-topic-exchange/) and use `make run-broker`.
