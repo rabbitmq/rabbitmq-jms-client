@@ -96,6 +96,18 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     /**
+     * Creates a destination for RJMS mapped onto an AMQP topic/destination.
+     *
+     * @param destName the name of the topic destination
+     * @param amqpExchangeName - the exchange name for the mapped resource
+     * @param amqpRoutingKey - the routing key for the mapped resource
+     */
+    public RMQDestination(String destName, String amqpExchangeName, String amqpRoutingKey) {
+        this(destName, false, amqpExchangeName, amqpRoutingKey, destName, false, false);
+    }
+
+
+    /**
      * Creates a destination: either a queue or a topic; either mapped to a real AMQP resource or not.
      * <p>
      * If this is a mapped AMQP resource then if either <code>amqpExchangeName</code> or <code>amqpRoutingKey</code> is
