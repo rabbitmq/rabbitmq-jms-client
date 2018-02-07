@@ -869,7 +869,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public Topic createTopic(String topicName) throws JMSException {
         illegalStateExceptionIfClosed();
-        RMQDestination dest = new RMQDestination(topicName, false, false);
+        RMQDestination dest = new RMQDestination(topicName, topicName, "");
         declareTopic(dest);
         return dest;
     }
