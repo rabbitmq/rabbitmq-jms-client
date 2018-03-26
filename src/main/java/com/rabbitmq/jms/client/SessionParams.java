@@ -1,4 +1,4 @@
-/* Copyright (c) 2016-2017 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2016-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import javax.jms.Message;
@@ -48,6 +48,12 @@ public class SessionParams {
      * @since 1.8.0
      */
     private boolean cleanUpServerNamedQueuesForNonDurableTopics = false;
+
+    /**
+     * Callback to customise properties of outbound AMQP messages.
+     * @since 1.9.0
+     */
+    private AmqpPropertiesCustomiser amqpPropertiesCustomiser;
 
     public RMQConnection getConnection() {
         return connection;
@@ -118,6 +124,15 @@ public class SessionParams {
 
     public SessionParams setCleanUpServerNamedQueuesForNonDurableTopics(boolean cleanUpServerNamedQueuesForNonDurableTopics) {
         this.cleanUpServerNamedQueuesForNonDurableTopics = cleanUpServerNamedQueuesForNonDurableTopics;
+        return this;
+    }
+
+    public AmqpPropertiesCustomiser getAmqpPropertiesCustomiser() {
+        return amqpPropertiesCustomiser;
+    }
+
+    public SessionParams setAmqpPropertiesCustomiser(AmqpPropertiesCustomiser amqpPropertiesCustomiser) {
+        this.amqpPropertiesCustomiser = amqpPropertiesCustomiser;
         return this;
     }
 }

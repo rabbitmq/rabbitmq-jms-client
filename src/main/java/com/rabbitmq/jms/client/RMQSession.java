@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2017 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
@@ -103,6 +103,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private final boolean cleanUpServerNamedQueuesForNonDurableTopics;
 
+    /**
+     * Callback to customise properties of outbound AMQP messages.
+     * @since 1.9.0
+     */
+    private final AmqpPropertiesCustomiser amqpPropertiesCustomiser;
+
     /** The main RabbitMQ channel we use under the hood */
     private final Channel channel;
     /** Set to true if close() has been called and completed */
@@ -195,6 +201,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.preferProducerMessageProperty = sessionParams.willPreferProducerMessageProperty();
         this.requeueOnMessageListenerException = sessionParams.willRequeueOnMessageListenerException();
         this.cleanUpServerNamedQueuesForNonDurableTopics = sessionParams.isCleanUpServerNamedQueuesForNonDurableTopics();
+        this.amqpPropertiesCustomiser = sessionParams.getAmqpPropertiesCustomiser();
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;
@@ -604,7 +611,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         illegalStateExceptionIfClosed();
         RMQDestination dest = (RMQDestination) destination;
         declareDestinationIfNecessary(dest);
-        RMQMessageProducer producer = new RMQMessageProducer(this, dest, this.preferProducerMessageProperty);
+        RMQMessageProducer producer = new RMQMessageProducer(this, dest, this.preferProducerMessageProperty, this.amqpPropertiesCustomiser);
         this.producers.add(producer);
         return producer;
     }

@@ -1,7 +1,8 @@
-/* Copyright (c) 2013-2017 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
 import com.rabbitmq.client.Address;
+import com.rabbitmq.jms.client.AmqpPropertiesCustomiser;
 import com.rabbitmq.jms.client.ConnectionParams;
 import com.rabbitmq.jms.client.RMQConnection;
 import com.rabbitmq.jms.util.RMQJMSException;
@@ -72,6 +73,12 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     private boolean cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose = false;
 
+    /**
+     * Callback to customise properties of outbound AMQP messages.
+     * @since 1.9.0
+     */
+    private AmqpPropertiesCustomiser amqpPropertiesCustomiser;
+
     /** Default not to use ssl */
     private boolean ssl = false;
     private String tlsProtocol;
@@ -134,6 +141,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setPreferProducerMessageProperty(preferProducerMessageProperty)
             .setRequeueOnMessageListenerException(requeueOnMessageListenerException)
             .setCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose(this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose)
+            .setAmqpPropertiesCustomiser(this.amqpPropertiesCustomiser)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
@@ -693,5 +701,10 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     public boolean isCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose() {
         return this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose;
     }
+
+    public void setAmqpPropertiesCustomiser(AmqpPropertiesCustomiser amqpPropertiesCustomiser) {
+        this.amqpPropertiesCustomiser = amqpPropertiesCustomiser;
+    }
+
 }
 

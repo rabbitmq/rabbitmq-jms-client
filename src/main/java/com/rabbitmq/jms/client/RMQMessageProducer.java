@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2017 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
@@ -69,13 +69,9 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     private final SendingStrategy sendingStrategy;
 
-    /**
-     * Create a producer of messages.
-     * @param session which this producer uses
-     * @param destination to which this producer sends messages.
-     * @param preferProducerMessageProperty properties take precedence over respective message properties
-     */
-    public RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty) {
+    private final AmqpPropertiesCustomiser amqpPropertiesCustomiser;
+
+    public RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty, AmqpPropertiesCustomiser amqpPropertiesCustomiser) {
         this.session = session;
         this.destination = destination;
         if (preferProducerMessageProperty) {
@@ -83,6 +79,17 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         } else {
             sendingStrategy = new PreferMessagePropertySendingStrategy();
         }
+        this.amqpPropertiesCustomiser = amqpPropertiesCustomiser == null ? new NoOpAmqpPropertiesCustomiser() : amqpPropertiesCustomiser;
+    }
+
+    /**
+     * Create a producer of messages.
+     * @param session which this producer uses
+     * @param destination to which this producer sends messages.
+     * @param preferProducerMessageProperty properties take precedence over respective message properties
+     */
+    public RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty) {
+        this(session, destination, preferProducerMessageProperty, new NoOpAmqpPropertiesCustomiser());
     }
 
     /**
@@ -292,6 +299,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
                 bob.expiration(rmqExpiration(timeToLive));
                 bob.headers(msg.toAmqpHeaders());
 
+                bob = amqpPropertiesCustomiser.customise(bob, msg);
+
                 byte[] data = msg.toAmqpByteArray();
 
                 this.session.getChannel().basicPublish(destination.getAmqpExchangeName(), destination.getAmqpRoutingKey(), bob.build(), data);
@@ -460,5 +469,14 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     private enum MessageExpirationType {
         TTL, EXPIRATION
+    }
+
+    private static final class NoOpAmqpPropertiesCustomiser implements AmqpPropertiesCustomiser {
+
+        @Override
+        public AMQP.BasicProperties.Builder customise(AMQP.BasicProperties.Builder builder, Message jmsMessage) {
+            return builder;
+        }
+
     }
 }
