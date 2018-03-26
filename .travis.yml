@@ -4,6 +4,7 @@ sudo: required
 language: java
 jdk:
   - oraclejdk8
+  - oraclejdk9
 
 notifications:
   email:
@@ -30,7 +31,7 @@ branches:
 before_script:
   - ./bin/before_build.sh
 
-script: ./mvnw clean verify -P '!setup-test-node' -Djunit5.exclude.tags='tls,need-rabbitmqctl'
+script: ./mvnw clean verify -P '!setup-test-node' -Dtravis-ci=true 
 cache:
   directories:
     - $HOME/.m2

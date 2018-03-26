@@ -3,8 +3,8 @@ package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.jms.client.Completion;
 import com.rabbitmq.jms.util.Shell;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import javax.jms.*;
 import java.util.concurrent.TimeUnit;
@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Integration test of broker close while waiting for receive on a Topic destination.
  */
-@Tag("need-rabbitmqctl")
+@DisabledIfSystemProperty(named = "travis-ci", matches = "true")
 public class ConnectionForceCloseOnReceiveIT extends AbstractITTopic {
 
     private static final boolean TRACING = false;
@@ -34,14 +34,11 @@ public class ConnectionForceCloseOnReceiveIT extends AbstractITTopic {
 
     @Test
     public void testConnectionFailDuringReceiveWithExceptionListener() throws Exception {
-        ExceptionListener eListener = new ExceptionListener() {
-
-            @Override
-            public void onException(JMSException exception) {
-                t("onException called");
-                atomBool.set(true);
-                atomJMSExceptionRef.set(exception);
-            }};
+        ExceptionListener eListener = exception -> {
+            t("onException called");
+            atomBool.set(true);
+            atomJMSExceptionRef.set(exception);
+        };
 
         topicConn.setExceptionListener(eListener);
 
