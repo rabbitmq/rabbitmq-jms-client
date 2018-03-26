@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
@@ -101,6 +101,12 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private final boolean cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose;
 
     /**
+     * Callback to customise properties of outbound AMQP messages.
+     * @since 1.9.0
+     */
+    private final AmqpPropertiesCustomiser amqpPropertiesCustomiser;
+
+    /**
      * Classes in these packages can be transferred via ObjectMessage.
      *
      * @see WhiteListObjectInputStream
@@ -123,6 +129,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.preferProducerMessageProperty = connectionParams.willPreferProducerMessageProperty();
         this.requeueOnMessageListenerException = connectionParams.willRequeueOnMessageListenerException();
         this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose = connectionParams.isCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose();
+        this.amqpPropertiesCustomiser = connectionParams.getAmqpPropertiesCustomiser();
     }
 
     /**
@@ -171,6 +178,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setPreferProducerMessageProperty(this.preferProducerMessageProperty)
             .setRequeueOnMessageListenerException(this.requeueOnMessageListenerException)
             .setCleanUpServerNamedQueuesForNonDurableTopics(this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose)
+            .setAmqpPropertiesCustomiser(this.amqpPropertiesCustomiser)
         );
         session.setTrustedPackages(this.trustedPackages);
         this.sessions.add(session);
