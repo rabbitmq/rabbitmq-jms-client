@@ -8,23 +8,13 @@ import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.AmqpPropertiesCustomiser;
 import org.junit.Test;
 
-import javax.jms.BytesMessage;
-import javax.jms.DeliveryMode;
 import javax.jms.Message;
 import javax.jms.Queue;
-import javax.jms.QueueReceiver;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -33,9 +23,9 @@ import static org.junit.Assert.assertNotNull;
  */
 public class AmqpPropertiesCustomiserIT extends AbstractAmqpITQueue {
 
-    private static final String QUEUE_NAME = "test.queue."+AmqpPropertiesCustomiserIT.class.getCanonicalName();
     public static final String MESSAGE = "hello";
     public static final String TEXT_PLAIN = "text/plain";
+    private static final String QUEUE_NAME = "test.queue." + AmqpPropertiesCustomiserIT.class.getCanonicalName();
 
     @Override
     protected void customise(RMQConnectionFactory connectionFactory) {
@@ -53,11 +43,11 @@ public class AmqpPropertiesCustomiserIT extends AbstractAmqpITQueue {
     public void customiserIsApplied() throws Exception {
 
         channel.queueDeclare(QUEUE_NAME,
-                             false, // durable
-                             true,  // exclusive
-                             true,  // autoDelete
-                             null   // options
-                             );
+            false, // durable
+            true,  // exclusive
+            true,  // autoDelete
+            null   // options
+        );
 
         queueConn.start();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
@@ -80,5 +70,4 @@ public class AmqpPropertiesCustomiserIT extends AbstractAmqpITQueue {
 
         assertEquals("body of response is not correct", TEXT_PLAIN, response.getProps().getContentType());
     }
-
 }
