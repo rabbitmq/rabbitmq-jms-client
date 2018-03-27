@@ -67,6 +67,7 @@ public class AmqpPropertiesCustomiserIT extends AbstractAmqpITQueue {
         assertNotNull(body, "body of response is null");
 
         assertEquals(new String(body), MESSAGE, "body of response is not correct");
+
         assertEquals(response.getProps().getContentType(), TEXT_PLAIN, "body of response is not correct");
     }
 }
