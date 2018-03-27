@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BiFunction;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
@@ -40,6 +41,7 @@ import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,7 +109,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * Callback to customise properties of outbound AMQP messages.
      * @since 1.9.0
      */
-    private final AmqpPropertiesCustomiser amqpPropertiesCustomiser;
+    private final BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser;
 
     /** The main RabbitMQ channel we use under the hood */
     private final Channel channel;

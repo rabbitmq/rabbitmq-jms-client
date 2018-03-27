@@ -1,10 +1,12 @@
 /* Copyright (c) 2016-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Connection;
 
 import javax.jms.Message;
 import javax.jms.MessageProducer;
+import java.util.function.BiFunction;
 
 /**
  * Holder for {@link RMQConnection} constructor arguments.
@@ -58,7 +60,7 @@ public class ConnectionParams {
      * Callback to customise properties of outbound AMQP messages.
      * @since 1.9.0
      */
-    private AmqpPropertiesCustomiser amqpPropertiesCustomiser;
+    private BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser;
 
     public Connection getRabbitConnection() {
         return rabbitConnection;
@@ -132,11 +134,11 @@ public class ConnectionParams {
         return this;
     }
 
-    public AmqpPropertiesCustomiser getAmqpPropertiesCustomiser() {
+    public BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> getAmqpPropertiesCustomiser() {
         return amqpPropertiesCustomiser;
     }
 
-    public ConnectionParams setAmqpPropertiesCustomiser(AmqpPropertiesCustomiser amqpPropertiesCustomiser) {
+    public ConnectionParams setAmqpPropertiesCustomiser(BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser) {
         this.amqpPropertiesCustomiser = amqpPropertiesCustomiser;
         return this;
     }

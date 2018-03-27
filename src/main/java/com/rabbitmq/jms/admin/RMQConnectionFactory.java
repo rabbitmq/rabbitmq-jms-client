@@ -1,8 +1,8 @@
 /* Copyright (c) 2013-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Address;
-import com.rabbitmq.jms.client.AmqpPropertiesCustomiser;
 import com.rabbitmq.jms.client.ConnectionParams;
 import com.rabbitmq.jms.client.RMQConnection;
 import com.rabbitmq.jms.util.RMQJMSException;
@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BiFunction;
 
 import static com.rabbitmq.jms.util.UriCodec.*;
 
@@ -77,7 +78,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * Callback to customise properties of outbound AMQP messages.
      * @since 1.9.0
      */
-    private AmqpPropertiesCustomiser amqpPropertiesCustomiser;
+    private BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser;
 
     /** Default not to use ssl */
     private boolean ssl = false;
@@ -702,7 +703,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         return this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose;
     }
 
-    public void setAmqpPropertiesCustomiser(AmqpPropertiesCustomiser amqpPropertiesCustomiser) {
+    public void setAmqpPropertiesCustomiser(BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser) {
         this.amqpPropertiesCustomiser = amqpPropertiesCustomiser;
     }
 

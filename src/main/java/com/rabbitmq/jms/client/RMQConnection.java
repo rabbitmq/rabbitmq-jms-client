@@ -9,10 +9,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 
 import javax.jms.*;
 import javax.jms.IllegalStateException;
 
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,7 +106,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      * Callback to customise properties of outbound AMQP messages.
      * @since 1.9.0
      */
-    private final AmqpPropertiesCustomiser amqpPropertiesCustomiser;
+    private final BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser;
 
     /**
      * Classes in these packages can be transferred via ObjectMessage.

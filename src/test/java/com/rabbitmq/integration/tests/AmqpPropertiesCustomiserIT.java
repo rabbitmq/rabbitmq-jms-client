@@ -1,14 +1,11 @@
 /* Copyright (c) 2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.admin.RMQDestination;
-import com.rabbitmq.jms.client.AmqpPropertiesCustomiser;
 import org.junit.jupiter.api.Test;
 
-import javax.jms.Message;
 import javax.jms.Queue;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
@@ -29,14 +26,7 @@ public class AmqpPropertiesCustomiserIT extends AbstractAmqpITQueue {
 
     @Override
     protected void customise(RMQConnectionFactory connectionFactory) {
-        connectionFactory.setAmqpPropertiesCustomiser(new AmqpPropertiesCustomiser() {
-
-            @Override
-            public AMQP.BasicProperties.Builder customise(AMQP.BasicProperties.Builder builder, Message jmsMessage) {
-                builder.contentType(TEXT_PLAIN);
-                return builder;
-            }
-        });
+        connectionFactory.setAmqpPropertiesCustomiser((builder, message) -> builder.contentType(TEXT_PLAIN));
     }
 
     @Test
