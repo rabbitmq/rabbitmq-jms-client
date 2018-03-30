@@ -1,10 +1,9 @@
-/* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.jms.client.Completion;
 import com.rabbitmq.jms.util.Shell;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import javax.jms.*;
 import java.util.concurrent.TimeUnit;
@@ -17,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Integration test of broker close while waiting for receive on a Topic destination.
  */
-@DisabledIfSystemProperty(named = "travis-ci", matches = "true")
 public class ConnectionForceCloseOnReceiveIT extends AbstractITTopic {
 
     private static final boolean TRACING = false;
@@ -56,8 +54,7 @@ public class ConnectionForceCloseOnReceiveIT extends AbstractITTopic {
 
         Thread.sleep(ONE_SECOND);
 
-        Shell.invokeMakeTarget("stop-rabbit-on-node start-rabbit-on-node");
-
+        Shell.restartNode();
 
         try {
             t("waiting for completion...");
@@ -83,7 +80,7 @@ public class ConnectionForceCloseOnReceiveIT extends AbstractITTopic {
         public DelayedReceive(long timeoutMillis, MessageConsumer subscr, Completion completion) {
             this.timeoutMillis = timeoutMillis;
             this.subscr = subscr;
-            this.result = new AtomicReference<Message>(null);
+            this.result = new AtomicReference<>(null);
             this.completion = completion;
         }
         @Override

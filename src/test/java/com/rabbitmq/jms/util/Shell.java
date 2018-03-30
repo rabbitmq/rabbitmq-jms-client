@@ -1,14 +1,15 @@
-/* Copyright (c) 2014 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2014-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.util;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 /**
  * Shell is a test utility class for issuing shell commands from integration tests.
  */
 public class Shell {
-
-    private static final String CTLCMD = "rabbitmqctl ";
 
     public static String executeSimpleCommand(String command) {
         StringBuffer outputSb = new StringBuffer();
@@ -19,7 +20,7 @@ public class Shell {
             process.waitFor();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line = "";
-            while ((line = reader.readLine())!= null) {
+            while ((line = reader.readLine()) != null) {
                 outputSb.append(line + "\n");
             }
             reader.close();
@@ -29,16 +30,8 @@ public class Shell {
         return outputSb.toString();
     }
 
-    /*
-    public static String executeControl(String cmd) {
-        return executeCommand(CTLCMD + cmd);
-    }
-    */
-
-
     public static String capture(InputStream is)
-        throws IOException
-    {
+        throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
         String line;
         StringBuilder buff = new StringBuilder();
@@ -48,19 +41,12 @@ public class Shell {
         return buff.toString();
     }
 
-    public static Process invokeMakeTarget(String command) throws IOException {
-        File rabbitmqctl = new File(rabbitmqctlCommand());
-        return executeCommand(makeCommand() +
-            " -C \'" + rabbitmqDir() + "\'" +
-            " RABBITMQCTL=\'" + rabbitmqctl.getAbsolutePath() + "\'" +
-            " RABBITMQ_NODENAME=\'" + nodenameA() + "\'" +
-            " RABBITMQ_NODE_PORT=" + node_portA() +
-            " RABBITMQ_CONFIG_FILE=\'" + config_fileA() + "\'" +
-            " " + command);
+    public static void restartNode() throws IOException {
+        executeCommand(rabbitmqctlCommand() + " -n " + nodenameA() + " stop_app");
+        executeCommand(rabbitmqctlCommand() + " -n " + nodenameA() + " start_app");
     }
 
-    public static Process executeCommand(String command) throws IOException
-    {
+    public static Process executeCommand(String command) throws IOException {
         Process pr = executeCommandProcess(command);
 
         int ev = waitForExitValue(pr);
@@ -76,17 +62,17 @@ public class Shell {
     }
 
     private static int waitForExitValue(Process pr) {
-        while(true) {
+        while (true) {
             try {
                 pr.waitFor();
                 break;
-            } catch (InterruptedException ignored) {}
+            } catch (InterruptedException ignored) {
+            }
         }
         return pr.exitValue();
     }
 
-    private static Process executeCommandProcess(String command) throws IOException
-    {
+    private static Process executeCommandProcess(String command) throws IOException {
         String[] finalCommand;
         if (System.getProperty("os.name").toLowerCase().contains("windows")) {
             finalCommand = new String[4];
@@ -103,33 +89,11 @@ public class Shell {
         return Runtime.getRuntime().exec(finalCommand);
     }
 
-    public static String makeCommand()
-    {
-        return System.getProperty("make.bin", "make");
-    }
-
-    public static String nodenameA()
-    {
+    public static String nodenameA() {
         return System.getProperty("test-broker.A.nodename");
     }
 
-    public static String node_portA()
-    {
-        return System.getProperty("test-broker.A.node_port");
-    }
-
-    public static String config_fileA()
-    {
-        return System.getProperty("test-broker.A.config_file");
-    }
-
-    public static String rabbitmqctlCommand()
-    {
+    public static String rabbitmqctlCommand() {
         return System.getProperty("rabbitmqctl.bin");
-    }
-
-    public static String rabbitmqDir()
-    {
-        return System.getProperty("rabbitmq.dir");
     }
 }
