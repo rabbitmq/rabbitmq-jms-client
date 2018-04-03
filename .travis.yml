@@ -33,7 +33,7 @@ branches:
 before_script:
   - ./bin/before_build.sh
 
-script: ./mvnw clean verify -P '!setup-test-node' -Dtravis-ci=true -Drabbitmqctl.bin='sudo rabbitmqctl'
+script: ./mvnw clean verify -P '!setup-test-node' -Dtravis-ci=true -Drabbitmqctl.bin="$RABBITMQ_CTL"
 cache:
   directories:
     - $HOME/.m2

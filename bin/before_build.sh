@@ -11,6 +11,7 @@ tar xf rabbitmq-server-generic-unix-3.7.4.tar.xz
 cp target/test-classes/rabbit@localhost.config rabbitmq_server-3.7.4/etc/rabbitmq/rabbitmq.config
 rabbitmq_server-3.7.4/sbin/rabbitmq-plugins enable rabbitmq_jms_topic_exchange
 rabbitmq_server-3.7.4/sbin/rabbitmq-server -detached
+export RABBITMQ_CTL=rabbitmq_server-3.7.4/sbin/rabbitmqctl
 
 sleep 3
 
