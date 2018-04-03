@@ -9,6 +9,7 @@ git clone https://github.com/michaelklishin/tls-gen.git /tmp/tls-gen
 make -C /tmp/tls-gen/basic
 ./mvnw clean resources:testResources -Dtest-tls-certs.dir=/tmp/tls-gen/basic
 cp target/test-classes/rabbit@localhost.config /tmp/rabbitmq.config
+sudo service rabbitmq-server stop
 sudo service rabbitmq-server start
 
 sleep 3
