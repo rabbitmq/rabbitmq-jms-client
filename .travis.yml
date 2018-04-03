@@ -23,6 +23,8 @@ before_install:
   - sudo mv /opt/jdk_switcher/jdk_switcher.sh /tmp
   - sudo apt-get install rabbitmq-server=3.7.4-1
   - sudo mv /tmp/jdk_switcher.sh /opt/jdk_switcher/
+  - sudo apt-get update
+  - sudo apt-get install python3
 services:
   - rabbitmq
 branches:

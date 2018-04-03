@@ -11,12 +11,10 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 /**
  * Integration test for simple point-to-point messaging.
  */
-@DisabledIfSystemProperty(named = "travis-ci", matches = "true")
 public class SSLSimpleQueueMessageIT extends AbstractITQueueSSL {
 
     private static final String QUEUE_NAME = "test.queue."+SSLSimpleQueueMessageIT.class.getCanonicalName();

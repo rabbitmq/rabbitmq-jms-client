@@ -86,7 +86,7 @@ public class RMQConnectionFactoryTest {
         connFactory.setPort(42);
         connFactory.setQueueBrowserReadMax(52);
         connFactory.setOnMessageTimeoutMs(62);
-        connFactory.setSsl(true);
+        connFactory.useSslProtocol();
         connFactory.setTerminationTimeout(1234567890123456789L);
         connFactory.setUsername("fred");
         connFactory.setVirtualHost("bill");
@@ -107,7 +107,7 @@ public class RMQConnectionFactoryTest {
         connFactory.setPassword("my-password");
         connFactory.setPort(42);
         connFactory.setQueueBrowserReadMax(52);
-        connFactory.setSsl(true);
+        connFactory.useSslProtocol();
         connFactory.setTerminationTimeout(1234567890123456789L);
         connFactory.setUsername("fred");
         connFactory.setVirtualHost("bill");

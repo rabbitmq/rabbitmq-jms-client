@@ -1,6 +1,7 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.Hashtable;
 
 import javax.jms.ConnectionFactory;
@@ -190,7 +191,13 @@ public class RMQObjectFactory implements ObjectFactory {
         f.setPort               (getIntProperty    (ref, environment, "port",                true, f.getPort()               ));
         f.setQueueBrowserReadMax(getIntProperty    (ref, environment, "queueBrowserReadMax", true, f.getQueueBrowserReadMax()));
         f.setOnMessageTimeoutMs (getIntProperty    (ref, environment, "onMessageTimeoutMs",  true, f.getOnMessageTimeoutMs() ));
-        f.setSsl                (getBooleanProperty(ref, environment, "ssl",                 true, f.isSsl()                 ));
+        if (getBooleanProperty(ref, environment, "ssl",                 true, f.isSsl())) {
+            try {
+                f.useSslProtocol();
+            } catch (NoSuchAlgorithmException e) {
+                throw new NamingException("Error while enabling TLS: " + e.getMessage());
+            }
+        }
         f.setTerminationTimeout (getLongProperty   (ref, environment, "terminationTimeout",  true, f.getTerminationTimeout() ));
         f.setUsername           (getStringProperty (ref, environment, "username",            true, f.getUsername()           ));
         f.setVirtualHost        (getStringProperty (ref, environment, "virtualHost",         true, f.getVirtualHost()        ));
