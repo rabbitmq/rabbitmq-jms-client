@@ -39,4 +39,4 @@ cache:
     - $HOME/.m2
 install: true
 env:
-  - RABBITMQ_CONFIG_FILE=/tmp/rabbitmq.config
+  - RABBITMQ_CONFIG_FILE=/tmp/rabbitmq
