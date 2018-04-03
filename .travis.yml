@@ -33,7 +33,7 @@ branches:
 before_script:
   - ./bin/before_build.sh
 
-script: ./mvnw clean verify -P '!setup-test-node' -Dtravis-ci=true -Drabbitmqctl.bin='rabbitmq/sbin/rabbitmqctl'
+script: ./mvnw clean verify -P '!setup-test-node' -Dtravis-ci=true -Drabbitmqctl.bin='rabbitmq/sbin/rabbitmqctl' -Dtest-broker.A.nodename=rabbit@$(hostname)
 cache:
   directories:
     - $HOME/.m2
