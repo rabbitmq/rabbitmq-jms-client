@@ -1,17 +1,16 @@
 #!/bin/sh
 
-${HOP_RABBITMQ_PLUGINS:="sudo rabbitmq-plugins"}
-
-$HOP_RABBITMQ_PLUGINS enable rabbitmq_jms_topic_exchange
-
 rm -rf /tmp/tls-gen
 git clone https://github.com/michaelklishin/tls-gen.git /tmp/tls-gen
 make -C /tmp/tls-gen/basic
 ./mvnw clean resources:testResources -Dtest-tls-certs.dir=/tmp/tls-gen/basic
-cp target/test-classes/rabbit@localhost.config /tmp/rabbitmq.config
-sudo service rabbitmq-server stop
-sudo service rabbitmq-server start
-sudo rabbitmqctl status
+
+wget https://github.com/rabbitmq/rabbitmq-server/releases/download/v3.7.4/rabbitmq-server-generic-unix-3.7.4.tar.xz
+tar xf rabbitmq-server-generic-unix-3.7.4.tar.xz
+
+cp target/test-classes/rabbit@localhost.config rabbitmq_server-3.7.4/etc/rabbitmq/rabbitmq.config
+rabbitmq_server-3.7.4/sbin/rabbitmq-plugins enable rabbitmq_jms_topic_exchange
+rabbitmq_server-3.7.4/sbin/rabbitmq-server -detached
 
 sleep 3
 
