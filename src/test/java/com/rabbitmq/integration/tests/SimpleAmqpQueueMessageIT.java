@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.jms.BytesMessage;
 import javax.jms.DeliveryMode;
@@ -53,7 +54,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
         queueConn.start();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-        Queue queue = (Queue) new RMQDestination(QUEUE_NAME, "", QUEUE_NAME, null);  // write-only AMQP-mapped queue
+        Queue queue = new RMQDestination(QUEUE_NAME, "", QUEUE_NAME, null);  // write-only AMQP-mapped queue
 
         QueueSender queueSender = queueSession.createSender(queue);
         queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
@@ -98,7 +99,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
         queueConn.start();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-        Queue queue = (Queue) new RMQDestination(QUEUE_NAME, "", QUEUE_NAME, null);  // write-only AMQP-mapped queue
+        Queue queue = new RMQDestination(QUEUE_NAME, "", QUEUE_NAME, null);  // write-only AMQP-mapped queue
 
         QueueSender queueSender = queueSession.createSender(queue);
         queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
@@ -156,7 +157,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
         queueConn.start();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-        Queue queue = (Queue) new RMQDestination(QUEUE_NAME_NON_EXCLUSIVE, null, null, QUEUE_NAME_NON_EXCLUSIVE);  // read-only AMQP-mapped queue
+        Queue queue = new RMQDestination(QUEUE_NAME_NON_EXCLUSIVE, null, null, QUEUE_NAME_NON_EXCLUSIVE);  // read-only AMQP-mapped queue
 
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
         BytesMessage message = (BytesMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
@@ -212,7 +213,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
         queueConn.start();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-        Queue queue = (Queue) new RMQDestination(QUEUE_NAME_NON_EXCLUSIVE, null, null, QUEUE_NAME_NON_EXCLUSIVE);  // read-only AMQP-mapped queue
+        Queue queue = new RMQDestination(QUEUE_NAME_NON_EXCLUSIVE, null, null, QUEUE_NAME_NON_EXCLUSIVE);  // read-only AMQP-mapped queue
 
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
         TextMessage message = (TextMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
@@ -237,6 +238,42 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
         assertEquals(STRING_PROP_VALUE, message.getStringProperty(USER_STRING_PROPERTY_NAME), "String property not transferred");
         assertEquals("42", message.getStringProperty("DummyProp"), "Numeric property not transferred");
+    }
+
+    @Test
+    public void testSendFromJmsAndReceiveJmsTextMessage() throws Exception {
+        String queueName = UUID.randomUUID().toString();
+        channel.queueDeclare(queueName,
+            false, // durable
+            false, // non-exclusive
+            true,  // autoDelete
+            null   // options
+        );
+
+        queueConn.start();
+        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        Queue queue = new RMQDestination(queueName, "", queueName, null); // write-only AMQP-mapped queue
+
+        QueueSender queueSender = queueSession.createSender(queue);
+        queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+
+        TextMessage message = queueSession.createTextMessage(MESSAGE);
+        message.setStringProperty("JMSType", "TextMessage");
+        message.setStringProperty(USER_STRING_PROPERTY_NAME, STRING_PROP_VALUE);
+
+        queueSender.send(message);
+        queueSession.close();
+
+        queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        queue = new RMQDestination(queueName, null, null, queueName);  // read-only AMQP-mapped queue
+        QueueReceiver queueReceiver = queueSession.createReceiver(queue);
+        message = (TextMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
+
+        channel.queueDelete(queueName);
+
+        assertNotNull("No message received", message);
+        assertEquals("Payload doesn't match", MESSAGE, message.getText());
+        assertEquals("String property not transferred", STRING_PROP_VALUE, message.getStringProperty(USER_STRING_PROPERTY_NAME));
     }
 
 }
