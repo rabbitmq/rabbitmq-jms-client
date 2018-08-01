@@ -271,9 +271,9 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
         channel.queueDelete(queueName);
 
-        assertNotNull("No message received", message);
-        assertEquals("Payload doesn't match", MESSAGE, message.getText());
-        assertEquals("String property not transferred", STRING_PROP_VALUE, message.getStringProperty(USER_STRING_PROPERTY_NAME));
+        assertNotNull(message, "No message received");
+        assertEquals(MESSAGE, message.getText(), "Payload doesn't match");
+        assertEquals(STRING_PROP_VALUE, message.getStringProperty(USER_STRING_PROPERTY_NAME), "String property not transferred");
     }
 
 }
