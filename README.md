@@ -26,7 +26,7 @@ Add the following dependency to `pom.xml`:
 <dependency>
   <groupId>com.rabbitmq.jms</groupId>
   <artifactId>rabbitmq-jms</artifactId>
-  <version>1.8.1</version>
+  <version>1.9.0</version>
 </dependency>
 ```
 
