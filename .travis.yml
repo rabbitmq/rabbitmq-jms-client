@@ -9,6 +9,8 @@ jdk:
 notifications:
   email:
     - acogoluegnes@pivotal.io
+env:
+  - PYTHON=python3.7
 addons:
   apt:
     sources:
