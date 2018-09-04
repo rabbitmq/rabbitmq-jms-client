@@ -2,6 +2,8 @@
 package com.rabbitmq.jms.admin;
 
 import com.rabbitmq.client.Address;
+import com.rabbitmq.client.MetricsCollector;
+import com.rabbitmq.client.NoOpMetricsCollector;
 import com.rabbitmq.jms.client.AmqpPropertiesCustomiser;
 import com.rabbitmq.jms.client.ConnectionParams;
 import com.rabbitmq.jms.client.RMQConnection;
@@ -11,8 +13,21 @@ import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.*;
-import javax.naming.*;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.QueueConnection;
+import javax.jms.QueueConnectionFactory;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
+import javax.naming.NamingException;
+import javax.naming.RefAddr;
+import javax.naming.Reference;
+import javax.naming.Referenceable;
+import javax.naming.StringRefAddr;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import java.io.IOException;
@@ -21,7 +36,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import static com.rabbitmq.jms.util.UriCodec.*;
+import static com.rabbitmq.jms.util.UriCodec.encHost;
+import static com.rabbitmq.jms.util.UriCodec.encSegment;
+import static com.rabbitmq.jms.util.UriCodec.encUserinfo;
 
 /**
  * RabbitMQ Implementation of JMS {@link ConnectionFactory}
@@ -79,6 +96,13 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     private AmqpPropertiesCustomiser amqpPropertiesCustomiser;
 
+    /**
+     * Collector for AMQP-client metrics.
+     *
+     * @since 1.10.0
+     */
+    private MetricsCollector metricsCollector = new NoOpMetricsCollector();
+
     /** Default not to use ssl */
     private boolean ssl = false;
     private String tlsProtocol;
@@ -130,6 +154,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
         setRabbitUri(logger, this, factory, this.getUri());
         maybeEnableTLS(factory);
+
+        factory.setMetricsCollector(this.metricsCollector);
         com.rabbitmq.client.Connection rabbitConnection = instantiateNodeConnection(factory);
 
         RMQConnection conn = new RMQConnection(new ConnectionParams()
@@ -706,5 +732,15 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.amqpPropertiesCustomiser = amqpPropertiesCustomiser;
     }
 
+    /**
+     * Set the collector for AMQP-client metrics.
+     *
+     * @param metricsCollector
+     * @since 1.10.0
+     * @see com.rabbitmq.client.ConnectionFactory#setMetricsCollector(MetricsCollector)
+     */
+    public void setMetricsCollector(MetricsCollector metricsCollector) {
+        this.metricsCollector = metricsCollector;
+    }
 }
 

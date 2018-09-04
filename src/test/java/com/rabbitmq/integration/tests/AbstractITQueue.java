@@ -12,6 +12,7 @@ import javax.jms.QueueSession;
 
 import org.junit.After;
 import org.junit.Before;
+import com.rabbitmq.jms.admin.RMQConnectionFactory;
 
 public abstract class AbstractITQueue {
     QueueConnectionFactory connFactory;
@@ -21,7 +22,12 @@ public abstract class AbstractITQueue {
     public void beforeTests() throws Exception {
         this.connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                 .getConnectionFactory();
+        customise((RMQConnectionFactory) connFactory);
         this.queueConn = connFactory.createQueueConnection();
+    }
+
+    protected void customise(RMQConnectionFactory connectionFactory) {
+
     }
 
     protected static void drainQueue(QueueSession session, Queue queue) throws Exception {
