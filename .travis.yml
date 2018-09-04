@@ -31,7 +31,7 @@ branches:
 before_script:
   - ./bin/before_build.sh
 
-script: ./mvnw clean verify -P '!setup-test-node' -Djunit5.exclude.tags='tls,need-rabbitmqctl'
+script: ./mvnw clean verify -P '!setup-test-node' -Dtravis-ci=true -Drabbitmqctl.bin='rabbitmq/sbin/rabbitmqctl' -Dtest-broker.A.nodename=rabbit@$(hostname) -Dtest-client-cert.password= -Dtest-tls-certs.dir=/tmp/tls-gen/basic
 cache:
   directories:
     - $HOME/.m2
