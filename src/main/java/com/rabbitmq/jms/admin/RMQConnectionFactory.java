@@ -11,8 +11,21 @@ import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.*;
-import javax.naming.*;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.QueueConnection;
+import javax.jms.QueueConnectionFactory;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
+import javax.naming.NamingException;
+import javax.naming.RefAddr;
+import javax.naming.Reference;
+import javax.naming.Referenceable;
+import javax.naming.StringRefAddr;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import java.io.IOException;
@@ -22,7 +35,9 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BiFunction;
 
-import static com.rabbitmq.jms.util.UriCodec.*;
+import static com.rabbitmq.jms.util.UriCodec.encHost;
+import static com.rabbitmq.jms.util.UriCodec.encSegment;
+import static com.rabbitmq.jms.util.UriCodec.encUserinfo;
 
 /**
  * RabbitMQ Implementation of JMS {@link ConnectionFactory}
@@ -86,6 +101,14 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private SSLContext sslContext;
     private boolean useDefaultSslContext = false;
 
+    /**
+     * Whether to use hostname verification when TLS is on.
+     *
+     * @since 1.10.0
+     */
+    private boolean hostnameVerification = false;
+
+
     /** The maximum number of messages to read on a queue browser, which must be non-negative;
      *  0 means unlimited and is the default; negative values are interpreted as 0. */
     private int queueBrowserReadMax = Math.max(0, Integer.getInteger("rabbit.jms.queueBrowserReadMax", 0));
@@ -131,6 +154,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
         setRabbitUri(logger, this, factory, this.getUri());
         maybeEnableTLS(factory);
+        maybeEnableHostnameVerification(factory);
         com.rabbitmq.client.Connection rabbitConnection = instantiateNodeConnection(factory);
 
         RMQConnection conn = new RMQConnection(new ConnectionParams()
@@ -313,6 +337,16 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
                 this.logger.warn("Could not set SSL protocol on connection factory, {}. SSL set off.", this, e);
                 this.ssl = false;
             }
+    }
+
+    private void maybeEnableHostnameVerification(com.rabbitmq.client.ConnectionFactory factory) {
+        if (hostnameVerification) {
+            if (this.ssl) {
+                factory.enableHostnameVerification();
+            } else {
+                logger.warn("Hostname verification enabled, but not TLS, please enable TLS too.");
+            }
+        }
     }
 
     public boolean isSsl() {
@@ -705,6 +739,17 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     public void setAmqpPropertiesCustomiser(BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser) {
         this.amqpPropertiesCustomiser = amqpPropertiesCustomiser;
+    }
+
+    /**
+     * Enable or disable hostname verification when TLS is used.
+     *
+     * @param hostnameVerification
+     * @see com.rabbitmq.client.ConnectionFactory#enableHostnameVerification()
+     * @since 1.10.0
+     */
+    public void setHostnameVerification(boolean hostnameVerification) {
+        this.hostnameVerification = hostnameVerification;
     }
 
 }
