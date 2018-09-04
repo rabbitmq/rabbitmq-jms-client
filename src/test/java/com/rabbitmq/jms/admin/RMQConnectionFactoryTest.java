@@ -2,6 +2,7 @@
 
 package com.rabbitmq.jms.admin;
 
+import com.rabbitmq.client.Address;
 import com.rabbitmq.client.AddressResolver;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -14,6 +15,7 @@ import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 
@@ -252,9 +254,11 @@ public class RMQConnectionFactoryTest {
         rmqCf.setUri("amqp://localhost:10000");
         rmqCf.createConnection("guest", "guest");
         assertNotNull(passedInAddressResolver);
-        assertEquals(1, passedInAddressResolver.getAddresses().size());
+        List<Address> resolved = passedInAddressResolver.getAddresses();
+        assertTrue(resolved.size() > 1);
+        assertTrue(resolved.size() <= 2);
         // don't check host, as there can be some DNS resolution happening
-        assertEquals(10000, passedInAddressResolver.getAddresses().get(0).getPort());
+        assertEquals(10000, resolved.get(0).getPort());
     }
 
     @Test
