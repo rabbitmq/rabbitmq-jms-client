@@ -255,7 +255,7 @@ public class RMQConnectionFactoryTest {
         rmqCf.createConnection("guest", "guest");
         assertNotNull(passedInAddressResolver);
         List<Address> resolved = passedInAddressResolver.getAddresses();
-        assertTrue(resolved.size() > 1);
+        assertTrue(resolved.size() >= 1);
         assertTrue(resolved.size() <= 2);
         // don't check host, as there can be some DNS resolution happening
         assertEquals(10000, resolved.get(0).getPort());
