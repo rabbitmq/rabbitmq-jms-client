@@ -109,6 +109,14 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private SSLContext sslContext;
     private boolean useDefaultSslContext = false;
 
+    /**
+     * Whether to use hostname verification when TLS is on.
+     *
+     * @since 1.10.0
+     */
+    private boolean hostnameVerification = false;
+
+
     /** The maximum number of messages to read on a queue browser, which must be non-negative;
      *  0 means unlimited and is the default; negative values are interpreted as 0. */
     private int queueBrowserReadMax = Math.max(0, Integer.getInteger("rabbit.jms.queueBrowserReadMax", 0));
@@ -154,8 +162,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
         setRabbitUri(logger, this, factory, this.getUri());
         maybeEnableTLS(factory);
-
         factory.setMetricsCollector(this.metricsCollector);
+        maybeEnableHostnameVerification(factory);
         com.rabbitmq.client.Connection rabbitConnection = instantiateNodeConnection(factory);
 
         RMQConnection conn = new RMQConnection(new ConnectionParams()
@@ -181,6 +189,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.password = password;
         com.rabbitmq.client.ConnectionFactory cf = new com.rabbitmq.client.ConnectionFactory();
         maybeEnableTLS(cf);
+        cf.setMetricsCollector(this.metricsCollector);
         com.rabbitmq.client.Connection rabbitConnection = instantiateNodeConnection(cf, endpoints);
 
         RMQConnection conn = new RMQConnection(new ConnectionParams()
@@ -338,6 +347,16 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
                 this.logger.warn("Could not set SSL protocol on connection factory, {}. SSL set off.", this, e);
                 this.ssl = false;
             }
+    }
+
+    private void maybeEnableHostnameVerification(com.rabbitmq.client.ConnectionFactory factory) {
+        if (hostnameVerification) {
+            if (this.ssl) {
+                factory.enableHostnameVerification();
+            } else {
+                logger.warn("Hostname verification enabled, but not TLS, please enable TLS too.");
+            }
+        }
     }
 
     public boolean isSsl() {
@@ -742,5 +761,17 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     public void setMetricsCollector(MetricsCollector metricsCollector) {
         this.metricsCollector = metricsCollector;
     }
+
+    /**
+     * Enable or disable hostname verification when TLS is used.
+     *
+     * @param hostnameVerification
+     * @see com.rabbitmq.client.ConnectionFactory#enableHostnameVerification()
+     * @since 1.10.0
+     */
+    public void setHostnameVerification(boolean hostnameVerification) {
+        this.hostnameVerification = hostnameVerification;
+    }
+
 }
 
