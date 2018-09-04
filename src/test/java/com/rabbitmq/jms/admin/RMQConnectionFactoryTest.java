@@ -1,17 +1,31 @@
+/* Copyright (c) 2018 Pivotal Software, Inc. All rights reserved. */
+
 package com.rabbitmq.jms.admin;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Properties;
+import com.rabbitmq.client.Address;
+import com.rabbitmq.client.AddressResolver;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.naming.CompositeName;
 import javax.naming.RefAddr;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.ExecutorService;
 
-import org.junit.jupiter.api.Test;
+import static java.util.Arrays.asList;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class RMQConnectionFactoryTest {
 
@@ -193,5 +207,84 @@ public class RMQConnectionFactoryTest {
         assertEquals("bill", newFactory.getVirtualHost(), "Not the correct virtualHost");
 
         assertEquals("amqps://fred:my-password@sillyHost:42/bill", newFactory.getUri());
+    }
+
+    TestRmqConnectionFactory rmqCf;
+
+    AddressResolver passedInAddressResolver;
+
+    @BeforeEach
+    public void init() {
+        rmqCf = new TestRmqConnectionFactory();
+        passedInAddressResolver = null;
+    }
+
+    @Test
+    public void shouldFailWhenOneOfUrisIsInvalid() {
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> rmqCf.setUris(asList("amqp://localhost", "invalid-amqp-uri"))
+        );
+    }
+
+    @Test
+    public void firstUriShouldBeAppliedToGlobalSettings() throws Exception {
+        rmqCf.setUris(asList("amqp://user:pass@host1:10000/vhost", "amqp://user:pass@host2:10000/vhost"));
+        assertEquals("host1", rmqCf.getHost());
+        assertEquals("user", rmqCf.getUsername());
+        assertEquals("pass", rmqCf.getPassword());
+        assertEquals(10000, rmqCf.getPort());
+        assertEquals("vhost", rmqCf.getVirtualHost());
+        assertFalse(rmqCf.isSsl());
+    }
+
+    @Test
+    public void firstUriShouldBeAppliedToGlobalSettingsTls() throws Exception {
+        rmqCf.setUris(asList("amqps://user:pass@host1:10000/vhost", "amqps://user:pass@host2:10000/vhost"));
+        assertEquals("host1", rmqCf.getHost());
+        assertEquals("user", rmqCf.getUsername());
+        assertEquals("pass", rmqCf.getPassword());
+        assertEquals(10000, rmqCf.getPort());
+        assertEquals("vhost", rmqCf.getVirtualHost());
+        assertTrue(rmqCf.isSsl());
+    }
+
+    @Test
+    public void shouldUseSingleAddressWhenSingleUri() throws Exception {
+        rmqCf.setUri("amqp://localhost:10000");
+        rmqCf.createConnection("guest", "guest");
+        assertNotNull(passedInAddressResolver);
+        List<Address> resolved = passedInAddressResolver.getAddresses();
+        assertTrue(resolved.size() >= 1);
+        assertTrue(resolved.size() <= 2);
+        // don't check host, as there can be some DNS resolution happening
+        assertEquals(10000, resolved.get(0).getPort());
+    }
+
+    @Test
+    public void shouldUseSeveralAddressesWhenUrisIsUsed() throws Exception {
+        rmqCf.setUris(asList("amqps://user:pass@host1:10000/vhost", "amqps://user:pass@host2:10000/vhost"));
+        rmqCf.createConnection("user", "pass");
+        assertNotNull(passedInAddressResolver);
+        assertEquals(2, passedInAddressResolver.getAddresses().size());
+        assertEquals("host1", passedInAddressResolver.getAddresses().get(0).getHost());
+        assertEquals(10000, passedInAddressResolver.getAddresses().get(0).getPort());
+        assertEquals("host2", passedInAddressResolver.getAddresses().get(1).getHost());
+        assertEquals(10000, passedInAddressResolver.getAddresses().get(1).getPort());
+    }
+
+    class TestRmqConnectionFactory extends RMQConnectionFactory {
+
+        @Override
+        protected ConnectionFactory createConnectionFactory() {
+            return new ConnectionFactory() {
+
+                @Override
+                public Connection newConnection(ExecutorService executor, AddressResolver addressResolver, String clientProvidedName) {
+                    passedInAddressResolver = addressResolver;
+                    return mock(Connection.class);
+                }
+            };
+        }
     }
 }
