@@ -10,6 +10,7 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueReceiver;
 import javax.jms.QueueSession;
 
+import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -21,7 +22,12 @@ public abstract class AbstractITQueue {
     public void beforeTests() throws Exception {
         this.connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                 .getConnectionFactory();
+        customise((RMQConnectionFactory) connFactory);
         this.queueConn = connFactory.createQueueConnection();
+    }
+
+    protected void customise(RMQConnectionFactory connectionFactory) {
+
     }
 
     protected static void drainQueue(QueueSession session, Queue queue) throws Exception {
