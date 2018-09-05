@@ -748,14 +748,20 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         illegalStateExceptionIfClosed();
         if (nullOrEmpty(messageSelector)) {
             return createConsumer(destination);
+        } else if (isTopic(destination)) {
+            return createConsumerInternal((RMQDestination) destination, null, false, messageSelector);
         } else {
-            // we are not implementing this method yet
+            // selectors are not supported for queues
             throw new UnsupportedOperationException();
         }
     }
 
     private static boolean nullOrEmpty(String str) {
         return str==null || str.trim().isEmpty();
+    }
+
+    private static boolean isTopic(Destination destination) {
+        return !((RMQDestination) destination).isQueue();
     }
 
     /**
@@ -769,8 +775,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             RMQMessageConsumer consumer = (RMQMessageConsumer)createConsumer(destination);
             consumer.setNoLocal(noLocal);
             return consumer;
-        } else {
-            // we are not implementing this method yet
+        } else if (isTopic(destination)) {
+            RMQMessageConsumer consumer = createConsumerInternal((RMQDestination) destination, null, false, messageSelector);
+            consumer.setNoLocal(noLocal);
+            return consumer;
+        }  else {
+            // selectors are not supported for queues
             throw new UnsupportedOperationException();
         }
     }
