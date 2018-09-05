@@ -6,6 +6,7 @@ import com.rabbitmq.client.Address;
 import com.rabbitmq.client.AddressResolver;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.jms.client.AmqpConnectionFactoryPostProcessor;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,6 +20,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.both;
@@ -272,6 +274,21 @@ public class RMQConnectionFactoryTest {
         assertEquals(10000, passedInAddressResolver.getAddresses().get(0).getPort());
         assertEquals("host2", passedInAddressResolver.getAddresses().get(1).getHost());
         assertEquals(10000, passedInAddressResolver.getAddresses().get(1).getPort());
+    }
+
+    @Test public void amqpConnectionFactoryIsCalled() throws Exception {
+        final AtomicInteger callCount = new AtomicInteger(0);
+        rmqCf.setAmqpConnectionFactoryPostProcessor(new AmqpConnectionFactoryPostProcessor() {
+
+            @Override
+            public void postProcess(ConnectionFactory cf) {
+                callCount.incrementAndGet();
+            }
+        });
+        rmqCf.createConnection();
+        assertEquals(1, callCount.get());
+        rmqCf.createConnection();
+        assertEquals(2, callCount.get());
     }
 
     class TestRmqConnectionFactory extends RMQConnectionFactory {

@@ -4,6 +4,7 @@ package com.rabbitmq.jms.admin;
 import com.rabbitmq.client.Address;
 import com.rabbitmq.client.MetricsCollector;
 import com.rabbitmq.client.NoOpMetricsCollector;
+import com.rabbitmq.jms.client.AmqpConnectionFactoryPostProcessor;
 import com.rabbitmq.jms.client.AmqpPropertiesCustomiser;
 import com.rabbitmq.jms.client.ConnectionParams;
 import com.rabbitmq.jms.client.RMQConnection;
@@ -106,6 +107,17 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * @since 1.10.0
      */
     private MetricsCollector metricsCollector = new NoOpMetricsCollector();
+
+    /**
+     * For post-processor the {@link com.rabbitmq.client.ConnectionFactory} before creating the AMQP connection.
+     *
+     * @since 1.10.0
+     */
+    private AmqpConnectionFactoryPostProcessor amqpConnectionFactoryPostProcessor = new AmqpConnectionFactoryPostProcessor() {
+
+        @Override
+        public void postProcess(com.rabbitmq.client.ConnectionFactory connectionFactory) { }
+    };
 
     /** Default not to use ssl */
     private boolean ssl = false;
@@ -222,6 +234,9 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         maybeEnableTLS(cf);
         maybeEnableHostnameVerification(cf);
         cf.setMetricsCollector(this.metricsCollector);
+        if (this.amqpConnectionFactoryPostProcessor != null) {
+            this.amqpConnectionFactoryPostProcessor.postProcess(cf);
+        }
         com.rabbitmq.client.Connection rabbitConnection = instantiateNodeConnection(cf, connectionCreator);
 
         RMQConnection conn = new RMQConnection(new ConnectionParams()
@@ -857,6 +872,20 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             urisAsStrings.add(uri.toString());
         }
         return urisAsStrings;
+    }
+
+    /**
+     * Set a post-processor for the AMQP {@link com.rabbitmq.client.ConnectionFactory}.
+     * <p>
+     * The post-processor is called before the AMQP creation. This callback can be
+     * useful to customize the {@link com.rabbitmq.client.ConnectionFactory}:
+     * TLS-related configuration, metrics collection, etc.
+     *
+     * @param amqpConnectionFactoryPostProcessor
+     * @since 1.10.0
+     */
+    public void setAmqpConnectionFactoryPostProcessor(AmqpConnectionFactoryPostProcessor amqpConnectionFactoryPostProcessor) {
+        this.amqpConnectionFactoryPostProcessor = amqpConnectionFactoryPostProcessor;
     }
 
     private interface ConnectionCreator {
