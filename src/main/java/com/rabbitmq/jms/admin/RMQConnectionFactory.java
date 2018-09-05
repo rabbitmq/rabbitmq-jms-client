@@ -28,6 +28,7 @@ import javax.naming.RefAddr;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
 import javax.naming.StringRefAddr;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import java.io.IOException;
@@ -116,6 +117,13 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     private boolean hostnameVerification = false;
 
+    /**
+     * {@link HostnameVerifier} to use when TLS is on.
+     *
+     * @since 1.10.0
+     */
+    private HostnameVerifier hostnameVerifier;
+
 
     /** The maximum number of messages to read on a queue browser, which must be non-negative;
      *  0 means unlimited and is the default; negative values are interpreted as 0. */
@@ -162,8 +170,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
         setRabbitUri(logger, this, factory, this.getUri());
         maybeEnableTLS(factory);
-        factory.setMetricsCollector(this.metricsCollector);
         maybeEnableHostnameVerification(factory);
+        factory.setMetricsCollector(this.metricsCollector);
         com.rabbitmq.client.Connection rabbitConnection = instantiateNodeConnection(factory);
 
         RMQConnection conn = new RMQConnection(new ConnectionParams()
@@ -189,6 +197,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.password = password;
         com.rabbitmq.client.ConnectionFactory cf = new com.rabbitmq.client.ConnectionFactory();
         maybeEnableTLS(cf);
+        maybeEnableHostnameVerification(cf);
         cf.setMetricsCollector(this.metricsCollector);
         com.rabbitmq.client.Connection rabbitConnection = instantiateNodeConnection(cf, endpoints);
 
@@ -350,9 +359,13 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     private void maybeEnableHostnameVerification(com.rabbitmq.client.ConnectionFactory factory) {
-        if (hostnameVerification) {
+        if (hostnameVerification || hostnameVerifier != null)  {
             if (this.ssl) {
-                factory.enableHostnameVerification();
+                if (hostnameVerifier == null) {
+                    factory.enableHostnameVerification();
+                } else {
+                    factory.enableHostnameVerification(this.hostnameVerifier);
+                }
             } else {
                 logger.warn("Hostname verification enabled, but not TLS, please enable TLS too.");
             }
@@ -764,14 +777,38 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     /**
      * Enable or disable hostname verification when TLS is used.
+     * <p>
+     * If using Java 7 and more, the hostname verification will be handled
+     * by the JVM as part of the TLS handshake. If using Java 6,
+     * the hostname verification is performed by the {@link HostnameVerifier}
+     * from the Commons HttpClient project. This implies that Commons HttpClient
+     * and its dependencies are added to the classpath. To use another {@link HostnameVerifier},
+     * use {@link RMQConnectionFactory#setHostnameVerifier(HostnameVerifier)}.
+     *
      *
      * @param hostnameVerification
      * @see com.rabbitmq.client.ConnectionFactory#enableHostnameVerification()
+     * @see com.rabbitmq.client.ConnectionFactory#enableHostnameVerification(HostnameVerifier)
+     * @see #setHostnameVerifier(HostnameVerifier)
      * @since 1.10.0
      */
     public void setHostnameVerification(boolean hostnameVerification) {
         this.hostnameVerification = hostnameVerification;
     }
 
+    /**
+     * Set the {@link HostnameVerifier} to use for the hostname verification.
+     * <p>
+     * Setting an {@link HostnameVerifier} is relevant for Java 6, as the JVM
+     * can perform the hostname verification as of Java 7.
+     *
+     * @param hostnameVerifier
+     * @see #setHostnameVerification(boolean)
+     * @see com.rabbitmq.client.ConnectionFactory#enableHostnameVerification(HostnameVerifier)
+     * @since 1.10.0
+     */
+    public void setHostnameVerifier(HostnameVerifier hostnameVerifier) {
+        this.hostnameVerifier = hostnameVerifier;
+    }
 }
 
