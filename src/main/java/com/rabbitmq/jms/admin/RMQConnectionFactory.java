@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.rabbitmq.jms.util.UriCodec.encHost;
@@ -107,6 +108,13 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * @since 1.10.0
      */
     private MetricsCollector metricsCollector = new NoOpMetricsCollector();
+
+    /**
+     * For post-processor the {@link com.rabbitmq.client.ConnectionFactory} before creating the AMQP connection.
+     *
+     * @since 1.10.0
+     */
+    private Consumer<com.rabbitmq.client.ConnectionFactory> amqpConnectionFactoryPostProcessor = cf -> {};
 
     /** Default not to use ssl */
     private boolean ssl = false;
@@ -197,6 +205,10 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         maybeEnableTLS(cf);
         maybeEnableHostnameVerification(cf);
         cf.setMetricsCollector(this.metricsCollector);
+
+        if (this.amqpConnectionFactoryPostProcessor != null) {
+            this.amqpConnectionFactoryPostProcessor.accept(cf);
+        }
 
         com.rabbitmq.client.Connection rabbitConnection = instantiateNodeConnection(cf, connectionCreator);
 
@@ -797,6 +809,20 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     
     public List<String> getUris() {
         return this.uris.stream().map(uri -> uri.toString()).collect(Collectors.toList());
+    }
+
+    /**
+     * Set a post-processor for the AMQP {@link com.rabbitmq.client.ConnectionFactory}.
+     * <p>
+     * The post-processor is called before the AMQP creation. This callback can be
+     * useful to customize the {@link com.rabbitmq.client.ConnectionFactory}:
+     * TLS-related configuration, metrics collection, etc.
+     *
+     * @param amqpConnectionFactoryPostProcessor
+     * @since 1.10.0
+     */
+    public void setAmqpConnectionFactoryPostProcessor(Consumer<com.rabbitmq.client.ConnectionFactory> amqpConnectionFactoryPostProcessor) {
+        this.amqpConnectionFactoryPostProcessor = amqpConnectionFactoryPostProcessor;
     }
 
     @FunctionalInterface

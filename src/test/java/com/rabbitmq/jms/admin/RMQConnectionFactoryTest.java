@@ -18,6 +18,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -275,6 +276,15 @@ public class RMQConnectionFactoryTest {
         assertEquals(10000, passedInAddressResolver.getAddresses().get(0).getPort());
         assertEquals("host2", passedInAddressResolver.getAddresses().get(1).getHost());
         assertEquals(10000, passedInAddressResolver.getAddresses().get(1).getPort());
+    }
+
+    @Test public void amqpConnectionFactoryIsCalled() throws Exception {
+        AtomicInteger callCount = new AtomicInteger(0);
+        rmqCf.setAmqpConnectionFactoryPostProcessor(cf -> callCount.incrementAndGet());
+        rmqCf.createConnection();
+        assertEquals(1, callCount.get());
+        rmqCf.createConnection();
+        assertEquals(2, callCount.get());
     }
 
     class TestRmqConnectionFactory extends RMQConnectionFactory {
