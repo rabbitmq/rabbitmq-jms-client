@@ -36,6 +36,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BiFunction;
@@ -148,7 +149,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      *
      * @since 1.10.0
      */
-    private List<URI> uris = new ArrayList<>();
+    private List<URI> uris = Collections.EMPTY_LIST;
 
     /**
      * {@inheritDoc}
@@ -322,6 +323,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             }).collect(Collectors.toList());
             this.setUri(urisAsStrings.get(0));
         } else {
+            this.uris = Collections.EMPTY_LIST;
             setUri(null);
         }
     }
