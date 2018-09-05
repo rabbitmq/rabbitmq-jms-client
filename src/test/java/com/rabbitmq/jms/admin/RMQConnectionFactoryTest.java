@@ -20,6 +20,11 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 
 import static java.util.Arrays.asList;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -255,8 +260,7 @@ public class RMQConnectionFactoryTest {
         rmqCf.createConnection("guest", "guest");
         assertNotNull(passedInAddressResolver);
         List<Address> resolved = passedInAddressResolver.getAddresses();
-        assertTrue(resolved.size() >= 1);
-        assertTrue(resolved.size() <= 2);
+        assertThat(resolved.size(), is(both(greaterThanOrEqualTo(1)).and(lessThanOrEqualTo(2))));
         // don't check host, as there can be some DNS resolution happening
         assertEquals(10000, resolved.get(0).getPort());
     }
