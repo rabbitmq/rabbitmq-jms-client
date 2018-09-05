@@ -6,6 +6,7 @@ import com.rabbitmq.client.Address;
 import com.rabbitmq.client.AddressResolver;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -20,9 +21,14 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 
 import static java.util.Arrays.asList;
+import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -251,8 +257,7 @@ public class RMQConnectionFactoryTest {
         rmqCf.createConnection("guest", "guest");
         assertNotNull(passedInAddressResolver);
         List<Address> resolved = passedInAddressResolver.getAddresses();
-        assertTrue(resolved.size() >= 1);
-        assertTrue(resolved.size() <= 2);
+        assertThat(resolved.size(), is(both(greaterThanOrEqualTo(1)).and(lessThanOrEqualTo(2))));
         // don't check host, as there can be some DNS resolution happening
         assertEquals(10000, resolved.get(0).getPort());
     }
