@@ -12,16 +12,16 @@ public class AbortableHolder implements Abortable {
     private final boolean[] flags = new boolean[] { false, false, false }; // to prevent infinite regress
 
     private enum Action {
-        ABORT(0) { @Override void doit(Abortable a) { a.abort(); } },
-        START(1) { @Override void doit(Abortable a) { a.start(); } },
-        STOP(2)  { @Override void doit(Abortable a) { a.stop();  } };
+        ABORT(0) { @Override void doit(Abortable a) throws Exception { a.abort(); } },
+        START(1) { @Override void doit(Abortable a) throws Exception { a.start(); } },
+        STOP(2)  { @Override void doit(Abortable a) throws Exception { a.stop();  } };
         private final int ind;
 
         Action(int ind) { this.ind = ind;  }
 
         int index()     { return this.ind; }
 
-        abstract void doit(Abortable a);
+        abstract void doit(Abortable a) throws Exception;
     };
 
     /**
@@ -38,13 +38,13 @@ public class AbortableHolder implements Abortable {
         this.abortableQueue.remove(a);
     }
 
-    public void abort() { act(Action.ABORT); }
+    public void abort() throws Exception { act(Action.ABORT); }
 
-    public void start() { act(Action.START); }
+    public void start() throws Exception { act(Action.START); }
 
-    public void stop()  { act(Action.STOP);  }
+    public void stop() throws Exception  { act(Action.STOP);  }
 
-    private void act(AbortableHolder.Action action) {
+    private void act(AbortableHolder.Action action) throws Exception {
         if (this.flags[action.index()]) return; // prevent infinite
         this.flags[action.index()] = true;      // regress
 

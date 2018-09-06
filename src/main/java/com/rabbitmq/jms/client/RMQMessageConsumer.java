@@ -17,6 +17,7 @@ import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
+import com.rabbitmq.jms.util.RMQJMSException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -179,7 +180,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         logger.trace("setting MessageListener({})", messageListener);
         this.removeListenerConsumer();  // if there is any
         this.messageListener = messageListener;
-        this.setNewListenerConsumer(messageListener); // if needed
+        try {
+            this.setNewListenerConsumer(messageListener); // if needed
+        } catch (JMSException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RMQJMSException(e);
+        }
     }
 
     /**
@@ -187,7 +194,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @param messageListener to drive from Consumer; no Consumer is created if this is null.
      * @throws IllegalStateException
      */
-    private void setNewListenerConsumer(MessageListener messageListener) throws IllegalStateException {
+    private void setNewListenerConsumer(MessageListener messageListener) throws Exception {
         if (messageListener != null) {
             MessageListenerConsumer mlConsumer =
               new MessageListenerConsumer(this,
@@ -404,7 +411,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         /* stop and remove any active subscription - waits for onMessage processing to finish */
         this.removeListenerConsumer();
 
-        this.abortables.abort(); // abort Consumers of both types that remain
+        try {
+            this.abortables.abort(); // abort Consumers of both types that remain
+        } catch (JMSException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RMQJMSException(e);
+        }
 
         this.closed = true;
         this.closing = false;
@@ -471,7 +484,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      *
      * @throws InterruptedException if the thread is interrupted
      */
-    void pause() throws InterruptedException {
+    void pause() throws Exception {
         this.receiveManager.closeGate();
         this.receiveManager.waitToClear(new TimeTracker(STOP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
         this.abortables.stop();
@@ -484,7 +497,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @throws javax.jms.JMSException if the thread is interrupted
      */
     void resume() throws JMSException {
-        this.abortables.start(); // async listener restarted
+        try {
+            this.abortables.start(); // async listener restarted
+        } catch (JMSException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RMQJMSException(e);
+        }
         this.receiveManager.openGate(); // sync listener allowed to run
     }
 

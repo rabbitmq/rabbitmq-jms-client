@@ -1182,8 +1182,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         for (RMQMessageConsumer consumer : this.consumers) {
             try {
                 consumer.pause();
+            } catch (JMSException e) {
+                throw e;
             } catch (InterruptedException x) {
                 logger.error("Consumer({}) pause interrupted", consumer, x);
+                throw new RMQJMSException(x);
+            } catch (Exception x) {
+                logger.error("Error while pausing consumer({})", consumer, x);
                 throw new RMQJMSException(x);
             }
         }
