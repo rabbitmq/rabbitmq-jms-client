@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
@@ -17,6 +17,7 @@ import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
+import com.rabbitmq.jms.util.RMQJMSException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,6 +85,11 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private final boolean requeueOnMessageListenerException;
 
     /**
+     * Whether an exception should be thrown or not when consumer startup fails.
+     */
+    private final boolean throwExceptionOnConsumerStartFailure;
+
+    /**
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
      *
      * @param session - the session object that created this consume
@@ -92,8 +98,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      *            unique name.
      * @param paused - true if the connection is {@link javax.jms.Connection#stop}ped, false otherwise.
      * @param requeueOnMessageListenerException true to requeue message on RuntimeException in listener, false otherwise
+     * @param throwExceptionOnConsumerStartFailure true to throw an exception if start-up fails, false otherwise
      */
-    RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag, boolean paused, String messageSelector, boolean requeueOnMessageListenerException) {
+    RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag, boolean paused, String messageSelector, boolean requeueOnMessageListenerException,
+            boolean throwExceptionOnConsumerStartFailure) {
         this.session = session;
         this.destination = destination;
         this.uuidTag = uuidTag;
@@ -103,6 +111,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             this.receiveManager.openGate();
         this.autoAck = session.isAutoAck();
         this.requeueOnMessageListenerException = requeueOnMessageListenerException;
+        this.throwExceptionOnConsumerStartFailure = throwExceptionOnConsumerStartFailure;
     }
 
     /**
@@ -179,7 +188,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         logger.trace("setting MessageListener({})", messageListener);
         this.removeListenerConsumer();  // if there is any
         this.messageListener = messageListener;
-        this.setNewListenerConsumer(messageListener); // if needed
+        try {
+            this.setNewListenerConsumer(messageListener); // if needed
+        } catch (JMSException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RMQJMSException(e);
+        }
     }
 
     /**
@@ -187,7 +202,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @param messageListener to drive from Consumer; no Consumer is created if this is null.
      * @throws IllegalStateException
      */
-    private void setNewListenerConsumer(MessageListener messageListener) throws IllegalStateException {
+    private void setNewListenerConsumer(MessageListener messageListener) throws Exception {
         if (messageListener != null) {
             MessageListenerConsumer mlConsumer =
               new MessageListenerConsumer(this,
@@ -195,7 +210,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                                           messageListener,
                                           TimeUnit.MILLISECONDS.toNanos(this.session.getConnection()
                                                                                     .getTerminationTimeout()),
-                                          this.requeueOnMessageListenerException);
+                                          this.requeueOnMessageListenerException,
+                                          this.throwExceptionOnConsumerStartFailure);
             if (this.listenerConsumer.compareAndSet(null, mlConsumer)) {
                 this.abortables.add(mlConsumer);
                 if (!this.getSession().getConnection().isStopped()) {
@@ -404,7 +420,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         /* stop and remove any active subscription - waits for onMessage processing to finish */
         this.removeListenerConsumer();
 
-        this.abortables.abort(); // abort Consumers of both types that remain
+        try {
+            this.abortables.abort(); // abort Consumers of both types that remain
+        } catch (JMSException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RMQJMSException(e);
+        }
 
         this.closed = true;
         this.closing = false;
@@ -471,7 +493,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      *
      * @throws InterruptedException if the thread is interrupted
      */
-    void pause() throws InterruptedException {
+    void pause() throws Exception {
         this.receiveManager.closeGate();
         this.receiveManager.waitToClear(new TimeTracker(STOP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
         this.abortables.stop();
@@ -484,7 +506,13 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @throws javax.jms.JMSException if the thread is interrupted
      */
     void resume() throws JMSException {
-        this.abortables.start(); // async listener restarted
+        try {
+            this.abortables.start(); // async listener restarted
+        } catch (JMSException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RMQJMSException(e);
+        }
         this.receiveManager.openGate(); // sync listener allowed to run
     }
 

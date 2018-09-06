@@ -119,6 +119,15 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         public void postProcess(com.rabbitmq.client.ConnectionFactory connectionFactory) { }
     };
 
+    /**
+     * Whether an exception should be thrown or not when consumer startup fails.
+     * <p>
+     * Default is false.
+     *
+     * @since 1.10.0
+     */
+    private boolean throwExceptionOnConsumerStartFailure = false;
+
     /** Default not to use ssl */
     private boolean ssl = false;
     private String tlsProtocol;
@@ -249,6 +258,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setRequeueOnMessageListenerException(requeueOnMessageListenerException)
             .setCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose(this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose)
             .setAmqpPropertiesCustomiser(amqpPropertiesCustomiser)
+            .setThrowExceptionOnConsumerStartFailure(this.throwExceptionOnConsumerStartFailure)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
@@ -886,6 +896,18 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     public void setAmqpConnectionFactoryPostProcessor(AmqpConnectionFactoryPostProcessor amqpConnectionFactoryPostProcessor) {
         this.amqpConnectionFactoryPostProcessor = amqpConnectionFactoryPostProcessor;
+    }
+
+    /**
+     * Whether an exception should be thrown or not when consumer startup fails.
+     * <p>
+     * Default is false.
+     *
+     * @param throwExceptionOnConsumerStartFailure
+     * @since 1.10.0
+     */
+    public void setThrowExceptionOnConsumerStartFailure(boolean throwExceptionOnConsumerStartFailure) {
+        this.throwExceptionOnConsumerStartFailure = throwExceptionOnConsumerStartFailure;
     }
 
     private interface ConnectionCreator {

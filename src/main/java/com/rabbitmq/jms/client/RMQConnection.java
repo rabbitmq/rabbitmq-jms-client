@@ -1,6 +1,32 @@
 /* Copyright (c) 2013-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ShutdownListener;
+import com.rabbitmq.client.ShutdownSignalException;
+import com.rabbitmq.jms.util.RMQJMSException;
+import com.rabbitmq.jms.util.WhiteListObjectInputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.jms.Connection;
+import javax.jms.ConnectionConsumer;
+import javax.jms.ConnectionMetaData;
+import javax.jms.Destination;
+import javax.jms.ExceptionListener;
+import javax.jms.IllegalStateException;
+import javax.jms.InvalidClientIDException;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.QueueConnection;
+import javax.jms.QueueSession;
+import javax.jms.ServerSessionPool;
+import javax.jms.Session;
+import javax.jms.Topic;
+import javax.jms.TopicConnection;
+import javax.jms.TopicSession;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,18 +35,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-
-import javax.jms.*;
-import javax.jms.IllegalStateException;
-
-import com.rabbitmq.jms.util.WhiteListObjectInputStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ShutdownListener;
-import com.rabbitmq.client.ShutdownSignalException;
-import com.rabbitmq.jms.util.RMQJMSException;
 
 /**
  * Implementation of the {@link Connection}, {@link QueueConnection} and {@link TopicConnection} interfaces.
@@ -102,9 +116,19 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
     /**
      * Callback to customise properties of outbound AMQP messages.
+     *
      * @since 1.9.0
      */
     private final AmqpPropertiesCustomiser amqpPropertiesCustomiser;
+
+    /**
+     * Whether an exception should be thrown or not when consumer startup fails.
+     * <p>
+     * Default is false.
+     *
+     * @since 1.10.0
+     */
+    private final boolean throwExceptionOnConsumerStartFailure;
 
     /**
      * Classes in these packages can be transferred via ObjectMessage.
@@ -130,6 +154,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.requeueOnMessageListenerException = connectionParams.willRequeueOnMessageListenerException();
         this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose = connectionParams.isCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose();
         this.amqpPropertiesCustomiser = connectionParams.getAmqpPropertiesCustomiser();
+        this.throwExceptionOnConsumerStartFailure = connectionParams.willThrowExceptionOnConsumerStartFailure();
     }
 
     /**
@@ -179,6 +204,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setRequeueOnMessageListenerException(this.requeueOnMessageListenerException)
             .setCleanUpServerNamedQueuesForNonDurableTopics(this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose)
             .setAmqpPropertiesCustomiser(this.amqpPropertiesCustomiser)
+            .setThrowExceptionOnConsumerStartFailure(this.throwExceptionOnConsumerStartFailure)
         );
         session.setTrustedPackages(this.trustedPackages);
         this.sessions.add(session);
