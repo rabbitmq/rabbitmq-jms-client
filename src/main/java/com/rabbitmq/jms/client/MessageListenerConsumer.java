@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
@@ -40,6 +40,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
     private final long terminationTimeout;
     private volatile boolean rejecting;
     private final boolean requeueOnMessageListenerException;
+    private final boolean throwExceptionOnStartFailure;
 
     /**
      * Constructor
@@ -49,7 +50,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
      * @param terminationTimeout wait time (in nanoseconds) for cancel to take effect
      */
     public MessageListenerConsumer(RMQMessageConsumer messageConsumer, Channel channel, MessageListener messageListener, long terminationTimeout,
-                boolean requeueOnMessageListenerException) {
+                boolean requeueOnMessageListenerException, boolean throwExceptionOnStartFailure) {
         this.messageConsumer = messageConsumer;
         this.channel = channel;
         this.messageListener = messageListener;
@@ -58,6 +59,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
         this.completion = new Completion();  // completed when cancelled.
         this.rejecting = this.messageConsumer.getSession().getConnection().isStopped();
         this.requeueOnMessageListenerException = requeueOnMessageListenerException;
+        this.throwExceptionOnStartFailure = throwExceptionOnStartFailure;
     }
 
     private String getConsTag() {
@@ -227,7 +229,9 @@ class MessageListenerConsumer implements Consumer, Abortable {
         } catch (Exception e) {
             this.completion.setComplete();  // just in case someone is waiting on it
             logger.error("basicConsume (consumerTag='{}') threw exception", cT, e);
-            throw new RMQJMSException("Error while starting consumer", e);
+            if (throwExceptionOnStartFailure) {
+                throw new RMQJMSException("Error while starting consumer", e);
+            }
         }
     }
 

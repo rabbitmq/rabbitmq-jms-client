@@ -50,15 +50,26 @@ public class ConnectionParams {
      * If set to true, those queues will be deleted when the session is closed.
      * If set to false, queues will be deleted when the owning connection is closed.
      * Default is false.
+     *
      * @since 1.8.0
      */
     private boolean cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose = false;
 
     /**
      * Callback to customise properties of outbound AMQP messages.
+     *
      * @since 1.9.0
      */
     private AmqpPropertiesCustomiser amqpPropertiesCustomiser;
+
+    /**
+     * Whether an exception should be thrown or not when consumer startup fails.
+     * <p>
+     * Default is false.
+     *
+     * @since 1.10.0
+     */
+    private boolean throwExceptionOnConsumerStartFailure;
 
     public Connection getRabbitConnection() {
         return rabbitConnection;
@@ -139,5 +150,14 @@ public class ConnectionParams {
     public ConnectionParams setAmqpPropertiesCustomiser(AmqpPropertiesCustomiser amqpPropertiesCustomiser) {
         this.amqpPropertiesCustomiser = amqpPropertiesCustomiser;
         return this;
+    }
+
+    public ConnectionParams setThrowExceptionOnConsumerStartFailure(boolean throwExceptionOnConsumerStartFailure) {
+        this.throwExceptionOnConsumerStartFailure = throwExceptionOnConsumerStartFailure;
+        return this;
+    }
+
+    public boolean willThrowExceptionOnConsumerStartFailure() {
+        return throwExceptionOnConsumerStartFailure;
     }
 }

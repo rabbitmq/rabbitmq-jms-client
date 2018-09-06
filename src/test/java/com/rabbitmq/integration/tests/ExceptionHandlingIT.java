@@ -2,50 +2,65 @@
 
 package com.rabbitmq.integration.tests;
 
+import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.admin.RMQDestination;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
 import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
 import javax.jms.Session;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 /**
- * To make sure an exception is thrown when starting listening on
- * a non-existing destination.
+ * To check an exception is thrown depending on the corresponding setting.
+ *
+ * https://github.com/rabbitmq/rabbitmq-jms-client/issues/53
  */
 public class ExceptionHandlingIT {
 
-    QueueConnectionFactory connFactory;
+    RMQConnectionFactory connFactory;
     QueueConnection queueConn;
 
-    @BeforeEach
+    @Before
     public void beforeTests() throws Exception {
-        this.connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
+        this.connFactory = (RMQConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
             .getConnectionFactory();
-        this.queueConn = connFactory.createQueueConnection();
     }
 
-    @AfterEach
+    @After
     public void afterTests() throws Exception {
         if (queueConn != null)
             queueConn.close();
     }
 
     @Test
-    public void consumerOnNonExistingDestination() throws Exception {
+    public void shouldNotThrowExceptionForNonExistingDestinationByDefault() throws Exception {
+        listenOnNonExistingDestination();
+    }
+
+    @Test(expected = JMSException.class)
+    public void shouldThrowExceptionForNonExistingDestinationWhenFlagIsSet() throws Exception {
+        connFactory.setThrowExceptionOnConsumerStartFailure(true);
+        listenOnNonExistingDestination();
+    }
+
+    private void listenOnNonExistingDestination() throws JMSException {
+        queueConn = connFactory.createQueueConnection();
         queueConn.start();
         String queueName = ExceptionHandlingIT.class.getSimpleName() + " " + System.currentTimeMillis();
         RMQDestination queue = new RMQDestination(queueName, null, null, queueName);
         Session session = queueConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer messageConsumer = session.createConsumer(queue);
 
-        assertThrows(JMSException.class, () -> messageConsumer.setMessageListener(msg -> {
-        }));
+        messageConsumer.setMessageListener(new MessageListener() {
+
+            @Override
+            public void onMessage(Message msg) {
+            }
+        });
     }
 }

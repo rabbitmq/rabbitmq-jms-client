@@ -44,16 +44,28 @@ public class SessionParams {
      * Whether using auto-delete for server-named queues for non-durable topics.
      * If set to true, those queues will be deleted when the session is closed.
      * If set to false, queues will be deleted when the owning connection is closed.
+     * <p>
      * Default is false.
+     *
      * @since 1.8.0
      */
     private boolean cleanUpServerNamedQueuesForNonDurableTopics = false;
 
     /**
      * Callback to customise properties of outbound AMQP messages.
+     *
      * @since 1.9.0
      */
     private AmqpPropertiesCustomiser amqpPropertiesCustomiser;
+
+    /**
+     * Whether an exception should be thrown or not when consumer startup fails.
+     * <p>
+     * Default is false.
+     *
+     * @since 1.10.0
+     */
+    private boolean throwExceptionOnConsumerStartFailure= false;
 
     public RMQConnection getConnection() {
         return connection;
@@ -134,5 +146,14 @@ public class SessionParams {
     public SessionParams setAmqpPropertiesCustomiser(AmqpPropertiesCustomiser amqpPropertiesCustomiser) {
         this.amqpPropertiesCustomiser = amqpPropertiesCustomiser;
         return this;
+    }
+
+    public SessionParams setThrowExceptionOnConsumerStartFailure(boolean throwExceptionOnConsumerStartFailure) {
+        this.throwExceptionOnConsumerStartFailure = throwExceptionOnConsumerStartFailure;
+        return this;
+    }
+
+    public boolean willThrowExceptionOnConsumerStartFailure() {
+        return throwExceptionOnConsumerStartFailure;
     }
 }

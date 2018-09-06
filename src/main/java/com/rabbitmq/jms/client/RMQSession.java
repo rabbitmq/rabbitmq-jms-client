@@ -92,7 +92,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * {@link javax.jms.MessageListener} or not.
      * Default is false.
      */
-    private boolean requeueOnMessageListenerException = false;
+    private final boolean requeueOnMessageListenerException;
 
     /**
      * Whether using auto-delete for server-named queues for non-durable topics.
@@ -108,6 +108,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @since 1.9.0
      */
     private final AmqpPropertiesCustomiser amqpPropertiesCustomiser;
+
+    /**
+     * Whether an exception should be thrown or not when consumer startup fails.
+     *
+     * @since 1.10.0
+     */
+    private final boolean throwExceptionOnConsumerStartFailure;
 
     /** The main RabbitMQ channel we use under the hood */
     private final Channel channel;
@@ -202,6 +209,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.requeueOnMessageListenerException = sessionParams.willRequeueOnMessageListenerException();
         this.cleanUpServerNamedQueuesForNonDurableTopics = sessionParams.isCleanUpServerNamedQueuesForNonDurableTopics();
         this.amqpPropertiesCustomiser = sessionParams.getAmqpPropertiesCustomiser();
+        this.throwExceptionOnConsumerStartFailure = sessionParams.willThrowExceptionOnConsumerStartFailure();
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;
@@ -688,7 +696,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 throw new RMQJMSException("RabbitMQ Exception creating Consumer", x);
             }
         }
-        RMQMessageConsumer consumer = new RMQMessageConsumer(this, dest, consumerTag, getConnection().isStopped(), jmsSelector, this.requeueOnMessageListenerException);
+        RMQMessageConsumer consumer = new RMQMessageConsumer(this, dest, consumerTag, getConnection().isStopped(), jmsSelector,
+            this.requeueOnMessageListenerException, this.throwExceptionOnConsumerStartFailure);
         this.consumers.add(consumer);
         return consumer;
     }
