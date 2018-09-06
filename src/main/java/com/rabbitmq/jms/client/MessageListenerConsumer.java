@@ -8,6 +8,7 @@ import java.util.concurrent.TimeoutException;
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
 
+import com.rabbitmq.jms.util.RMQJMSException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -216,7 +217,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
     }
 
     @Override
-    public void start() {
+    public void start() throws Exception {
         String cT = this.getConsTag();
         logger.trace("consumerTag='{}'", cT);
         this.rejecting = false;
@@ -226,6 +227,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
         } catch (Exception e) {
             this.completion.setComplete();  // just in case someone is waiting on it
             logger.error("basicConsume (consumerTag='{}') threw exception", cT, e);
+            throw new RMQJMSException("Error while starting consumer", e);
         }
     }
 

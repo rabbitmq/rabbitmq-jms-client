@@ -9,24 +9,24 @@ public interface Abortable {
      * Cause any other implementing threads to terminate fairly quickly, signalling abnormal termination
      * to its instigator, if necessary.
      * <p>
-     * Implementations of this method must be thread-safe, and throw no exceptions, except possibly {@link RuntimeException}s.
+     * Implementations of this method must be thread-safe.
      * </p>
      */
-    void abort();
+    void abort() throws Exception;
 
     /**
      * Cause any other implementing threads to stop temporarily.
      * <p>
-     * Implementations of this method must be thread-safe, and throw no exceptions, except possibly {@link RuntimeException}s.
+     * Implementations of this method must be thread-safe.
      * </p>
      */
-    void stop();
+    void stop() throws Exception;
 
     /**
      * Cause any other stopped threads to start.
      * <p>
-     * Implementations of this method must be thread-safe, and throw no exceptions, except possibly {@link RuntimeException}s.
+     * Implementations of this method must be thread-safe.
      * </p>
      */
-    void start();
+    void start() throws Exception;
 }
