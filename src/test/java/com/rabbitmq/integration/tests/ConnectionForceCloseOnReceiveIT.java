@@ -57,7 +57,7 @@ public class ConnectionForceCloseOnReceiveIT extends AbstractITTopic {
 
         Thread.sleep(ONE_SECOND);
 
-        Shell.invokeMakeTarget("stop-rabbit-on-node start-rabbit-on-node");
+        Shell.restartNode();
 
 
         try {
