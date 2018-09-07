@@ -141,6 +141,7 @@ public class WhiteListObjectInputStream extends ObjectInputStream {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     protected Class<?> resolveProxyClass(String[] interfaces) throws IOException, ClassNotFoundException {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         Class[] ifaces = new Class[interfaces.length];
