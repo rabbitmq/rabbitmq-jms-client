@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.util;
 
 import java.io.ByteArrayOutputStream;
@@ -13,32 +13,32 @@ public class RMQByteArrayOutputStream extends ByteArrayOutputStream {
         super(size);
     }
 
-    public void writeBoolean(boolean value) throws JMSException {
+    public void writeBoolean(boolean value) {
         this.write((byte) (value ? 1 : 0));
     }
 
-    public void writeByte(byte value) throws JMSException {
+    public void writeByte(byte value) {
         this.write(value);
     }
 
-    public void writeShort(short value) throws JMSException {
+    public void writeShort(short value) {
         this.write((byte) (value >>> 8));
         this.write((byte) (value >>> 0));
     }
 
-    public void writeChar(char value) throws JMSException {
+    public void writeChar(char value) {
         this.write((byte) (value >>> 8));
         this.write((byte) (value >>> 0));
     }
 
-    public void writeInt(int value) throws JMSException {
+    public void writeInt(int value) {
         this.write((byte) (value >>> 24));
         this.write((byte) (value >>> 16));
         this.write((byte) (value >>> 8));
         this.write((byte) (value >>> 0));
     }
 
-    public void writeLong(long value) throws JMSException {
+    public void writeLong(long value) {
         this.write((byte) (value >>> 56));
         this.write((byte) (value >>> 48));
         this.write((byte) (value >>> 40));
@@ -49,11 +49,11 @@ public class RMQByteArrayOutputStream extends ByteArrayOutputStream {
         this.write((byte) (value >>> 0));
     }
 
-    public void writeFloat(float value) throws JMSException {
+    public void writeFloat(float value) {
         this.writeInt(Float.floatToIntBits(value));
     }
 
-    public void writeDouble(double value) throws JMSException {
+    public void writeDouble(double value) {
         this.writeLong(Double.doubleToLongBits(value));
     }
 
@@ -69,15 +69,15 @@ public class RMQByteArrayOutputStream extends ByteArrayOutputStream {
         }
     }
 
-    public void writeBytes(byte[] value) throws JMSException {
+    public void writeBytes(byte[] value)  {
         if (value == null)
-            throw new MessageFormatException("Null byte array");
+            throw new IllegalArgumentException("Null byte array");
         this.writeBytes(value, 0, value.length);
     }
 
-    public void writeBytes(byte[] value, int offset, int length) throws JMSException {
+    public void writeBytes(byte[] value, int offset, int length) {
         if (value == null) {
-            throw new MessageFormatException("Null byte array");
+            throw new IllegalArgumentException("Null byte array");
         } else if (offset>=value.length || length<0) {
             throw new IndexOutOfBoundsException();
         }
