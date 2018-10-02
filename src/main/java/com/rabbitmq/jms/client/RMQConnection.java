@@ -131,6 +131,13 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private final boolean throwExceptionOnConsumerStartFailure;
 
     /**
+     * Callback before sending a message.
+     *
+     * @since 1.11.0
+     */
+    private final SendingContextConsumer sendingContextConsumer;
+
+    /**
      * Classes in these packages can be transferred via ObjectMessage.
      *
      * @see WhiteListObjectInputStream
@@ -155,6 +162,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose = connectionParams.isCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose();
         this.amqpPropertiesCustomiser = connectionParams.getAmqpPropertiesCustomiser();
         this.throwExceptionOnConsumerStartFailure = connectionParams.willThrowExceptionOnConsumerStartFailure();
+        this.sendingContextConsumer = connectionParams.getSendingContextConsumer();
     }
 
     /**
@@ -205,6 +213,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setCleanUpServerNamedQueuesForNonDurableTopics(this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose)
             .setAmqpPropertiesCustomiser(this.amqpPropertiesCustomiser)
             .setThrowExceptionOnConsumerStartFailure(this.throwExceptionOnConsumerStartFailure)
+            .setSendingContextConsumer(this.sendingContextConsumer)
         );
         session.setTrustedPackages(this.trustedPackages);
         this.sessions.add(session);

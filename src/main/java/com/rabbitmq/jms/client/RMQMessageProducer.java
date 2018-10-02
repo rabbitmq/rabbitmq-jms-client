@@ -71,7 +71,16 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     private final AmqpPropertiesCustomiser amqpPropertiesCustomiser;
 
-    public RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty, AmqpPropertiesCustomiser amqpPropertiesCustomiser) {
+    private final SendingContextConsumer sendingContextConsumer;
+
+    private static final SendingContextConsumer NO_OP_CONTEXT_CONSUMER = new SendingContextConsumer() {
+        @Override
+        public void accept(SendingContext sendingContext) { }
+    };
+
+    public RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty,
+        AmqpPropertiesCustomiser amqpPropertiesCustomiser,
+            SendingContextConsumer sendingContextConsumer) {
         this.session = session;
         this.destination = destination;
         if (preferProducerMessageProperty) {
@@ -80,6 +89,12 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             sendingStrategy = new PreferMessagePropertySendingStrategy();
         }
         this.amqpPropertiesCustomiser = amqpPropertiesCustomiser == null ? new NoOpAmqpPropertiesCustomiser() : amqpPropertiesCustomiser;
+        this.sendingContextConsumer = sendingContextConsumer == null ? NO_OP_CONTEXT_CONSUMER : sendingContextConsumer;
+    }
+
+    public RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty,
+        AmqpPropertiesCustomiser amqpPropertiesCustomiser) {
+        this(session, destination, preferProducerMessageProperty, amqpPropertiesCustomiser, NO_OP_CONTEXT_CONSUMER);
     }
 
     /**
@@ -246,6 +261,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     private void internalSend(RMQDestination destination, Message message, int deliveryMode, int priority, long timeToLiveOrExpiration, MessageExpirationType messageExpirationType) throws JMSException {
         logger.trace("send/publish message({}) to destination({}) with properties deliveryMode({}), priority({}), timeToLive({})", message, destination, deliveryMode, priority, timeToLiveOrExpiration);
+
+        this.sendingContextConsumer.accept(new SendingContext(destination, message));
 
         if (destination == null)
             destination = this.destination;

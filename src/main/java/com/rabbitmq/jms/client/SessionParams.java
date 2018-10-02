@@ -67,6 +67,13 @@ public class SessionParams {
      */
     private boolean throwExceptionOnConsumerStartFailure= false;
 
+    /**
+     * Callback before sending a message.
+     *
+     * @since 1.11.0
+     */
+    private SendingContextConsumer sendingContextConsumer;
+
     public RMQConnection getConnection() {
         return connection;
     }
@@ -155,5 +162,14 @@ public class SessionParams {
 
     public boolean willThrowExceptionOnConsumerStartFailure() {
         return throwExceptionOnConsumerStartFailure;
+    }
+
+    public SessionParams setSendingContextConsumer(SendingContextConsumer sendingContextConsumer) {
+        this.sendingContextConsumer = sendingContextConsumer;
+        return this;
+    }
+
+    public SendingContextConsumer getSendingContextConsumer() {
+        return sendingContextConsumer;
     }
 }

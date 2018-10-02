@@ -71,6 +71,13 @@ public class ConnectionParams {
      */
     private boolean throwExceptionOnConsumerStartFailure;
 
+    /**
+     * Callback before sending a message.
+     *
+     * @since 1.11.0
+     */
+    private SendingContextConsumer sendingContextConsumer;
+
     public Connection getRabbitConnection() {
         return rabbitConnection;
     }
@@ -159,5 +166,14 @@ public class ConnectionParams {
 
     public boolean willThrowExceptionOnConsumerStartFailure() {
         return throwExceptionOnConsumerStartFailure;
+    }
+
+    public SendingContextConsumer getSendingContextConsumer() {
+        return sendingContextConsumer;
+    }
+
+    public ConnectionParams setSendingContextConsumer(SendingContextConsumer sendingContextConsumer) {
+        this.sendingContextConsumer = sendingContextConsumer;
+        return this;
     }
 }
