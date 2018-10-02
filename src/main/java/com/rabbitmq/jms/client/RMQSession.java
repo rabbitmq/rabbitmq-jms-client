@@ -107,9 +107,17 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * Callback to customise properties of outbound AMQP messages.
+     *
      * @since 1.9.0
      */
     private final BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser;
+
+    /**
+     * Callback before sending a message.
+     *
+     * @since 1.11.0
+     */
+    private final SendingContextConsumer sendingContextConsumer;
 
     /** The main RabbitMQ channel we use under the hood */
     private final Channel channel;
@@ -204,6 +212,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.requeueOnMessageListenerException = sessionParams.willRequeueOnMessageListenerException();
         this.cleanUpServerNamedQueuesForNonDurableTopics = sessionParams.isCleanUpServerNamedQueuesForNonDurableTopics();
         this.amqpPropertiesCustomiser = sessionParams.getAmqpPropertiesCustomiser();
+        this.sendingContextConsumer = sessionParams.getSendingContextConsumer();
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;
@@ -613,7 +622,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         illegalStateExceptionIfClosed();
         RMQDestination dest = (RMQDestination) destination;
         declareDestinationIfNecessary(dest);
-        RMQMessageProducer producer = new RMQMessageProducer(this, dest, this.preferProducerMessageProperty, this.amqpPropertiesCustomiser);
+        RMQMessageProducer producer = new RMQMessageProducer(this, dest, this.preferProducerMessageProperty,
+            this.amqpPropertiesCustomiser, this.sendingContextConsumer);
         this.producers.add(producer);
         return producer;
     }

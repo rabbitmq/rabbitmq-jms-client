@@ -104,9 +104,17 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
     /**
      * Callback to customise properties of outbound AMQP messages.
+     *
      * @since 1.9.0
      */
     private final BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser;
+
+    /**
+     * Callback before sending a message.
+     *
+     * @since 1.11.0
+     */
+    private final SendingContextConsumer sendingContextConsumer;
 
     /**
      * Classes in these packages can be transferred via ObjectMessage.
@@ -132,6 +140,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.requeueOnMessageListenerException = connectionParams.willRequeueOnMessageListenerException();
         this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose = connectionParams.isCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose();
         this.amqpPropertiesCustomiser = connectionParams.getAmqpPropertiesCustomiser();
+        this.sendingContextConsumer = connectionParams.getSendingContextConsumer();
     }
 
     /**
@@ -181,6 +190,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setRequeueOnMessageListenerException(this.requeueOnMessageListenerException)
             .setCleanUpServerNamedQueuesForNonDurableTopics(this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose)
             .setAmqpPropertiesCustomiser(this.amqpPropertiesCustomiser)
+            .setSendingContextConsumer(this.sendingContextConsumer)
         );
         session.setTrustedPackages(this.trustedPackages);
         this.sessions.add(session);
