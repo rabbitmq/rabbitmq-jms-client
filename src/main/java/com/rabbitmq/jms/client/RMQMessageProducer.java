@@ -72,8 +72,11 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     private final BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser;
 
+    private final SendingContextConsumer sendingContextConsumer;
+
     public RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty,
-            BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser) {
+            BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser,
+            SendingContextConsumer sendingContextConsumer) {
         this.session = session;
         this.destination = destination;
         if (preferProducerMessageProperty) {
@@ -82,6 +85,12 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             sendingStrategy = new PreferMessagePropertySendingStrategy();
         }
         this.amqpPropertiesCustomiser = amqpPropertiesCustomiser == null ? (builder, message) -> builder : amqpPropertiesCustomiser;
+        this.sendingContextConsumer = sendingContextConsumer == null ? ctx -> {} : sendingContextConsumer;
+    }
+
+    public RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty,
+        BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser) {
+        this(session, destination, preferProducerMessageProperty, amqpPropertiesCustomiser, ctx -> {});
     }
 
     /**
@@ -248,6 +257,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     private void internalSend(RMQDestination destination, Message message, int deliveryMode, int priority, long timeToLiveOrExpiration, MessageExpirationType messageExpirationType) throws JMSException {
         logger.trace("send/publish message({}) to destination({}) with properties deliveryMode({}), priority({}), timeToLive({})", message, destination, deliveryMode, priority, timeToLiveOrExpiration);
+
+        this.sendingContextConsumer.accept(new SendingContext(destination, message));
 
         if (destination == null)
             destination = this.destination;

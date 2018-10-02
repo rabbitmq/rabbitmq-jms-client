@@ -7,6 +7,7 @@ import com.rabbitmq.client.MetricsCollector;
 import com.rabbitmq.client.NoOpMetricsCollector;
 import com.rabbitmq.jms.client.ConnectionParams;
 import com.rabbitmq.jms.client.RMQConnection;
+import com.rabbitmq.jms.client.SendingContextConsumer;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.RMQJMSSecurityException;
 import com.rabbitmq.jms.util.WhiteListObjectInputStream;
@@ -35,7 +36,6 @@ import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -93,12 +93,14 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * If set to true, those queues will be deleted when the session is closed.
      * If set to false, queues will be deleted when the owning connection is closed.
      * Default is false.
+     *
      * @since 1.8.0
      */
     private boolean cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose = false;
 
     /**
      * Callback to customise properties of outbound AMQP messages.
+     *
      * @since 1.9.0
      */
     private BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser;
@@ -111,11 +113,18 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private MetricsCollector metricsCollector = new NoOpMetricsCollector();
 
     /**
-     * For post-processor the {@link com.rabbitmq.client.ConnectionFactory} before creating the AMQP connection.
+     * For post-processing the {@link com.rabbitmq.client.ConnectionFactory} before creating the AMQP connection.
      *
      * @since 1.10.0
      */
     private Consumer<com.rabbitmq.client.ConnectionFactory> amqpConnectionFactoryPostProcessor = cf -> {};
+
+    /**
+     * Callback before sending a message.
+     *
+     * @since 1.11.0
+     */
+    private SendingContextConsumer sendingContextConsumer = ctx -> {};
 
     /** Default not to use ssl */
     private boolean ssl = false;
@@ -223,6 +232,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setRequeueOnMessageListenerException(requeueOnMessageListenerException)
             .setCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose(this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose)
             .setAmqpPropertiesCustomiser(amqpPropertiesCustomiser)
+            .setSendingContextConsumer(sendingContextConsumer)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
@@ -825,6 +835,19 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     public void setAmqpConnectionFactoryPostProcessor(Consumer<com.rabbitmq.client.ConnectionFactory> amqpConnectionFactoryPostProcessor) {
         this.amqpConnectionFactoryPostProcessor = amqpConnectionFactoryPostProcessor;
+    }
+
+    /**
+     * Set callback called before sending a message.
+     * Can be used to customize the message or the destination
+     * before the message is actually sent.
+     *
+     * @see SendingContextConsumer
+     * @see com.rabbitmq.jms.client.SendingContext
+     * @since 1.11.0
+     */
+    public void setSendingContextConsumer(SendingContextConsumer sendingContextConsumer) {
+        this.sendingContextConsumer = sendingContextConsumer;
     }
 
     @FunctionalInterface

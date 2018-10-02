@@ -52,15 +52,24 @@ public class ConnectionParams {
      * If set to true, those queues will be deleted when the session is closed.
      * If set to false, queues will be deleted when the owning connection is closed.
      * Default is false.
+     *
      * @since 1.8.0
      */
     private boolean cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose = false;
 
     /**
      * Callback to customise properties of outbound AMQP messages.
+     *
      * @since 1.9.0
      */
     private BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser;
+
+    /**
+     * Callback before sending a message.
+     *
+     * @since 1.11.0
+     */
+    private SendingContextConsumer sendingContextConsumer;
 
     public Connection getRabbitConnection() {
         return rabbitConnection;
@@ -140,6 +149,15 @@ public class ConnectionParams {
 
     public ConnectionParams setAmqpPropertiesCustomiser(BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser) {
         this.amqpPropertiesCustomiser = amqpPropertiesCustomiser;
+        return this;
+    }
+
+    public SendingContextConsumer getSendingContextConsumer() {
+        return sendingContextConsumer;
+    }
+
+    public ConnectionParams setSendingContextConsumer(SendingContextConsumer sendingContextConsumer) {
+        this.sendingContextConsumer = sendingContextConsumer;
         return this;
     }
 }
