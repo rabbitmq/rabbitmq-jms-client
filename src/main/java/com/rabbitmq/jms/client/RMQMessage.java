@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.BasicProperties;
@@ -6,17 +6,45 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
-import com.rabbitmq.jms.client.message.*;
-import com.rabbitmq.jms.util.*;
+import com.rabbitmq.jms.client.message.RMQBytesMessage;
+import com.rabbitmq.jms.client.message.RMQMapMessage;
+import com.rabbitmq.jms.client.message.RMQObjectMessage;
+import com.rabbitmq.jms.client.message.RMQStreamMessage;
+import com.rabbitmq.jms.client.message.RMQTextMessage;
+import com.rabbitmq.jms.util.HexDisplay;
+import com.rabbitmq.jms.util.IteratorEnum;
+import com.rabbitmq.jms.util.RMQJMSException;
+import com.rabbitmq.jms.util.Util;
+import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.*;
-import java.io.*;
+import javax.jms.BytesMessage;
+import javax.jms.DeliveryMode;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MapMessage;
+import javax.jms.Message;
+import javax.jms.MessageFormatException;
+import javax.jms.MessageNotWriteableException;
+import javax.jms.ObjectMessage;
+import javax.jms.StreamMessage;
+import javax.jms.TextMessage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 /**
@@ -25,6 +53,8 @@ import java.util.Map.Entry;
 public abstract class RMQMessage implements Message, Cloneable {
     /** Logger shared with derived classes */
     protected final Logger logger = LoggerFactory.getLogger(RMQMessage.class);
+
+    private static final String DIRECT_REPLY_TO = "amq.rabbitmq.reply-to";
 
     protected void loggerDebugByteArray(String format, byte[] buffer, Object arg) {
         if (logger.isDebugEnabled()) {
@@ -876,6 +906,9 @@ public abstract class RMQMessage implements Message, Cloneable {
         // message.setJMSDestination(dest);                                     // DO NOT set the destination bug#57214768
         // JMSProperties already set
         message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
+
+        maybeSetupDirectReplyTo(message, response.getProps().getReplyTo());
+
         return message;
     }
 
@@ -892,9 +925,33 @@ public abstract class RMQMessage implements Message, Cloneable {
             message.setJMSDestination(dest);                                        // We cannot know the original destination, so set local one
             message.setJMSPropertiesFromAmqpProperties(props);
             message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
+
+            maybeSetupDirectReplyTo(message, response.getProps().getReplyTo());
+
             return message;
         } catch (IOException x) {
             throw new RMQJMSException(x);
+        }
+    }
+
+    /**
+     * Properly assign JMSReplyTo header when using direct reply to.
+     * <p>
+     * On a received request message, the AMQP reply-to property is
+     * set to a specific <code>amq.rabbitmq.reply-to.ID</code> value.
+     * We must use this value for the JMS reply to destination if
+     * we want to send the response back to the destination the sender
+     * is waiting.
+     *
+     * @param message
+     * @param replyTo
+     * @throws JMSException
+     * @since 1.11.0
+     */
+    private static void maybeSetupDirectReplyTo(RMQMessage message, String replyTo) throws JMSException {
+        if (replyTo != null && replyTo.startsWith(DIRECT_REPLY_TO)) {
+            RMQDestination replyToDestination = new RMQDestination(DIRECT_REPLY_TO, "", replyTo, replyTo);
+            message.setJMSReplyTo(replyToDestination);
         }
     }
 

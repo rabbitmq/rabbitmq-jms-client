@@ -1,7 +1,13 @@
 /* Copyright (c) 2013-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
-import java.io.IOException;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.jms.admin.RMQDestination;
+import com.rabbitmq.jms.client.message.RMQBytesMessage;
+import com.rabbitmq.jms.client.message.RMQTextMessage;
+import com.rabbitmq.jms.util.RMQJMSException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.Destination;
 import javax.jms.InvalidDestinationException;
@@ -12,15 +18,7 @@ import javax.jms.Queue;
 import javax.jms.QueueSender;
 import javax.jms.Topic;
 import javax.jms.TopicPublisher;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.jms.admin.RMQDestination;
-import com.rabbitmq.jms.client.message.RMQBytesMessage;
-import com.rabbitmq.jms.client.message.RMQTextMessage;
-import com.rabbitmq.jms.util.RMQJMSException;
+import java.io.IOException;
 
 import static com.rabbitmq.jms.client.RMQMessage.JMS_MESSAGE_DELIVERY_MODE;
 import static com.rabbitmq.jms.client.RMQMessage.JMS_MESSAGE_EXPIRATION;
@@ -32,6 +30,8 @@ import static com.rabbitmq.jms.client.RMQMessage.JMS_MESSAGE_PRIORITY;
 public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPublisher {
 
     private final Logger logger = LoggerFactory.getLogger(RMQMessageProducer.class);
+
+    private static final String DIRECT_REPLY_TO = "amq.rabbitmq.reply-to";
 
     /**
      * The destination that we send our message to
@@ -318,6 +318,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
                 bob = amqpPropertiesCustomiser.customise(bob, msg);
 
+                maybeSetReplyToPropertyToDirectReplyTo(bob, msg);
+
                 byte[] data = msg.toAmqpByteArray();
 
                 this.session.getChannel().basicPublish(destination.getAmqpExchangeName(), destination.getAmqpRoutingKey(), bob.build(), data);
@@ -341,11 +343,36 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             bob.expiration(rmqExpiration(timeToLive));
             bob.headers(msg.toHeaders());
 
+            maybeSetReplyToPropertyToDirectReplyTo(bob, msg);
+
             byte[] data = msg.toByteArray();
 
             this.session.getChannel().basicPublish(destination.getAmqpExchangeName(), destination.getAmqpRoutingKey(), bob.build(), data);
         } catch (IOException x) {
             throw new RMQJMSException(x);
+        }
+    }
+
+    /**
+     * Set AMQP reply-to property to direct-reply-to if necessary.
+     * <p>
+     * Set the <code>reply-to</code> property to <code>amq.rabbitmq.reply-to</code>
+     * if the <code>JMSReplyTo</code> header is set to a destination with that
+     * name.
+     * <p>
+     * For outbound RPC request.
+     *
+     * @param builder
+     * @param msg
+     * @throws JMSException
+     * @since 1.11.0
+     */
+    private static void maybeSetReplyToPropertyToDirectReplyTo(AMQP.BasicProperties.Builder builder, RMQMessage msg) throws JMSException {
+        if (msg.getJMSReplyTo() != null && msg.getJMSReplyTo() instanceof RMQDestination) {
+            RMQDestination replyTo = (RMQDestination) msg.getJMSReplyTo();
+            if (DIRECT_REPLY_TO.equals(replyTo.getDestinationName())) {
+                builder.replyTo(DIRECT_REPLY_TO);
+            }
         }
     }
 

@@ -43,6 +43,13 @@ class MessageListenerConsumer implements Consumer, Abortable {
     private final boolean throwExceptionOnStartFailure;
 
     /**
+     * True when AMQP auto-ack is true as well. Happens
+     * only when the consumer listens on direct reply to
+     * pseudo-queue. No ack or nack operation is then performed.
+     */
+    private final boolean skipAck;
+
+    /**
      * Constructor
      * @param messageConsumer to which this Rabbit Consumer belongs
      * @param channel Rabbit channel this Consumer uses
@@ -60,6 +67,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
         this.rejecting = this.messageConsumer.getSession().getConnection().isStopped();
         this.requeueOnMessageListenerException = requeueOnMessageListenerException;
         this.throwExceptionOnStartFailure = throwExceptionOnStartFailure;
+        this.skipAck = messageConsumer.amqpAutoAck();
     }
 
     private String getConsTag() {
@@ -108,7 +116,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
         if (this.rejecting) {
             long dtag = envelope.getDeliveryTag();
             logger.debug("basicNack: dtag='{}'", dtag);
-            this.messageConsumer.getSession().explicitNack(dtag);
+            nack(dtag);
             return;
         }
         /* Wrap the incoming message in a GetResponse */
@@ -127,25 +135,25 @@ class MessageListenerConsumer implements Consumer, Abortable {
                     } catch(RMQMessageListenerExecutionJMSException e) {
                         if (e.getCause() instanceof RuntimeException) {
                             runtimeExceptionInListener = true;
-                            this.messageConsumer.getSession().explicitNack(dtag);
+                            nack(dtag);
                             this.abort();
                         } else {
                             throw e;
                         }
                     }
                     if (!runtimeExceptionInListener) {
-                        this.messageConsumer.dealWithAcknowledgements(this.autoAck, dtag);
+                        dealWithAcknowledgments(dtag);
                     }
                 } else {
                     // this is the "historical" behavior, not compliant with the spec
-                    this.messageConsumer.dealWithAcknowledgements(this.autoAck, dtag);
+                    dealWithAcknowledgments(dtag);
                     RMQMessage msg = RMQMessage.convertMessage(this.messageConsumer.getSession(), this.messageConsumer.getDestination(), response);
                     this.messageConsumer.getSession().deliverMessage(msg, this.messageListener);
                 }
             } else {
                 // We are unable to deliver the message, nack it
                 logger.debug("basicNack: dtag='{}' (null MessageListener)", dtag);
-                this.messageConsumer.getSession().explicitNack(dtag);
+                nack(dtag);
             }
         } catch (JMSException x) {
             logger.error("Error while delivering message", x);
@@ -153,6 +161,18 @@ class MessageListenerConsumer implements Consumer, Abortable {
         } catch (InterruptedException ie) {
             logger.warn("Message delivery has been interrupted", ie);
             throw new IOException("Interrupted while delivering message", ie);
+        }
+    }
+
+    private void nack(long dtag) {
+        if (!skipAck) {
+            this.messageConsumer.getSession().explicitNack(dtag);
+        }
+    }
+
+    private void dealWithAcknowledgments(long dtag) {
+        if (!skipAck) {
+            this.messageConsumer.dealWithAcknowledgements(this.autoAck, dtag);
         }
     }
 
