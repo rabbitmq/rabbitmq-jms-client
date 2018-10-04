@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
@@ -43,6 +43,8 @@ import com.rabbitmq.jms.util.Util;
  */
 public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscriber {
     private final Logger logger = LoggerFactory.getLogger(RMQMessageConsumer.class);
+
+    private static final String DIRECT_REPLY_TO = "amq.rabbitmq.reply-to";
 
     private static final int DEFAULT_BATCHING_SIZE = 5;
     private static final long STOP_TIMEOUT_MS = 1000; // ONE SECOND
@@ -280,8 +282,9 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         logger.debug("consuming from queue '{}' with tag '{}'", name, consTag);
         getSession().getChannel()
          .basicConsume(name, /* the name of the queue */
-                       false, /* autoack is ALWAYS false, otherwise we risk acking messages that are received
-                               * to the client but the client listener(onMessage) has not yet been invoked */
+                       amqpAutoAck(), /* autoack is true only when listening on direct-reply-to, otherwise
+                               * autoack is ALWAYS false, since we risk acking messages that are received
+                               * to the client but the client listener(onMessage) has not yet been invoked with autoack = true */
                        consTag, /* the consumer tag to use */
                        this.noLocal, /* RabbitMQ accepts but does not support noLocal=true for subscriptions */
                        false, /* exclusive will always be false: exclusive consumer access true means only this
@@ -543,5 +546,20 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             }
         }
         return null;
+    }
+
+    /**
+     * Whether the underlying AMQP consumer uses auto-ack or not.
+     *
+     * Auto-ack is enabled only for when consuming on direct reply to.
+     *
+     * @return
+     */
+    protected boolean amqpAutoAck() {
+        return  isDirectReplyTo();
+    }
+
+    private boolean isDirectReplyTo() {
+        return this.destination.isAmqp() && DIRECT_REPLY_TO.equals(this.destination.getDestinationName());
     }
 }
