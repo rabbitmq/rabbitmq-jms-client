@@ -254,12 +254,12 @@ public class RMQConnectionFactoryTest {
     }
 
     @Test
-    public void shouldUseSingleAddressWhenSingleUri() throws Exception {
+    public void shouldUseSingleResolvedAddressWhenSingleUri() throws Exception {
         rmqCf.setUri("amqp://localhost:10000");
         rmqCf.createConnection("guest", "guest");
         assertNotNull(passedInAddressResolver);
         List<Address> resolved = passedInAddressResolver.getAddresses();
-        assertThat(resolved.size(), is(both(greaterThanOrEqualTo(1)).and(lessThanOrEqualTo(2))));
+        assertThat(resolved.size(), is(both(greaterThanOrEqualTo(1)).and(lessThanOrEqualTo(3))));
         // don't check host, as there can be some DNS resolution happening
         assertEquals(10000, resolved.get(0).getPort());
     }
