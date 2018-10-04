@@ -62,6 +62,8 @@
     <maven.sources.plugin.version>3.0.1</maven.sources.plugin.version>
     <maven.javadoc.plugin.version>3.0.0-M1</maven.javadoc.plugin.version>
     <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
+    <maven.packagecloud.wagon.version>0.0.6</maven.packagecloud.wagon.version>
+    <checksum.maven.plugin.version>1.8</checksum.maven.plugin.version>
 
     <java.compile.version>1.6</java.compile.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -359,6 +361,13 @@
         </executions>
       </plugin>
     </plugins>
+    <extensions>
+      <extension>
+        <groupId>io.packagecloud.maven.wagon</groupId>
+        <artifactId>maven-packagecloud-wagon</artifactId>
+        <version>${maven.packagecloud.wagon.version}</version>
+      </extension>
+    </extensions>
   </build>
 
   <profiles>
@@ -482,7 +491,7 @@
 
     <!--
       The "milestone" Maven profile is used to push release artifacts to the
-      Bintray Milestones Maven Repository.
+      PackageCloud Milestones Maven Repository.
     -->
     <profile>
       <id>milestone</id>
@@ -522,13 +531,43 @@
               </execution>
             </executions>
           </plugin>
+
+          <plugin>
+            <groupId>net.nicoulaj.maven.plugins</groupId>
+            <artifactId>checksum-maven-plugin</artifactId>
+            <version>${checksum.maven.plugin.version}</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>files</goal>
+                </goals>
+                <configuration>
+                  <fileSets>
+                    <fileSet>
+                      <directory>${project.build.directory}</directory>
+                      <includes>
+                        <include>*.jar</include>
+                        <include>*.pom</include>
+                      </includes>
+                    </fileSet>
+                  </fileSets>
+                  <algorithms>
+                    <algorithm>MD5</algorithm>
+                    <algorithm>SHA-256</algorithm>
+                  </algorithms>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
         </plugins>
       </build>
       <distributionManagement>
         <repository>
-          <id>bintray-rabbitmq-maven-milestones</id>
-          <name>rabbitmq-maven-milestones</name>
-          <url>https://api.bintray.com/maven/rabbitmq/maven-milestones/com.rabbitmq.jms:rabbitmq-jms/;publish=1</url>
+          <id>packagecloud-rabbitmq-maven-milestones</id>
+          <url>packagecloud+https://packagecloud.io/rabbitmq/maven-milestones</url>
         </repository>
       </distributionManagement>
     </profile>
