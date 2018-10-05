@@ -79,6 +79,7 @@ public class RpcWithAmqpDirectReplyIT {
         Message response = doRpc(messageContent);
         assertNotNull(response);
         assertThat(response, is(instanceOf(TextMessage.class)));
+        assertThat(response.getJMSCorrelationID(), is(messageContent));
         assertThat(((TextMessage) response).getText(), is("*** " + messageContent + " ***"));
     }
 
@@ -99,7 +100,9 @@ public class RpcWithAmqpDirectReplyIT {
 
         message.setJMSReplyTo(replyQueue);
         producer.send(message);
-        return queue.poll(2, TimeUnit.SECONDS);
+        Message response = queue.poll(2, TimeUnit.SECONDS);
+        responseConsumer.close();
+        return response;
     }
 
     void setupRpcServer() throws Exception {
