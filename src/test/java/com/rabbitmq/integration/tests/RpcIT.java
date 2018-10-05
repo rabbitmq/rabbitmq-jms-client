@@ -1,9 +1,6 @@
 /* Copyright (c) 2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import com.rabbitmq.jms.admin.RMQConnectionFactory;
-import com.rabbitmq.jms.admin.RMQDestination;
-import com.rabbitmq.jms.client.SendingContextConsumer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,21 +47,13 @@ public class RpcIT {
         }
     }
 
-    static SendingContextConsumer destinationAlreadyDeclaredForRpcResponse() {
-        return ctx -> {
-            if (ctx.getMessage().getJMSCorrelationID() != null && ctx.getDestination() instanceof RMQDestination) {
-                RMQDestination destination = (RMQDestination) ctx.getDestination();
-                destination.setDeclared(true);
-            }
-        };
-    }
-
     @BeforeEach
     public void init() throws Exception {
         ConnectionFactory connectionFactory = AbstractTestConnectionFactory.getTestConnectionFactory()
             .getConnectionFactory();
         clientConnection = connectionFactory.createConnection();
         clientConnection.start();
+        setupRpcServer();
     }
 
     @AfterEach
@@ -83,13 +72,12 @@ public class RpcIT {
     }
 
     @Test
-    public void responseOkWhenServerDoesNotRecreateTemporaryResponseQueue() throws Exception {
-        setupRpcServer(destinationAlreadyDeclaredForRpcResponse());
-
+    public void rpc() throws Exception {
         String messageContent = UUID.randomUUID().toString();
         Message response = doRpc(messageContent);
         assertNotNull(response);
         assertThat(response, is(instanceOf(TextMessage.class)));
+        assertThat(response.getJMSCorrelationID(), is(messageContent));
         assertThat(((TextMessage) response).getText(), is("*** " + messageContent + " ***"));
     }
 
@@ -106,13 +94,14 @@ public class RpcIT {
         responseConsumer.setMessageListener(msg -> queue.add(msg));
         message.setJMSReplyTo(replyQueue);
         producer.send(message);
-        return queue.poll(2, TimeUnit.SECONDS);
+        Message response = queue.poll(2, TimeUnit.SECONDS);
+        responseConsumer.close();
+        return response;
     }
 
-    void setupRpcServer(SendingContextConsumer sendingContextConsumer) throws Exception {
-        RMQConnectionFactory connectionFactory = (RMQConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
+    void setupRpcServer() throws Exception {
+        ConnectionFactory connectionFactory = AbstractTestConnectionFactory.getTestConnectionFactory()
             .getConnectionFactory();
-        connectionFactory.setSendingContextConsumer(sendingContextConsumer);
         serverConnection = connectionFactory.createConnection();
         serverConnection.start();
         Session session = serverConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
