@@ -908,6 +908,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
 
         maybeSetupDirectReplyTo(message, response.getProps().getReplyTo());
+        doNotDeclareReplyToDestination(message);
 
         return message;
     }
@@ -927,6 +928,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
 
             maybeSetupDirectReplyTo(message, response.getProps().getReplyTo());
+            doNotDeclareReplyToDestination(message);
 
             return message;
         } catch (IOException x) {
@@ -952,6 +954,23 @@ public abstract class RMQMessage implements Message, Cloneable {
         if (replyTo != null && replyTo.startsWith(DIRECT_REPLY_TO)) {
             RMQDestination replyToDestination = new RMQDestination(DIRECT_REPLY_TO, "", replyTo, replyTo);
             message.setJMSReplyTo(replyToDestination);
+        }
+    }
+
+    /**
+     * Indicates to not declare a reply-to {@link RMQDestination}.
+     * <p>
+     * This is used for inbound messages, when the reply-to destination
+     * is supposed to be already created. This avoids trying to create
+     * a second time a temporary queue.
+     *
+     * @param message
+     * @throws JMSException
+     * @since 1.11.0
+     */
+    private static void doNotDeclareReplyToDestination(RMQMessage message) throws JMSException {
+        if (message.getJMSReplyTo() != null && message.getJMSReplyTo() instanceof RMQDestination) {
+            ((RMQDestination) message.getJMSReplyTo()).setDeclared(true);
         }
     }
 

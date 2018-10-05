@@ -31,7 +31,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 /**
  *
@@ -94,16 +93,7 @@ public class RpcIT {
     }
 
     @Test
-    public void noResponseWhenServerTriesToRecreateTemporaryResponseQueue() throws Exception {
-        setupRpcServer();
-
-        String messageContent = UUID.randomUUID().toString();
-        Message response = doRpc(messageContent);
-        assertNull(response);
-    }
-
-    @Test
-    public void responseOkWhenServerDoesNotRecreateTemporaryResponseQueue() throws Exception {
+    public void rpc() throws Exception {
         setupRpcServer(destinationAlreadyDeclaredForRpcResponse());
 
         String messageContent = UUID.randomUUID().toString();
@@ -146,15 +136,6 @@ public class RpcIT {
         drainQueue(session, queue);
         session.close();
         rpcServer = new RpcServer(serverConnection);
-    }
-
-    void setupRpcServer() throws Exception {
-        setupRpcServer(new SendingContextConsumer() {
-
-            @Override
-            public void accept(SendingContext ctx) {
-            }
-        });
     }
 
     private static class RpcServer {

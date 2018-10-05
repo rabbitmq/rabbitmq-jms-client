@@ -1,10 +1,7 @@
 /* Copyright (c) 2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.admin.RMQDestination;
-import com.rabbitmq.jms.client.SendingContext;
-import com.rabbitmq.jms.client.SendingContextConsumer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,19 +49,6 @@ public class RpcWithAmqpDirectReplyIT {
         }
     }
 
-    static SendingContextConsumer destinationAlreadyDeclaredForRpcResponse() {
-        return new SendingContextConsumer() {
-
-            @Override
-            public void accept(SendingContext ctx) throws JMSException {
-                if (ctx.getMessage().getJMSCorrelationID() != null && ctx.getDestination() instanceof RMQDestination) {
-                    RMQDestination destination = (RMQDestination) ctx.getDestination();
-                    destination.setDeclared(true);
-                }
-            }
-        };
-    }
-
     @Before
     public void init() throws Exception {
         ConnectionFactory connectionFactory = AbstractTestConnectionFactory.getTestConnectionFactory()
@@ -93,7 +77,7 @@ public class RpcWithAmqpDirectReplyIT {
 
     @Test
     public void responseOkWhenServerDoesNotRecreateTemporaryResponseQueue() throws Exception {
-        setupRpcServer(destinationAlreadyDeclaredForRpcResponse());
+        setupRpcServer();
 
         String messageContent = UUID.randomUUID().toString();
         Message response = doRpc(messageContent);
@@ -128,10 +112,9 @@ public class RpcWithAmqpDirectReplyIT {
         return queue.poll(2, TimeUnit.SECONDS);
     }
 
-    void setupRpcServer(SendingContextConsumer sendingContextConsumer) throws Exception {
-        RMQConnectionFactory connectionFactory = (RMQConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
+    void setupRpcServer() throws Exception {
+        ConnectionFactory connectionFactory = AbstractTestConnectionFactory.getTestConnectionFactory()
             .getConnectionFactory();
-        connectionFactory.setSendingContextConsumer(sendingContextConsumer);
         serverConnection = connectionFactory.createConnection();
         serverConnection.start();
         Session session = serverConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
