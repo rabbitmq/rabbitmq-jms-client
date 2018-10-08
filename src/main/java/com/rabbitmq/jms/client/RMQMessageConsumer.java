@@ -86,6 +86,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     private final boolean requeueOnMessageListenerException;
 
+    private final ReceivingContextConsumer receivingContextConsumer;
+
     /**
      * Whether an exception should be thrown or not when consumer startup fails.
      */
@@ -103,7 +105,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @param throwExceptionOnConsumerStartFailure true to throw an exception if start-up fails, false otherwise
      */
     RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag, boolean paused, String messageSelector, boolean requeueOnMessageListenerException,
-            boolean throwExceptionOnConsumerStartFailure) {
+            boolean throwExceptionOnConsumerStartFailure, ReceivingContextConsumer receivingContextConsumer) {
         this.session = session;
         this.destination = destination;
         this.uuidTag = uuidTag;
@@ -114,6 +116,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         this.autoAck = session.isAutoAck();
         this.requeueOnMessageListenerException = requeueOnMessageListenerException;
         this.throwExceptionOnConsumerStartFailure = throwExceptionOnConsumerStartFailure;
+        this.receivingContextConsumer = receivingContextConsumer;
     }
 
     /**
@@ -213,7 +216,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                                           TimeUnit.MILLISECONDS.toNanos(this.session.getConnection()
                                                                                     .getTerminationTimeout()),
                                           this.requeueOnMessageListenerException,
-                                          this.throwExceptionOnConsumerStartFailure);
+                                          this.throwExceptionOnConsumerStartFailure,
+                                          this.receivingContextConsumer);
             if (this.listenerConsumer.compareAndSet(null, mlConsumer)) {
                 this.abortables.add(mlConsumer);
                 if (!this.getSession().getConnection().isStopped()) {
@@ -347,7 +351,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 GetResponse resp = this.delayedReceiver.get(tt);
                 if (resp == null) return null; // nothing received in time or aborted
                 this.dealWithAcknowledgements(this.isAutoAck(), resp.getEnvelope().getDeliveryTag());
-                return RMQMessage.convertMessage(this.session, this.destination, resp);
+                return RMQMessage.convertMessage(this.session, this.destination, resp, this.receivingContextConsumer);
             } finally {
                 this.receiveManager.exit();
             }

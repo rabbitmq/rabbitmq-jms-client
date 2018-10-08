@@ -137,6 +137,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     private final SendingContextConsumer sendingContextConsumer;
 
+    private final ReceivingContextConsumer receivingContextConsumer;
+
     /**
      * Classes in these packages can be transferred via ObjectMessage.
      *
@@ -163,6 +165,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.amqpPropertiesCustomiser = connectionParams.getAmqpPropertiesCustomiser();
         this.throwExceptionOnConsumerStartFailure = connectionParams.willThrowExceptionOnConsumerStartFailure();
         this.sendingContextConsumer = connectionParams.getSendingContextConsumer();
+        this.receivingContextConsumer = connectionParams.getReceivingContextConsumer();
     }
 
     /**
@@ -214,6 +217,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setAmqpPropertiesCustomiser(this.amqpPropertiesCustomiser)
             .setThrowExceptionOnConsumerStartFailure(this.throwExceptionOnConsumerStartFailure)
             .setSendingContextConsumer(this.sendingContextConsumer)
+            .setReceivingContextConsumer(this.receivingContextConsumer)
         );
         session.setTrustedPackages(this.trustedPackages);
         this.sessions.add(session);

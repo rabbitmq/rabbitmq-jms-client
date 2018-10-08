@@ -1,4 +1,4 @@
-/* Copyright (c) 2014 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2014-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
@@ -25,13 +25,17 @@ class BrowsingConsumer extends DefaultConsumer {
     private final RMQSession session;
     private final RMQDestination dest;
 
-    public BrowsingConsumer(Channel channel, RMQSession session, RMQDestination dest, int messagesExpected, java.util.Queue<RMQMessage> msgQueue, SqlEvaluator evaluator) {
+    private final ReceivingContextConsumer receivingContextConsumer;
+
+    public BrowsingConsumer(Channel channel, RMQSession session, RMQDestination dest, int messagesExpected, java.util.Queue<RMQMessage> msgQueue, SqlEvaluator evaluator,
+            ReceivingContextConsumer receivingContextConsumer) {
         super(channel);
         this.messagesExpected = messagesExpected;
         this.msgQueue = msgQueue;
         this.evaluator = evaluator;
         this.session = session;
         this.dest = dest;
+        this.receivingContextConsumer = receivingContextConsumer;
     }
 
     public boolean finishesInTime(int browsingConsumerTimeout) {
@@ -61,7 +65,8 @@ class BrowsingConsumer extends DefaultConsumer {
     throws IOException {
         if (this.messagesExpected==0) return;
         try {
-            RMQMessage msg = RMQMessage.convertMessage(this.session, this.dest, new GetResponse(envelope, properties, body, --this.messagesExpected));
+            RMQMessage msg = RMQMessage.convertMessage(this.session, this.dest,
+                new GetResponse(envelope, properties, body, --this.messagesExpected), this.receivingContextConsumer);
             if (evaluator==null || evaluator.evaluate(msg.toHeaders()))
                 this.msgQueue.add(msg);
         } catch (JMSException e) {

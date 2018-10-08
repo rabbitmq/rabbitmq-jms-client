@@ -49,6 +49,8 @@ class MessageListenerConsumer implements Consumer, Abortable {
      */
     private final boolean skipAck;
 
+    private final ReceivingContextConsumer receivingContextConsumer;
+
     /**
      * Constructor
      * @param messageConsumer to which this Rabbit Consumer belongs
@@ -57,7 +59,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
      * @param terminationTimeout wait time (in nanoseconds) for cancel to take effect
      */
     public MessageListenerConsumer(RMQMessageConsumer messageConsumer, Channel channel, MessageListener messageListener, long terminationTimeout,
-                boolean requeueOnMessageListenerException, boolean throwExceptionOnStartFailure) {
+                boolean requeueOnMessageListenerException, boolean throwExceptionOnStartFailure, ReceivingContextConsumer receivingContextConsumer) {
         this.messageConsumer = messageConsumer;
         this.channel = channel;
         this.messageListener = messageListener;
@@ -68,6 +70,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
         this.requeueOnMessageListenerException = requeueOnMessageListenerException;
         this.throwExceptionOnStartFailure = throwExceptionOnStartFailure;
         this.skipAck = messageConsumer.amqpAutoAck();
+        this.receivingContextConsumer = receivingContextConsumer;
     }
 
     private String getConsTag() {
@@ -128,7 +131,8 @@ class MessageListenerConsumer implements Consumer, Abortable {
                     // requeuing in case of RuntimeException from the listener
                     // see https://github.com/rabbitmq/rabbitmq-jms-client/issues/23
                     // see section 4.5.2 of JMS 1.1 specification
-                    RMQMessage msg = RMQMessage.convertMessage(this.messageConsumer.getSession(), this.messageConsumer.getDestination(), response);
+                    RMQMessage msg = RMQMessage.convertMessage(this.messageConsumer.getSession(), this.messageConsumer.getDestination(),
+                        response, this.receivingContextConsumer);
                     boolean runtimeExceptionInListener = false;
                     try {
                         this.messageConsumer.getSession().deliverMessage(msg, this.messageListener);
@@ -147,7 +151,8 @@ class MessageListenerConsumer implements Consumer, Abortable {
                 } else {
                     // this is the "historical" behavior, not compliant with the spec
                     dealWithAcknowledgments(dtag);
-                    RMQMessage msg = RMQMessage.convertMessage(this.messageConsumer.getSession(), this.messageConsumer.getDestination(), response);
+                    RMQMessage msg = RMQMessage.convertMessage(this.messageConsumer.getSession(), this.messageConsumer.getDestination(),
+                        response, this.receivingContextConsumer);
                     this.messageConsumer.getSession().deliverMessage(msg, this.messageListener);
                 }
             } else {
