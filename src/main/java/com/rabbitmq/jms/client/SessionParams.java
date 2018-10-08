@@ -67,6 +67,13 @@ public class SessionParams {
      */
     private SendingContextConsumer sendingContextConsumer;
 
+    /**
+     * Callback before receiving a message.
+     *
+     * @since 1.11.0
+     */
+    private ReceivingContextConsumer receivingContextConsumer;
+
     public RMQConnection getConnection() {
         return connection;
     }
@@ -155,5 +162,14 @@ public class SessionParams {
 
     public SendingContextConsumer getSendingContextConsumer() {
         return sendingContextConsumer;
+    }
+
+    public SessionParams setReceivingContextConsumer(ReceivingContextConsumer receivingContextConsumer) {
+        this.receivingContextConsumer = receivingContextConsumer;
+        return this;
+    }
+
+    public ReceivingContextConsumer getReceivingContextConsumer() {
+        return receivingContextConsumer;
     }
 }

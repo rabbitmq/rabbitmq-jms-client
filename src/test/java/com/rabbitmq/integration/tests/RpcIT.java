@@ -1,6 +1,7 @@
 /* Copyright (c) 2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
+import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -100,8 +101,9 @@ public class RpcIT {
     }
 
     void setupRpcServer() throws Exception {
-        ConnectionFactory connectionFactory = AbstractTestConnectionFactory.getTestConnectionFactory()
+        RMQConnectionFactory connectionFactory = (RMQConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
             .getConnectionFactory();
+        connectionFactory.setDeclareReplyToDestination(false);
         serverConnection = connectionFactory.createConnection();
         serverConnection.start();
         Session session = serverConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);

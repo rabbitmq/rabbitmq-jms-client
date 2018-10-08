@@ -1,4 +1,4 @@
-/* Copyright (c) 2014 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2014-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import java.util.Enumeration;
@@ -23,13 +23,16 @@ class BrowsingMessageQueue implements QueueBrowser {
     private final SqlEvaluator evaluator;
     private final RMQSession session;
     private final int queueBrowserReadMax;
+    private final ReceivingContextConsumer receivingContextConsumer;
 
-    public BrowsingMessageQueue(RMQSession session, RMQDestination dest, String selector, int queueBrowserReadMax) throws JMSException {
+    public BrowsingMessageQueue(RMQSession session, RMQDestination dest, String selector,
+            int queueBrowserReadMax, ReceivingContextConsumer receivingContextConsumer) throws JMSException {
         this.dest = dest;
         this.selector = selector;
         this.session = session;
         this.evaluator = setEvaluator(selector);
         this.queueBrowserReadMax = queueBrowserReadMax;
+        this.receivingContextConsumer = receivingContextConsumer;
     }
 
     private static final SqlEvaluator setEvaluator(String selector) throws JMSException {
@@ -53,7 +56,8 @@ class BrowsingMessageQueue implements QueueBrowser {
     @SuppressWarnings("rawtypes")
     public Enumeration getEnumeration() throws JMSException {
         Channel chan = this.session.getBrowsingChannel();
-        Enumeration e = new BrowsingMessageEnumeration(this.session, this.dest, chan, this.evaluator, this.queueBrowserReadMax);
+        Enumeration e = new BrowsingMessageEnumeration(this.session, this.dest, chan, this.evaluator,
+            this.queueBrowserReadMax, this.receivingContextConsumer);
         session.closeBrowsingChannel(chan); // this should requeue all the messages browsed
         return e;
     }

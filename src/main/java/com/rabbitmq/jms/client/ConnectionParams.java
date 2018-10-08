@@ -71,6 +71,13 @@ public class ConnectionParams {
      */
     private SendingContextConsumer sendingContextConsumer;
 
+    /**
+     * Callback before receiving a message.
+     *
+     * @since 1.11.0
+     */
+    private ReceivingContextConsumer receivingContextConsumer;
+
     public Connection getRabbitConnection() {
         return rabbitConnection;
     }
@@ -158,6 +165,15 @@ public class ConnectionParams {
 
     public ConnectionParams setSendingContextConsumer(SendingContextConsumer sendingContextConsumer) {
         this.sendingContextConsumer = sendingContextConsumer;
+        return this;
+    }
+
+    public ReceivingContextConsumer getReceivingContextConsumer() {
+        return receivingContextConsumer;
+    }
+
+    public ConnectionParams setReceivingContextConsumer(ReceivingContextConsumer receivingContextConsumer) {
+        this.receivingContextConsumer = receivingContextConsumer;
         return this;
     }
 }

@@ -86,6 +86,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      */
     private final boolean requeueOnMessageListenerException;
 
+    private final ReceivingContextConsumer receivingContextConsumer;
+
     /**
      * Creates a RMQMessageConsumer object. Internal constructor used by {@link RMQSession}
      *
@@ -96,7 +98,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @param paused - true if the connection is {@link javax.jms.Connection#stop}ped, false otherwise.
      * @param requeueOnMessageListenerException true to requeue message on RuntimeException in listener, false otherwise
      */
-    RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag, boolean paused, String messageSelector, boolean requeueOnMessageListenerException) {
+    RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag, boolean paused, String messageSelector, boolean requeueOnMessageListenerException,
+            ReceivingContextConsumer receivingContextConsumer) {
         this.session = session;
         this.destination = destination;
         this.uuidTag = uuidTag;
@@ -106,6 +109,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
             this.receiveManager.openGate();
         this.autoAck = session.isAutoAck();
         this.requeueOnMessageListenerException = requeueOnMessageListenerException;
+        this.receivingContextConsumer = receivingContextConsumer;
     }
 
     /**
@@ -204,7 +208,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                                           messageListener,
                                           TimeUnit.MILLISECONDS.toNanos(this.session.getConnection()
                                                                                     .getTerminationTimeout()),
-                                          this.requeueOnMessageListenerException);
+                                          this.requeueOnMessageListenerException, this.receivingContextConsumer);
             if (this.listenerConsumer.compareAndSet(null, mlConsumer)) {
                 this.abortables.add(mlConsumer);
                 if (!this.getSession().getConnection().isStopped()) {
@@ -338,7 +342,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 GetResponse resp = this.delayedReceiver.get(tt);
                 if (resp == null) return null; // nothing received in time or aborted
                 this.dealWithAcknowledgements(this.isAutoAck(), resp.getEnvelope().getDeliveryTag());
-                return RMQMessage.convertMessage(this.session, this.destination, resp);
+                return RMQMessage.convertMessage(this.session, this.destination, resp, this.receivingContextConsumer);
             } finally {
                 this.receiveManager.exit();
             }

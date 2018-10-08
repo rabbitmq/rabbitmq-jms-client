@@ -119,6 +119,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private final SendingContextConsumer sendingContextConsumer;
 
+    private final ReceivingContextConsumer receivingContextConsumer;
+
     /** The main RabbitMQ channel we use under the hood */
     private final Channel channel;
     /** Set to true if close() has been called and completed */
@@ -213,6 +215,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.cleanUpServerNamedQueuesForNonDurableTopics = sessionParams.isCleanUpServerNamedQueuesForNonDurableTopics();
         this.amqpPropertiesCustomiser = sessionParams.getAmqpPropertiesCustomiser();
         this.sendingContextConsumer = sessionParams.getSendingContextConsumer();
+        this.receivingContextConsumer = sessionParams.getReceivingContextConsumer() == null ?
+            ReceivingContextConsumer.NO_OP : sessionParams.getReceivingContextConsumer();
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;
@@ -700,7 +704,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 throw new RMQJMSException("RabbitMQ Exception creating Consumer", x);
             }
         }
-        RMQMessageConsumer consumer = new RMQMessageConsumer(this, dest, consumerTag, getConnection().isStopped(), jmsSelector, this.requeueOnMessageListenerException);
+        RMQMessageConsumer consumer = new RMQMessageConsumer(this, dest, consumerTag, getConnection().isStopped(),
+            jmsSelector, this.requeueOnMessageListenerException, this.receivingContextConsumer);
         this.consumers.add(consumer);
         return consumer;
     }
@@ -995,7 +1000,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (queue instanceof RMQDestination) {
             RMQDestination rmqDest = (RMQDestination) queue;
             if (rmqDest.isQueue()) {
-                return new BrowsingMessageQueue(this, rmqDest, messageSelector, this.connection.getQueueBrowserReadMax());
+                return new BrowsingMessageQueue(this, rmqDest, messageSelector,
+                    this.connection.getQueueBrowserReadMax(), this.receivingContextConsumer);
             }
         }
         throw new UnsupportedOperationException("Unknown destination");

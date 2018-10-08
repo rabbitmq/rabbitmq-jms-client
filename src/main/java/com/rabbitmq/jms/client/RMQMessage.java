@@ -130,7 +130,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     /**
      * A message is read only if it has been received.
      * We set this flag when we receive a message in the following method
-     * {@link RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse)}
+     * {@link RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse, ReceivingContextConsumer)}
      */
     private volatile boolean readonlyProperties=false;
     private volatile boolean readonlyBody=false;
@@ -151,7 +151,7 @@ public abstract class RMQMessage implements Message, Cloneable {
 
     /**
      * Sets the read only flag on this message
-     * @see RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse)
+     * @see RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse, ReceivingContextConsumer)
      * @param readonly read only flag value
      */
     protected void setReadonly(boolean readonly) {
@@ -172,7 +172,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * We use this delivery tag when we ack
      * a single message
      * @see RMQSession#acknowledgeMessage(RMQMessage)
-     * @see RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse)
+     * @see RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse, ReceivingContextConsumer)
      */
     private long rabbitDeliveryTag = -1;
     /**
@@ -184,7 +184,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
     /**
      * Sets the RabbitMQ delivery tag for this message.
-      * @see RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse)
+      * @see RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse, ReceivingContextConsumer)
 
      * @param rabbitDeliveryTag RabbitMQ delivery tag
      */
@@ -207,7 +207,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
     /**
      * Sets the session this object was received by
-     * @see RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse)
+     * @see RMQMessage#convertMessage(RMQSession, RMQDestination, com.rabbitmq.client.GetResponse, ReceivingContextConsumer)
      * @see RMQSession#acknowledgeMessage(RMQMessage)
      * @param session the session this object was received by
      */
@@ -886,17 +886,17 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @return the JMS message corresponding to the RabbitMQ message
      * @throws JMSException
      */
-    static RMQMessage convertMessage(RMQSession session, RMQDestination dest, GetResponse response) throws JMSException {
+    static RMQMessage convertMessage(RMQSession session, RMQDestination dest, GetResponse response, ReceivingContextConsumer receivingContextConsumer) throws JMSException {
         if (response == null) /* return null if the response is null */
             return null;
         if (dest.isAmqp()) {
-            return convertAmqpMessage(session, dest, response);
+            return convertAmqpMessage(session, dest, response, receivingContextConsumer);
         } else {
-            return convertJmsMessage(session, dest, response);
+            return convertJmsMessage(session, response, receivingContextConsumer);
         }
     }
 
-    static RMQMessage convertJmsMessage(RMQSession session, RMQDestination dest, GetResponse response) throws JMSException {
+    static RMQMessage convertJmsMessage(RMQSession session, GetResponse response, ReceivingContextConsumer receivingContextConsumer) throws JMSException {
         // Deserialize the message payload from the byte[] body
         RMQMessage message = fromMessage(response.getBody(), session.getTrustedPackages());
 
@@ -908,12 +908,12 @@ public abstract class RMQMessage implements Message, Cloneable {
         message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
 
         maybeSetupDirectReplyTo(message, response.getProps().getReplyTo());
-        doNotDeclareReplyToDestination(message);
+        receivingContextConsumer.accept(new ReceivingContext(message));
 
         return message;
     }
 
-    private static RMQMessage convertAmqpMessage(RMQSession session, RMQDestination dest, GetResponse response) throws JMSException {
+    private static RMQMessage convertAmqpMessage(RMQSession session, RMQDestination dest, GetResponse response, ReceivingContextConsumer receivingContextConsumer) throws JMSException {
         try {
             BasicProperties props = response.getProps();
 
@@ -928,7 +928,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
 
             maybeSetupDirectReplyTo(message, response.getProps().getReplyTo());
-            doNotDeclareReplyToDestination(message);
+            receivingContextConsumer.accept(new ReceivingContext(message));
 
             return message;
         } catch (IOException x) {
@@ -968,8 +968,8 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @throws JMSException
      * @since 1.11.0
      */
-    private static void doNotDeclareReplyToDestination(RMQMessage message) throws JMSException {
-        if (message.getJMSReplyTo() != null && message.getJMSReplyTo() instanceof RMQDestination) {
+    public static void doNotDeclareReplyToDestination(Message message) throws JMSException {
+        if (message instanceof RMQMessage && message.getJMSReplyTo() != null && message.getJMSReplyTo() instanceof RMQDestination) {
             ((RMQDestination) message.getJMSReplyTo()).setDeclared(true);
         }
     }

@@ -155,8 +155,9 @@ public class RpcSpringJmsIT {
     }
 
     void setupRpcServer() throws Exception {
-        ConnectionFactory connectionFactory = AbstractTestConnectionFactory.getTestConnectionFactory()
+        RMQConnectionFactory connectionFactory = (RMQConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
             .getConnectionFactory();
+        connectionFactory.setDeclareReplyToDestination(false);
         serverConnection = connectionFactory.createConnection();
         serverConnection.start();
         Session session = serverConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -209,13 +210,14 @@ public class RpcSpringJmsIT {
 
         @Bean
         Connection connection() throws Exception {
-            return AbstractTestConnectionFactory.getTestConnectionFactory().getConnectionFactory().createConnection();
+            RMQConnectionFactory cf = (RMQConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory().getConnectionFactory();
+            cf.setDeclareReplyToDestination(false);
+            return cf.createConnection();
         }
 
         @Bean
         ConnectionFactory connectionFactory() throws Exception {
-            RMQConnectionFactory cf = (RMQConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory().getConnectionFactory();
-            return new SingleConnectionFactory(cf.createConnection());
+            return new SingleConnectionFactory(connection());
         }
 
         @Bean

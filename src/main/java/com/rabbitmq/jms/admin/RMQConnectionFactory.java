@@ -7,6 +7,8 @@ import com.rabbitmq.client.MetricsCollector;
 import com.rabbitmq.client.NoOpMetricsCollector;
 import com.rabbitmq.jms.client.ConnectionParams;
 import com.rabbitmq.jms.client.RMQConnection;
+import com.rabbitmq.jms.client.RMQMessage;
+import com.rabbitmq.jms.client.ReceivingContextConsumer;
 import com.rabbitmq.jms.client.SendingContextConsumer;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.RMQJMSSecurityException;
@@ -126,6 +128,13 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     private SendingContextConsumer sendingContextConsumer = ctx -> {};
 
+    /**
+     * Callback before receiving a message.
+     *
+     * @since 1.11.0
+     */
+    private ReceivingContextConsumer receivingContextConsumer = ctx -> {};
+
     /** Default not to use ssl */
     private boolean ssl = false;
     private String tlsProtocol;
@@ -167,6 +176,13 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * @since 1.10.0
      */
     private List<URI> uris = Collections.EMPTY_LIST;
+
+    /**
+     * Whether <code>replyTo</code> destination for consumed messages should be declared.
+     *
+     * @since 1.11.0
+     */
+    private boolean declareReplyToDestination = true;
 
     /**
      * {@inheritDoc}
@@ -222,6 +238,16 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
         com.rabbitmq.client.Connection rabbitConnection = instantiateNodeConnection(cf, connectionCreator);
 
+        ReceivingContextConsumer rcc;
+        if (this.declareReplyToDestination) {
+            rcc = this.receivingContextConsumer;
+        } else {
+            rcc = ctx -> RMQMessage.doNotDeclareReplyToDestination(ctx.getMessage());
+            if (this.receivingContextConsumer != null) {
+                rcc = rcc.andThen(this.receivingContextConsumer);
+            }
+        }
+
         RMQConnection conn = new RMQConnection(new ConnectionParams()
             .setRabbitConnection(rabbitConnection)
             .setTerminationTimeout(getTerminationTimeout())
@@ -233,6 +259,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose(this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose)
             .setAmqpPropertiesCustomiser(amqpPropertiesCustomiser)
             .setSendingContextConsumer(sendingContextConsumer)
+            .setReceivingContextConsumer(rcc)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
@@ -848,6 +875,35 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     public void setSendingContextConsumer(SendingContextConsumer sendingContextConsumer) {
         this.sendingContextConsumer = sendingContextConsumer;
+    }
+
+    /**
+     * Set callback called before dispatching a received message to application code.
+     * Can be used to customize messages before they handed
+     * over application.
+     *
+     * @param receivingContextConsumer
+     * @see ReceivingContextConsumer
+     * @since 1.11.0
+     */
+    public void setReceivingContextConsumer(ReceivingContextConsumer receivingContextConsumer) {
+        this.receivingContextConsumer = receivingContextConsumer;
+    }
+
+    /**
+     * Whether <code>replyTo</code> destination for consumed messages should be declared.
+     * <p>
+     * Default is <code>true</code>. Set this value to <code>false</code> for the
+     * <b>server-side of RPC</b>, this avoids creating a temporary reply-to destination on
+     * both client and server, leading to an error.
+     * <p>
+     * This is implemented as {@link ReceivingContextConsumer}.
+     *
+     * @see RMQConnectionFactory#setReceivingContextConsumer(ReceivingContextConsumer)
+     * @since 1.11.0
+     */
+    public void setDeclareReplyToDestination(boolean declareReplyToDestination) {
+        this.declareReplyToDestination = declareReplyToDestination;
     }
 
     @FunctionalInterface

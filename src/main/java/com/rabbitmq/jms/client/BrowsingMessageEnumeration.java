@@ -1,4 +1,4 @@
-/* Copyright (c) 2014 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2014-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import java.util.Enumeration;
@@ -14,20 +14,23 @@ class BrowsingMessageEnumeration implements Enumeration<RMQMessage> {
     private static final int BROWSING_CONSUMER_TIMEOUT = 10000; // ms
     private final java.util.Queue<RMQMessage> msgQueue;
 
-    public BrowsingMessageEnumeration(RMQSession session, RMQDestination dest, Channel channel, SqlEvaluator evaluator, int readMax) {
+    public BrowsingMessageEnumeration(RMQSession session, RMQDestination dest, Channel channel, SqlEvaluator evaluator, int readMax,
+            ReceivingContextConsumer receivingContextConsumer) {
         java.util.Queue<RMQMessage> msgQ = new ConcurrentLinkedQueue<RMQMessage>();
-        populateQueue(msgQ, channel, session, dest, evaluator, readMax);
+        populateQueue(msgQ, channel, session, dest, evaluator, readMax, receivingContextConsumer);
         this.msgQueue = msgQ;
     }
 
-    private static void populateQueue(java.util.Queue<RMQMessage> msgQueue, Channel channel, RMQSession session, RMQDestination dest, SqlEvaluator evaluator, int readMax) {
+    private static void populateQueue(java.util.Queue<RMQMessage> msgQueue, Channel channel, RMQSession session, RMQDestination dest, SqlEvaluator evaluator,
+            int readMax, ReceivingContextConsumer receivingContextConsumer) {
         try {
             String destQueueName = dest.getQueueName();
             int qCount = getNumberOfMessages(channel, destQueueName);
             if (qCount > 0) { // we need to read them
                 int messagesExpected = (readMax<=0) ? qCount : Math.min(readMax, qCount);
                 channel.basicQos(messagesExpected); // limit subsequent consumers to the expected number of messages unacknowledged
-                BrowsingConsumer bc = new BrowsingConsumer(channel, session, dest, messagesExpected, msgQueue, evaluator);
+                BrowsingConsumer bc = new BrowsingConsumer(channel, session, dest, messagesExpected, msgQueue,
+                    evaluator, receivingContextConsumer);
                 String consumerTag = channel.basicConsume(destQueueName, bc);
                 if (bc.finishesInTime(BROWSING_CONSUMER_TIMEOUT))
                     return;
