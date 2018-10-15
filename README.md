@@ -26,7 +26,7 @@ Add the following dependency to `pom.xml`:
 <dependency>
   <groupId>com.rabbitmq.jms</groupId>
   <artifactId>rabbitmq-jms</artifactId>
-  <version>1.10.0</version>
+  <version>1.11.0</version>
 </dependency>
 ```
 
@@ -77,7 +77,7 @@ in a separate repository.
 
 ## License and Copyright
 
-(c) Pivotal Software, Inc., 2007-2017.
+(c) Pivotal Software, Inc., 2007-2018.
 
 This package, the RabbitMQ JMS client library, is double-licensed
 under the Apache License version 2 ("ASL") and the Mozilla Public License
