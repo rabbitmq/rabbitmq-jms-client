@@ -11,8 +11,8 @@ import org.junit.jupiter.api.Test;
 
 public class TestTimeTracker {
 
-    private static final long QUANTUM_TIME_NANOS = 1000000L; //one millisecond
-    private static final long SHORT_WAIT_MILLIS = 10; // ten milliseconds
+    private static final long QUANTUM_TIME_NANOS = 1000000L; // one millisecond
+    private static final long SHORT_WAIT_MILLIS = 100; // hundred milliseconds
 
     /**
      * Test TimeTracker constructors.
