@@ -688,7 +688,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         logger.trace("create consumer for destination '{}' with consumerTag '{}' and selector '{}'", dest, consumerTag, jmsSelector);
         declareDestinationIfNecessary(dest);
 
-
         if (!dest.isQueue()) {
             // This is a topic, we need to define a queue, and bind to it.
             // The queue name is distinct for each consumer.
@@ -876,7 +875,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         try { /* Declare the queue to RabbitMQ -- this creates it if it doesn't already exist */
             this.logger.debug("declare RabbitMQ queue name({}), durable({}), exclusive({}), auto-delete({}), properties({})",
                               queueName, durable, exclusive, false, options);
-            System.out.println("passe");
             this.channel.queueDeclare(queueName,
                                       durable,
                                       exclusive,
