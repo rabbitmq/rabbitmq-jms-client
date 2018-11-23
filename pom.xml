@@ -198,6 +198,11 @@
           <systemPropertyVariables>
             <RABBITMQ_VERSION>${rabbitmq.version}</RABBITMQ_VERSION>
           </systemPropertyVariables>
+          <!--
+            needed because of bug in OpenJDK 8 u181 on Debian distros
+            see https://stackoverflow.com/questions/53010200/maven-surefire-could-not-find-forkedbooter-class
+          -->
+          <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
         </configuration>
       </plugin>
 
@@ -238,6 +243,11 @@
           <environmentVariables>
             <DEPS_DIR>${deps.dir}</DEPS_DIR>
           </environmentVariables>
+          <!--
+            needed because of bug in OpenJDK 8 u181 on Debian distros
+            see https://stackoverflow.com/questions/53010200/maven-surefire-could-not-find-forkedbooter-class
+          -->
+          <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
         </configuration>
 
         <executions>
