@@ -680,8 +680,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private RMQMessageConsumer createConsumerInternal(RMQDestination dest, String uuidTag, boolean durableSubscriber, String jmsSelector) throws JMSException {
         String consumerTag = uuidTag != null ? uuidTag : Util.generateUUID("jms-cons-");
         logger.trace("create consumer for destination '{}' with consumerTag '{}' and selector '{}'", dest, consumerTag, jmsSelector);
-
         declareDestinationIfNecessary(dest);
+
 
         if (!dest.isQueue()) {
             // This is a topic, we need to define a queue, and bind to it.
@@ -869,6 +869,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         try { /* Declare the queue to RabbitMQ -- this creates it if it doesn't already exist */
             this.logger.debug("declare RabbitMQ queue name({}), durable({}), exclusive({}), auto-delete({}), properties({})",
                               queueName, durable, exclusive, false, options);
+            System.out.println("passe");
             this.channel.queueDeclare(queueName,
                                       durable,
                                       exclusive,
