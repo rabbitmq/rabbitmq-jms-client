@@ -1,10 +1,12 @@
-/* Copyright (c) 2014 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2014-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Shell is a test utility class for issuing shell commands from integration tests.
@@ -32,12 +34,6 @@ public class Shell {
         return outputSb.toString();
     }
 
-    /*
-    public static String executeControl(String cmd) {
-        return executeCommand(CTLCMD + cmd);
-    }
-    */
-
     public static String capture(InputStream is)
         throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
@@ -52,6 +48,23 @@ public class Shell {
     public static void restartNode() throws IOException {
         executeCommand(rabbitmqctlCommand() + " -n " + nodenameA() + " stop_app");
         executeCommand(rabbitmqctlCommand() + " -n " + nodenameA() + " start_app");
+    }
+
+    public static List<Binding> listBindings(boolean includeDefaults) throws IOException {
+        List<Binding> bindings = new ArrayList<Binding>();
+        Process process = executeCommand(rabbitmqctlCommand() + " -n " + nodenameA() + " list_bindings source_name destination_name routing_key --quiet");
+        String output = capture(process.getInputStream());
+        String[] lines = output.split("\n");
+        if (lines.length > 0) {
+            for (int i = 1; i < lines.length; i++) {
+                String [] fields = lines[i].split("\t");
+                Binding binding = new Binding(fields[0], fields[1], fields[2]);
+                if (includeDefaults || !binding.isDefault()) {
+                    bindings.add(binding);
+                }
+            }
+        }
+        return bindings;
     }
 
     public static Process executeCommand(String command) throws IOException {
@@ -119,5 +132,41 @@ public class Shell {
 
     public static String rabbitmqDir() {
         return System.getProperty("rabbitmq.dir");
+    }
+
+    public static class Binding {
+
+        private final String source, destination, routingKey;
+
+        public Binding(String source, String destination, String routingKey) {
+            this.source = source;
+            this.destination = destination;
+            this.routingKey = routingKey;
+        }
+
+        public String getSource() {
+            return source;
+        }
+
+        public String getDestination() {
+            return destination;
+        }
+
+        public String getRoutingKey() {
+            return routingKey;
+        }
+
+        public boolean isDefault() {
+            return "".equals(source);
+        }
+
+        @Override
+        public String toString() {
+            return "Binding{" +
+                    "source='" + source + '\'' +
+                    ", destination='" + destination + '\'' +
+                    ", routingKey='" + routingKey + '\'' +
+                    '}';
+        }
     }
 }
