@@ -1,17 +1,15 @@
-/* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import javax.jms.DeliveryMode;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-import javax.jms.Topic;
-import javax.jms.TopicPublisher;
-import javax.jms.TopicSession;
-import javax.jms.TopicSubscriber;
-
+import com.rabbitmq.jms.util.Shell;
 import org.junit.jupiter.api.Test;
+
+import javax.jms.*;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Integration test
@@ -37,6 +35,21 @@ public class SimpleTopicMessageIT extends AbstractITTopic {
 
         assertEquals(MESSAGE_TEXT_1, ((TextMessage) receiver1.receive()).getText());
         assertEquals(MESSAGE_TEXT_1, ((TextMessage) receiver2.receive()).getText());
+
+        // check only one binding to each subscriber AMQP queue is created
+        // see https://github.com/rabbitmq/rabbitmq-jms-client/issues/72
+        List<Shell.Binding> bindings = Shell.listBindings(false);
+        List<Shell.Binding> bindingsToTopic = bindings.stream()
+                .filter(b -> b.getRoutingKey().equals(TOPIC_NAME)) // bindings to the topic
+                .collect(toList());
+        assertEquals(2, bindingsToTopic.size());
+        bindingsToTopic.forEach(b -> {
+            String subscriberAmqpQueue = b.getDestination();
+            List<Shell.Binding> subscriberAmqpQueueBinding = bindings.stream()
+                    .filter(topicBinding -> topicBinding.getDestination().equals(subscriberAmqpQueue)) // bindings to this queue
+                    .collect(Collectors.toList());
+            assertEquals(1, subscriberAmqpQueueBinding.size());
+        });
     }
 
     @Test

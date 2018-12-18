@@ -635,7 +635,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     void declareDestinationIfNecessary(RMQDestination destination) throws JMSException {
         if (destination != null && !destination.isAmqp() && !destination.isDeclared()) {
             if (destination.isQueue()) {
-                declareRMQQueue(destination, null, false);
+                declareRMQQueue(destination, null, false, true);
             } else {
                 declareTopic(destination);
             }
@@ -687,7 +687,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             // The queue name is distinct for each consumer.
             try {
                 String queueName = consumerTag;
-                this.declareRMQQueue(dest, queueName, durableSubscriber);
+                this.declareRMQQueue(dest, queueName, durableSubscriber, false);
                 if (nullOrEmpty(jmsSelector)) {
                     // bind the queue to the exchange with the correct routing key
                     this.channel.queueBind(queueName, dest.getAmqpExchangeName(), dest.getAmqpRoutingKey());
@@ -806,7 +806,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public Queue createQueue(String queueName) throws JMSException {
         illegalStateExceptionIfClosed();
         RMQDestination dest = new RMQDestination(queueName, true, false);
-        declareRMQQueue(dest, null, false);
+        declareRMQQueue(dest, null, false, true);
         return dest;
     }
 
@@ -818,7 +818,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @param durableSubscriber - true if the subscriber ius
      * @throws JMSException if an IOException occurs in the {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)} call
      */
-    private void declareRMQQueue(RMQDestination dest, String queueNameOverride, boolean durableSubscriber) throws JMSException {
+    private void declareRMQQueue(RMQDestination dest, String queueNameOverride, boolean durableSubscriber, boolean bind) throws JMSException {
         logger.trace("declare RabbitMQ queue for destination '{}', explicitName '{}', durableSubscriber={}", dest, queueNameOverride, durableSubscriber);
         String queueName = queueNameOverride!=null ? queueNameOverride : dest.getQueueName();
 
@@ -881,16 +881,18 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             throw new RMQJMSException(x);
         }
 
-        try { /* Bind the queue to our exchange -- this allows publications to succeed. */
-            this.logger.debug("bind queue name({}), to exchange({}), with r-key({}), no arguments",
-                              queueName, exchangeName, queueName);
-            this.channel.queueBind(queueName, exchangeName,
-                                   queueName, // routing key
-                                   null); // arguments
-        } catch (Exception x) {
-            this.logger.error("RabbitMQ exception on queue declare name({}), durable({}), exclusive({}), auto-delete({}), properties({})",
-                              queueName, durable, exclusive, false, options, x);
-            throw new RMQJMSException(x);
+        if (bind) {
+            try { /* Bind the queue to our exchange -- this allows publications to succeed. */
+                this.logger.debug("bind queue name({}), to exchange({}), with r-key({}), no arguments",
+                        queueName, exchangeName, queueName);
+                this.channel.queueBind(queueName, exchangeName,
+                        queueName, // routing key
+                        null); // arguments
+            } catch (Exception x) {
+                this.logger.error("RabbitMQ exception on queue declare name({}), durable({}), exclusive({}), auto-delete({}), properties({})",
+                        queueName, durable, exclusive, false, options, x);
+                throw new RMQJMSException(x);
+            }
         }
         dest.setDeclared(true);
     }
