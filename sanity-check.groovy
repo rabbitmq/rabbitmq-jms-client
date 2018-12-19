@@ -26,9 +26,11 @@ try {
     message = queueReceiver.receive(5000)
     if (message == null)
         throw new IllegalStateException("Didn't receive message in 5 seconds")
-    LoggerFactory.getLogger("rabbitmq").info("Test succeeded")
+    LoggerFactory.getLogger("rabbitmq").info("Test succeeded with JMS Client {}",
+            RMQConnectionFactory.package.getImplementationVersion())
     System.exit 0
 } catch (Exception e) {
-    LoggerFactory.getLogger("rabbitmq").info("Test failed", e)
+    LoggerFactory.getLogger("rabbitmq").info("Test failed with JMS Client {}",
+            RMQConnectionFactory.package.getImplementationVersion(), e)
     System.exit 1
 }
