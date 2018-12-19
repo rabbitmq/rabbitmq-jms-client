@@ -10,7 +10,7 @@ a RabbitMQ server plugin.
 
 ## Installation
 
-### With Maven
+### With Maven or Gradle
 
 This package is published to several Maven package repositories:
 
@@ -20,14 +20,20 @@ This package is published to several Maven package repositories:
  * [Sonatype OSS snapshot repository](https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/jms/rabbitmq-jms/) for snapshots
  
 
-Add the following dependency to `pom.xml`:
+Add the following to `pom.xml` for Maven:
 
 ``` xml
 <dependency>
   <groupId>com.rabbitmq.jms</groupId>
   <artifactId>rabbitmq-jms</artifactId>
-  <version>1.11.0</version>
+  <version>1.11.1</version>
 </dependency>
+```
+
+Or the following to `build.gradle` for Gradle:
+
+```
+compile 'com.rabbitmq.jms:rabbitmq-jms:1.11.1'
 ```
 
 ### Building from Source
