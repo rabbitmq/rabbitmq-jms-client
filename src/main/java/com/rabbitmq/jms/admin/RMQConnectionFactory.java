@@ -274,8 +274,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.username = username;
         this.password = password;
         com.rabbitmq.client.ConnectionFactory cf = createConnectionFactory();
-        setRabbitUri(logger, this, cf, getUri());
         maybeEnableTLS(cf);
+        setRabbitUri(logger, this, cf, getUri());
         maybeEnableHostnameVerification(cf);
         cf.setMetricsCollector(this.metricsCollector);
         if (this.amqpConnectionFactoryPostProcessor != null) {
@@ -384,6 +384,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         if (uriString != null && !uriString.trim().isEmpty()) {
             // Create a temp factory and set the properties by uri
             com.rabbitmq.client.ConnectionFactory factory = createConnectionFactory();
+            // Generates a TrustEverythingTrustManager warning which can be ignored as the SSLContext is not copied over
             setRabbitUri(logger, this, factory, uriString);
             // Now extract our properties from this factory, leaving the rest unchanged.
             this.host = factory.getHost();
