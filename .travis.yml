@@ -18,10 +18,12 @@ addons:
       - sourceline: 'ppa:deadsnakes/ppa'
 
     packages:
-      - esl-erlang=1:21.2
+      - esl-erlang=1:21.2.4-1
 before_install:
   - sudo apt-get update
   - sudo apt-get install python3.7
+  - curl -s https://packagecloud.io/install/repositories/rabbitmq/rabbitmq-server/script.deb.sh | sudo bash
+  - sudo apt-get install rabbitmq-server=3.7.10-1
 branches:
   only:
     - master
