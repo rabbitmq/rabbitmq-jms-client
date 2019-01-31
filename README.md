@@ -26,14 +26,14 @@ Add the following to `pom.xml` for Maven:
 <dependency>
   <groupId>com.rabbitmq.jms</groupId>
   <artifactId>rabbitmq-jms</artifactId>
-  <version>1.11.1</version>
+  <version>1.11.2</version>
 </dependency>
 ```
 
 Or the following to `build.gradle` for Gradle:
 
 ```
-compile 'com.rabbitmq.jms:rabbitmq-jms:1.11.1'
+compile 'com.rabbitmq.jms:rabbitmq-jms:1.11.2'
 ```
 
 ### Building from Source
@@ -83,7 +83,7 @@ in a separate repository.
 
 ## License and Copyright
 
-(c) Pivotal Software, Inc., 2007-2018.
+(c) Pivotal Software, Inc., 2007-2019.
 
 This package, the RabbitMQ JMS client library, is double-licensed
 under the Apache License version 2 ("ASL") and the Mozilla Public License
