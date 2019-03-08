@@ -14,7 +14,7 @@ a RabbitMQ server plugin.
 
 This package is published to several Maven package repositories:
 
- * [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.rabbitmq.jms%22%20AND%20a%3A%22rabbitmq-jms%22)
+ * [Maven Central](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.rabbitmq.jms%22%20AND%20a%3A%22rabbitmq-jms%22)
  * [RabbitMQ Maven Release repository](https://bintray.com/rabbitmq/maven) on Bintray
  * [RabbitMQ Maven Milestones repository](https://bintray.com/rabbitmq/maven-milestones) on Bintray
  * [Sonatype OSS snapshot repository](https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/jms/rabbitmq-jms/) for snapshots
