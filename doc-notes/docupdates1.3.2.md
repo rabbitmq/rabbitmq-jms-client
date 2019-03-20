@@ -70,7 +70,7 @@ Here is a complete list of the attributes/properties available:
       <code>username</code>, <code>password</code> and <code>virtualHost</code> properties in a single string.
       Both ‘amqp’ and ‘amqps’ schemes are
       accepted, which set the <code>ssl</code> property.
-      See the <a href="http://www.rabbitmq.com/uri-spec.html">amqp uri spec</a> on the public RabbitMQ site for details. <b><i>Note:</i></b> this
+      See the <a href="https://www.rabbitmq.com/uri-spec.html">amqp uri spec</a> on the public RabbitMQ site for details. <b><i>Note:</i></b> this
       property, if present, is applied first. The other attributes, if present, will override the ones set in <code>uri</code>.
       There is no default value, if not present it is not set.
     </td>

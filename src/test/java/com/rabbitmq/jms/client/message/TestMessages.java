@@ -190,7 +190,7 @@ public class TestMessages {
         assertEquals(Float.MAX_VALUE, message.getFloat("float"), 1e-20D);
 
         // we must cast to get the same precision error -
-        // http://en.wikipedia.org/wiki/Floating_point
+        // https://en.wikipedia.org/wiki/Floating_point
         assertEquals((double) Float.MAX_VALUE, message.getDouble("float"), 1e-20D);
         assertEquals(Float.MAX_VALUE, message.getFloat("string.float"), 1e-20D);
 
