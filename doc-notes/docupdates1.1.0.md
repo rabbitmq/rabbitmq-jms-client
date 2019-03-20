@@ -239,7 +239,7 @@ Here is a complete list of the attributes/properties available:
       The AMQP URI string used to establish a RabbitMQ connection. The value can encode the <code>host</code>, <code>port</code>,
       <code>userid</code>, <code>password</code> and <code>virtualHost</code> in a single string. Both ‘amqp’ and ‘amqps’ schemes are
       accepted.
-      See the <a href="http://www.rabbitmq.com/uri-spec.html">amqp uri spec</a> on the public RabbitMQ site for details. Note: this
+      See the <a href="https://www.rabbitmq.com/uri-spec.html">amqp uri spec</a> on the public RabbitMQ site for details. Note: this
       property sets other properties and the set order is unspecified.
     </td>
   </tr>

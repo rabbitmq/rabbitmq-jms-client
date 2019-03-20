@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * JNDI Factory to create resources in containers such as <a href="http://tomcat.apache.org">Tomcat</a>.
+ * JNDI Factory to create resources in containers such as <a href="https://tomcat.apache.org">Tomcat</a>.
  * <p>
  * An example Tomcat configuration for a {@link ConnectionFactory} would look like:
  * </p>
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  *           virtualHost=&quot;/&quot;
  *           host=&quot;localhost&quot;/&gt;
  * </pre>
- * <p>Alternatively, a <a href="http://www.rabbitmq.com/uri-spec.html">AMQP uri</a> can be used:
+ * <p>Alternatively, a <a href="https://www.rabbitmq.com/uri-spec.html">AMQP uri</a> can be used:
  * </p>
  * <pre>
  * &lt;Resource name=&quot;jms/ConnectionFactory&quot; type=&quot;javax.jms.ConnectionFactory&quot;
