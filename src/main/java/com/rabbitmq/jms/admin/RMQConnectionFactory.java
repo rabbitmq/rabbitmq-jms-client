@@ -462,7 +462,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * Enables TLS on opened connections using the provided TLS protocol
      * version.
      * @param protocol TLS or SSL protocol version.
-     * @see <a href="http://docs.oracle.com/javase/7/docs/technotes/guides/security/SunProviders.html#SunJSSEProvider">JDK documentation on protocol names</a>
+     * @see <a href="https://docs.oracle.com/javase/7/docs/technotes/guides/security/SunProviders.html#SunJSSEProvider">JDK documentation on protocol names</a>
      */
     public void useSslProtocol(String protocol)
     {

@@ -39,14 +39,14 @@ import java.util.Arrays;
  * <b>URI Specification</b>
  * </p>
  * <p>
- * <a href="http://tools.ietf.org/pdf/rfc2396.pdf">RFC 2396 - Uniform Resource Identifiers (URI): Generic Syntax</a>
- * is obsoleted by <a href="http://tools.ietf.org/pdf/rfc3986.pdf">RFC 3986 -
+ * <a href="https://tools.ietf.org/pdf/rfc2396.pdf">RFC 2396 - Uniform Resource Identifiers (URI): Generic Syntax</a>
+ * is obsoleted by <a href="https://tools.ietf.org/pdf/rfc3986.pdf">RFC 3986 -
  * Uniform Resource Identifier (URI): Generic Syntax</a> which describes in (A)BNF the
  * valid form of an <i>encoded</i> URI.
  * </p>
  * <p>
- * Here is the appendix from <a href="http://tools.ietf.org/pdf/rfc3986.pdf">RFC 3986</a> which gives the ABNF.
- * ABNF itself is defined in <a href="http://tools.ietf.org/pdf/rfc2234.pdf">RFC
+ * Here is the appendix from <a href="https://tools.ietf.org/pdf/rfc3986.pdf">RFC 3986</a> which gives the ABNF.
+ * ABNF itself is defined in <a href="https://tools.ietf.org/pdf/rfc2234.pdf">RFC
  * 2234 - Augmented BNF for Syntax Specifications: ABNF</a> where furthermore the following
  * non-terminals are defined: <code>ALPHA</code> (letters), <code>DIGIT</code> (decimal digits), and
  * <code>HEXDIG</code> (hexadecimal digits).
