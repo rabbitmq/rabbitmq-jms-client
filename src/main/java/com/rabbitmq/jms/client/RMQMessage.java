@@ -1385,7 +1385,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         if (null!=da)   this.setJMSTimestamp(da.getTime()/1000l);  // JMS timestamps are the number of *seconds* since jan 1 1900
 
         String ex = props.getExpiration();  // this is a time-to-live period in milliseconds, as a Long.toString(long, 10)
-        if (null!=ex)   this.setJMSExpiration(RMQMessage.jmsExpiration(ex, da));
+        this.setJMSExpiration(RMQMessage.jmsExpiration(ex, da));
 
         Integer pr = props.getPriority();
         if (null!=pr)   this.setJMSPriority(pr);
