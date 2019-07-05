@@ -76,7 +76,7 @@ public class SslContextIT {
 
     private static SSLContext createSslContext() throws NoSuchAlgorithmException {
         String[] protocols = SSLContext.getDefault().getSupportedSSLParameters().getProtocols();
-        String protocol = com.rabbitmq.client.ConnectionFactory.computeDefaultTlsProcotol(protocols);
+        String protocol = com.rabbitmq.client.ConnectionFactory.computeDefaultTlsProtocol(protocols);
         return SSLContext.getInstance(protocol);
     }
 
