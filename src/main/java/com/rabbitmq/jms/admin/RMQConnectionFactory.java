@@ -512,7 +512,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     public void useSslProtocol() throws NoSuchAlgorithmException {
         this.useSslProtocol(
-            com.rabbitmq.client.ConnectionFactory.computeDefaultTlsProcotol(
+            com.rabbitmq.client.ConnectionFactory.computeDefaultTlsProtocol(
                 SSLContext.getDefault().getSupportedSSLParameters().getProtocols()));
     }
 
