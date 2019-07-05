@@ -45,13 +45,13 @@
     <slf4j-api.version>1.7.25</slf4j-api.version>
     <httpclient.version>4.5.6</httpclient.version>
     <junit.version>4.12</junit.version>
-    <mockito-core.version>2.21.0</mockito-core.version>
-    <awaitility.version>3.1.2</awaitility.version>
+    <mockito-core.version>2.28.2</mockito-core.version>
+    <awaitility.version>3.1.6</awaitility.version>
 
     <maven.dependency.plugin.version>2.8</maven.dependency.plugin.version>
     <maven.compiler.plugin.version>3.7.0</maven.compiler.plugin.version>
-    <maven.surefire.plugin.version>2.22.0</maven.surefire.plugin.version>
-    <maven.failsafe.plugin.version>2.22.0</maven.failsafe.plugin.version>
+    <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
+    <maven.failsafe.plugin.version>2.22.2</maven.failsafe.plugin.version>
     <maven.jar.plugin.version>3.0.2</maven.jar.plugin.version>
     <build.helper.maven.plugin.version>1.12</build.helper.maven.plugin.version>
     <maven.antrun.plugin.version>1.8</maven.antrun.plugin.version>
