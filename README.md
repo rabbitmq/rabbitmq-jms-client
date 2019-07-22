@@ -26,7 +26,7 @@ Add the following to `pom.xml` for Maven:
 <dependency>
   <groupId>com.rabbitmq.jms</groupId>
   <artifactId>rabbitmq-jms</artifactId>
-  <version>1.11.2</version>
+  <version>1.12.0</version>
 </dependency>
 ```
 
