@@ -33,7 +33,7 @@ Add the following to `pom.xml` for Maven:
 Or the following to `build.gradle` for Gradle:
 
 ```
-compile 'com.rabbitmq.jms:rabbitmq-jms:1.11.2'
+compile 'com.rabbitmq.jms:rabbitmq-jms:1.12.0'
 ```
 
 ### Building from Source
