@@ -1,10 +1,10 @@
-/* Copyright (c) 2013-2018 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2019 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Address;
+import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.MetricsCollector;
-import com.rabbitmq.client.NoOpMetricsCollector;
 import com.rabbitmq.jms.client.*;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.RMQJMSSecurityException;
@@ -27,6 +27,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
+import static com.rabbitmq.jms.util.UriCodec.*;
 
 import static com.rabbitmq.jms.util.UriCodec.*;
 
@@ -100,21 +102,21 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      *
      * @since 1.10.0
      */
-    private Consumer<com.rabbitmq.client.ConnectionFactory> amqpConnectionFactoryPostProcessor = cf -> {};
+    private Consumer<com.rabbitmq.client.ConnectionFactory> amqpConnectionFactoryPostProcessor = new NoOpSerializableConsumer<>();
 
     /**
      * Callback before sending a message.
      *
      * @since 1.11.0
      */
-    private SendingContextConsumer sendingContextConsumer = ctx -> {};
+    private SendingContextConsumer sendingContextConsumer = new NoOpSerializableSendingContextConsumer();
 
     /**
      * Callback before receiving a message.
      *
      * @since 1.11.0
      */
-    private ReceivingContextConsumer receivingContextConsumer = ctx -> {};
+    private ReceivingContextConsumer receivingContextConsumer = new NoOpSerializableReceivingContextConsumer();
 
     /**
      * Callback to be notified of publisher confirms.
@@ -924,6 +926,95 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     @FunctionalInterface
     private interface ConnectionCreator {
         com.rabbitmq.client.Connection create(com.rabbitmq.client.ConnectionFactory cf) throws Exception;
+    }
+
+    private static final class NoOpMetricsCollector implements MetricsCollector, Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void newConnection(com.rabbitmq.client.Connection connection) {
+
+        }
+
+        @Override
+        public void closeConnection(com.rabbitmq.client.Connection connection) {
+
+        }
+
+        @Override
+        public void newChannel(Channel channel) {
+
+        }
+
+        @Override
+        public void closeChannel(Channel channel) {
+
+        }
+
+        @Override
+        public void basicPublish(Channel channel) {
+
+        }
+
+        @Override
+        public void consumedMessage(Channel channel, long deliveryTag, boolean autoAck) {
+
+        }
+
+        @Override
+        public void consumedMessage(Channel channel, long deliveryTag, String consumerTag) {
+
+        }
+
+        @Override
+        public void basicAck(Channel channel, long deliveryTag, boolean multiple) {
+
+        }
+
+        @Override
+        public void basicNack(Channel channel, long deliveryTag) {
+
+        }
+
+        @Override
+        public void basicReject(Channel channel, long deliveryTag) {
+
+        }
+
+        @Override
+        public void basicConsume(Channel channel, String consumerTag, boolean autoAck) {
+
+        }
+
+        @Override
+        public void basicCancel(Channel channel, String consumerTag) {
+
+        }
+    }
+
+    private static final class NoOpSerializableConsumer<T> implements Consumer<T>, Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void accept(T t) { }
+    }
+
+    private static final class NoOpSerializableSendingContextConsumer implements SendingContextConsumer, Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void accept(SendingContext sendingContext) { }
+    }
+
+    private static final class NoOpSerializableReceivingContextConsumer implements ReceivingContextConsumer, Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void accept(ReceivingContext receivingContext) { }
     }
 }
 
