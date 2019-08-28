@@ -13,6 +13,8 @@ import javax.naming.CompositeName;
 import javax.naming.RefAddr;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
@@ -22,15 +24,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.both;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.lessThanOrEqualTo;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 public class RMQConnectionFactoryTest {
@@ -285,6 +280,16 @@ public class RMQConnectionFactoryTest {
         assertEquals(1, callCount.get());
         rmqCf.createConnection();
         assertEquals(2, callCount.get());
+    }
+
+    @Test
+    public void shouldBeSerializable() throws Exception {
+        RMQConnectionFactory cf = new RMQConnectionFactory();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+        objectOutputStream.writeObject(cf);
+        objectOutputStream.flush();
+        objectOutputStream.close();
     }
 
     class TestRmqConnectionFactory extends RMQConnectionFactory {
