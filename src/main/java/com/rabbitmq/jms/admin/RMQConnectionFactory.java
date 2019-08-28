@@ -4,37 +4,15 @@ package com.rabbitmq.jms.admin;
 import com.rabbitmq.client.Address;
 import com.rabbitmq.client.MetricsCollector;
 import com.rabbitmq.client.NoOpMetricsCollector;
-import com.rabbitmq.jms.client.AbstractReceivingContextConsumer;
-import com.rabbitmq.jms.client.AmqpConnectionFactoryPostProcessor;
-import com.rabbitmq.jms.client.AmqpPropertiesCustomiser;
-import com.rabbitmq.jms.client.ConnectionParams;
-import com.rabbitmq.jms.client.RMQConnection;
-import com.rabbitmq.jms.client.RMQMessage;
-import com.rabbitmq.jms.client.ReceivingContext;
-import com.rabbitmq.jms.client.ReceivingContextConsumer;
-import com.rabbitmq.jms.client.SendingContext;
-import com.rabbitmq.jms.client.SendingContextConsumer;
+import com.rabbitmq.jms.client.*;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.RMQJMSSecurityException;
 import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
-import javax.jms.TopicConnection;
-import javax.jms.TopicConnectionFactory;
-import javax.naming.NamingException;
-import javax.naming.RefAddr;
-import javax.naming.Reference;
-import javax.naming.Referenceable;
-import javax.naming.StringRefAddr;
+import javax.jms.*;
+import javax.naming.*;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
@@ -47,9 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import static com.rabbitmq.jms.util.UriCodec.encHost;
-import static com.rabbitmq.jms.util.UriCodec.encSegment;
-import static com.rabbitmq.jms.util.UriCodec.encUserinfo;
+import static com.rabbitmq.jms.util.UriCodec.*;
 
 /**
  * RabbitMQ Implementation of JMS {@link ConnectionFactory}
@@ -155,6 +131,21 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         @Override
         public void accept(ReceivingContext ctx) { }
     };
+
+    /**
+     * Callback to be notified of publisher confirms.
+     * <p>
+     * When this property is set, publisher confirms are enabled for all
+     * the underlying AMQP {@link com.rabbitmq.client.Channel}s created by
+     * this {@link ConnectionFactory}.
+     *
+     * @see <a href="https://www.rabbitmq.com/confirms.html#publisher-confirms">Publisher Confirms</a>
+     * @see <a href="https://www.rabbitmq.com/publishers.html#data-safety">Publisher Guide</a>
+     * @see ConfirmListener
+     * @since 1.13.0
+     */
+    private ConfirmListener confirmListener;
+
 
     /** Default not to use ssl */
     private boolean ssl = false;
@@ -312,6 +303,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setThrowExceptionOnConsumerStartFailure(this.throwExceptionOnConsumerStartFailure)
             .setSendingContextConsumer(sendingContextConsumer)
             .setReceivingContextConsumer(rcc)
+            .setConfirmListener(confirmListener)
         );
         conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
@@ -964,10 +956,6 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.throwExceptionOnConsumerStartFailure = throwExceptionOnConsumerStartFailure;
     }
 
-    private interface ConnectionCreator {
-        com.rabbitmq.client.Connection create(com.rabbitmq.client.ConnectionFactory cf) throws Exception;
-    }
-
     /**
      * Set callback called before sending a message.
      * Can be used to customize the message or the destination
@@ -1008,6 +996,27 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     public void setDeclareReplyToDestination(boolean declareReplyToDestination) {
         this.declareReplyToDestination = declareReplyToDestination;
+    }
+
+    /**
+     * Set the callback to be notified of publisher confirms.
+     * <p>
+     * When this property is set, publisher confirms are enabled for all
+     * the underlying AMQP {@link com.rabbitmq.client.Channel}s created by
+     * this {@link ConnectionFactory}.
+     *
+     * @param confirmListener the callback
+     * @see <a href="https://www.rabbitmq.com/confirms.html#publisher-confirms">Publisher Confirms</a>
+     * @see <a href="https://www.rabbitmq.com/publishers.html#data-safety">Publisher Guide</a>
+     * @see ConfirmListener
+     * @since 1.13.0
+     */
+    public void setConfirmListener(ConfirmListener confirmListener) {
+        this.confirmListener = confirmListener;
+    }
+
+    private interface ConnectionCreator {
+        com.rabbitmq.client.Connection create(com.rabbitmq.client.ConnectionFactory cf) throws Exception;
     }
 
 }

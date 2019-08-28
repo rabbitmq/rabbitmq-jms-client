@@ -105,7 +105,7 @@ public class RMQMessageProducerTest {
         }
 
         @Override
-        protected void sendJMSMessage(RMQDestination destination, RMQMessage msg, int deliveryMode, int priority, long timeToLive) throws JMSException {
+        protected void sendJMSMessage(RMQDestination destination, RMQMessage msg, Message originalMessage, int deliveryMode, int priority, long timeToLive) throws JMSException {
             this.message = msg;
         }
     }

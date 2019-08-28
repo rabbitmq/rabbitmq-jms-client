@@ -126,6 +126,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private final ReceivingContextConsumer receivingContextConsumer;
 
+    private final PublishingListener publishingListener;
+
     /** The main RabbitMQ channel we use under the hood */
     private final Channel channel;
     /** Set to true if close() has been called and completed */
@@ -236,6 +238,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
         try {
             this.channel = connection.createRabbitChannel(transacted);
+            if (sessionParams.getConfirmListener() != null) {
+                this.publishingListener = PublisherConfirmsUtils.configurePublisherConfirmsSupport(
+                        this.channel, sessionParams.getConfirmListener()
+                );
+            } else {
+                this.publishingListener = null;
+            }
         } catch (Exception x) { // includes unchecked exceptions, e.g. ShutdownSignalException
             throw new RMQJMSException(x);
         }
@@ -633,7 +642,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         RMQDestination dest = (RMQDestination) destination;
         declareDestinationIfNecessary(dest);
         RMQMessageProducer producer = new RMQMessageProducer(this, dest, this.preferProducerMessageProperty,
-            this.amqpPropertiesCustomiser, this.sendingContextConsumer);
+            this.amqpPropertiesCustomiser, this.sendingContextConsumer, this.publishingListener);
         this.producers.add(producer);
         return producer;
     }

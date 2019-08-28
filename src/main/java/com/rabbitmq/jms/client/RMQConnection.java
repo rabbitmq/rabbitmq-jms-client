@@ -140,6 +140,13 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private final ReceivingContextConsumer receivingContextConsumer;
 
     /**
+     * Callback for publisher confirms.
+     *
+     * @since 1.13.0
+     */
+    private final ConfirmListener confirmListener;
+
+    /**
      * Classes in these packages can be transferred via ObjectMessage.
      *
      * @see WhiteListObjectInputStream
@@ -166,6 +173,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.throwExceptionOnConsumerStartFailure = connectionParams.willThrowExceptionOnConsumerStartFailure();
         this.sendingContextConsumer = connectionParams.getSendingContextConsumer();
         this.receivingContextConsumer = connectionParams.getReceivingContextConsumer();
+        this.confirmListener = connectionParams.getConfirmListener();
     }
 
     /**
@@ -218,6 +226,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setThrowExceptionOnConsumerStartFailure(this.throwExceptionOnConsumerStartFailure)
             .setSendingContextConsumer(this.sendingContextConsumer)
             .setReceivingContextConsumer(this.receivingContextConsumer)
+            .setConfirmListener(this.confirmListener)
         );
         session.setTrustedPackages(this.trustedPackages);
         this.sessions.add(session);
@@ -404,6 +413,9 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         }
         if (transactional) {
             channel.txSelect();
+        }
+        if (this.confirmListener != null) {
+            channel.confirmSelect();
         }
         return channel;
     }
