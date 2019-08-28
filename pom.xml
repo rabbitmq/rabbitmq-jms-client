@@ -46,6 +46,7 @@
     <junit.jupiter.version>5.5.1</junit.jupiter.version>
     <mockito-core.version>3.0.0</mockito-core.version>
     <awaitility.version>3.1.6</awaitility.version>
+    <assertj.version>3.13.2</assertj.version>
     <spring.version>5.1.8.RELEASE</spring.version>
 
     <maven.dependency.plugin.version>2.8</maven.dependency.plugin.version>
@@ -152,6 +153,12 @@
       <groupId>org.awaitility</groupId>
       <artifactId>awaitility</artifactId>
       <version>${awaitility.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>${assertj.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

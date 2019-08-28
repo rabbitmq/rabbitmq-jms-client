@@ -2,6 +2,7 @@
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
@@ -74,9 +75,12 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     private final SendingContextConsumer sendingContextConsumer;
 
-    public RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty,
-            BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser,
-            SendingContextConsumer sendingContextConsumer) {
+    private final BeforePublishingCallback beforePublishingCallback;
+
+    RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty,
+                              BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser,
+                              SendingContextConsumer sendingContextConsumer,
+                              PublishingListener publishingListener) {
         this.session = session;
         this.destination = destination;
         if (preferProducerMessageProperty) {
@@ -86,6 +90,17 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         }
         this.amqpPropertiesCustomiser = amqpPropertiesCustomiser == null ? (builder, message) -> builder : amqpPropertiesCustomiser;
         this.sendingContextConsumer = sendingContextConsumer == null ? ctx -> {} : sendingContextConsumer;
+        if (publishingListener == null) {
+            this.beforePublishingCallback = (message, channel) -> {};
+        } else {
+            this.beforePublishingCallback = (message, channel) -> publishingListener.publish(message, channel.getNextPublishSeqNo());
+        }
+    }
+
+    public RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty,
+            BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser,
+            SendingContextConsumer sendingContextConsumer) {
+        this(session, destination, preferProducerMessageProperty, amqpPropertiesCustomiser, sendingContextConsumer, null);
     }
 
     public RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty,
@@ -291,13 +306,13 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
         /* Now send it */
         if (destination.isAmqp()) {
-            sendAMQPMessage(destination, rmqMessage, deliveryMode, priority, ttl);
+            sendAMQPMessage(destination, rmqMessage, message, deliveryMode, priority, ttl);
         } else {
-            sendJMSMessage(destination, rmqMessage, deliveryMode, priority, ttl);
+            sendJMSMessage(destination, rmqMessage, message, deliveryMode, priority, ttl);
         }
     }
 
-    private void sendAMQPMessage(RMQDestination destination, RMQMessage msg, int deliveryMode, int priority, long timeToLive) throws JMSException {
+    private void sendAMQPMessage(RMQDestination destination, RMQMessage msg, Message originalMessage, int deliveryMode, int priority, long timeToLive) throws JMSException {
         if (!destination.amqpWritable()) {
             this.logger.error("Cannot write to AMQP destination {}", destination);
             throw new RMQJMSException("Cannot write to AMQP destination", new UnsupportedOperationException("MessageProducer.send to undefined AMQP resource"));
@@ -318,6 +333,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
                 byte[] data = msg.toAmqpByteArray();
 
+                this.beforePublishingCallback.beforePublishing(originalMessage, this.session.getChannel());
                 this.session.getChannel().basicPublish(destination.getAmqpExchangeName(), destination.getAmqpRoutingKey(), bob.build(), data);
             } catch (IOException x) {
                 throw new RMQJMSException(x);
@@ -329,7 +345,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     }
 
     // protected for testing
-    protected void sendJMSMessage(RMQDestination destination, RMQMessage msg, int deliveryMode, int priority, long timeToLive) throws JMSException {
+    protected void sendJMSMessage(RMQDestination destination, RMQMessage msg, Message originalMessage, int deliveryMode, int priority, long timeToLive) throws JMSException {
         this.session.declareDestinationIfNecessary(destination);
         try {
             AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
@@ -343,6 +359,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
             byte[] data = msg.toByteArray();
 
+            this.beforePublishingCallback.beforePublishing(originalMessage, this.session.getChannel());
             this.session.getChannel().basicPublish(destination.getAmqpExchangeName(), destination.getAmqpRoutingKey(), bob.build(), data);
         } catch (IOException x) {
             throw new RMQJMSException(x);
@@ -509,6 +526,12 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     private enum MessageExpirationType {
         TTL, EXPIRATION
+    }
+
+    interface BeforePublishingCallback {
+
+        void beforePublishing(Message message, Channel channel);
+
     }
 
 }

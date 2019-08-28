@@ -74,6 +74,13 @@ public class SessionParams {
      */
     private ReceivingContextConsumer receivingContextConsumer;
 
+    /**
+     * Callback for publisher confirms.
+     *
+     * @since 1.13.0
+     */
+    private ConfirmListener confirmListener;
+
     public RMQConnection getConnection() {
         return connection;
     }
@@ -171,5 +178,14 @@ public class SessionParams {
 
     public ReceivingContextConsumer getReceivingContextConsumer() {
         return receivingContextConsumer;
+    }
+
+    public SessionParams setConfirmListener(ConfirmListener confirmListener) {
+        this.confirmListener = confirmListener;
+        return this;
+    }
+
+    public ConfirmListener getConfirmListener() {
+        return confirmListener;
     }
 }
