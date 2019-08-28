@@ -78,6 +78,13 @@ public class ConnectionParams {
      */
     private ReceivingContextConsumer receivingContextConsumer;
 
+    /**
+     * Callback for publisher confirms.
+     *
+     * @since 1.13.0
+     */
+    private ConfirmListener confirmListener;
+
     public Connection getRabbitConnection() {
         return rabbitConnection;
     }
@@ -175,5 +182,14 @@ public class ConnectionParams {
     public ConnectionParams setReceivingContextConsumer(ReceivingContextConsumer receivingContextConsumer) {
         this.receivingContextConsumer = receivingContextConsumer;
         return this;
+    }
+
+    public ConnectionParams setConfirmListener(ConfirmListener confirmListener) {
+        this.confirmListener = confirmListener;
+        return this;
+    }
+
+    public ConfirmListener getConfirmListener() {
+        return confirmListener;
     }
 }
