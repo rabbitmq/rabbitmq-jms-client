@@ -7,7 +7,6 @@ import com.rabbitmq.client.AddressResolver;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.jms.client.AmqpConnectionFactoryPostProcessor;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -15,6 +14,8 @@ import javax.naming.CompositeName;
 import javax.naming.RefAddr;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
@@ -289,6 +290,16 @@ public class RMQConnectionFactoryTest {
         assertEquals(1, callCount.get());
         rmqCf.createConnection();
         assertEquals(2, callCount.get());
+    }
+
+    @Test
+    public void shouldBeSerializable() throws Exception {
+        RMQConnectionFactory cf = new RMQConnectionFactory();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+        objectOutputStream.writeObject(cf);
+        objectOutputStream.flush();
+        objectOutputStream.close();
     }
 
     class TestRmqConnectionFactory extends RMQConnectionFactory {

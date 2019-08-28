@@ -20,7 +20,6 @@ package com.rabbitmq.jms.client;
  * @see com.rabbitmq.jms.admin.RMQConnectionFactory#setConfirmListener(ConfirmListener)
  * @since 1.13.0
  */
-@FunctionalInterface
 public interface ConfirmListener {
 
     /**
