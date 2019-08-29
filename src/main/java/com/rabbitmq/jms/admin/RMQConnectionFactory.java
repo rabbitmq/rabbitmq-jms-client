@@ -30,8 +30,6 @@ import java.util.stream.Collectors;
 
 import static com.rabbitmq.jms.util.UriCodec.*;
 
-import static com.rabbitmq.jms.util.UriCodec.*;
-
 /**
  * RabbitMQ Implementation of JMS {@link ConnectionFactory}
  * TODO - implement SslContext option
