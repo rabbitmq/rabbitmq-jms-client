@@ -41,7 +41,7 @@
   </scm>
 
   <properties>
-    <rabbitmq.version>4.11.2</rabbitmq.version>
+    <rabbitmq.version>4.11.3</rabbitmq.version>
     <slf4j-api.version>1.7.26</slf4j-api.version>
     <httpclient.version>4.5.9</httpclient.version>
     <junit.version>4.12</junit.version>
