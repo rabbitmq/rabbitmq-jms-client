@@ -219,13 +219,6 @@
           </execution>
         </executions>
         <configuration>
-          <ignores>
-            <!--
-              To avoid failure because of call to SSLParameters#setEndpointIdentificationAlgorithm (Java 7)
-              It is mentioned in the Javadoc that the class making this call requires Java 7.
-            -->
-<!--            <ignore>javax.net.ssl.SSLParameters</ignore>-->
-          </ignores>
           <signature>
             <groupId>org.codehaus.mojo.signature</groupId>
             <artifactId>java16</artifactId>
