@@ -13,7 +13,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.awaitility.Awaitility.waitAtMost;
 import static org.awaitility.Duration.*;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -100,7 +99,7 @@ public class RabbitMqBasicQosIT extends AbstractITQueue {
             // ack first message
             ackLatch.countDown();
             // second message should be delivered to first listener
-            waitAtMost(ONE_SECOND).until(new MessageListenerMessageCountCallable(listener), equalTo(2));
+            waitAtMost(ONE_SECOND).until(() -> new MessageListenerMessageCountCallable(listener).call() == 2);
 
             assertEquals(2, listener.getMessageCount());
             assertEquals(0, listener2.getMessageCount());
