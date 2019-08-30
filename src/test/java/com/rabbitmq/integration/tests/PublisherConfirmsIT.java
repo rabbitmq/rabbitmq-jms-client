@@ -7,13 +7,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.jms.*;
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static com.rabbitmq.TestUtils.waitUntil;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.waitAtMost;
 
 /**
  * Integration test for publisher confirms.
@@ -64,11 +65,11 @@ public class PublisherConfirmsIT {
         TextMessage message = session.createTextMessage("hello1");
         MessageProducer producer = session.createProducer(queue);
         producer.send(message);
-        waitAtMost(5, TimeUnit.SECONDS).until(() -> ackedMessages.size() == 1);
+        assertThat(waitUntil(Duration.ofSeconds(5), () -> ackedMessages.size() == 1)).isTrue();
         assertThat(ackedMessages).containsKeys("hello1").containsValues(message);
         message = session.createTextMessage("hello2");
         producer.send(message);
-        waitAtMost(5, TimeUnit.SECONDS).until(() -> ackedMessages.size() == 2);
+        waitUntil(Duration.ofSeconds(5), () -> ackedMessages.size() == 2);
         assertThat(ackedMessages).containsKeys("hello2").containsValues(message);
 
         assertThat(receivedMessagesLatch.await(5, TimeUnit.SECONDS)).isTrue();
