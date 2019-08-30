@@ -37,9 +37,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
@@ -100,10 +98,9 @@ public class RpcSpringJmsIT {
             return message;
         });
 
-        assertNotNull(response);
-        assertThat(response, is(instanceOf(TextMessage.class)));
-        assertThat(response.getJMSCorrelationID(), is(messageContent));
-        assertThat(((TextMessage) response).getText(), is("*** " + messageContent + " ***"));
+        assertThat(response).isNotNull().isInstanceOf(TextMessage.class);
+        assertThat(response.getJMSCorrelationID()).isEqualTo(messageContent);
+        assertThat(((TextMessage) response).getText()).isEqualTo("*** " + messageContent + " ***");
     }
 
     @Test
@@ -114,10 +111,9 @@ public class RpcSpringJmsIT {
         JmsTemplate tpl = new JmsTemplate(new SingleConnectionFactory(clientConnection));
         Message response = tpl.execute(new DirectReplyToSessionCallback(messageContent));
 
-        assertNotNull(response);
-        assertThat(response, is(instanceOf(TextMessage.class)));
-        assertThat(response.getJMSCorrelationID(), is(messageContent));
-        assertThat(((TextMessage) response).getText(), is("*** " + messageContent + " ***"));
+        assertThat(response).isNotNull().isInstanceOf(TextMessage.class);
+        assertThat(response.getJMSCorrelationID()).isEqualTo(messageContent);
+        assertThat(((TextMessage) response).getText()).isEqualTo("*** " + messageContent + " ***");
     }
 
     @Test
@@ -132,10 +128,9 @@ public class RpcSpringJmsIT {
                 return message;
             });
 
-            assertNotNull(response);
-            assertThat(response, is(instanceOf(TextMessage.class)));
-            assertThat(response.getJMSCorrelationID(), is(messageContent));
-            assertThat(((TextMessage) response).getText(), is("*** " + messageContent + " ***"));
+            assertThat(response).isNotNull().isInstanceOf(TextMessage.class);
+            assertThat(response.getJMSCorrelationID()).isEqualTo(messageContent);
+            assertThat(((TextMessage) response).getText()).isEqualTo("*** " + messageContent + " ***");
         }
     }
 
@@ -147,10 +142,9 @@ public class RpcSpringJmsIT {
 
             Message response = tpl.execute(new DirectReplyToSessionCallback(messageContent));
 
-            assertNotNull(response);
-            assertThat(response, is(instanceOf(TextMessage.class)));
-            assertThat(response.getJMSCorrelationID(), is(messageContent));
-            assertThat(((TextMessage) response).getText(), is("*** " + messageContent + " ***"));
+            assertThat(response).isNotNull().isInstanceOf(TextMessage.class);
+            assertThat(response.getJMSCorrelationID()).isEqualTo(messageContent);
+            assertThat(((TextMessage) response).getText()).isEqualTo("*** " + messageContent + " ***");
         }
     }
 

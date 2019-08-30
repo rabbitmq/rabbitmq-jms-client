@@ -23,10 +23,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  *
@@ -76,10 +73,9 @@ public class RpcIT {
     public void rpc() throws Exception {
         String messageContent = UUID.randomUUID().toString();
         Message response = doRpc(messageContent);
-        assertNotNull(response);
-        assertThat(response, is(instanceOf(TextMessage.class)));
-        assertThat(response.getJMSCorrelationID(), is(messageContent));
-        assertThat(((TextMessage) response).getText(), is("*** " + messageContent + " ***"));
+        assertThat(response).isNotNull().isInstanceOf(TextMessage.class);
+        assertThat(response.getJMSCorrelationID()).isEqualTo(messageContent);
+        assertThat(((TextMessage) response).getText()).isEqualTo("*** " + messageContent + " ***");
     }
 
     Message doRpc(String messageContent) throws Exception {

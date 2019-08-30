@@ -3,7 +3,6 @@ package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import org.awaitility.Awaitility;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -67,8 +66,8 @@ public class ReceivingContextConsumerIT {
         TextMessage message = session.createTextMessage("hello");
         MessageProducer producer = session.createProducer(queue);
         producer.send(message);
-        Awaitility.waitAtMost(5, TimeUnit.SECONDS).untilAtomic(receivedCount, Matchers.is(initialCount + 1));
+        Awaitility.waitAtMost(5, TimeUnit.SECONDS).until(() -> receivedCount.get() == initialCount + 1);
         producer.send(message);
-        Awaitility.waitAtMost(5, TimeUnit.SECONDS).untilAtomic(receivedCount, Matchers.is(initialCount + 2));
+        Awaitility.waitAtMost(5, TimeUnit.SECONDS).until(() -> receivedCount.get() == initialCount + 2);
     }
 }
