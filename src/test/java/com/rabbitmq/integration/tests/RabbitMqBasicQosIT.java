@@ -6,13 +6,14 @@ import com.rabbitmq.jms.client.RMQConnection;
 import org.junit.jupiter.api.Test;
 
 import javax.jms.*;
+import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.awaitility.Awaitility.waitAtMost;
-import static org.awaitility.Duration.*;
+import static com.rabbitmq.TestUtils.waitUntil;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -99,7 +100,7 @@ public class RabbitMqBasicQosIT extends AbstractITQueue {
             // ack first message
             ackLatch.countDown();
             // second message should be delivered to first listener
-            waitAtMost(ONE_SECOND).until(() -> new MessageListenerMessageCountCallable(listener).call() == 2);
+            assertThat(waitUntil(Duration.ofSeconds(1), () -> new MessageListenerMessageCountCallable(listener).call() == 2)).isTrue();
 
             assertEquals(2, listener.getMessageCount());
             assertEquals(0, listener2.getMessageCount());

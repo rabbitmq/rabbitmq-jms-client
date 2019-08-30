@@ -1,8 +1,9 @@
 /* Copyright (c) 2018 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
+import com.rabbitmq.TestUtils;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
-import org.awaitility.Awaitility;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,8 +15,11 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.rabbitmq.TestUtils.waitUntil;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  *
@@ -66,8 +70,8 @@ public class ReceivingContextConsumerIT {
         TextMessage message = session.createTextMessage("hello");
         MessageProducer producer = session.createProducer(queue);
         producer.send(message);
-        Awaitility.waitAtMost(5, TimeUnit.SECONDS).until(() -> receivedCount.get() == initialCount + 1);
+        assertThat(waitUntil(Duration.ofSeconds(5), () -> receivedCount.get() == initialCount + 1)).isTrue();
         producer.send(message);
-        Awaitility.waitAtMost(5, TimeUnit.SECONDS).until(() -> receivedCount.get() == initialCount + 2);
+        assertThat(waitUntil(Duration.ofSeconds(5), () -> receivedCount.get() == initialCount + 2)).isTrue();
     }
 }
