@@ -3,7 +3,6 @@
 package com.rabbitmq;
 
 import java.time.Duration;
-import java.util.function.BooleanSupplier;
 
 public class TestUtils {
 
