@@ -1,32 +1,16 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
-import javax.jms.BytesMessage;
-import javax.jms.DeliveryMode;
-import javax.jms.Queue;
-import javax.jms.QueueReceiver;
-import javax.jms.QueueSender;
-import javax.jms.QueueSession;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-
-import org.junit.Test;
-
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
+import org.junit.jupiter.api.Test;
+
+import javax.jms.Queue;
+import javax.jms.*;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration test for simple point-to-point messaging with target AMQP queue.
@@ -67,23 +51,23 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
         queueConn.close();
 
         GetResponse response = channel.basicGet(QUEUE_NAME, false);
-        assertNotNull("basicGet failed to retrieve a response", response);
+        assertNotNull(response, "basicGet failed to retrieve a response");
 
         byte[] body = response.getBody();
-        assertNotNull("body of response is null", body);
+        assertNotNull(body, "body of response is null");
 
         { Map<String, Object> hdrs = response.getProps().getHeaders();
 
-          assertEquals("Some keys missing", new HashSet<String>(Arrays.asList("JMSMessageID","JMSDeliveryMode","JMSPriority","JMSTimestamp",USER_STRING_PROPERTY_NAME))
-                                          , hdrs.keySet()
-                      );
+            assertEquals(new HashSet<String>(Arrays.asList("JMSMessageID", "JMSDeliveryMode", "JMSPriority", "JMSTimestamp", USER_STRING_PROPERTY_NAME))
+                    , hdrs.keySet(), "Some keys missing"
+            );
 
-          assertEquals("Priority wrong", 9, hdrs.get("JMSPriority"));
-          assertEquals("Delivery mode wrong", "NON_PERSISTENT", hdrs.get("JMSDeliveryMode").toString()); // toString is a bit wiffy
-          assertEquals("String property wrong", STRING_PROP_VALUE, hdrs.get(USER_STRING_PROPERTY_NAME).toString());
+          assertEquals(9, hdrs.get("JMSPriority"), "Priority wrong");
+          assertEquals("NON_PERSISTENT", hdrs.get("JMSDeliveryMode").toString(), "Delivery mode wrong"); // toString is a bit wiffy
+          assertEquals(STRING_PROP_VALUE, hdrs.get(USER_STRING_PROPERTY_NAME).toString(), "String property wrong");
         }
 
-        assertEquals("Message received not identical to message sent", MESSAGE,  new String(body, "UTF-8"));
+        assertEquals(MESSAGE,  new String(body, "UTF-8"), "Message received not identical to message sent");
     }
 
     @Test
@@ -113,22 +97,23 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
         queueConn.close();
 
         GetResponse response = channel.basicGet(QUEUE_NAME, false);
-        assertNotNull("basicGet failed to retrieve a response", response);
+        assertNotNull(response, "basicGet failed to retrieve a response");
 
         byte[] body = response.getBody();
-        assertNotNull("body of response is null", body);
+        assertNotNull(body, "body of response is null");
 
         { Map<String, Object> hdrs = response.getProps().getHeaders();
 
-          assertEquals("Some keys missing", new HashSet<String>(Arrays.asList("JMSMessageID","JMSDeliveryMode","JMSPriority","JMSTimestamp",USER_STRING_PROPERTY_NAME))
-                                          , hdrs.keySet()
-                      );
+            assertEquals(new HashSet<String>(Arrays.asList("JMSMessageID", "JMSDeliveryMode", "JMSPriority", "JMSTimestamp", USER_STRING_PROPERTY_NAME))
+                    , hdrs.keySet(), "Some keys missing"
+            );
 
-          assertEquals("Priority wrong", 9, hdrs.get("JMSPriority"));
-          assertEquals("Delivery mode wrong", "NON_PERSISTENT", hdrs.get("JMSDeliveryMode").toString()); // toString is a bit wiffy
-          assertEquals("String property wrong", STRING_PROP_VALUE, hdrs.get(USER_STRING_PROPERTY_NAME).toString());
+          assertEquals(9, hdrs.get("JMSPriority"), "Priority wrong");
+          assertEquals("NON_PERSISTENT", hdrs.get("JMSDeliveryMode").toString(), "Delivery mode wrong"); // toString is a bit wiffy
+          assertEquals(STRING_PROP_VALUE, hdrs.get(USER_STRING_PROPERTY_NAME).toString(), "String property wrong");
         }
-        assertArrayEquals("Message received not identical to message sent", BYTE_ARRAY,  body);
+
+        assertArrayEquals(BYTE_ARRAY,  body, "Message received not identical to message sent");
     }
 
     @Test
@@ -160,18 +145,18 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
         BytesMessage message = (BytesMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
 
-        assertNotNull("No message received", message);
+        assertNotNull(message, "No message received");
 
         byte[] bytes = new byte[BYTE_ARRAY.length+2];
         int bytesIn = message.readBytes(bytes);
-        assertEquals("Message payload not correct size", BYTE_ARRAY.length, bytesIn);
+        assertEquals(BYTE_ARRAY.length, bytesIn, "Message payload not correct size");
         byte[] bytesTrunc = new byte[bytesIn];
         System.arraycopy(bytes, 0, bytesTrunc, 0, bytesIn);
-        assertArrayEquals("Payload doesn't match", BYTE_ARRAY, bytesTrunc);
+        assertArrayEquals(BYTE_ARRAY, bytesTrunc, "Payload doesn't match");
 
-        assertEquals("Priority incorrect", 21, message.getJMSPriority()); // override should work
-        assertEquals("Delivery mode incorrect", 1, message.getJMSDeliveryMode()); // override should fail
-        assertEquals("JMSType not set correctly", USER_JMS_TYPE_SETTING, message.getJMSType()); // override should work
+        assertEquals(21, message.getJMSPriority(), "Priority incorrect"); // override should work
+        assertEquals(1, message.getJMSDeliveryMode(), "Delivery mode incorrect"); // override should fail
+        assertEquals(USER_JMS_TYPE_SETTING, message.getJMSType(), "JMSType not set correctly"); // override should work
 
         Enumeration<?> propNames = message.getPropertyNames();
         Set<String> propNameSet = new HashSet<String>();
@@ -179,11 +164,11 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
             propNameSet.add((String) propNames.nextElement());
         }
 
-        assertEquals("Headers not set correctly", new HashSet<String>(Arrays.asList(USER_STRING_PROPERTY_NAME, "DummyProp"))
-                                                , propNameSet);
+        assertEquals(new HashSet<String>(Arrays.asList(USER_STRING_PROPERTY_NAME, "DummyProp"))
+                , propNameSet, "Headers not set correctly");
 
-        assertEquals("String property not transferred", STRING_PROP_VALUE, message.getStringProperty(USER_STRING_PROPERTY_NAME));
-        assertEquals("Numeric property not transferred", "42", message.getStringProperty("DummyProp"));
+        assertEquals(STRING_PROP_VALUE, message.getStringProperty(USER_STRING_PROPERTY_NAME), "String property not transferred");
+        assertEquals("42", message.getStringProperty("DummyProp"), "Numeric property not transferred");
     }
 
     @Test
@@ -215,13 +200,13 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
         TextMessage message = (TextMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
 
-        assertNotNull("No message received", message);
+        assertNotNull(message, "No message received");
 
-        assertEquals("Payload doesn't match", MESSAGE, message.getText());
+        assertEquals(MESSAGE, message.getText(), "Payload doesn't match");
 
-        assertEquals("Priority incorrect", 21, message.getJMSPriority()); // override should work
-        assertEquals("Delivery mode incorrect", 1, message.getJMSDeliveryMode()); // override should fail
-        assertEquals("JMSType not set correctly", "TextMessage", message.getJMSType()); // override should work
+        assertEquals(21, message.getJMSPriority(), "Priority incorrect"); // override should work
+        assertEquals(1, message.getJMSDeliveryMode(), "Delivery mode incorrect"); // override should fail
+        assertEquals("TextMessage", message.getJMSType(), "JMSType not set correctly"); // override should work
 
         Enumeration<?> propNames = message.getPropertyNames();
         Set<String> propNameSet = new HashSet<String>();
@@ -229,11 +214,11 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
             propNameSet.add((String) propNames.nextElement());
         }
 
-        assertEquals("Headers not set correctly", new HashSet<String>(Arrays.asList(USER_STRING_PROPERTY_NAME, "DummyProp"))
-                                                , propNameSet);
+        assertEquals(new HashSet<String>(Arrays.asList(USER_STRING_PROPERTY_NAME, "DummyProp"))
+                , propNameSet, "Headers not set correctly");
 
-        assertEquals("String property not transferred", STRING_PROP_VALUE, message.getStringProperty(USER_STRING_PROPERTY_NAME));
-        assertEquals("Numeric property not transferred", "42", message.getStringProperty("DummyProp"));
+        assertEquals(STRING_PROP_VALUE, message.getStringProperty(USER_STRING_PROPERTY_NAME), "String property not transferred");
+        assertEquals("42", message.getStringProperty("DummyProp"), "Numeric property not transferred");
     }
 
     @Test
@@ -267,9 +252,9 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
         channel.queueDelete(queueName);
 
-        assertNotNull("No message received", message);
-        assertEquals("Payload doesn't match", MESSAGE, message.getText());
-        assertEquals("String property not transferred", STRING_PROP_VALUE, message.getStringProperty(USER_STRING_PROPERTY_NAME));
+        assertNotNull(message, "No message received");
+        assertEquals(MESSAGE, message.getText(), "Payload doesn't match");
+        assertEquals(STRING_PROP_VALUE, message.getStringProperty(USER_STRING_PROPERTY_NAME), "String property not transferred");
     }
 
 }

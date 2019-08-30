@@ -1,8 +1,6 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import static org.junit.Assert.fail;
-
 import javax.jms.Message;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
@@ -10,15 +8,17 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueReceiver;
 import javax.jms.QueueSession;
 
-import org.junit.After;
-import org.junit.Before;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 public abstract class AbstractITQueue {
     QueueConnectionFactory connFactory;
     protected QueueConnection queueConn;
 
-    @Before
+    @BeforeEach
     public void beforeTests() throws Exception {
         this.connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                 .getConnectionFactory();
@@ -52,7 +52,7 @@ public abstract class AbstractITQueue {
         }
     }
 
-    @After
+    @AfterEach
     public void afterTests() throws Exception {
         if (queueConn != null)
             queueConn.close();

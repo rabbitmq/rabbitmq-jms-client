@@ -1,13 +1,12 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.parse.sql;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.junit.Test;
 
 /**
  * This test class generates all {@link SqlTreeNode}s possible at a parent of an {@link SqlParseTree} and
@@ -166,14 +165,14 @@ public class SqlCompilerVisitorTest {
         SqlTreeNode[] children = testChildren(arity);
 
         scv.visitBefore(parent, children);
-        assertEquals(String.format("", treeType, tokenType), expectedBefore, scv.extractCode());
+        assertEquals(expectedBefore, scv.extractCode(), String.format("", treeType, tokenType));
         scv.clearCode();
-        assertEquals("extractCode() not cleared after visitBefore() and clearCode()", "", scv.extractCode());
+        assertEquals("", scv.extractCode(), "extractCode() not cleared after visitBefore() and clearCode()");
 
         scv.visitAfter(parent, children);
-        assertEquals(String.format("", treeType, tokenType), expectedAfter, scv.extractCode());
+        assertEquals(expectedAfter, scv.extractCode(), String.format("", treeType, tokenType));
         scv.clearCode();
-        assertEquals("extractCode() not cleared after visitAfter() and clearCode()", "", scv.extractCode());
+        assertEquals("", scv.extractCode(), "extractCode() not cleared after visitAfter() and clearCode()");
     }
 
     private SqlTreeNode[] testChildren(int arity) {

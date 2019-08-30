@@ -5,7 +5,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.impl.AbstractMetricsCollector;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Queue;
@@ -15,7 +15,7 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 import java.io.Serializable;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration test to check metrics collection is properly set up.

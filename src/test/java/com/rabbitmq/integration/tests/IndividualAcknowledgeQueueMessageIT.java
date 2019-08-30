@@ -11,9 +11,8 @@ import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 
-import org.junit.Test;
-
 import com.rabbitmq.jms.client.RMQSession;
+import org.junit.jupiter.api.Test;
 
 /**
  * Integration test for simple browsing of a queue with selective acknowledgements; all message types.

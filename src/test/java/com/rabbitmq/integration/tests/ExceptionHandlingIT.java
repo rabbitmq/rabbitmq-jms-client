@@ -4,9 +4,9 @@ package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.admin.RMQDestination;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -14,6 +14,8 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.QueueConnection;
 import javax.jms.Session;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * To check an exception is thrown depending on the corresponding setting.
@@ -25,13 +27,13 @@ public class ExceptionHandlingIT {
     RMQConnectionFactory connFactory;
     QueueConnection queueConn;
 
-    @Before
+    @BeforeEach
     public void beforeTests() throws Exception {
         this.connFactory = (RMQConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
             .getConnectionFactory();
     }
 
-    @After
+    @AfterEach
     public void afterTests() throws Exception {
         if (queueConn != null)
             queueConn.close();
@@ -42,10 +44,10 @@ public class ExceptionHandlingIT {
         listenOnNonExistingDestination();
     }
 
-    @Test(expected = JMSException.class)
+    @Test
     public void shouldThrowExceptionForNonExistingDestinationWhenFlagIsSet() throws Exception {
         connFactory.setThrowExceptionOnConsumerStartFailure(true);
-        listenOnNonExistingDestination();
+        assertThrows(JMSException.class, () -> listenOnNonExistingDestination());
     }
 
     private void listenOnNonExistingDestination() throws JMSException {
@@ -56,11 +58,7 @@ public class ExceptionHandlingIT {
         Session session = queueConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer messageConsumer = session.createConsumer(queue);
 
-        messageConsumer.setMessageListener(new MessageListener() {
-
-            @Override
-            public void onMessage(Message msg) {
-            }
+        messageConsumer.setMessageListener(msg -> {
         });
     }
 }

@@ -3,7 +3,7 @@ package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.client.RMQConnection;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.jms.*;
 import java.util.concurrent.Callable;
@@ -11,11 +11,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.awaitility.Awaitility.*;
 import static org.awaitility.Awaitility.waitAtMost;
 import static org.awaitility.Duration.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Asynchronous Consumer integration test.

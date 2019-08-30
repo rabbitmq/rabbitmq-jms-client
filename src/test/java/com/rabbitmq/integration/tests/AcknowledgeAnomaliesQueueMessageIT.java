@@ -1,7 +1,7 @@
 /* Copyright (c) 2013, 2014 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.Serializable;
 
@@ -14,9 +14,8 @@ import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 
-import org.junit.Test;
-
 import com.rabbitmq.jms.client.RMQSession;
+import org.junit.jupiter.api.Test;
 
 /**
  * Integration test for acknowledgement anomalies: repeated ack and ack out of session.

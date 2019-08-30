@@ -2,9 +2,9 @@
 package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +14,6 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
@@ -27,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -49,7 +48,7 @@ public class RpcIT {
         }
     }
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         ConnectionFactory connectionFactory = AbstractTestConnectionFactory.getTestConnectionFactory()
             .getConnectionFactory();
@@ -57,7 +56,7 @@ public class RpcIT {
         clientConnection.start();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         rpcServer.close();
         if (clientConnection != null) {
@@ -97,13 +96,7 @@ public class RpcIT {
 
         MessageConsumer responseConsumer = session.createConsumer(replyQueue);
         final BlockingQueue<Message> queue = new ArrayBlockingQueue<Message>(1);
-        responseConsumer.setMessageListener(new MessageListener() {
-
-            @Override
-            public void onMessage(Message msg) {
-                queue.add(msg);
-            }
-        });
+        responseConsumer.setMessageListener(msg -> queue.add(msg));
         message.setJMSReplyTo(replyQueue);
         producer.send(message);
         return queue.poll(2, TimeUnit.SECONDS);
@@ -131,22 +124,18 @@ public class RpcIT {
             Destination destination = session.createQueue(QUEUE_NAME);
             final MessageProducer replyProducer = session.createProducer(null);
             MessageConsumer consumer = session.createConsumer(destination);
-            consumer.setMessageListener(new MessageListener() {
-
-                @Override
-                public void onMessage(Message msg) {
-                    TextMessage message = (TextMessage) msg;
-                    try {
-                        String text = message.getText();
-                        Destination replyQueue = message.getJMSReplyTo();
-                        if (replyQueue != null) {
-                            TextMessage replyMessage = session.createTextMessage("*** " + text + " ***");
-                            replyMessage.setJMSCorrelationID(message.getJMSCorrelationID());
-                            replyProducer.send(replyQueue, replyMessage);
-                        }
-                    } catch (JMSException e) {
-                        LOGGER.warn("Error in RPC server", e);
+            consumer.setMessageListener(msg -> {
+                TextMessage message = (TextMessage) msg;
+                try {
+                    String text = message.getText();
+                    Destination replyQueue = message.getJMSReplyTo();
+                    if (replyQueue != null) {
+                        TextMessage replyMessage = session.createTextMessage("*** " + text + " ***");
+                        replyMessage.setJMSCorrelationID(message.getJMSCorrelationID());
+                        replyProducer.send(replyQueue, replyMessage);
                     }
+                } catch (JMSException e) {
+                    LOGGER.warn("Error in RPC server", e);
                 }
             });
         }

@@ -2,9 +2,9 @@
 package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.jms.*;
 import java.util.Map;
@@ -25,7 +25,7 @@ public class PublisherConfirmsIT {
     Connection connection;
     Map<String, Message> ackedMessages = new ConcurrentHashMap<>();
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         ackedMessages.clear();
         RMQConnectionFactory connectionFactory = (RMQConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
@@ -42,7 +42,7 @@ public class PublisherConfirmsIT {
         connection.start();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         if (connection != null) {
             connection.close();

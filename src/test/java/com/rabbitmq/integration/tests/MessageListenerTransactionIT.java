@@ -1,7 +1,9 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import static org.junit.Assert.fail;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Message;
@@ -12,8 +14,6 @@ import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-
-import org.junit.Test;
 
 /**
  * Integration test for transaction commits in the presence of message listeners.

@@ -3,8 +3,8 @@
 package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -16,15 +16,15 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class SslContextIT {
 
     Connection connection = null;
 
-    @After public void tearDown() throws JMSException {
+    @AfterEach
+    public void tearDown() throws JMSException {
         if(connection != null) {
             connection.close();
         }
@@ -32,7 +32,8 @@ public class SslContextIT {
 
     // https://github.com/rabbitmq/rabbitmq-jms-client/issues/12
     // the set SSLContext isn't overridden
-    @Test public void sslContextShouldBeUsedWhenExplicitlySet() throws Exception {
+    @Test
+    public void sslContextShouldBeUsedWhenExplicitlySet() throws Exception {
         RMQConnectionFactory connectionFactory = (RMQConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory(true, 0)
             .getConnectionFactory();
         connectionFactory.setUri("amqps://guest:guest@localhost:5671/%2f");
@@ -41,7 +42,7 @@ public class SslContextIT {
         sslContext.init(null, new TrustManager[] {trustManager}, null);
         connectionFactory.useSslProtocol(sslContext);
         connection = connectionFactory.createConnection();
-        assertTrue("TrustManager#checkServerTrusted must be called", trustManager.checkServerTrustedCallCount.get() >= 1);
+        assertTrue(trustManager.checkServerTrustedCallCount.get() >= 1, "TrustManager#checkServerTrusted must be called");
     }
 
     @Test public void useDefaultSslContextWhenOptionIsEnabled() throws Exception {
@@ -53,7 +54,7 @@ public class SslContextIT {
         SSLContext.setDefault(defaultSslContext);
         connectionFactory.useDefaultSslContext(true);
         connection = connectionFactory.createConnection();
-        assertTrue("TrustManager#checkServerTrusted must be called", defaultTrustManager.checkServerTrustedCallCount.get() >= 1);
+        assertTrue(defaultTrustManager.checkServerTrustedCallCount.get() >= 1, "TrustManager#checkServerTrusted must be called");
     }
 
     @Test public void defaultSslContextOverridesSetSslContext() throws Exception {
@@ -71,7 +72,7 @@ public class SslContextIT {
         connectionFactory.useSslProtocol(sslContext);
 
         connection = connectionFactory.createConnection();
-        assertTrue("TrustManager#checkServerTrusted must be called", defaultTrustManager.checkServerTrustedCallCount.get() >= 1);
+        assertTrue(defaultTrustManager.checkServerTrustedCallCount.get() >= 1, "TrustManager#checkServerTrusted must be called");
         assertEquals(0, trustManager.checkServerTrustedCallCount.get());
     }
 

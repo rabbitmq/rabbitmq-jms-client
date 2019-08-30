@@ -1,11 +1,11 @@
 /* Copyright (c) 2013-2019 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.jms.*;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration test

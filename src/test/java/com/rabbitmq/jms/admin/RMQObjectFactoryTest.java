@@ -1,6 +1,6 @@
 package com.rabbitmq.jms.admin;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.jms.ConnectionFactory;
 import javax.naming.CompositeName;
@@ -8,7 +8,7 @@ import javax.naming.NamingException;
 import javax.naming.Reference;
 import java.util.Hashtable;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * RMQObjectFactory unit test

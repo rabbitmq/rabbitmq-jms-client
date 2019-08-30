@@ -6,16 +6,16 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.jms.admin.RMQDestination;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.jms.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class TtlIT extends AbstractITQueue {
@@ -26,12 +26,12 @@ public class TtlIT extends AbstractITQueue {
 
     Connection connection;
 
-    @Before
+    @BeforeEach
     public void initAmqp() throws Exception {
         connection = new ConnectionFactory().newConnection();
     }
 
-    @After
+    @AfterEach
     public void tearDownAmqp() throws Exception {
         connection.close();
     }
@@ -119,8 +119,8 @@ public class TtlIT extends AbstractITQueue {
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
         TextMessage message = (TextMessage) queueReceiver.receive(TEST_RECEIVE_TIMEOUT);
 
-        assertNotNull("No message received", message);
-        assertEquals("Payload doesn't match", content, message.getText());
+        assertNotNull(message, "No message received");
+        assertEquals(content, message.getText(), "Payload doesn't match");
         return message;
     }
 

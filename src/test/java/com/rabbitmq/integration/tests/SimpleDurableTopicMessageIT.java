@@ -1,8 +1,7 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.jupiter.api.Test;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Session;
@@ -12,7 +11,7 @@ import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration test
@@ -68,7 +67,7 @@ public class SimpleDurableTopicMessageIT extends AbstractITTopic {
             TopicSubscriber receiver = topicSession.createDurableSubscriber(topic, DURABLE_SUBSCRIBER_NAME);
 
             TextMessage tm = (TextMessage) receiver.receive(RECEIVE_TIMEOUT);
-            assertNotNull("No message received", tm);
+            assertNotNull(tm, "No message received");
             assertEquals(MESSAGE_TEXT_1, tm.getText());
 
             topicSession.unsubscribe(DURABLE_SUBSCRIBER_NAME);

@@ -1,8 +1,6 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import static org.junit.Assert.fail;
-
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -17,9 +15,10 @@ import javax.jms.Topic;
 import javax.jms.TopicConnection;
 import javax.jms.TopicSession;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.rabbitmq.jms.client.Completion;
+import org.junit.jupiter.api.Test;
 
 /**
  * Integration test of close while waiting for receive on a Topic destination.

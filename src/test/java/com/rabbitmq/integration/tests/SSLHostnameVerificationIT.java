@@ -3,11 +3,10 @@ package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -21,26 +20,19 @@ import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration test for hostname verification with TLS.
  */
-@RunWith(Parameterized.class)
 public class SSLHostnameVerificationIT {
 
     static SSLContext sslContext;
     static AtomicInteger hostnameVerifierCalls;
-    @Parameterized.Parameter(0)
-    public ConnectionFactoryCustomizer customizer;
-    @Parameterized.Parameter(1)
-    public Runnable assertion;
     RMQConnectionFactory cf;
 
-    @Parameterized.Parameters
-    public static Object[] data() {
-        return new Object[] {
+    public static Object[][] arguments() {
+        return new Object[][] {
             new Object[] { enableHostnameVerification(), expectedCallsOnHostnameVerifierAssertion(0) },
             new Object[] { useCustomHostnameVerifier(), expectedCallsOnHostnameVerifierAssertion(1) }
         };
@@ -85,7 +77,7 @@ public class SSLHostnameVerificationIT {
         };
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void initCrypto() throws Exception {
         String keystorePath = System.getProperty("test-keystore.ca");
         assertNotNull(keystorePath);
@@ -115,15 +107,16 @@ public class SSLHostnameVerificationIT {
         sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
     }
 
-    @Before
+    @BeforeEach
     public void init() {
         cf = new RMQConnectionFactory();
         cf.useSslProtocol(sslContext);
         hostnameVerifierCalls = new AtomicInteger(0);
     }
 
-    @Test
-    public void hostnameVerificationEnabledShouldPassForLocalhost() throws JMSException {
+    @ParameterizedTest
+    @MethodSource("arguments")
+    public void hostnameVerificationEnabledShouldPassForLocalhost(ConnectionFactoryCustomizer customizer, Runnable assertion) throws JMSException {
         cf.setHost("localhost");
         customizer.customize(cf);
         Connection connection = null;
@@ -137,11 +130,12 @@ public class SSLHostnameVerificationIT {
         assertion.run();
     }
 
-    @Test(expected = JMSSecurityException.class)
-    public void hostnameVerificationEnabledShouldFailForLoopbackInterface() throws JMSException {
+    @ParameterizedTest
+    @MethodSource("arguments")
+    public void hostnameVerificationEnabledShouldFailForLoopbackInterface(ConnectionFactoryCustomizer customizer, Runnable assertion) {
         cf.setHost("127.0.0.1");
         customizer.customize(cf);
-        cf.createConnection();
+        assertThrows(JMSSecurityException.class, () -> cf.createConnection());
     }
 
     interface ConnectionFactoryCustomizer {

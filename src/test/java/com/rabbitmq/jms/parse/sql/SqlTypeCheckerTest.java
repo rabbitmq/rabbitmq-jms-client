@@ -1,11 +1,9 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.parse.sql;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SqlTypeCheckerTest {
 
@@ -48,14 +46,14 @@ public class SqlTypeCheckerTest {
 
     private void assertType(SqlProduction sct, String inStr, SqlExpressionType expType) {
         SqlTokenStream stream = new SqlTokenStream(inStr);
-        assertEquals("Residue not empty", "", stream.getResidue());
+        assertEquals("", stream.getResidue(), "Residue not empty");
 
         SqlParseTree stn = sct.parse(stream);
-        assertNotNull("parse failed", stn);
+        assertNotNull(stn, "parse failed");
 
-        assertTrue("Stream not fully used, next token is: "+ stream.readToken(), !stream.moreTokens());
+        assertTrue(!stream.moreTokens(), "Stream not fully used, next token is: "+ stream.readToken());
 
-        assertEquals("Unexpected expression type", expType, SqlTypeChecker.deriveExpressionType(stn));
+        assertEquals(expType, SqlTypeChecker.deriveExpressionType(stn), "Unexpected expression type");
     }
 
 }

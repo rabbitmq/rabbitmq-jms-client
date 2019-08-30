@@ -1,9 +1,9 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.util;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test the {@link AbortableHolder} collection of {@link Abortable}s.
@@ -161,8 +161,8 @@ public class TestAbortableHolder {
     }
 
     private void assertCounts(String descr, int exAbort, int exStop, int exStart, Counts cs) throws Exception {
-        assertEquals(descr+"(abort)", exAbort, cs.getAborts());
-        assertEquals(descr+"(stop)", exStop, cs.getStops());
-        assertEquals(descr+"(start)", exStart, cs.getStarts());
+        assertEquals(exAbort, cs.getAborts(), descr+"(abort)");
+        assertEquals(exStop, cs.getStops(), descr+"(stop)");
+        assertEquals(exStart, cs.getStarts(), descr+"(start)");
     }
 }

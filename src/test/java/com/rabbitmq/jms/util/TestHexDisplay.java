@@ -1,9 +1,9 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.util;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestHexDisplay {
 
@@ -67,24 +67,24 @@ public class TestHexDisplay {
     @Test
     public void testHexDisplaySmall() throws Exception {
         HexDisplay.decodeByteArrayIntoStringBuilder(TEST_BYTES_1, testSb);
-        assertEquals("Output does not match", TEST_STRING_1, testSb.toString());
+        assertEquals(TEST_STRING_1, testSb.toString(), "Output does not match");
     }
 
     @Test
     public void testHexDisplayAll() throws Exception {
         HexDisplay.decodeByteArrayIntoStringBuilder(TEST_BYTES_2, testSb);
-        assertEquals("Output does not match", TEST_STRING_2, testSb.toString());
+        assertEquals(TEST_STRING_2, testSb.toString(), "Output does not match");
     }
 
     @Test
     public void testHexDisplaySome() throws Exception {
         HexDisplay.decodeByteArrayIntoStringBuilder(TEST_BYTES_3, testSb);
-        assertEquals("Output does not match", TEST_STRING_3, testSb.toString());
+        assertEquals(TEST_STRING_3, testSb.toString(), "Output does not match");
     }
 
     @Test
     public void testHexDisplayNull() throws Exception {
         HexDisplay.decodeByteArrayIntoStringBuilder(new byte[0], testSb);
-        assertEquals("Output does not match", "", testSb.toString());
+        assertEquals("", testSb.toString(), "Output does not match");
     }
 }

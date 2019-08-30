@@ -4,14 +4,12 @@ package com.rabbitmq.integration.tests;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.client.ReceivingContext;
 import com.rabbitmq.jms.client.ReceivingContextConsumer;
-import org.awaitility.Awaitility;
-import org.hamcrest.Matchers;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.jms.Connection;
-import javax.jms.JMSException;
+
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
@@ -42,7 +40,7 @@ public class ReceivingContextConsumerIT {
         }
     }
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         RMQConnectionFactory connectionFactory = (RMQConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
             .getConnectionFactory();
@@ -57,7 +55,7 @@ public class ReceivingContextConsumerIT {
         connection.start();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         if (connection != null) {
             connection.close();

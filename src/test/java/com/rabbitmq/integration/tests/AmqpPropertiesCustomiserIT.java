@@ -6,7 +6,7 @@ import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.AmqpPropertiesCustomiser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.jms.Message;
 import javax.jms.Queue;
@@ -15,8 +15,7 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration test to test the AMQP properties customiser is applied correctly.
@@ -61,13 +60,13 @@ public class AmqpPropertiesCustomiserIT extends AbstractAmqpITQueue {
         queueConn.close();
 
         GetResponse response = channel.basicGet(QUEUE_NAME, false);
-        assertNotNull("basicGet failed to retrieve a response", response);
+        assertNotNull(response, "basicGet failed to retrieve a response");
 
         byte[] body = response.getBody();
-        assertNotNull("body of response is null", body);
+        assertNotNull(body, "body of response is null");
 
-        assertEquals("body of response is not correct", MESSAGE, new String(body));
+        assertEquals(MESSAGE, new String(body), "body of response is not correct");
 
-        assertEquals("body of response is not correct", TEXT_PLAIN, response.getProps().getContentType());
+        assertEquals(TEXT_PLAIN, response.getProps().getContentType(), "body of response is not correct");
     }
 }

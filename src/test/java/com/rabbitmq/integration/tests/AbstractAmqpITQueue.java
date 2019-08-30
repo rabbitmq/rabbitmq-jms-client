@@ -5,12 +5,12 @@ import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
-import org.junit.After;
-import org.junit.Before;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 public abstract class AbstractAmqpITQueue {
     private QueueConnectionFactory connFactory;
@@ -20,7 +20,7 @@ public abstract class AbstractAmqpITQueue {
     protected Connection rabbitConn;
     protected Channel channel;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                 .getConnectionFactory();
@@ -35,7 +35,7 @@ public abstract class AbstractAmqpITQueue {
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         if (this.queueConn != null) this.queueConn.close();
         if (this.channel != null) this.channel.close();

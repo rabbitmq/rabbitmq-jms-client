@@ -5,13 +5,13 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.client.RMQConnection;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.jms.*;
 import java.util.concurrent.CountDownLatch;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -20,7 +20,8 @@ public class RequeueMessageOnListenerExceptionIT extends AbstractITQueue {
     private static final String QUEUE_NAME = "test.queue." + RequeueMessageOnListenerExceptionIT.class.getCanonicalName();
     private static final String MESSAGE = "Hello " + RequeueMessageOnListenerExceptionIT.class.getName();
 
-    @Before public void init() throws Exception {
+    @BeforeEach
+    public void init() throws Exception {
         Connection connection = null;
         try {
             com.rabbitmq.client.ConnectionFactory connectionFactory = new ConnectionFactory();

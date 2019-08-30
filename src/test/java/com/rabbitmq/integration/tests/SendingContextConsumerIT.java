@@ -4,9 +4,9 @@ package com.rabbitmq.integration.tests;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.client.SendingContext;
 import com.rabbitmq.jms.client.SendingContextConsumer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.jms.Connection;
 import javax.jms.Message;
@@ -17,7 +17,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -36,7 +36,7 @@ public class SendingContextConsumerIT {
         }
     }
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         RMQConnectionFactory connectionFactory = (RMQConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
             .getConnectionFactory();
@@ -51,7 +51,7 @@ public class SendingContextConsumerIT {
         connection.start();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         if (connection != null) {
             connection.close();

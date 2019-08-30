@@ -1,8 +1,7 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.parse.sql;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,12 +11,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.junit.Before;
-import org.junit.Test;
-
 import com.rabbitmq.jms.parse.Multiples.Pair;
 import com.rabbitmq.jms.parse.Multiples.Triple;
 import com.rabbitmq.jms.parse.Visitor;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * This test class generates all combinations of {@link SqlTreeNode}s possible at a point of an {@link SqlParseTree} and
@@ -84,7 +82,7 @@ public class SqlTypeSetterVisitorTest {
     private Visitor<SqlTreeNode> tsVisitorBasic;
     private Visitor<SqlTreeNode> tsVisitorIdents;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         // Some useful pre-typed identifiers
         idTypes.put("aBool"     , SqlExpressionType.BOOL    );
@@ -274,7 +272,7 @@ public class SqlTypeSetterVisitorTest {
         }
         SqlTreeNode stn = new SqlTreeNode(treeType, token);
         assertTrue(visitor.visitAfter(stn, children.toArray(new SqlTreeNode[children.size()])));
-        assertEquals("Wrong expType for " + stn + " with children " + children, resultType, stn.getExpValue().getType());
+        assertEquals(resultType, stn.getExpValue().getType(), "Wrong expType for " + stn + " with children " + children);
     }
 
     private static SqlTreeNode sqlDummyTypedNode(SqlExpressionType arg) {

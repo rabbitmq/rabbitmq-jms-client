@@ -1,6 +1,8 @@
 /* Copyright (c) 2013, 2014 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.Serializable;
 
 import javax.jms.Message;
@@ -9,8 +11,6 @@ import javax.jms.QueueReceiver;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
-
-import org.junit.Test;
 
 /**
  * Integration test for simple browsing of a queue.

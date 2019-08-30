@@ -1,9 +1,7 @@
 /* Copyright (c) 2014 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.Serializable;
 
@@ -81,22 +79,22 @@ enum MessageTestType {
         @Override
         void check(Message m, Serializable obj) throws Exception {
             Serializable robj = (Serializable) goodObject(m).getObject();
-            assertEquals("Object not read correctly;", obj, robj); }
+            assertEquals(obj, robj, "Object not read correctly;"); }
     };
     abstract Message gen(QueueSession s, Serializable obj) throws Exception;
     abstract void check(Message m, Serializable obj) throws Exception;
     public void checkAttrs(Message m, int mode, int priority) throws Exception {
-        assertEquals("DeliveryMode incorrect", mode, m.getJMSDeliveryMode());
-        assertEquals("Priority incorrect", priority, m.getJMSPriority());
+        assertEquals(mode, m.getJMSDeliveryMode(), "DeliveryMode incorrect");
+        assertEquals(priority, m.getJMSPriority(), "Priority incorrect");
     }
 
-    private static final Message nonNull(Message m) throws Exception { assertNotNull("Message received is null", m); return m; }
+    private static final Message nonNull(Message m) throws Exception { assertNotNull(m, "Message received is null"); return m; }
 
-    private static final BytesMessage goodBytes(Message m) throws Exception { nonNull(m); assertTrue("Message is not BytesMessage", m instanceof BytesMessage); return (BytesMessage)m; }
-    private static final TextMessage goodText(Message m) throws Exception { nonNull(m); assertTrue("Message is not TextMessage", m instanceof TextMessage); return (TextMessage)m; }
-    private static final MapMessage goodMap(Message m) throws Exception { nonNull(m); assertTrue("Message is not MapMessage", m instanceof MapMessage); return (MapMessage)m; }
-    private static final StreamMessage goodStream(Message m) throws Exception { nonNull(m); assertTrue("Message is not StreamMessage", m instanceof StreamMessage); return (StreamMessage)m; }
-    private static final ObjectMessage goodObject(Message m) throws Exception { nonNull(m); assertTrue("Message is not ObjectMessage", m instanceof ObjectMessage); return (ObjectMessage)m; }
+    private static final BytesMessage goodBytes(Message m) throws Exception { nonNull(m); assertTrue(m instanceof BytesMessage, "Message is not BytesMessage"); return (BytesMessage)m; }
+    private static final TextMessage goodText(Message m) throws Exception { nonNull(m); assertTrue(m instanceof TextMessage, "Message is not TextMessage"); return (TextMessage)m; }
+    private static final MapMessage goodMap(Message m) throws Exception { nonNull(m); assertTrue(m instanceof MapMessage, "Message is not MapMessage"); return (MapMessage)m; }
+    private static final StreamMessage goodStream(Message m) throws Exception { nonNull(m); assertTrue(m instanceof StreamMessage, "Message is not StreamMessage"); return (StreamMessage)m; }
+    private static final ObjectMessage goodObject(Message m) throws Exception { nonNull(m); assertTrue(m instanceof ObjectMessage, "Message is not ObjectMessage"); return (ObjectMessage)m; }
 
     private static final String MESSAGE = "Hello " + MessageTestType.class.getName();
     private static final char[] CHAR = new char[]{' ', ';', '…', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};

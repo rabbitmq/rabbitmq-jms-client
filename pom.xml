@@ -44,7 +44,7 @@
     <rabbitmq.version>4.11.3</rabbitmq.version>
     <slf4j-api.version>1.7.26</slf4j-api.version>
     <httpclient.version>4.5.9</httpclient.version>
-    <junit.version>4.12</junit.version>
+    <junit.jupiter.version>5.5.1</junit.jupiter.version>
     <mockito-core.version>3.0.0</mockito-core.version>
     <awaitility.version>3.1.6</awaitility.version>
     <assertj.version>3.13.2</assertj.version>
@@ -132,9 +132,22 @@
 
     <!-- test scope -->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit.jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>${junit.jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- for parameterized tests -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <version>${junit.jupiter.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

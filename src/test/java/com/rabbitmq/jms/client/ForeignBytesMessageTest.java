@@ -1,9 +1,7 @@
 /* Copyright (c) 2014 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.nio.charset.Charset;
 import java.util.Collections;
@@ -15,8 +13,7 @@ import javax.jms.JMSException;
 import javax.jms.MessageFormatException;
 
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ForeignBytesMessageTest {
 
@@ -219,7 +216,7 @@ public class ForeignBytesMessageTest {
 
             byte[] byteArr = new byte[utflen];
             int bytesRead = fbmsg.readBytes(byteArr);
-            assertEquals("Not enough bytes for readUTF()", utflen, bytesRead);
+            assertEquals(utflen, bytesRead, "Not enough bytes for readUTF()");
 
             return new String(byteArr, UTF8_CHARSET);
         }

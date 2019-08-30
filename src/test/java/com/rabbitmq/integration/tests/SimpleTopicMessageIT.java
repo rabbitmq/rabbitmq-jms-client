@@ -2,13 +2,13 @@
 package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.jms.util.Shell;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.jms.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration test
@@ -82,7 +82,7 @@ public class SimpleTopicMessageIT extends AbstractITTopic {
         sender.send(message);
 
         TextMessage textMessage = (TextMessage) receiver.receive();
-        assertEquals("Failed to receive proper text message", MESSAGE_TEXT_2, textMessage.getText());
-        assertEquals("Incorrect publisher destination on received message", explicitTopicDestination, (Topic) textMessage.getJMSDestination());
+        assertEquals(MESSAGE_TEXT_2, textMessage.getText(), "Failed to receive proper text message");
+        assertEquals(explicitTopicDestination, (Topic) textMessage.getJMSDestination(), "Incorrect publisher destination on received message");
     }
 }

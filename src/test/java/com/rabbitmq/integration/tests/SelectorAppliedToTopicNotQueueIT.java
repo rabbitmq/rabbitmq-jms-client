@@ -3,9 +3,9 @@ package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
@@ -20,7 +20,7 @@ import javax.jms.TopicConnection;
 import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * To make sure Session#createConsumer works for at least topic when a
@@ -38,7 +38,7 @@ public class SelectorAppliedToTopicNotQueueIT {
     TopicConnection topicConn;
     QueueConnection queueConn;
 
-    @Before
+    @BeforeEach
     public void beforeTests() throws Exception {
         this.connFactory =
             (RMQConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
@@ -47,7 +47,7 @@ public class SelectorAppliedToTopicNotQueueIT {
         this.queueConn = connFactory.createQueueConnection();
     }
 
-    @After
+    @AfterEach
     public void afterTests() throws Exception {
         if (this.topicConn != null)
             this.topicConn.close();
@@ -84,19 +84,23 @@ public class SelectorAppliedToTopicNotQueueIT {
         assertEquals(MESSAGE1, t);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void sendAndReceiveNotSupportedOnQueue() throws Exception {
-        queueConn.start();
-        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-        Queue queue = queueSession.createQueue(QUEUE_NAME);
-        queueSession.createConsumer(queue, "boolProp");
+        assertThrows(UnsupportedOperationException.class, () -> {
+            queueConn.start();
+            QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+            Queue queue = queueSession.createQueue(QUEUE_NAME);
+            queueSession.createConsumer(queue, "boolProp");
+        });
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void sendAndReceiveNotSupportedOnQueueNoLocal() throws Exception {
-        queueConn.start();
-        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-        Queue queue = queueSession.createQueue(QUEUE_NAME);
-        queueSession.createConsumer(queue, "boolProp", false);
+        assertThrows(UnsupportedOperationException.class, () -> {
+            queueConn.start();
+            QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+            Queue queue = queueSession.createQueue(QUEUE_NAME);
+            queueSession.createConsumer(queue, "boolProp", false);
+        });
     }
 }

@@ -1,11 +1,10 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.parse.sql;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SqlParserTest {
 
@@ -61,10 +60,10 @@ public class SqlParserTest {
         if ("".equals(tokenStream.getResidue()) && sp.parseOk()) {
             fail("Parse did not fail!");
         } else {
-            assertEquals( "Parse did not fail with the right message."
-                        , "Terminated before end of stream; next token is: '(' at index: 4."
-                        , sp.getErrorMessage()
-                        );
+            assertEquals("Terminated before end of stream; next token is: '(' at index: 4.",
+                    sp.getErrorMessage(),
+                    "Parse did not fail with the right message."
+            );
         }
     }
 
@@ -77,10 +76,10 @@ public class SqlParserTest {
         if ("".equals(tokenStream.getResidue()) && sp.parseOk()) {
             fail("Parse did not fail!");
         } else {
-            assertEquals( "Parse did not fail with the right message."
-                        , "Terminated before end of stream; next token is: 'and' at index: 1."
-                        , sp.getErrorMessage()
-                        );
+            assertEquals(
+                    "Terminated before end of stream; next token is: 'and' at index: 1."
+                    , sp.getErrorMessage(), "Parse did not fail with the right message."
+            );
         }
     }
 
@@ -93,16 +92,17 @@ public class SqlParserTest {
         if ("".equals(tokenStream.getResidue()) && sp.parseOk()) {
             fail("Parse did not fail!");
         } else {
-            assertEquals( "Parse did not fail correctly. Residue not valid."
-                        , "'"
-                        , tokenStream.getResidue()
-                        );
+            assertEquals(
+                    "'"
+                    , tokenStream.getResidue(),
+                    "Parse did not fail correctly. Residue not valid."
+            );
         }
     }
 
     private void assertParse(String inStr, String... outStr) {
         SqlTokenStream stream = new SqlTokenStream(inStr);
-        assertEquals("Residue not empty", "", stream.getResidue());
+        assertEquals("", stream.getResidue(), "Residue not empty");
 
         SqlParser sp = new SqlParser(stream);
         SqlParseTree pt = sp.parse();
@@ -112,7 +112,7 @@ public class SqlParserTest {
         }
 
         String[] formatted = pt.formattedTree();
-        assertArrayEquals("Parsed tree doesn't match", outStr, formatted);
+        assertArrayEquals(outStr, formatted, "Parsed tree doesn't match");
     }
 
 }

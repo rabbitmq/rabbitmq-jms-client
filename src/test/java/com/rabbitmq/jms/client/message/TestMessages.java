@@ -1,9 +1,7 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client.message;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
@@ -20,7 +18,7 @@ import javax.jms.StreamMessage;
 import javax.jms.TextMessage;
 
 import com.rabbitmq.jms.util.RMQJMSException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestMessages {
 
@@ -85,11 +83,13 @@ public class TestMessages {
         readObjectMessage(message);
     }
 
-    @Test(expected = RMQJMSException.class)
+    @Test
     public void testObjectMessageWithUntrustedPayload() throws Exception {
-        RMQObjectMessage message = new RMQObjectMessage();
-        writeObjectMessage(message, Color.WHITE);
-        readObjectMessage(message, Color.WHITE, Arrays.asList("java.lang", "com.rabbitmq"));
+        assertThrows(RMQJMSException.class, () -> {
+            RMQObjectMessage message = new RMQObjectMessage();
+            writeObjectMessage(message, Color.WHITE);
+            readObjectMessage(message, Color.WHITE, Arrays.asList("java.lang", "com.rabbitmq"));
+        });
     }
 
     @Test

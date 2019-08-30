@@ -1,24 +1,18 @@
 /* Copyright (c) 2013 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.parse.sql;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Test;
-
 import com.rabbitmq.jms.util.TimeTracker;
+import org.junit.jupiter.api.Test;
 
 public class SqlProductionTest {
 
     @Test
     public void root() throws Exception {
-        assertEquals("ROOT incorrectly set", SqlProduction.ROOT, SqlProduction.expression);
+        assertEquals(SqlProduction.ROOT, SqlProduction.expression, "ROOT incorrectly set");
     }
 
     @Test
@@ -177,7 +171,7 @@ public class SqlProductionTest {
                     , "PREFIXUNARYOP: -"
                     , "    LEAF: integer: 1"
                    );
-        assertFalse("Took too long", tt.timedOut());
+        assertFalse(tt.timedOut(), "Took too long");
     }
 
     @Test
@@ -255,12 +249,14 @@ public class SqlProductionTest {
                    );
     }
 
-    @Test(expected = StackOverflowError.class)
+    @Test
     public void deeplyNestedParenthesesParsingOverflowsAboveALimit() throws Exception {
-        assertParse(SqlProduction.simple,
+        assertThrows(StackOverflowError.class, () -> {
+            assertParse(SqlProduction.simple,
                     parens(STACKFRAME_NESTED_PARENS_LIMIT * 10, "1")
-                   , "LEAF: integer: 1"
-                   );
+                    , "LEAF: integer: 1"
+            );
+        });
     }
 
     private String parens(int num, String base) {
@@ -273,23 +269,23 @@ public class SqlProductionTest {
 
     private void assertParse(SqlProduction sct, String inStr, String... outStr) {
         SqlTokenStream stream = new SqlTokenStream(inStr);
-        assertEquals("Residue not empty", "", stream.getResidue());
+        assertEquals("", stream.getResidue(), "Residue not empty");
 
         SqlParseTree stn = sct.parse(stream);
-        assertNotNull("parse failed", stn);
+        assertNotNull(stn, "parse failed");
 
-        assertTrue("Stream not fully used", !stream.moreTokens());
+        assertTrue(!stream.moreTokens(), "Stream not fully used");
 
         String[] formatted = stn.formattedTree();
-        assertArrayEquals("Parsed tree doesn't match", outStr, formatted);
+        assertArrayEquals(outStr, formatted, "Parsed tree doesn't match");
     }
 
     private void assertNullParse(SqlProduction sct) {
         SqlTokenStream stream = new SqlTokenStream("");
-        assertEquals("Residue not empty", "", stream.getResidue());
+        assertEquals("", stream.getResidue(), "Residue not empty");
 
         SqlParseTree stn = sct.parse(stream);
-        assertNull("parse not null for empty tokenstream", stn);
+        assertNull(stn, "parse not null for empty tokenstream");
     }
 
 }
