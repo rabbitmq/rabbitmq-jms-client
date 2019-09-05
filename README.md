@@ -26,14 +26,14 @@ Add the following to `pom.xml` for Maven:
 <dependency>
   <groupId>com.rabbitmq.jms</groupId>
   <artifactId>rabbitmq-jms</artifactId>
-  <version>1.12.0</version>
+  <version>1.13.0</version>
 </dependency>
 ```
 
 Or the following to `build.gradle` for Gradle:
 
 ```
-compile 'com.rabbitmq.jms:rabbitmq-jms:1.12.0'
+compile 'com.rabbitmq.jms:rabbitmq-jms:1.13.0'
 ```
 
 ### Building from Source
