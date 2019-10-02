@@ -1,9 +1,9 @@
-dist: trusty
+dist: bionic
 sudo: required
 
 language: java
 jdk:
-  - oraclejdk8
+  - openjdk11
 
 notifications:
   email:
@@ -13,7 +13,7 @@ env:
 addons:
   apt:
     sources:
-      - sourceline: deb https://packages.erlang-solutions.com/ubuntu trusty contrib
+      - sourceline: deb https://packages.erlang-solutions.com/ubuntu bionic contrib
         key_url: https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc
       - sourceline: 'ppa:deadsnakes/ppa'
 
