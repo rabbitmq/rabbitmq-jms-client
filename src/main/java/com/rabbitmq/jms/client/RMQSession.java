@@ -199,6 +199,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
 
+    /** Options to be used when declaring a queue while creating a producer **/
+    private Map<String,Object> declaredQueueOptions = null;
+
     /**
      * Creates a session object associated with a connection
      * @param sessionParams parameters for this session
@@ -849,8 +852,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
          */
         boolean exclusive = dest.isTemporary() || ((!dest.isQueue()) && (!durableSubscriber));
 
-        Map<String,Object> options = null; //new HashMap<String,Object>();
-
         if (dest.isQueue()) {
             if (dest.noNeedToDeclareExchange()) {
                 logger.warn("no need to declare built-in exchange for queue destination '{}'", dest);
@@ -876,17 +877,17 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
         try { /* Declare the queue to RabbitMQ -- this creates it if it doesn't already exist */
             this.logger.debug("declare RabbitMQ queue name({}), durable({}), exclusive({}), auto-delete({}), properties({})",
-                              queueName, durable, exclusive, false, options);
+                              queueName, durable, exclusive, false, declaredQueueOptions);
             this.channel.queueDeclare(queueName,
                                       durable,
                                       exclusive,
                                       autoDelete,
-                                      options); // object properties
+                                      declaredQueueOptions); // object properties
 
             /* Temporary or 'topic queues' are exclusive and therefore get deleted by RabbitMQ on close */
         } catch (Exception x) {
             this.logger.error("RabbitMQ exception on queue declare name({}), durable({}), exclusive({}), auto-delete({}), properties({})",
-                              queueName, durable, exclusive, autoDelete, options, x);
+                              queueName, durable, exclusive, autoDelete, declaredQueueOptions, x);
             throw new RMQJMSException(x);
         }
 
@@ -899,7 +900,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                         null); // arguments
             } catch (Exception x) {
                 this.logger.error("RabbitMQ exception on queue declare name({}), durable({}), exclusive({}), auto-delete({}), properties({})",
-                        queueName, durable, exclusive, false, options, x);
+                        queueName, durable, exclusive, false, declaredQueueOptions, x);
                 throw new RMQJMSException(x);
             }
         }
