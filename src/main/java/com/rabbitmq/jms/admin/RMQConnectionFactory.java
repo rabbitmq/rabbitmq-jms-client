@@ -72,6 +72,12 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private boolean requeueOnMessageListenerException = false;
 
     /**
+     * Whether to commit nack on rollback or not.
+     * Default is false.
+     */
+    private boolean commitNackOnRollback = false;
+
+    /**
      * Whether using auto-delete for server-named queues for non-durable topics.
      * If set to true, those queues will be deleted when the session is closed.
      * If set to false, queues will be deleted when the owning connection is closed.
@@ -252,6 +258,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setChannelsQos(channelsQos)
             .setPreferProducerMessageProperty(preferProducerMessageProperty)
             .setRequeueOnMessageListenerException(requeueOnMessageListenerException)
+            .setCommitBackOnRollback(commitNackOnRollback)
             .setCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose(this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose)
             .setAmqpPropertiesCustomiser(amqpPropertiesCustomiser)
             .setSendingContextConsumer(sendingContextConsumer)
@@ -808,6 +815,18 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     public boolean isRequeueOnMessageListenerException() {
         return requeueOnMessageListenerException;
+    }
+
+    /**
+     * Whether to commit nack on rollback or not.
+     * Default is false.
+     */
+    public void setCommitNackOnRollback(boolean commitNackOnRollback) {
+        this.commitNackOnRollback = commitNackOnRollback;
+    }
+
+    public boolean isCommitNackOnRollback() {
+        return commitNackOnRollback;
     }
 
     public void setCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose(boolean cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose) {

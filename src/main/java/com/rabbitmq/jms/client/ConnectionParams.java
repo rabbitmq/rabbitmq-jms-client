@@ -48,6 +48,12 @@ public class ConnectionParams {
     private boolean requeueOnMessageListenerException = false;
 
     /**
+     * Whether to commit nack on rollback or not.
+     * Default is false.
+     */
+    private boolean commitNackOnRollback = false;
+
+    /**
      * Whether using auto-delete for server-named queues for non-durable topics.
      * If set to true, those queues will be deleted when the session is closed.
      * If set to false, queues will be deleted when the owning connection is closed.
@@ -145,6 +151,15 @@ public class ConnectionParams {
 
     public ConnectionParams setRequeueOnMessageListenerException(boolean requeueOnMessageListenerException) {
         this.requeueOnMessageListenerException = requeueOnMessageListenerException;
+        return this;
+    }
+
+    public boolean willCommitNackOnRollback() {
+        return commitNackOnRollback;
+    }
+
+    public ConnectionParams setCommitBackOnRollback(boolean commitNackOnRollback) {
+        this.commitNackOnRollback = commitNackOnRollback;
         return this;
     }
 

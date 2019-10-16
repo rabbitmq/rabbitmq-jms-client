@@ -342,6 +342,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                 GetResponse resp = this.delayedReceiver.get(tt);
                 if (resp == null) return null; // nothing received in time or aborted
                 this.dealWithAcknowledgements(this.isAutoAck(), resp.getEnvelope().getDeliveryTag());
+                this.session.addUncommittedTag(resp.getEnvelope().getDeliveryTag());
                 return RMQMessage.convertMessage(this.session, this.destination, resp, this.receivingContextConsumer);
             } finally {
                 this.receiveManager.exit();
