@@ -382,6 +382,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.trustedPackages = trustedPackages;
     }
 
+    public void setDeclaredQueueOptions(Map<String, Object> declaredQueueOptions) { this.declaredQueueOptions = declaredQueueOptions; }
+
     /**
      * Same as {@link RMQSession#getAcknowledgeMode()} but without
      * a declared exception in the throws clause.
