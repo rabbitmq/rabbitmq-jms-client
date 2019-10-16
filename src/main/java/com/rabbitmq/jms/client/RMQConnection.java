@@ -106,6 +106,12 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private boolean requeueOnMessageListenerException;
 
     /**
+     * Whether to commit nack on rollback or not.
+     * Default is false.
+     */
+    private boolean commitNackOnRollback;
+
+    /**
      * Whether using auto-delete for server-named queues for non-durable topics.
      * If set to true, those queues will be deleted when the session is closed.
      * If set to false, queues will be deleted when the owning connection is closed.
@@ -168,6 +174,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.channelsQos = connectionParams.getChannelsQos();
         this.preferProducerMessageProperty = connectionParams.willPreferProducerMessageProperty();
         this.requeueOnMessageListenerException = connectionParams.willRequeueOnMessageListenerException();
+        this.commitNackOnRollback = connectionParams.willCommitNackOnRollback();
         this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose = connectionParams.isCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose();
         this.amqpPropertiesCustomiser = connectionParams.getAmqpPropertiesCustomiser();
         this.throwExceptionOnConsumerStartFailure = connectionParams.willThrowExceptionOnConsumerStartFailure();
@@ -221,6 +228,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setSubscriptions(this.subscriptions)
             .setPreferProducerMessageProperty(this.preferProducerMessageProperty)
             .setRequeueOnMessageListenerException(this.requeueOnMessageListenerException)
+            .setCommitNackOnRollback(this.commitNackOnRollback)
             .setCleanUpServerNamedQueuesForNonDurableTopics(this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose)
             .setAmqpPropertiesCustomiser(this.amqpPropertiesCustomiser)
             .setThrowExceptionOnConsumerStartFailure(this.throwExceptionOnConsumerStartFailure)
