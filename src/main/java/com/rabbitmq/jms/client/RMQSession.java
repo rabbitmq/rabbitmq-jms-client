@@ -204,8 +204,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
 
-    /** Options to be used when declaring a queue while creating a producer **/
-    private Map<String,Object> declaredQueueOptions = null;
+    /**
+     * Arguments to be used when declaring a queue while creating a producer
+     *
+     * @since 1.14.0
+     */
+    private Map<String, Object> queueDeclareArguments = null;
 
     /**
      * Creates a session object associated with a connection
@@ -388,7 +392,18 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.trustedPackages = trustedPackages;
     }
 
-    public void setDeclaredQueueOptions(Map<String, Object> declaredQueueOptions) { this.declaredQueueOptions = declaredQueueOptions; }
+    /**
+     * Set arguments to be used when declaring a queue while creating a producer.
+     * <p>
+     * Use this method only when you need to customize the creation of an AMQP queue.
+     * Note calling this method requires to cast the JMS {@link Session} to {@link RMQSession},
+     * coupling the code to the JMS implementation. Common usage is to keep this call in
+     * one place, not scattered in the application code.
+     *
+     * @param queueDeclareArguments
+     * @since 1.14.0
+     */
+    public void setQueueDeclareArguments(Map<String, Object> queueDeclareArguments) { this.queueDeclareArguments = queueDeclareArguments; }
 
     /**
      * Same as {@link RMQSession#getAcknowledgeMode()} but without
@@ -885,18 +900,18 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             !durable && queueNameOverride != null && !dest.isQueue() : false;
 
         try { /* Declare the queue to RabbitMQ -- this creates it if it doesn't already exist */
-            this.logger.debug("declare RabbitMQ queue name({}), durable({}), exclusive({}), auto-delete({}), properties({})",
-                              queueName, durable, exclusive, false, declaredQueueOptions);
+            this.logger.debug("declare RabbitMQ queue name({}), durable({}), exclusive({}), auto-delete({}), arguments({})",
+                              queueName, durable, exclusive, false, queueDeclareArguments);
             this.channel.queueDeclare(queueName,
                                       durable,
                                       exclusive,
                                       autoDelete,
-                                      declaredQueueOptions); // object properties
+                                      queueDeclareArguments);
 
             /* Temporary or 'topic queues' are exclusive and therefore get deleted by RabbitMQ on close */
         } catch (Exception x) {
-            this.logger.error("RabbitMQ exception on queue declare name({}), durable({}), exclusive({}), auto-delete({}), properties({})",
-                              queueName, durable, exclusive, autoDelete, declaredQueueOptions, x);
+            this.logger.error("RabbitMQ exception on queue declare name({}), durable({}), exclusive({}), auto-delete({}), arguments({})",
+                              queueName, durable, exclusive, autoDelete, queueDeclareArguments, x);
             throw new RMQJMSException(x);
         }
 
@@ -909,7 +924,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                         null); // arguments
             } catch (Exception x) {
                 this.logger.error("RabbitMQ exception on queue declare name({}), durable({}), exclusive({}), auto-delete({}), properties({})",
-                        queueName, durable, exclusive, false, declaredQueueOptions, x);
+                        queueName, durable, exclusive, false, queueDeclareArguments, x);
                 throw new RMQJMSException(x);
             }
         }
