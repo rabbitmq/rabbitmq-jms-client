@@ -19,12 +19,12 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  *
  */
-public class CommitNackMessageOnRollbackIT extends AbstractITQueue {
-    private static final String EXCHANGE_NAME = "test.exchange." + CommitNackMessageOnRollbackIT.class.getCanonicalName();
-    private static final String EXCHANGE_DLX_NAME = "test.exchange." + CommitNackMessageOnRollbackIT.class.getCanonicalName() + ".dlx";
-    private static final String QUEUE_NAME = "test.queue." + CommitNackMessageOnRollbackIT.class.getCanonicalName();
-    private static final String QUEUE_DLX_NAME = "test.queue." + CommitNackMessageOnRollbackIT.class.getCanonicalName() + ".dlx";
-    private static final String MESSAGE = "Hello " + CommitNackMessageOnRollbackIT.class.getName();
+public class NackMessageOnRollbackIT extends AbstractITQueue {
+    private static final String EXCHANGE_NAME = "test.exchange." + NackMessageOnRollbackIT.class.getCanonicalName();
+    private static final String EXCHANGE_DLX_NAME = "test.exchange." + NackMessageOnRollbackIT.class.getCanonicalName() + ".dlx";
+    private static final String QUEUE_NAME = "test.queue." + NackMessageOnRollbackIT.class.getCanonicalName();
+    private static final String QUEUE_DLX_NAME = "test.queue." + NackMessageOnRollbackIT.class.getCanonicalName() + ".dlx";
+    private static final String MESSAGE = "Hello " + NackMessageOnRollbackIT.class.getName();
     private static final String ROUTING_KEY = "test";
 
     @BeforeEach public void init() throws Exception {
@@ -55,7 +55,7 @@ public class CommitNackMessageOnRollbackIT extends AbstractITQueue {
     }
 
     @Test
-    public void commitNackParameterTrueCommitMessageShouldBeGone() throws Exception {
+    public void nackParameterTrueCommitMessageShouldBeGone() throws Exception {
         sendMessage();
         QueueConnection connection = null;
         try {
@@ -91,7 +91,7 @@ public class CommitNackMessageOnRollbackIT extends AbstractITQueue {
     }
 
     @Test
-    public void commitNackParameterTrueRollbackMessageShouldBeInDlxQueue() throws Exception {
+    public void nackParameterTrueRollbackMessageShouldBeInDlxQueue() throws Exception {
         sendMessage();
         QueueConnection connection = null;
         try {
@@ -146,7 +146,7 @@ public class CommitNackMessageOnRollbackIT extends AbstractITQueue {
 
     private QueueConnection connection() throws Exception {
         RMQConnectionFactory connectionFactory = (RMQConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory().getConnectionFactory();
-        connectionFactory.setCommitNackOnRollback(true);
+        connectionFactory.setNackOnRollback(true);
         QueueConnection queueConnection = connectionFactory.createQueueConnection();
         queueConnection.start();
         return queueConnection;

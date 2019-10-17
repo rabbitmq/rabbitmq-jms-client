@@ -97,7 +97,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      * Whether to commit nack on rollback or not.
      * Default is false.
      */
-    private boolean commitNackOnRollback;
+    private final boolean nackOnRollback;
 
     /**
      * Whether using auto-delete for server-named queues for non-durable topics.
@@ -153,7 +153,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.channelsQos = connectionParams.getChannelsQos();
         this.preferProducerMessageProperty = connectionParams.willPreferProducerMessageProperty();
         this.requeueOnMessageListenerException = connectionParams.willRequeueOnMessageListenerException();
-        this.commitNackOnRollback = connectionParams.willCommitNackOnRollback();
+        this.nackOnRollback = connectionParams.willNackOnRollback();
         this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose = connectionParams.isCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose();
         this.amqpPropertiesCustomiser = connectionParams.getAmqpPropertiesCustomiser();
         this.sendingContextConsumer = connectionParams.getSendingContextConsumer();
@@ -206,7 +206,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setSubscriptions(this.subscriptions)
             .setPreferProducerMessageProperty(this.preferProducerMessageProperty)
             .setRequeueOnMessageListenerException(this.requeueOnMessageListenerException)
-            .setCommitNackOnRollback(this.commitNackOnRollback)
+            .setNackOnRollback(this.nackOnRollback)
             .setCleanUpServerNamedQueuesForNonDurableTopics(this.cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose)
             .setAmqpPropertiesCustomiser(this.amqpPropertiesCustomiser)
             .setSendingContextConsumer(this.sendingContextConsumer)
