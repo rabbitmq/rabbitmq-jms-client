@@ -49,7 +49,7 @@ public class ConnectionParams {
      * Whether to commit nack on rollback or not.
      * Default is false.
      */
-    private boolean commitNackOnRollback = false;
+    private boolean nackOnRollback = false;
 
     /**
      * Whether using auto-delete for server-named queues for non-durable topics.
@@ -161,12 +161,12 @@ public class ConnectionParams {
         return this;
     }
 
-    public boolean willCommitNackOnRollback() {
-        return commitNackOnRollback;
+    public boolean willNackOnRollback() {
+        return nackOnRollback;
     }
 
-    public ConnectionParams setCommitBackOnRollback(boolean commitNackOnRollback) {
-        this.commitNackOnRollback = commitNackOnRollback;
+    public ConnectionParams setNackOnRollback(boolean nackOnRollback) {
+        this.nackOnRollback = nackOnRollback;
         return this;
     }
 

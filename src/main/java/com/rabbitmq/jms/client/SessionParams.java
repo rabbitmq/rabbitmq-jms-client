@@ -44,7 +44,7 @@ public class SessionParams {
      * Whether to commit nack on rollback or not.
      * Default is false.
      */
-    private boolean commitNackOnRollback = false;
+    private boolean nackOnRollback = false;
 
     /**
      * Whether using auto-delete for server-named queues for non-durable topics.
@@ -157,12 +157,12 @@ public class SessionParams {
         return this;
     }
 
-    public boolean willCommitNackOnRollback() {
-        return commitNackOnRollback;
+    public boolean willNackOnRollback() {
+        return nackOnRollback;
     }
 
-    public SessionParams setCommitNackOnRollback(boolean rejectOnMessageListenerException) {
-        this.commitNackOnRollback = rejectOnMessageListenerException;
+    public SessionParams setNackOnRollback(boolean nackOnRollback) {
+        this.nackOnRollback = nackOnRollback;
         return this;
     }
 
