@@ -97,6 +97,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private boolean requeueOnMessageListenerException = false;
 
     /**
+     * Whether to commit nack on rollback or not.
+     * Default is false.
+     */
+    private final boolean nackOnRollback;
+
+    /**
      * Whether using auto-delete for server-named queues for non-durable topics.
      * If set to true, those queues will be deleted when the session is closed.
      * If set to false, queues will be deleted when the owning connection is closed.
@@ -139,6 +145,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * Each message acknowledgement must ACK all (unacknowledged) messages received up to this point, and
      * we must never acknowledge a message more than once (nor acknowledge a message that doesn't exist). */
     private final SortedSet<Long> unackedMessageTags = Collections.synchronizedSortedSet(new TreeSet<Long>());
+
+    /* Holds the uncommited tags to commit a nack on rollback */
+    private final List<Long> uncommittedMessageTags = new ArrayList<Long>(); // GuardedBy("commitLock");
 
     /** List of all our durable subscriptions so we can track them */
     private final Map<String, RMQMessageConsumer> subscriptions;
@@ -221,6 +230,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.deliveryExecutor = new DeliveryExecutor(sessionParams.getOnMessageTimeoutMs());
         this.preferProducerMessageProperty = sessionParams.willPreferProducerMessageProperty();
         this.requeueOnMessageListenerException = sessionParams.willRequeueOnMessageListenerException();
+        this.nackOnRollback = sessionParams.willNackOnRollback();
         this.cleanUpServerNamedQueuesForNonDurableTopics = sessionParams.isCleanUpServerNamedQueuesForNonDurableTopics();
         this.amqpPropertiesCustomiser = sessionParams.getAmqpPropertiesCustomiser();
         this.sendingContextConsumer = sessionParams.getSendingContextConsumer();
@@ -445,11 +455,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 // Call commit on the channel.
                 // All messages ought already to have been acked.
                 this.channel.txCommit();
+                this.clearUncommittedTags();
             } catch (Exception x) {
                 this.logger.error("RabbitMQ exception on channel.txCommit() in session {}", this, x);
                 throw new RMQJMSException(x);
             } finally {
-                    this.leaveCommittingBlock();
+                this.leaveCommittingBlock();
             }
         }
     }
@@ -466,14 +477,21 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             try {
                 // rollback the RabbitMQ transaction which may cause some messages to become unacknowledged
                 this.channel.txRollback();
+                if (this.nackOnRollback && this.uncommittedMessageTags.size() > 0) {
+                    for (Long dtag : this.uncommittedMessageTags) {
+                        this.channel.basicNack(dtag, false, false);
+                    }
+                    this.channel.txCommit();
+                    this.clearUncommittedTags();
+                }
                 // requeue all unacknowledged messages (not automatically done by RabbitMQ)
                 this.channel.basicRecover(true); // requeue
             } catch (IOException x) {
-                    this.logger.error("RabbitMQ exception on channel.txRollback() or channel.basicRecover(true) in session {}",
-                                      this, x);
+                this.logger.error("RabbitMQ exception on channel.txRollback() or channel.basicRecover(true) in session {}",
+                                  this, x);
                 throw new RMQJMSException(x);
             } finally {
-                    this.leaveCommittingBlock();
+                this.leaveCommittingBlock();
             }
         }
     }
@@ -526,6 +544,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
                 // rollback anything not committed already
                 if (this.getTransactedNoException()) {
+                    // don't nack messages on close
+                    this.clearUncommittedTags();
                     this.rollback();
                 }
 
@@ -1319,5 +1339,20 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private final boolean getIndividualAck() {
         return this.isIndividualAck;
+    }
+
+    void addUncommittedTag(long deliveryTag) {
+        if (this.nackOnRollback && this.getTransactedNoException()) {
+            if (this.enterCommittingBlock()) {
+                this.uncommittedMessageTags.add(deliveryTag);
+                this.leaveCommittingBlock();
+            }
+        }
+    }
+
+    private void clearUncommittedTags() {
+        if (this.nackOnRollback) {
+            this.uncommittedMessageTags.clear();
+        }
     }
 }

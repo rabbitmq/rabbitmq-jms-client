@@ -131,6 +131,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
                     // see section 4.5.2 of JMS 1.1 specification
                     RMQMessage msg = RMQMessage.convertMessage(this.messageConsumer.getSession(), this.messageConsumer.getDestination(),
                         response, this.receivingContextConsumer);
+                    this.messageConsumer.getSession().addUncommittedTag(dtag);
                     boolean runtimeExceptionInListener = false;
                     try {
                         this.messageConsumer.getSession().deliverMessage(msg, this.messageListener);
@@ -151,6 +152,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
                     dealWithAcknowledgments(dtag);
                     RMQMessage msg = RMQMessage.convertMessage(this.messageConsumer.getSession(), this.messageConsumer.getDestination(),
                         response, this.receivingContextConsumer);
+                    this.messageConsumer.getSession().addUncommittedTag(dtag);
                     this.messageConsumer.getSession().deliverMessage(msg, this.messageListener);
                 }
             } else {
