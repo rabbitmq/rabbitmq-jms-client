@@ -96,14 +96,14 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      * properties or not.
      * Default is true.
      */
-    private boolean preferProducerMessageProperty;
+    private final boolean preferProducerMessageProperty;
 
     /**
      * Whether requeue message on {@link RuntimeException} in the
      * {@link javax.jms.MessageListener} or not.
      * Default is false.
      */
-    private boolean requeueOnMessageListenerException;
+    private final boolean requeueOnMessageListenerException;
 
     /**
      * Whether to commit nack on rollback or not.

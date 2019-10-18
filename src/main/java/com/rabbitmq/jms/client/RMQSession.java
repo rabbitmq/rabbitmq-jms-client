@@ -85,7 +85,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * properties or not.
      * Default is true.
      */
-    private boolean preferProducerMessageProperty = true;
+    private final boolean preferProducerMessageProperty;
 
     /**
      * Whether requeue message on {@link RuntimeException} in the
