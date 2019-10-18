@@ -159,7 +159,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      *
      * @see WhiteListObjectInputStream
      */
-    private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
+    private final List<String> trustedPackages;
 
     /**
      * Creates an RMQConnection object.
@@ -183,6 +183,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.sendingContextConsumer = connectionParams.getSendingContextConsumer();
         this.receivingContextConsumer = connectionParams.getReceivingContextConsumer();
         this.confirmListener = connectionParams.getConfirmListener();
+        this.trustedPackages = connectionParams.getTrustedPackages();
     }
 
     /**
@@ -237,8 +238,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setSendingContextConsumer(this.sendingContextConsumer)
             .setReceivingContextConsumer(this.receivingContextConsumer)
             .setConfirmListener(this.confirmListener)
+            .setTrustedPackages(this.trustedPackages)
         );
-        session.setTrustedPackages(this.trustedPackages);
         this.sessions.add(session);
         return session;
     }
@@ -282,15 +283,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
     public List<String> getTrustedPackages() {
         return trustedPackages;
-    }
-
-    /**
-     * @param value list of trusted package prefixes
-     *
-     * @see com.rabbitmq.jms.admin.RMQConnectionFactory#setTrustedPackages(List)
-     */
-    public void setTrustedPackages(List<String> value) {
-        this.trustedPackages = value;
     }
 
     /**

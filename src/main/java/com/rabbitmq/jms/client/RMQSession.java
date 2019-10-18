@@ -213,7 +213,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      *
      * @see WhiteListObjectInputStream
      */
-    private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
+    private final List<String> trustedPackages;
 
     /**
      * Arguments to be used when declaring a queue while creating a producer
@@ -244,6 +244,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.sendingContextConsumer = sessionParams.getSendingContextConsumer();
         this.receivingContextConsumer = sessionParams.getReceivingContextConsumer() == null ?
             ReceivingContextConsumer.NO_OP : sessionParams.getReceivingContextConsumer();
+        this.trustedPackages = sessionParams.getTrustedPackages();
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;
@@ -395,13 +396,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         return getAcknowledgeModeNoException();
     }
 
-    @SuppressWarnings("unused")
     public List<String> getTrustedPackages() {
         return trustedPackages;
-    }
-
-    public void setTrustedPackages(List<String> trustedPackages) {
-        this.trustedPackages = trustedPackages;
     }
 
     /**

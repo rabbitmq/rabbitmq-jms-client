@@ -311,8 +311,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setSendingContextConsumer(sendingContextConsumer)
             .setReceivingContextConsumer(rcc)
             .setConfirmListener(confirmListener)
+            .setTrustedPackages(this.trustedPackages)
         );
-        conn.setTrustedPackages(this.trustedPackages);
         logger.debug("Connection {} created.", conn);
         return conn;
     }
