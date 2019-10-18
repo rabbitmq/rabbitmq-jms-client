@@ -87,14 +87,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * properties or not.
      * Default is true.
      */
-    private boolean preferProducerMessageProperty = true;
+    private final boolean preferProducerMessageProperty;
 
     /**
      * Whether requeue message on {@link RuntimeException} in the
      * {@link javax.jms.MessageListener} or not.
      * Default is false.
      */
-    private boolean requeueOnMessageListenerException = false;
+    private final boolean requeueOnMessageListenerException;
 
     /**
      * Whether to commit nack on rollback or not.
