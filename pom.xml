@@ -43,7 +43,7 @@
   <properties>
     <rabbitmq.version>5.7.3</rabbitmq.version>
     <slf4j-api.version>1.7.26</slf4j-api.version>
-    <junit.jupiter.version>5.5.1</junit.jupiter.version>
+    <junit.jupiter.version>5.5.2</junit.jupiter.version>
     <mockito-core.version>3.0.0</mockito-core.version>
     <assertj.version>3.13.2</assertj.version>
     <spring.version>5.1.8.RELEASE</spring.version>
@@ -134,6 +134,13 @@
       <groupId>org.apiguardian</groupId>
       <artifactId>apiguardian-api</artifactId>
       <version>1.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- for parameterized tests -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <version>${junit.jupiter.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

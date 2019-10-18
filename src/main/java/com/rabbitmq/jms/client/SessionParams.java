@@ -46,6 +46,8 @@ public class SessionParams {
     /**
      * Whether to commit nack on rollback or not.
      * Default is false.
+     *
+     * @since 1.14.0
      */
     private boolean nackOnRollback = false;
 

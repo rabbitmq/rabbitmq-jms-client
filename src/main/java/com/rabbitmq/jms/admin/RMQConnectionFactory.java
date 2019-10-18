@@ -72,8 +72,18 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private boolean requeueOnMessageListenerException = false;
 
     /**
-     * Whether to commit nack on rollback or not.
+     * Whether to <a href="https://www.rabbitmq.com/nack.html">nack</a> messages on rollback or not.
+     *
+     * <b>Nack-ed messages will be discarded, not re-queued.</b> Queues
+     * will typically have <a href="https://www.rabbitmq.com/dlx.html">dead lettering</a>
+     * configured when enabling this feature, so nack-ed messages are routed
+     * elsewhere and not discarded forever.
+     * <p>
      * Default is false.
+     *
+     * @see <a href="https://www.rabbitmq.com/nack.html">Negative Acknowledgements</a>
+     * @see <a href="https://www.rabbitmq.com/dlx.html">Dead Letter Exchanges</a>
+     * @since 1.14.0
      */
     private boolean nackOnRollback = false;
 
@@ -818,8 +828,19 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * Whether to commit nack on rollback or not.
+     * Whether to <a href="https://www.rabbitmq.com/nack.html">nack</a> messages on rollback or not.
+     *
+     * <b>Nack-ed messages will be discarded, not re-queued.</b> Queues
+     * will typically have <a href="https://www.rabbitmq.com/dlx.html">dead lettering</a>
+     * configured when enabling this feature, so nack-ed messages are routed
+     * elsewhere and not discarded forever.
+     * <p>
      * Default is false.
+     *
+     * @param nackOnRollback true to nack and discard messages on rollback, false to requeue them
+     * @see <a href="https://www.rabbitmq.com/nack.html">Negative Acknowledgements</a>
+     * @see <a href="https://www.rabbitmq.com/dlx.html">Dead Letter Exchanges</a>
+     * @since 1.14.0
      */
     public void setNackOnRollback(boolean nackOnRollback) {
         this.nackOnRollback = nackOnRollback;
