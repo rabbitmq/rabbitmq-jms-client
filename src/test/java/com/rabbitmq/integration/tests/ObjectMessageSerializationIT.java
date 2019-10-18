@@ -1,11 +1,10 @@
-/* Copyright (c) 2013, 2014 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2019 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
-import com.rabbitmq.jms.client.RMQConnection;
+import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.client.message.RMQObjectMessage;
 import com.rabbitmq.jms.client.message.TestMessages;
 import com.rabbitmq.jms.util.RMQJMSException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.jms.Queue;
@@ -27,10 +26,10 @@ public class ObjectMessageSerializationIT extends AbstractITQueue {
     private static final long TEST_RECEIVE_TIMEOUT = 1000; // one second
     private static final java.util.List<String> TRUSTED_PACKAGES = Arrays.asList("java.lang", "com.rabbitmq.jms");
 
-    @BeforeEach
-    public void configureTrustedPackages() {
-        ((RMQConnection) queueConn).setTrustedPackages(
-                TRUSTED_PACKAGES);
+    @Override
+    protected void customise(RMQConnectionFactory connectionFactory) {
+        super.customise(connectionFactory);
+        connectionFactory.setTrustedPackages(TRUSTED_PACKAGES);
     }
 
     protected void testReceiveObjectMessageWithPayload(Object payload) throws Exception {
@@ -44,9 +43,7 @@ public class ObjectMessageSerializationIT extends AbstractITQueue {
             QueueSender queueSender = queueSession.createSender(queue);
             queueSender.send(MessageTestType.OBJECT.gen(queueSession, (Serializable) payload));
         } finally {
-            reconnect();
-            ((RMQConnection) queueConn).setTrustedPackages(
-                    Arrays.asList("java.lang", "com.rabbitmq.jms"));
+            reconnect(Arrays.asList("java.lang", "com.rabbitmq.jms"));
         }
 
         queueConn.start();
@@ -86,6 +83,16 @@ public class ObjectMessageSerializationIT extends AbstractITQueue {
         assertThrows(RMQJMSException.class, () -> {
             testReceiveObjectMessageWithPayload(Color.WHITE);
         });
+    }
+
+    protected void reconnect(java.util.List<String> trustedPackages) throws Exception {
+        if (queueConn != null) {
+            this.queueConn.close();
+            ((RMQConnectionFactory) connFactory).setTrustedPackages(trustedPackages);
+            this.queueConn = connFactory.createQueueConnection();
+        } else {
+            fail("Cannot reconnect");
+        }
     }
 }
 
