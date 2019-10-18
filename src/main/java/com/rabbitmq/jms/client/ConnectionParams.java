@@ -3,10 +3,12 @@ package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Connection;
+import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import java.util.function.BiFunction;
+import java.util.List;
 
 /**
  * Holder for {@link RMQConnection} constructor arguments.
@@ -92,6 +94,8 @@ public class ConnectionParams {
      * @since 1.13.0
      */
     private ConfirmListener confirmListener;
+
+    private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
 
     public Connection getRabbitConnection() {
         return rabbitConnection;
@@ -208,5 +212,14 @@ public class ConnectionParams {
 
     public ConfirmListener getConfirmListener() {
         return confirmListener;
+    }
+
+    public ConnectionParams setTrustedPackages(List<String> trustedPackages) {
+        this.trustedPackages = trustedPackages;
+        return this;
+    }
+
+    public List<String> getTrustedPackages() {
+        return trustedPackages;
     }
 }

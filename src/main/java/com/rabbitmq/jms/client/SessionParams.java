@@ -1,10 +1,12 @@
-/* Copyright (c) 2016-2018 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2016-2019 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 
 import javax.jms.Message;
 import javax.jms.MessageProducer;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
@@ -88,6 +90,8 @@ public class SessionParams {
      * @since 1.13.0
      */
     private ConfirmListener confirmListener;
+
+    private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
 
     public RMQConnection getConnection() {
         return connection;
@@ -204,5 +208,14 @@ public class SessionParams {
 
     public ConfirmListener getConfirmListener() {
         return confirmListener;
+    }
+
+    public SessionParams setTrustedPackages(List<String> trustedPackages) {
+        this.trustedPackages = trustedPackages;
+        return this;
+    }
+
+    public List<String> getTrustedPackages() {
+        return trustedPackages;
     }
 }
