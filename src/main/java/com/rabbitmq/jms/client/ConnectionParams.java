@@ -1,4 +1,4 @@
-/* Copyright (c) 2016-2018 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2016-2019 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.Connection;
@@ -48,6 +48,8 @@ public class ConnectionParams {
     /**
      * Whether to commit nack on rollback or not.
      * Default is false.
+     *
+     * @since 1.14.0
      */
     private boolean nackOnRollback = false;
 

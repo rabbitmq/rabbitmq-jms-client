@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2018 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2019 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.Channel;
@@ -108,6 +108,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     /**
      * Whether to commit nack on rollback or not.
      * Default is false.
+     *
+     * @since 1.14.0
      */
     private final boolean nackOnRollback;
 

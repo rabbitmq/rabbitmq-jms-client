@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2018 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2019 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
@@ -97,6 +97,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     /**
      * Whether to commit nack on rollback or not.
      * Default is false.
+     *
+     * @since 1.14.0
      */
     private final boolean nackOnRollback;
 

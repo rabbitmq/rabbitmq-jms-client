@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2019 Pivotal Software, Inc. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.client.Channel;
@@ -7,12 +7,19 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.RMQConnection;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import javax.jms.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,35 +34,67 @@ public class NackMessageOnRollbackIT extends AbstractITQueue {
     private static final String MESSAGE = "Hello " + NackMessageOnRollbackIT.class.getName();
     private static final String ROUTING_KEY = "test";
 
-    @BeforeEach public void init() throws Exception {
-        Connection connection = null;
-        try {
-            com.rabbitmq.client.ConnectionFactory connectionFactory = new ConnectionFactory();
-            connection = connectionFactory.newConnection();
-            Channel channel = connection.createChannel();
+    Connection connection;
 
+    static Stream<Arguments> messageProviderArguments() {
+        return Stream.of(
+                Arguments.of(asynchronousMessageProvider()),
+                Arguments.of(synchronousMessageProvider())
+        );
+    }
+
+    private static MessageProvider synchronousMessageProvider() {
+        return queueReceiver -> queueReceiver.receive(10_000L);
+    }
+
+    private static MessageProvider asynchronousMessageProvider() {
+        return queueReceiver -> {
+            CountDownLatch latch = new CountDownLatch(1);
+            AtomicReference<Message> messageReference = new AtomicReference<>();
+            queueReceiver.setMessageListener(message -> {
+                messageReference.set(message);
+                latch.countDown();
+            });
+            latch.await(10, TimeUnit.SECONDS);
+            return messageReference.get();
+        };
+    }
+
+    @BeforeEach
+    public void init() throws Exception {
+        com.rabbitmq.client.ConnectionFactory connectionFactory = new ConnectionFactory();
+        connection = connectionFactory.newConnection();
+        Channel channel = connection.createChannel();
+
+        channel.exchangeDeclare(EXCHANGE_NAME, "direct");
+        HashMap<String, Object> args = new HashMap<String, Object>();
+        args.put("x-dead-letter-exchange", EXCHANGE_DLX_NAME);
+        channel.queueDeclare(QUEUE_NAME, false, false, false, args);
+        channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, ROUTING_KEY);
+
+        channel.exchangeDeclare(EXCHANGE_DLX_NAME, "direct");
+        channel.queueDeclare(QUEUE_DLX_NAME, false, false, false, null);
+        channel.queueBind(QUEUE_DLX_NAME, EXCHANGE_DLX_NAME, ROUTING_KEY);
+    }
+
+    @AfterEach
+    public void tearDown() throws Exception {
+        try {
+            Channel channel = connection.createChannel();
             channel.exchangeDelete(EXCHANGE_NAME);
             channel.queueDelete(QUEUE_NAME);
-            channel.exchangeDeclare(EXCHANGE_NAME, "direct");
-            HashMap<String, Object> args = new HashMap<String, Object>();
-            args.put("x-dead-letter-exchange", EXCHANGE_DLX_NAME);
-            channel.queueDeclare(QUEUE_NAME, false, false, false, args);
-            channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, ROUTING_KEY);
-
             channel.exchangeDelete(EXCHANGE_DLX_NAME);
             channel.queueDelete(QUEUE_DLX_NAME);
-            channel.exchangeDeclare(EXCHANGE_DLX_NAME, "direct");
-            channel.queueDeclare(QUEUE_DLX_NAME, false, false, false, null);
-            channel.queueBind(QUEUE_DLX_NAME, EXCHANGE_DLX_NAME, ROUTING_KEY);
         } finally {
-            if (connection  != null) {
+            if (connection != null) {
                 connection.close();
             }
         }
     }
 
-    @Test
-    public void nackParameterTrueCommitMessageShouldBeGone() throws Exception {
+    @ParameterizedTest
+    @MethodSource("messageProviderArguments")
+    public void nackParameterTrueCommitMessageShouldBeGone(MessageProvider messageProvider) throws Exception {
         sendMessage();
         QueueConnection connection = null;
         try {
@@ -65,7 +104,7 @@ public class NackMessageOnRollbackIT extends AbstractITQueue {
             queue.setAmqp(true);
             queue.setAmqpQueueName(QUEUE_NAME);
             QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-            Message message = queueReceiver.receive();
+            Message message = messageProvider.message(queueReceiver);
             assertNotNull(message);
             queueSession.commit();
 
@@ -84,14 +123,15 @@ public class NackMessageOnRollbackIT extends AbstractITQueue {
             message = queueReceiver.receive(1000L);
             assertNull(message);
         } finally {
-            if(connection != null) {
+            if (connection != null) {
                 connection.close();
             }
         }
     }
 
-    @Test
-    public void nackParameterTrueRollbackMessageShouldBeInDlxQueue() throws Exception {
+    @ParameterizedTest
+    @MethodSource("messageProviderArguments")
+    public void nackParameterTrueRollbackMessageShouldBeInDlxQueue(MessageProvider messageProvider) throws Exception {
         sendMessage();
         QueueConnection connection = null;
         try {
@@ -101,7 +141,7 @@ public class NackMessageOnRollbackIT extends AbstractITQueue {
             queue.setAmqp(true);
             queue.setAmqpQueueName(QUEUE_NAME);
             QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-            Message message = queueReceiver.receive();
+            Message message = messageProvider.message(queueReceiver);
             assertNotNull(message);
             queueSession.rollback();
 
@@ -120,7 +160,7 @@ public class NackMessageOnRollbackIT extends AbstractITQueue {
             message = queueReceiver.receive(1000L);
             assertNotNull(message);
         } finally {
-            if(connection != null) {
+            if (connection != null) {
                 connection.close();
             }
         }
@@ -150,5 +190,11 @@ public class NackMessageOnRollbackIT extends AbstractITQueue {
         QueueConnection queueConnection = connectionFactory.createQueueConnection();
         queueConnection.start();
         return queueConnection;
+    }
+
+    private interface MessageProvider {
+
+        Message message(QueueReceiver queueReceiver) throws Exception;
+
     }
 }
