@@ -963,7 +963,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     /**
      * Set a post-processor for the AMQP {@link com.rabbitmq.client.ConnectionFactory}.
      * <p>
-     * The post-processor is called before the AMQP creation. This callback can be
+     * The post-processor is called before the AMQP connection creation. This callback can be
      * useful to customize the {@link com.rabbitmq.client.ConnectionFactory}:
      * TLS-related configuration, metrics collection, etc.
      *
