@@ -80,6 +80,9 @@ The easiest way to run a test node is to clone
 [JMS 1.1 compliance test suite](https://github.com/rabbitmq/rabbitmq-jms-cts) for this client is available
 in a separate repository.
 
+## Versioning
+
+This library uses [semantic versioning](https://semver.org/).
 
 ## License and Copyright
 
