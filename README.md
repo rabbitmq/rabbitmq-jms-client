@@ -86,7 +86,7 @@ This library uses [semantic versioning](https://semver.org/).
 
 ## License and Copyright
 
-(c) Pivotal Software, Inc., 2007-2019.
+(c) Pivotal Software, Inc., 2007-2020.
 
 This package, the RabbitMQ JMS client library, is double-licensed
 under the Apache License version 2 ("ASL") and the Mozilla Public License
