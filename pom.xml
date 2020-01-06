@@ -48,19 +48,19 @@
     <assertj.version>3.13.2</assertj.version>
     <spring.version>5.2.2.RELEASE</spring.version>
 
-    <maven.dependency.plugin.version>2.8</maven.dependency.plugin.version>
-    <maven.compiler.plugin.version>3.7.0</maven.compiler.plugin.version>
+    <maven.dependency.plugin.version>3.1.1</maven.dependency.plugin.version>
+    <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
     <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
     <maven.failsafe.plugin.version>2.22.2</maven.failsafe.plugin.version>
-    <maven.jar.plugin.version>3.0.2</maven.jar.plugin.version>
+    <maven.jar.plugin.version>3.2.0</maven.jar.plugin.version>
     <build.helper.maven.plugin.version>1.12</build.helper.maven.plugin.version>
     <maven.antrun.plugin.version>1.8</maven.antrun.plugin.version>
     <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
-    <groovy.maven.plugin.version>2.0</groovy.maven.plugin.version>
-    <groovy.all.version>2.4.12</groovy.all.version>
+    <groovy.maven.plugin.version>2.1.1</groovy.maven.plugin.version>
+    <groovy.all.version>2.4.17</groovy.all.version>
     <keytool.maven.plugin.version>1.5</keytool.maven.plugin.version>
-    <maven.sources.plugin.version>3.0.1</maven.sources.plugin.version>
-    <maven.javadoc.plugin.version>3.0.1</maven.javadoc.plugin.version>
+    <maven.sources.plugin.version>3.2.1</maven.sources.plugin.version>
+    <maven.javadoc.plugin.version>3.1.1</maven.javadoc.plugin.version>
     <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
     <maven.packagecloud.wagon.version>0.0.6</maven.packagecloud.wagon.version>
     <checksum.maven.plugin.version>1.8</checksum.maven.plugin.version>
