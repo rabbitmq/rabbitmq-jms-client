@@ -84,6 +84,11 @@ in a separate repository.
 
 This library uses [semantic versioning](https://semver.org/).
 
+## Support
+
+See the [RabbitMQ Java libraries support page](https://www.rabbitmq.com/java-versions.html)
+for the support timeline of this library.
+
 ## License and Copyright
 
 (c) Pivotal Software, Inc., 2007-2020.
