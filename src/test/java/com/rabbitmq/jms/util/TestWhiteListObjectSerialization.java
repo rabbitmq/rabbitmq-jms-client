@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2016 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved. */
 package com.rabbitmq.jms.util;
 
 import com.rabbitmq.jms.client.message.RMQObjectMessage;

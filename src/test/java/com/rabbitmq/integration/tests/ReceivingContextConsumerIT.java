@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2018-2020 VMware, Inc. or its affiliates. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.TestUtils;
