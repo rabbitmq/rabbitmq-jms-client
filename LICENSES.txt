@@ -142,7 +142,7 @@ amqp-client-3.6.2-sources.jar\com\rabbitmq\tools\json\JSONWriter.java
 amqp-client-3.6.2-sources.jar\com\rabbitmq\client\impl\VariableLinkedBlockingQueue.java
 
 /*
- * Modifications Copyright 2015-2016 Pivotal Software, Inc and licenced as per
+ * Modifications Copyright 2015-2020 VMware, Inc. or its affiliates. and licenced as per
  * the rest of the RabbitMQ Java client.
  */
 * Written by Doug Lea with assistance from members of JCP JSR-166
