@@ -8,6 +8,7 @@ import javax.naming.NamingException;
 import javax.naming.Reference;
 import java.util.Hashtable;
 
+import static com.rabbitmq.jms.client.RMQConnection.NO_CHANNEL_QOS;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -35,6 +36,7 @@ public class RMQObjectFactoryTest {
         assertEquals("guest", createdConFactory.getPassword());
         assertEquals("/", createdConFactory.getVirtualHost());
         assertEquals("localhost", createdConFactory.getHost());
+        assertEquals(NO_CHANNEL_QOS, createdConFactory.getChannelsQos());
 
     }
 
@@ -48,6 +50,7 @@ public class RMQObjectFactoryTest {
             put("password", "1234");
             put("virtualHost", "/fake");
             put("host", "fakeHost");
+            put("channelsQos", 10);
         }};
 
         Object createdObject = rmqObjectFactory.getObjectInstance("anything but a javax.naming.Reference", new CompositeName("java:global/jms/TestConnectionFactory"), null, environment);
@@ -61,6 +64,7 @@ public class RMQObjectFactoryTest {
         assertEquals("1234", createdConFactory.getPassword());
         assertEquals("/fake", createdConFactory.getVirtualHost());
         assertEquals("fakeHost", createdConFactory.getHost());
+        assertEquals(10, createdConFactory.getChannelsQos());
 
     }
 
