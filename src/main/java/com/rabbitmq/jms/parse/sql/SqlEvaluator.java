@@ -1,4 +1,4 @@
-/* Copyright (c) 2014 Pivotal Software, Inc. All rights reserved. */
+/* Copyright (c) 2014-2020 VMware, Inc. or its affiliates. All rights reserved. */
 package com.rabbitmq.jms.parse.sql;
 
 import static com.rabbitmq.jms.parse.ParseTreeTraverser.traverse;
