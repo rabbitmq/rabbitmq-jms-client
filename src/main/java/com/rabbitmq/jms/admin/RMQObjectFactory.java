@@ -93,6 +93,7 @@ import org.slf4j.LoggerFactory;
  * <li>port</li>
  * <li>queueBrowserReadMax</li>
  * <li>onMessageTimeoutMs</li>
+ * <li>channelsQos</li>
  * <li>ssl</li>
  * <li>terminationTimeout</li>
  * <li>username</li>
@@ -191,6 +192,7 @@ public class RMQObjectFactory implements ObjectFactory {
         f.setPort               (getIntProperty    (ref, environment, "port",                true, f.getPort()               ));
         f.setQueueBrowserReadMax(getIntProperty    (ref, environment, "queueBrowserReadMax", true, f.getQueueBrowserReadMax()));
         f.setOnMessageTimeoutMs (getIntProperty    (ref, environment, "onMessageTimeoutMs",  true, f.getOnMessageTimeoutMs() ));
+        f.setChannelsQos        (getIntProperty    (ref, environment, "channelsQos",         true, f.getChannelsQos()        ));
         if (getBooleanProperty(ref, environment, "ssl",                 true, f.isSsl())) {
             try {
                 f.useSslProtocol();
