@@ -43,10 +43,10 @@
   <properties>
     <rabbitmq.version>5.9.0</rabbitmq.version>
     <slf4j-api.version>1.7.30</slf4j-api.version>
-    <junit.jupiter.version>5.5.2</junit.jupiter.version>
-    <mockito-core.version>3.2.4</mockito-core.version>
-    <assertj.version>3.13.2</assertj.version>
-    <spring.version>5.2.2.RELEASE</spring.version>
+    <junit.jupiter.version>5.6.2</junit.jupiter.version>
+    <mockito-core.version>3.3.0</mockito-core.version>
+    <assertj.version>3.15.0</assertj.version>
+    <spring.version>5.2.5.RELEASE</spring.version>
 
     <maven.dependency.plugin.version>3.1.1</maven.dependency.plugin.version>
     <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
