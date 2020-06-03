@@ -10,6 +10,7 @@ import javax.jms.Queue;
 import javax.jms.*;
 import java.util.*;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -19,22 +20,22 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
     private static final String USER_JMS_TYPE_SETTING = "this is my type";
     private static final String USER_STRING_PROPERTY_NAME = "UserHdr";
-    private static final String QUEUE_NAME = "test.queue."+SimpleAmqpQueueMessageIT.class.getCanonicalName();
-    private static final String QUEUE_NAME_NON_EXCLUSIVE = "test-non-ex.queue."+SimpleAmqpQueueMessageIT.class.getCanonicalName();
+    private static final String QUEUE_NAME = "test.queue." + SimpleAmqpQueueMessageIT.class.getCanonicalName();
+    private static final String QUEUE_NAME_NON_EXCLUSIVE = "test-non-ex.queue." + SimpleAmqpQueueMessageIT.class.getCanonicalName();
     private static final String MESSAGE = "Hello " + SimpleAmqpQueueMessageIT.class.getName();
     private static final long TEST_RECEIVE_TIMEOUT = 1000; // one second
-    private static final byte[] BYTE_ARRAY = { (byte) -2, (byte) -3, 4, 5, 34, (byte) -1 };
+    private static final byte[] BYTE_ARRAY = {(byte) -2, (byte) -3, 4, 5, 34, (byte) -1};
     private static final String STRING_PROP_VALUE = "the string property value";
 
     @Test
     public void testSendToAmqpAndReceiveTextMessage() throws Exception {
 
         channel.queueDeclare(QUEUE_NAME,
-                             false, // durable
-                             true,  // exclusive
-                             true,  // autoDelete
-                             null   // options
-                             );
+                false, // durable
+                true,  // exclusive
+                true,  // autoDelete
+                null   // options
+        );
 
         queueConn.start();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
@@ -56,29 +57,30 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
         byte[] body = response.getBody();
         assertNotNull(body, "body of response is null");
 
-        { Map<String, Object> hdrs = response.getProps().getHeaders();
+        {
+            Map<String, Object> hdrs = response.getProps().getHeaders();
 
             assertEquals(new HashSet<String>(Arrays.asList("JMSMessageID", "JMSDeliveryMode", "JMSPriority", "JMSTimestamp", USER_STRING_PROPERTY_NAME))
                     , hdrs.keySet(), "Some keys missing"
             );
 
-          assertEquals(9, hdrs.get("JMSPriority"), "Priority wrong");
-          assertEquals("NON_PERSISTENT", hdrs.get("JMSDeliveryMode").toString(), "Delivery mode wrong"); // toString is a bit wiffy
-          assertEquals(STRING_PROP_VALUE, hdrs.get(USER_STRING_PROPERTY_NAME).toString(), "String property wrong");
+            assertEquals(9, hdrs.get("JMSPriority"), "Priority wrong");
+            assertEquals("NON_PERSISTENT", hdrs.get("JMSDeliveryMode").toString(), "Delivery mode wrong"); // toString is a bit wiffy
+            assertEquals(STRING_PROP_VALUE, hdrs.get(USER_STRING_PROPERTY_NAME).toString(), "String property wrong");
         }
 
-        assertEquals(MESSAGE,  new String(body, "UTF-8"), "Message received not identical to message sent");
+        assertEquals(MESSAGE, new String(body, "UTF-8"), "Message received not identical to message sent");
     }
 
     @Test
     public void testSendToAmqpAndReceiveBytesMessage() throws Exception {
 
         channel.queueDeclare(QUEUE_NAME,
-                             false, // durable
-                             true,  // exclusive
-                             true,  // autoDelete
-                             null   // options
-                             );
+                false, // durable
+                true,  // exclusive
+                true,  // autoDelete
+                null   // options
+        );
 
         queueConn.start();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
@@ -102,31 +104,32 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
         byte[] body = response.getBody();
         assertNotNull(body, "body of response is null");
 
-        { Map<String, Object> hdrs = response.getProps().getHeaders();
+        {
+            Map<String, Object> hdrs = response.getProps().getHeaders();
 
             assertEquals(new HashSet<String>(Arrays.asList("JMSMessageID", "JMSDeliveryMode", "JMSPriority", "JMSTimestamp", USER_STRING_PROPERTY_NAME))
                     , hdrs.keySet(), "Some keys missing"
             );
 
-          assertEquals(9, hdrs.get("JMSPriority"), "Priority wrong");
-          assertEquals("NON_PERSISTENT", hdrs.get("JMSDeliveryMode").toString(), "Delivery mode wrong"); // toString is a bit wiffy
-          assertEquals(STRING_PROP_VALUE, hdrs.get(USER_STRING_PROPERTY_NAME).toString(), "String property wrong");
+            assertEquals(9, hdrs.get("JMSPriority"), "Priority wrong");
+            assertEquals("NON_PERSISTENT", hdrs.get("JMSDeliveryMode").toString(), "Delivery mode wrong"); // toString is a bit wiffy
+            assertEquals(STRING_PROP_VALUE, hdrs.get(USER_STRING_PROPERTY_NAME).toString(), "String property wrong");
         }
 
-        assertArrayEquals(BYTE_ARRAY,  body, "Message received not identical to message sent");
+        assertArrayEquals(BYTE_ARRAY, body, "Message received not identical to message sent");
     }
 
     @Test
     public void testSendFromAmqpAndReceiveBytesMessage() throws Exception {
 
         channel.queueDeclare(QUEUE_NAME_NON_EXCLUSIVE,
-                             false, // durable
-                             false, // non-exclusive
-                             true,  // autoDelete
-                             null   // options
-                             );
+                false, // durable
+                false, // non-exclusive
+                true,  // autoDelete
+                null   // options
+        );
 
-        Map<String, Object> hdrs = new HashMap<String,Object>();
+        Map<String, Object> hdrs = new HashMap<String, Object>();
         hdrs.put(USER_STRING_PROPERTY_NAME, STRING_PROP_VALUE);
         hdrs.put("JMSType", USER_JMS_TYPE_SETTING);
         hdrs.put("JMSPriority", 21);
@@ -147,7 +150,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
         assertNotNull(message, "No message received");
 
-        byte[] bytes = new byte[BYTE_ARRAY.length+2];
+        byte[] bytes = new byte[BYTE_ARRAY.length + 2];
         int bytesIn = message.readBytes(bytes);
         assertEquals(BYTE_ARRAY.length, bytesIn, "Message payload not correct size");
         byte[] bytesTrunc = new byte[bytesIn];
@@ -169,19 +172,20 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
         assertEquals(STRING_PROP_VALUE, message.getStringProperty(USER_STRING_PROPERTY_NAME), "String property not transferred");
         assertEquals("42", message.getStringProperty("DummyProp"), "Numeric property not transferred");
+        assertThat(message.getJMSTimestamp()).isZero();
     }
 
     @Test
     public void testSendFromAmqpAndReceiveTextMessage() throws Exception {
 
         channel.queueDeclare(QUEUE_NAME_NON_EXCLUSIVE,
-                             false, // durable
-                             false, // non-exclusive
-                             true,  // autoDelete
-                             null   // options
-                             );
+                false, // durable
+                false, // non-exclusive
+                true,  // autoDelete
+                null   // options
+        );
 
-        Map<String, Object> hdrs = new HashMap<String,Object>();
+        Map<String, Object> hdrs = new HashMap<String, Object>();
         hdrs.put(USER_STRING_PROPERTY_NAME, STRING_PROP_VALUE);
         hdrs.put("JMSType", "TextMessage");  // To signal a JMS TextMessage
         hdrs.put("JMSPriority", 21);
@@ -219,16 +223,17 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
         assertEquals(STRING_PROP_VALUE, message.getStringProperty(USER_STRING_PROPERTY_NAME), "String property not transferred");
         assertEquals("42", message.getStringProperty("DummyProp"), "Numeric property not transferred");
+        assertThat(message.getJMSTimestamp()).isZero();
     }
 
     @Test
     public void testSendFromJmsAndReceiveJmsTextMessage() throws Exception {
         String queueName = UUID.randomUUID().toString();
         channel.queueDeclare(queueName,
-            false, // durable
-            false, // non-exclusive
-            true,  // autoDelete
-            null   // options
+                false, // durable
+                false, // non-exclusive
+                true,  // autoDelete
+                null   // options
         );
 
         queueConn.start();
@@ -255,6 +260,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
         assertNotNull(message, "No message received");
         assertEquals(MESSAGE, message.getText(), "Payload doesn't match");
         assertEquals(STRING_PROP_VALUE, message.getStringProperty(USER_STRING_PROPERTY_NAME), "String property not transferred");
+        assertThat(message.getJMSTimestamp()).isGreaterThan(0);
     }
 
 }
