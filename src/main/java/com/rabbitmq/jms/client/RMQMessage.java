@@ -242,7 +242,12 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public long getJMSTimestamp() throws JMSException {
-        return this.getLongProperty(JMS_MESSAGE_TIMESTAMP);
+        Object timestamp = this.getObjectProperty(JMS_MESSAGE_TIMESTAMP);
+        if (timestamp == null) {
+            return 0L;
+        } else {
+            return convertToLong(timestamp);
+        }
     }
 
     /**
@@ -496,7 +501,10 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public long getLongProperty(String name) throws JMSException {
-        Object o = this.getObjectProperty(name);
+        return convertToLong(this.getObjectProperty(name));
+    }
+
+    private static long convertToLong(Object o) throws JMSException {
         if (o == null)
             throw new NumberFormatException("Null is not a valid long");
         else if (o instanceof String) {

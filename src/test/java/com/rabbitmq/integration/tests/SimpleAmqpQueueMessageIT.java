@@ -1,6 +1,7 @@
 /* Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved. */
 package com.rabbitmq.integration.tests;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -22,6 +23,7 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import com.rabbitmq.client.AMQP;
@@ -187,6 +189,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
         assertEquals(STRING_PROP_VALUE, message.getStringProperty(USER_STRING_PROPERTY_NAME), "String property not transferred");
         assertEquals("42", message.getStringProperty("DummyProp"), "Numeric property not transferred");
+        assertThat(message.getJMSTimestamp()).isZero();
     }
 
     @Test
@@ -238,6 +241,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
         assertEquals(STRING_PROP_VALUE, message.getStringProperty(USER_STRING_PROPERTY_NAME), "String property not transferred");
         assertEquals("42", message.getStringProperty("DummyProp"), "Numeric property not transferred");
+        assertThat(message.getJMSTimestamp()).isZero();
     }
 
     @Test
@@ -274,6 +278,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
         assertNotNull(message, "No message received");
         assertEquals(MESSAGE, message.getText(), "Payload doesn't match");
         assertEquals(STRING_PROP_VALUE, message.getStringProperty(USER_STRING_PROPERTY_NAME), "String property not transferred");
+        assertThat(message.getJMSTimestamp()).isGreaterThan(0);
     }
 
 }
