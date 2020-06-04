@@ -7,6 +7,8 @@ import javax.jms.JMSException;
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 
+import java.security.NoSuchAlgorithmException;
+
 /**
  * Connection factory for use in integration tests.
  */
@@ -39,7 +41,13 @@ public class RabbitAPIConnectionFactory extends AbstractTestConnectionFactory {
                 return super.createConnection(userName, password);
             }
         };
-        rmqCF.setSsl(testssl);
+        if (testssl) {
+            try {
+                rmqCF.useSslProtocol();
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            }
+        }
         rmqCF.setQueueBrowserReadMax(qbrMax);
         return rmqCF;
     }

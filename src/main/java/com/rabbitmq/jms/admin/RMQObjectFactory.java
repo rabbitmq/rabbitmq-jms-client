@@ -143,8 +143,10 @@ public class RMQObjectFactory implements ObjectFactory {
          * javax.jms.ConnectionFactory
          * javax.jms.QueueConnectionFactory
          * javax.jms.TopicConnectionFactory
+         * com.rabbitmq.jms.admin.RMQConnectionFactory
          * javax.jms.Topic
          * javax.jms.Queue
+         * com.rabbitmq.jms.admin.RMQDestination
          *
          */
         boolean topic = false;
@@ -152,11 +154,14 @@ public class RMQObjectFactory implements ObjectFactory {
         if (  javax.jms.QueueConnectionFactory.class.getName().equals(className)
            || javax.jms.TopicConnectionFactory.class.getName().equals(className)
            || javax.jms.ConnectionFactory.class.getName().equals(className)
+           || RMQConnectionFactory.class.getName().equals(className)
            ) {
             connectionFactory = true;
         } else if (javax.jms.Topic.class.getName().equals(className)) {
             topic = true;
         } else if (javax.jms.Queue.class.getName().equals(className)) {
+        } else if (RMQDestination.class.getName().equals(className)) {
+            topic = !getBooleanProperty(ref, environment, "isQueue", true, false);
         } else {
             throw new NamingException(String.format("Unknown class [%s]", className));
         }
