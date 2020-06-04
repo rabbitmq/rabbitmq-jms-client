@@ -1,3 +1,4 @@
+/* Copyright (c) 2018-2020 VMware, Inc. or its affiliates. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,7 @@ public class RMQObjectFactoryTest {
     private RMQObjectFactory rmqObjectFactory = new RMQObjectFactory();
 
     @Test
-    public void getObjectInstanceShouldCreateARMQConnectionFactoryViaReference() throws Exception {
+    public void getObjectInstanceShouldCreateAMQPConnectionFactoryViaReference() throws Exception {
 
         Reference ref = new Reference(ConnectionFactory.class.getName());
 
@@ -42,7 +43,7 @@ public class RMQObjectFactoryTest {
 
 
     @Test
-    public void getObjectInstanceShouldCreateARMQConnectionFactoryViaEnvironment() throws Exception {
+    public void getObjectInstanceShouldCreateAMQPConnectionFactoryViaEnvironment() throws Exception {
 
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
             put("className", "javax.jms.ConnectionFactory");
@@ -69,7 +70,7 @@ public class RMQObjectFactoryTest {
     }
 
     @Test
-    public void getObjectInstanceShouldCreateARMQDestinationQUEUEViaEnvironment() throws Exception {
+    public void getObjectInstanceShouldCreateAMQPDestinationQUEUEViaEnvironment() throws Exception {
 
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
             put("className", "javax.jms.Queue");
