@@ -46,4 +46,34 @@ public class RMQDestinationTest {
         assertThat(newReference.getAmqpQueueName()).isEqualTo("queue");
     }
 
+    @Test
+    void amqpDestinationExchangeRoutingKeyOnlyRegeneration() throws Exception {
+        RMQDestination destination = new RMQDestination(
+                "destination", "exchange", "routing-key", null
+        );
+        Reference reference = destination.getReference();
+        RMQDestination newReference = (RMQDestination) rmqObjectFactory.getObjectInstance(reference, null, null, null);
+        assertThat(newReference.isQueue()).isTrue();
+        assertThat(newReference.getDestinationName()).isEqualTo("destination");
+        assertThat(newReference.isAmqp()).isTrue();
+        assertThat(newReference.getAmqpExchangeName()).isEqualTo("exchange");
+        assertThat(newReference.getAmqpRoutingKey()).isEqualTo("routing-key");
+        assertThat(newReference.getAmqpQueueName()).isNull();
+    }
+
+    @Test
+    void amqpDestinationQueueOnlyRegeneration() throws Exception {
+        RMQDestination destination = new RMQDestination(
+                "destination", null, null, "queue"
+        );
+        Reference reference = destination.getReference();
+        RMQDestination newReference = (RMQDestination) rmqObjectFactory.getObjectInstance(reference, null, null, null);
+        assertThat(newReference.isQueue()).isTrue();
+        assertThat(newReference.getDestinationName()).isEqualTo("destination");
+        assertThat(newReference.isAmqp()).isTrue();
+        assertThat(newReference.getAmqpExchangeName()).isNull();
+        assertThat(newReference.getAmqpRoutingKey()).isNull();
+        assertThat(newReference.getAmqpQueueName()).isEqualTo("queue");
+    }
+
 }
