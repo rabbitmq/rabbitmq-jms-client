@@ -15,6 +15,7 @@ import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.Field;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
@@ -34,8 +35,18 @@ public class RMQConnectionFactoryTest {
     static {
         RMQConnectionFactory defaultFact = new RMQConnectionFactory();
         defaultProps.setProperty("uri", defaultFact.getUri());
+        defaultProps.setProperty("host", defaultFact.getHost());
+        defaultProps.setProperty("password", defaultFact.getPassword());
+        defaultProps.setProperty("port", "5672");
         defaultProps.setProperty("queueBrowserReadMax", "0");
         defaultProps.setProperty("onMessageTimeoutMs", "2000");
+        defaultProps.setProperty("channelsQos", "-1");
+        defaultProps.setProperty("ssl", "false");
+        defaultProps.setProperty("terminationTimeout", "15000");
+        defaultProps.setProperty("username", "guest");
+        defaultProps.setProperty("virtualHost", "/");
+        defaultProps.setProperty("cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose", "false");
+        defaultProps.setProperty("declareReplyToDestination", "true");
     }
 
     private static Properties getProps(Reference ref) {
@@ -87,7 +98,7 @@ public class RMQConnectionFactoryTest {
     public void testDefaultConnectionFactoryReference() throws Exception {
         RMQConnectionFactory connFactory = new RMQConnectionFactory();
         Reference ref = connFactory.getReference();
-
+        assertThat(getProps(ref)).hasSameSizeAs(defaultProps);
         assertEquals(defaultProps, getProps(ref), "Not the default properties");
     }
 
@@ -121,10 +132,14 @@ public class RMQConnectionFactoryTest {
         connFactory.setPassword("my-password");
         connFactory.setPort(42);
         connFactory.setQueueBrowserReadMax(52);
+        connFactory.setOnMessageTimeoutMs(66);
+        connFactory.setChannelsQos(250);
         connFactory.useSslProtocol();
         connFactory.setTerminationTimeout(1234567890123456789L);
         connFactory.setUsername("fred");
         connFactory.setVirtualHost("bill");
+        connFactory.setCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose(true);
+        connFactory.setDeclareReplyToDestination(false);
 
         Reference ref = connFactory.getReference();
 
@@ -136,12 +151,19 @@ public class RMQConnectionFactoryTest {
         assertEquals("my-password", newFactory.getPassword(), "Not the correct password");
         assertEquals(42, newFactory.getPort(), "Not the correct port");
         assertEquals(52, newFactory.getQueueBrowserReadMax(), "Not the correct queueBrowserReadMax");
+        assertEquals(66, newFactory.getOnMessageTimeoutMs());
+        assertEquals(250, newFactory.getChannelsQos());
         assertEquals(true, newFactory.isSsl(), "Not the correct ssl");
 
-        assertEquals(15000L, newFactory.getTerminationTimeout(), "Not the correct terminationTimeout");
+        assertEquals(1234567890123456789L, newFactory.getTerminationTimeout(), "Not the correct terminationTimeout");
 
         assertEquals("fred", newFactory.getUsername(), "Not the correct username");
         assertEquals("bill", newFactory.getVirtualHost(), "Not the correct virtualHost");
+        assertTrue(newFactory.isCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose());
+
+        Field declareReplyToDestinationField = RMQConnectionFactory.class.getDeclaredField("declareReplyToDestination");
+        declareReplyToDestinationField.setAccessible(true);
+        assertFalse((Boolean) declareReplyToDestinationField.get(newFactory));
     }
 
     @Test

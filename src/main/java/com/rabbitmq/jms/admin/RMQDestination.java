@@ -260,7 +260,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     @Override
     public Reference getReference() throws NamingException {
-        Reference ref = new Reference(this.getClass().getCanonicalName());
+        Reference ref = new Reference(this.getClass().getCanonicalName(), RMQObjectFactory.class.getName(), null);
         addStringProperty(ref, "destinationName", this.destinationName);
         addBooleanProperty(ref, "amqp", this.amqp);
         addBooleanProperty(ref, "isQueue", this.isQueue);

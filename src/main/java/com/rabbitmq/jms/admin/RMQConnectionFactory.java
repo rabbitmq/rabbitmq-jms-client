@@ -556,10 +556,22 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     @Override
     public Reference getReference() throws NamingException {
-        Reference ref = new Reference(RMQConnectionFactory.class.getName());
+        Reference ref = new Reference(RMQConnectionFactory.class.getName(), RMQObjectFactory.class.getName(), null);
         addStringRefProperty(ref, "uri", this.getUri());
+        addStringRefProperty(ref, "host", this.getHost());
+        addStringRefProperty(ref, "password", this.getPassword());
+        addIntegerRefProperty(ref, "port", this.getPort());
         addIntegerRefProperty(ref, "queueBrowserReadMax", this.getQueueBrowserReadMax());
         addIntegerRefProperty(ref, "onMessageTimeoutMs", this.getOnMessageTimeoutMs());
+        addIntegerRefProperty(ref, "channelsQos", this.getChannelsQos());
+        addBooleanProperty(ref, "ssl", this.ssl);
+        addLongRefProperty(ref, "terminationTimeout", this.getTerminationTimeout());
+        addStringRefProperty(ref, "username", this.getUsername());
+        addStringRefProperty(ref, "virtualHost", this.getVirtualHost());
+        addBooleanProperty(ref, "cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose",
+                this.isCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose());
+        addBooleanProperty(ref, "declareReplyToDestination",
+                this.declareReplyToDestination);
         return ref;
     }
 
@@ -587,6 +599,35 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
                                               String propertyName,
                                               Integer value) {
         if (value == null || propertyName == null) return;
+        RefAddr ra = new StringRefAddr(propertyName, String.valueOf(value));
+        ref.add(ra);
+    }
+
+    /**
+     * Adds an long valued property to a Reference (as a RefAddr).
+     * @param ref - the reference to contain the value
+     * @param propertyName - the name of the property
+     * @param value - the value to store with the property
+     */
+    private static void addLongRefProperty(Reference ref,
+                                              String propertyName,
+                                              Long value) {
+        if (value == null || propertyName == null) return;
+        RefAddr ra = new StringRefAddr(propertyName, String.valueOf(value));
+        ref.add(ra);
+    }
+
+    /**
+     * Adds a boolean valued property to a Reference (as a StringRefAddr) if the value is <code>true</code>
+     * (default <code>false</code> on read assumed).
+     * @param ref - the reference to contain the value
+     * @param propertyName - the name of the property
+     * @param value - the value to store with the property
+     */
+    private static final void addBooleanProperty(Reference ref,
+                                                 String propertyName,
+                                                 boolean value) {
+        if (propertyName==null) return;
         RefAddr ra = new StringRefAddr(propertyName, String.valueOf(value));
         ref.add(ra);
     }
