@@ -227,9 +227,9 @@ public class RMQObjectFactory implements ObjectFactory {
         String dname = getStringProperty(ref, environment, "destinationName", false, null);
         boolean amqp = getBooleanProperty(ref, environment, "amqp", true, false);
         if (amqp) {
-            String amqpExchangeName = getStringProperty(ref, environment, "amqpExchangeName", false, null);
-            String amqpRoutingKey = getStringProperty(ref, environment,"amqpRoutingKey", false, null);
-            String amqpQueueName = getStringProperty(ref, environment, "amqpQueueName", false, null);
+            String amqpExchangeName = getStringProperty(ref, environment, "amqpExchangeName", true, null);
+            String amqpRoutingKey = getStringProperty(ref, environment,"amqpRoutingKey", true, null);
+            String amqpQueueName = getStringProperty(ref, environment, "amqpQueueName", true, null);
             return new RMQDestination(dname, amqpExchangeName, amqpRoutingKey, amqpQueueName);
         } else {
             return new RMQDestination(dname, !topic, false);

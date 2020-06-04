@@ -91,7 +91,7 @@ public class RMQObjectFactoryTest {
 
 
     @Test
-    public void getObjectInstanceShouldCreateARMQDestinationTOPICViaEnvironment() throws Exception {
+    public void getObjectInstanceShouldCreateAMQPDestinationTOPICViaEnvironment() throws Exception {
 
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
             put("className", "javax.jms.Topic");
@@ -116,7 +116,6 @@ public class RMQObjectFactoryTest {
 
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
             put("className", "javax.jms.Queue");
-            put("destinationName", "TEST_QUEUE");
             put("amqp", "true");
         }};
 
@@ -124,7 +123,7 @@ public class RMQObjectFactoryTest {
             rmqObjectFactory.getObjectInstance("anything but a javax.naming.Reference", new CompositeName("java:global/jms/TestConnectionFactory"), null, environment);
             fail("Should have thrown a NamingException");
         } catch (NamingException ne) {
-            assertEquals("Property [amqpExchangeName] may not be null.", ne.getMessage());
+            assertEquals("Property [destinationName] may not be null.", ne.getMessage());
         }
 
     }
