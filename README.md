@@ -95,6 +95,6 @@ for the support timeline of this library.
 
 This package, the RabbitMQ JMS client library, is double-licensed
 under the Apache License version 2 ("ASL") and the Mozilla Public License
-1.1 ("MPL").
+2.0 ("MPL").
 
 See [LICENSE](./LICENSE).
