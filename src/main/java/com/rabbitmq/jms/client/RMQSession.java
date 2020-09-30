@@ -51,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ShutdownListener;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
@@ -392,6 +393,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public int getAcknowledgeMode() throws JMSException {
         illegalStateExceptionIfClosed();
         return getAcknowledgeModeNoException();
+    }
+
+    public void addShutdownListenerToChannel(ShutdownListener shutdownListener) {
+        this.channel.addShutdownListener(shutdownListener);
     }
 
     public List<String> getTrustedPackages() {
