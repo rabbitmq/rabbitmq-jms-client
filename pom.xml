@@ -41,7 +41,7 @@
   </scm>
 
   <properties>
-    <rabbitmq.version>5.9.0</rabbitmq.version>
+    <rabbitmq.version>5.10.0.RC2</rabbitmq.version>
     <slf4j-api.version>1.7.30</slf4j-api.version>
     <junit.jupiter.version>5.7.0</junit.jupiter.version>
     <mockito-core.version>3.5.13</mockito-core.version>
@@ -823,6 +823,16 @@
       <id>jboss.org</id>
       <name>Jboss Maven 2 Repository</name>
       <url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
+    </repository>
+    <repository>
+      <id>packagecloud-rabbitmq-maven-milestones</id>
+      <url>https://packagecloud.io/rabbitmq/maven-milestones/maven2</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
     </repository>
   </repositories>
 </project>
