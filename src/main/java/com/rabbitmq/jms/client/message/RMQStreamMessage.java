@@ -1,6 +1,7 @@
 /* Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved. */
 package com.rabbitmq.jms.client.message;
 
+import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
@@ -11,6 +12,7 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.UTFDataFormatException;
 
+import java.util.List;
 import javax.jms.JMSException;
 import javax.jms.MessageEOFException;
 import javax.jms.MessageFormatException;
@@ -43,12 +45,19 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
     private volatile transient byte[] buf;
     private volatile transient byte[] readbuf = null;
 
-    public RMQStreamMessage() {
-        this(false);
+    private final List<String> trustedPackages;
+
+    public RMQStreamMessage(List<String> trustedPackages) {
+        this(false, trustedPackages);
     }
 
-    private RMQStreamMessage(boolean reading) {
+    public RMQStreamMessage() {
+        this(false, WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES);
+    }
+
+    private RMQStreamMessage(boolean reading, List<String> trustedPackages) {
         this.reading = reading;
+        this.trustedPackages = trustedPackages;
         if (!reading) {
             this.bout = new ByteArrayOutputStream(RMQMessage.DEFAULT_MESSAGE_BODY_SIZE);
             try {
@@ -509,7 +518,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
         inputStream.read(buf);
         this.reading = true;
         this.bin = new ByteArrayInputStream(buf);
-        this.in = new ObjectInputStream(this.bin);
+        this.in = new WhiteListObjectInputStream(this.bin, this.trustedPackages);
     }
 
     @Override

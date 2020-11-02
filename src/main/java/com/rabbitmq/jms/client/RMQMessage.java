@@ -1142,6 +1142,8 @@ public abstract class RMQMessage implements Message, Cloneable {
     private static RMQMessage instantiateRmqMessage(String messageClass, List<String> trustedPackages) throws RMQJMSException {
         if(isRmqObjectMessageClass(messageClass)) {
             return instantiateRmqObjectMessageWithTrustedPackages(trustedPackages);
+        } else if (isRmqStreamMessageClass(messageClass)) {
+            return instantiateRmqStreamMessageWithTrustedPackages(trustedPackages);
         } else {
             try {
                 // instantiate the message object with the thread context classloader
@@ -1164,12 +1166,24 @@ public abstract class RMQMessage implements Message, Cloneable {
         return RMQObjectMessage.class.getName().equals(clazz);
     }
 
+    private static boolean isRmqStreamMessageClass(String clazz) {
+        return RMQStreamMessage.class.getName().equals(clazz);
+    }
+
     private static RMQObjectMessage instantiateRmqObjectMessageWithTrustedPackages(List<String> trustedPackages) throws RMQJMSException {
+        return (RMQObjectMessage) instantiateRmqMessageWithTrustedPackages(RMQObjectMessage.class.getName(), trustedPackages);
+    }
+
+    private static RMQStreamMessage instantiateRmqStreamMessageWithTrustedPackages(List<String> trustedPackages) throws RMQJMSException {
+        return (RMQStreamMessage) instantiateRmqMessageWithTrustedPackages(RMQStreamMessage.class.getName(), trustedPackages);
+    }
+
+    private static RMQMessage instantiateRmqMessageWithTrustedPackages(String messageClazz, List<String> trustedPackages) throws RMQJMSException {
         try {
             // instantiate the message object with the thread context classloader
-            Class<?> messageClass = Class.forName(RMQObjectMessage.class.getName(), true, Thread.currentThread().getContextClassLoader());
+            Class<?> messageClass = Class.forName(messageClazz, true, Thread.currentThread().getContextClassLoader());
             Constructor<?> constructor = messageClass.getConstructor(List.class);
-            return (RMQObjectMessage) constructor.newInstance(trustedPackages);
+            return (RMQMessage) constructor.newInstance(trustedPackages);
         } catch (NoSuchMethodException e) {
             throw new RMQJMSException(e);
         } catch (InvocationTargetException e) {

@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ObjectMessageSerializationIT extends AbstractITQueue {
 
-    private static final String QUEUE_NAME = "test.queue." + SimpleQueueMessageDefaultsIT.class.getCanonicalName();
+    private static final String QUEUE_NAME = "test.queue." + ObjectMessageSerializationIT.class.getCanonicalName();
     private static final long TEST_RECEIVE_TIMEOUT = 1000; // one second
     private static final java.util.List<String> TRUSTED_PACKAGES = Arrays.asList("java.lang", "com.rabbitmq.jms");
 
