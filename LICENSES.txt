@@ -111,7 +111,7 @@ Mozilla Public License, V1.1 is applicable to the following component(s).
 //  The Original Code is RabbitMQ.
 //
 //  The Initial Developer of the Original Code is GoPivotal, Inc.
-//  Copyright (c) 2007-2020 VMware, Inc. or its affiliates.  All rights reserved.
+//  Copyright (c) 2007-2021 VMware, Inc. or its affiliates.  All rights reserved.
 
 ADDITIONAL LICENSE INFORMATION:
 
@@ -121,7 +121,7 @@ amqp-client-3.6.2-sources.jar\com\rabbitmq\tools\json\JSONWriter.java
 
 /*
    Copyright (c) 2006-2007 Frank Carver
-   Copyright (c) 2007-2020 VMware, Inc. or its affiliates. All Rights Reserved
+   Copyright (c) 2007-2021 VMware, Inc. or its affiliates. All Rights Reserved
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -142,7 +142,7 @@ amqp-client-3.6.2-sources.jar\com\rabbitmq\tools\json\JSONWriter.java
 amqp-client-sources.jar\com\rabbitmq\client\impl\VariableLinkedBlockingQueue.java
 
 /*
- * Modifications Copyright 2015-2020 VMware, Inc. or its affiliates. and licenced as per
+ * Modifications Copyright 2015-2021 VMware, Inc. or its affiliates. and licenced as per
  * the rest of the RabbitMQ Java client.
  */
 * Written by Doug Lea with assistance from members of JCP JSR-166
@@ -702,7 +702,7 @@ file, then You may include the notice in a location (such as a LICENSE
 file in a relevant directory) where a recipient would be likely to look
 for such a notice.
 
-Copyright (c) 2007-2020 VMware, Inc. or its affiliates.
+Copyright (c) 2007-2021 VMware, Inc. or its affiliates.
 
 
 

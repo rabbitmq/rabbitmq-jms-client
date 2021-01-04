@@ -91,7 +91,7 @@ for the support timeline of this library.
 
 ## License and Copyright
 
-(c) 2007-2020 VMware, Inc. or its affiliates.
+(c) 2007-2021 VMware, Inc. or its affiliates.
 
 This package, the RabbitMQ JMS client library, is double-licensed
 under the Apache License version 2 ("ASL") and the Mozilla Public License
