@@ -17,6 +17,8 @@ import java.util.List;
  */
 public class Shell {
 
+    private static final String DOCKER_PREFIX = "DOCKER:";
+
     public static String executeSimpleCommand(String command) {
         StringBuffer outputSb = new StringBuffer();
 
@@ -48,13 +50,13 @@ public class Shell {
     }
 
     public static void restartNode() throws IOException {
-        executeCommand(rabbitmqctlCommand() + " -n " + nodenameA() + " stop_app");
-        executeCommand(rabbitmqctlCommand() + " -n " + nodenameA() + " start_app");
+        executeCommand(rabbitmqctlCommand() + rabbitmqctlNodenameArgument() + " stop_app");
+        executeCommand(rabbitmqctlCommand() + rabbitmqctlNodenameArgument() + " start_app");
     }
 
     public static List<Binding> listBindings(boolean includeDefaults) throws IOException {
         List<Binding> bindings = new ArrayList<>();
-        Process process = executeCommand(rabbitmqctlCommand() + " -n " + nodenameA() + " list_bindings source_name destination_name routing_key --quiet");
+        Process process = executeCommand(rabbitmqctlCommand() + rabbitmqctlNodenameArgument() + " list_bindings source_name destination_name routing_key --quiet");
         String output = capture(process.getInputStream());
         String[] lines = output.split("\n");
         if (lines.length > 0) {
@@ -116,8 +118,29 @@ public class Shell {
         return System.getProperty("test-broker.A.nodename");
     }
 
+    private static String rabbitmqctlNodenameArgument() {
+        return isOnDocker() ? "" : " -n \'" + nodenameA() + "\'";
+    }
+
+    public static boolean isOnDocker() {
+        String rabbitmqCtl = System.getProperty("rabbitmqctl.bin");
+        if (rabbitmqCtl == null) {
+            throw new IllegalStateException("Please define the rabbitmqctl.bin system property");
+        }
+        return rabbitmqCtl.startsWith(DOCKER_PREFIX);
+    }
+
     public static String rabbitmqctlCommand() {
-        return System.getProperty("rabbitmqctl.bin");
+        String rabbitmqCtl = System.getProperty("rabbitmqctl.bin");
+        if (rabbitmqCtl == null) {
+            throw new IllegalStateException("Please define the rabbitmqctl.bin system property");
+        }
+        if (rabbitmqCtl.startsWith("DOCKER:")) {
+            String containerId = rabbitmqCtl.split(":")[1];
+            return "docker exec " + containerId + " rabbitmqctl";
+        } else {
+            return rabbitmqCtl;
+        }
     }
 
     public static class Binding {
