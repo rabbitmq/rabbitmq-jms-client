@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2021 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
@@ -94,8 +94,22 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      * Whether requeue message on {@link RuntimeException} in the
      * {@link javax.jms.MessageListener} or not.
      * Default is false.
+     *
+     * @since 1.7.0
+     * @see RMQConnection#requeueOnTimeout
      */
     private final boolean requeueOnMessageListenerException;
+
+    /**
+     * Whether to requeue a message that timed out or not.
+     *
+     * Only taken into account if requeueOnMessageListenerException is true.
+     * Default is false.
+     *
+     * @since 2.3.0
+     * @see RMQConnection#requeueOnMessageListenerException
+     */
+    private final boolean requeueOnTimeout;
 
     /**
      * Whether to commit nack on rollback or not.
@@ -149,6 +163,9 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      * @param connectionParams parameters for this connection
      */
     public RMQConnection(ConnectionParams connectionParams) {
+        if (connectionParams.willRequeueOnTimeout() && !connectionParams.willRequeueOnMessageListenerException()) {
+            throw new IllegalArgumentException("requeueOnTimeout can be true only if requeueOnMessageListenerException is true as well");
+        }
 
         connectionParams.getRabbitConnection().addShutdownListener(new RMQConnectionShutdownListener());
 
@@ -166,6 +183,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.receivingContextConsumer = connectionParams.getReceivingContextConsumer();
         this.confirmListener = connectionParams.getConfirmListener();
         this.trustedPackages = connectionParams.getTrustedPackages();
+        this.requeueOnTimeout = connectionParams.willRequeueOnTimeout();
     }
 
     /**
@@ -220,6 +238,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setReceivingContextConsumer(this.receivingContextConsumer)
             .setConfirmListener(this.confirmListener)
             .setTrustedPackages(this.trustedPackages)
+            .setRequeueOnTimeout(this.requeueOnTimeout)
         );
         this.sessions.add(session);
         return session;

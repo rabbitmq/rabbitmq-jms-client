@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2016-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2016-2021 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.AMQP;
@@ -50,8 +50,22 @@ public class ConnectionParams {
      * Whether requeue message on {@link RuntimeException} in the
      * {@link javax.jms.MessageListener} or not.
      * Default is false.
+     *
+     * @since 1.7.0
+     * @see ConnectionParams#requeueOnTimeout
      */
     private boolean requeueOnMessageListenerException = false;
+
+    /**
+     * Whether to requeue a message that timed out or not.
+     *
+     * Only taken into account if requeueOnMessageListenerException is true.
+     * Default is false.
+     *
+     * @since 2.3.0
+     * @see ConnectionParams#requeueOnMessageListenerException
+     */
+    private boolean requeueOnTimeout = false;
 
     /**
      * Whether to commit nack on rollback or not.
@@ -225,5 +239,14 @@ public class ConnectionParams {
 
     public List<String> getTrustedPackages() {
         return trustedPackages;
+    }
+
+    public ConnectionParams setRequeueOnTimeout(boolean requeueOnTimeout) {
+        this.requeueOnTimeout = requeueOnTimeout;
+        return this;
+    }
+
+    public boolean willRequeueOnTimeout() {
+        return requeueOnTimeout;
     }
 }

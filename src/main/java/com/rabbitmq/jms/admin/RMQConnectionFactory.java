@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved. */
+/* Copyright (c) 2013-2021 VMware, Inc. or its affiliates. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
 import com.rabbitmq.client.AMQP;
@@ -68,8 +68,22 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * Whether requeue message on {@link RuntimeException} in the
      * {@link javax.jms.MessageListener} or not.
      * Default is false.
+     *
+     * @since 1.7.0
+     * @see RMQConnectionFactory#requeueOnTimeout
      */
     private boolean requeueOnMessageListenerException = false;
+
+    /**
+     * Whether to requeue a message that timed out or not.
+     *
+     * Only taken into account if requeueOnMessageListenerException is true.
+     * Default is false.
+     *
+     * @since 2.3.0
+     * @see RMQConnectionFactory#requeueOnMessageListenerException
+     */
+    private boolean requeueOnTimeout = false;
 
     /**
      * Whether to <a href="https://www.rabbitmq.com/nack.html">nack</a> messages on rollback or not.
@@ -275,6 +289,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setReceivingContextConsumer(rcc)
             .setConfirmListener(confirmListener)
             .setTrustedPackages(this.trustedPackages)
+            .setRequeueOnTimeout(this.requeueOnTimeout)
         );
         logger.debug("Connection {} created.", conn);
         return conn;
@@ -858,7 +873,11 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     /**
      * Whether requeue message on {@link RuntimeException} in the
      * {@link javax.jms.MessageListener} or not.
+     *
      * Default is false.
+     *
+     * @since 1.7.0
+     * @see RMQConnectionFactory#setRequeueOnTimeout(boolean)
      */
     public void setRequeueOnMessageListenerException(boolean requeueOnMessageListenerException) {
         this.requeueOnMessageListenerException = requeueOnMessageListenerException;
@@ -1000,6 +1019,19 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     public void setConfirmListener(ConfirmListener confirmListener) {
         this.confirmListener = confirmListener;
+    }
+
+    /**
+     * Whether to requeue a message that timed out or not.
+     *
+     * Only taken into account if requeueOnMessageListenerException is true.
+     * Default is false.
+     *
+     * @since 2.3.0
+     * @see RMQConnectionFactory#setRequeueOnMessageListenerException(boolean)
+     */
+    public void setRequeueOnTimeout(boolean requeueOnTimeout) {
+        this.requeueOnTimeout = requeueOnTimeout;
     }
 
     @FunctionalInterface

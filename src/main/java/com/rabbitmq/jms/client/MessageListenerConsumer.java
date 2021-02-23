@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2021 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
@@ -44,6 +44,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
     private final long terminationTimeout;
     private volatile boolean rejecting;
     private final boolean requeueOnMessageListenerException;
+    private final boolean requeueOnTimeout;
 
     /**
      * True when AMQP auto-ack is true as well. Happens
@@ -61,8 +62,12 @@ class MessageListenerConsumer implements Consumer, Abortable {
      * @param messageListener to call {@link MessageListener#onMessage(javax.jms.Message) onMessage(Message)} with received messages
      * @param terminationTimeout wait time (in nanoseconds) for cancel to take effect
      */
-    public MessageListenerConsumer(RMQMessageConsumer messageConsumer, Channel channel, MessageListener messageListener, long terminationTimeout,
-                boolean requeueOnMessageListenerException, ReceivingContextConsumer receivingContextConsumer) {
+    MessageListenerConsumer(RMQMessageConsumer messageConsumer, Channel channel, MessageListener messageListener, long terminationTimeout,
+                boolean requeueOnMessageListenerException, ReceivingContextConsumer receivingContextConsumer,
+                boolean requeueOnTimeout) {
+        if (requeueOnTimeout && !requeueOnMessageListenerException) {
+            throw new IllegalArgumentException("requeueOnTimeout can be true only if requeueOnMessageListenerException is true as well");
+        }
         this.messageConsumer = messageConsumer;
         this.channel = channel;
         this.messageListener = messageListener;
@@ -73,6 +78,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
         this.requeueOnMessageListenerException = requeueOnMessageListenerException;
         this.skipAck = messageConsumer.amqpAutoAck();
         this.receivingContextConsumer = receivingContextConsumer;
+        this.requeueOnTimeout = requeueOnTimeout;
     }
 
     private String getConsTag() {
@@ -110,7 +116,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
      * {@inheritDoc}
      */
     @Override
-    public void handleCancel(String consumerTag) throws IOException {
+    public void handleCancel(String consumerTag) {
         logger.trace("consumerTag='{}'", consumerTag);
         this.completion.setComplete();
     }
@@ -136,19 +142,24 @@ class MessageListenerConsumer implements Consumer, Abortable {
                     RMQMessage msg = RMQMessage.convertMessage(this.messageConsumer.getSession(), this.messageConsumer.getDestination(),
                         response, this.receivingContextConsumer);
                     this.messageConsumer.getSession().addUncommittedTag(dtag);
-                    boolean runtimeExceptionInListener = false;
+                    boolean alreadyNacked = false;
                     try {
                         this.messageConsumer.getSession().deliverMessage(msg, this.messageListener);
+                    } catch (DeliveryExecutor.DeliveryProcessingTimeoutException timeoutException) {
+                        // happens only if requeueOnTimeout is true
+                        logger.debug("nacking {} because of timeout", dtag);
+                        alreadyNacked = true;
+                        nack(dtag);
                     } catch(RMQMessageListenerExecutionJMSException e) {
                         if (e.getCause() instanceof RuntimeException) {
-                            runtimeExceptionInListener = true;
+                            alreadyNacked = true;
                             nack(dtag);
                             this.abort();
                         } else {
                             throw e;
                         }
                     }
-                    if (!runtimeExceptionInListener) {
+                    if (!alreadyNacked) {
                         dealWithAcknowledgments(dtag);
                     }
                 } else {

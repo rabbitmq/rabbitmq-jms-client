@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2021 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
@@ -45,7 +45,7 @@ import com.rabbitmq.jms.util.Util;
  * {@link MessageListener#onMessage} calls are implemented with a more conventional {@link Consumer}.
  * </p>
  */
-public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscriber {
+class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscriber {
     private final Logger logger = LoggerFactory.getLogger(RMQMessageConsumer.class);
 
     private static final String DIRECT_REPLY_TO = "amq.rabbitmq.reply-to";
@@ -80,6 +80,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
     private final DelayedReceiver delayedReceiver;
     /** Record and preserve the need to acknowledge automatically */
     private final boolean autoAck;
+    private final boolean requeueOnTimeout;
 
     /** Track how this consumer is being used. */
     private final AtomicInteger numberOfReceives = new AtomicInteger(0);
@@ -103,7 +104,10 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
      * @param requeueOnMessageListenerException true to requeue message on RuntimeException in listener, false otherwise
      */
     RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag, boolean paused, String messageSelector, boolean requeueOnMessageListenerException,
-            ReceivingContextConsumer receivingContextConsumer) {
+            ReceivingContextConsumer receivingContextConsumer, boolean requeueOnTimeout) {
+        if (requeueOnTimeout && !requeueOnMessageListenerException) {
+            throw new IllegalArgumentException("requeueOnTimeout can be true only if requeueOnMessageListenerException is true as well");
+        }
         this.session = session;
         this.destination = destination;
         this.uuidTag = uuidTag;
@@ -114,6 +118,7 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
         this.autoAck = session.isAutoAck();
         this.requeueOnMessageListenerException = requeueOnMessageListenerException;
         this.receivingContextConsumer = receivingContextConsumer;
+        this.requeueOnTimeout = requeueOnTimeout;
     }
 
     /**
@@ -212,7 +217,8 @@ public class RMQMessageConsumer implements MessageConsumer, QueueReceiver, Topic
                                           messageListener,
                                           TimeUnit.MILLISECONDS.toNanos(this.session.getConnection()
                                                                                     .getTerminationTimeout()),
-                                          this.requeueOnMessageListenerException, this.receivingContextConsumer);
+                                          this.requeueOnMessageListenerException, this.receivingContextConsumer,
+                                          this.requeueOnTimeout);
             if (this.listenerConsumer.compareAndSet(null, mlConsumer)) {
                 this.abortables.add(mlConsumer);
                 if (!this.getSession().getConnection().isStopped()) {

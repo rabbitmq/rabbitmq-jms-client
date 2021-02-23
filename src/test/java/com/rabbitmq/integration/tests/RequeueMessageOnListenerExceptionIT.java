@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2017-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2017-2021 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.client.Connection;
@@ -49,13 +49,10 @@ public class RequeueMessageOnListenerExceptionIT extends AbstractITQueue {
             Queue queue = queueSession.createQueue(QUEUE_NAME);
             QueueReceiver queueReceiver = queueSession.createReceiver(queue);
             final CountDownLatch latch = new CountDownLatch(1);
-            queueReceiver.setMessageListener(new MessageListener() {
-                @Override
-                public void onMessage(Message message) {
-                    if (true) {
-                        latch.countDown();
-                        throw new RuntimeException("runtime exception in message listener");
-                    }
+            queueReceiver.setMessageListener(message -> {
+                if (true) {
+                    latch.countDown();
+                    throw new RuntimeException("runtime exception in message listener");
                 }
             });
 
@@ -82,12 +79,7 @@ public class RequeueMessageOnListenerExceptionIT extends AbstractITQueue {
             Queue queue = queueSession.createQueue(QUEUE_NAME);
             QueueReceiver queueReceiver = queueSession.createReceiver(queue);
             final CountDownLatch latch = new CountDownLatch(1);
-            queueReceiver.setMessageListener(new MessageListener() {
-                @Override
-                public void onMessage(Message message) {
-                    latch.countDown();
-                }
-            });
+            queueReceiver.setMessageListener(message -> latch.countDown());
 
             // the message has been consumed, no longer in the queue
             queueSession = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);

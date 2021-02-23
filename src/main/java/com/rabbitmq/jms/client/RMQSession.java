@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2021 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
@@ -100,6 +100,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private final boolean requeueOnMessageListenerException;
 
+    private final boolean requeueOnTimeout;
+
     /**
      * Whether to commit nack on rollback or not.
      * Default is false.
@@ -185,7 +187,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private static final String RJMS_VERSION_ARG = "rjms_version";
     /** Selector exchange arguments */
     private static final Map<String, Object> RJMS_SELECTOR_EXCHANGE_ARGS
-        = Collections.singletonMap(RJMS_VERSION_ARG, (Object)RJMS_CLIENT_VERSION);
+        = Collections.singletonMap(RJMS_VERSION_ARG, RJMS_CLIENT_VERSION);
 
     private static Map<String, SqlExpressionType> generateJMSTypeIdents() {
         Map<String, SqlExpressionType> map = new HashMap<String, SqlExpressionType>(6);  // six elements only
@@ -230,10 +232,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (sessionParams.getMode() < 0 || sessionParams.getMode() > CLIENT_INDIVIDUAL_ACKNOWLEDGE) {
             throw new JMSException(String.format("cannot create session with acknowledgement mode = %d.", sessionParams.getMode()));
         }
+        if (sessionParams.willRequeueOnTimeout() && !sessionParams.willRequeueOnMessageListenerException()) {
+            throw new IllegalArgumentException("requeueOnTimeout can be true only if requeueOnMessageListenerException is true as well");
+        }
         this.connection = sessionParams.getConnection();
         this.transacted = sessionParams.isTransacted();
         this.subscriptions = sessionParams.getSubscriptions();
-        this.deliveryExecutor = new DeliveryExecutor(sessionParams.getOnMessageTimeoutMs());
+        boolean deliveryExecutorCloseOnTimeout = !sessionParams.willRequeueOnTimeout();
+        this.deliveryExecutor = new DeliveryExecutor(sessionParams.getOnMessageTimeoutMs(), deliveryExecutorCloseOnTimeout);
         this.preferProducerMessageProperty = sessionParams.willPreferProducerMessageProperty();
         this.requeueOnMessageListenerException = sessionParams.willRequeueOnMessageListenerException();
         this.nackOnRollback = sessionParams.willNackOnRollback();
@@ -243,6 +249,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.receivingContextConsumer = sessionParams.getReceivingContextConsumer() == null ?
             ReceivingContextConsumer.NO_OP : sessionParams.getReceivingContextConsumer();
         this.trustedPackages = sessionParams.getTrustedPackages();
+        this.requeueOnTimeout = sessionParams.willRequeueOnTimeout();
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;
@@ -755,7 +762,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             }
         }
         RMQMessageConsumer consumer = new RMQMessageConsumer(this, dest, consumerTag, getConnection().isStopped(),
-            jmsSelector, this.requeueOnMessageListenerException, this.receivingContextConsumer);
+            jmsSelector, this.requeueOnMessageListenerException, this.receivingContextConsumer,
+            this.requeueOnTimeout);
         this.consumers.add(consumer);
         return consumer;
     }
