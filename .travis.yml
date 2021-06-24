@@ -24,7 +24,7 @@ before_install:
   - sudo apt-get install python3.7
 branches:
   only:
-    - master
+    - main
 before_script:
   - ./bin/before_build.sh
 
