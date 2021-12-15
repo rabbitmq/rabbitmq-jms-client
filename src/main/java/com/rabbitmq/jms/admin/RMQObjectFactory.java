@@ -2,8 +2,10 @@
 package com.rabbitmq.jms.admin;
 
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Hashtable;
 
+import java.util.stream.Collectors;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.Queue;
@@ -189,6 +191,15 @@ public class RMQObjectFactory implements ObjectFactory {
             f.setUri(getStringProperty(ref, environment, "uri", true, f.getUri()));
         } catch (JMSException e) {
             this.logger.warn("Failed to set RMQConnectionFactory properties by URI--defaults taken initially.", e);
+        }
+
+        String urisString = getStringProperty(ref, environment, "uris", true, null);
+        if (urisString != null) {
+            try {
+                f.setUris(Arrays.stream(urisString.split(",")).map(String::trim).collect(Collectors.toList()));
+            } catch (JMSException e) {
+                this.logger.warn("Failed to set RMQConnectionFactory properties by URIs.", e);
+            }
         }
 
         // explicit properties (these override the uri, if set)

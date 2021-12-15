@@ -14,6 +14,7 @@ import javax.naming.Reference;
 import java.util.Hashtable;
 
 import static com.rabbitmq.jms.client.RMQConnection.NO_CHANNEL_QOS;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -71,6 +72,30 @@ public class RMQObjectFactoryTest {
         assertEquals("fakeHost", createdConFactory.getHost());
         assertEquals(10, createdConFactory.getChannelsQos());
 
+    }
+
+    @Test
+    public void urisOnRmqObjectFactoryShouldBeEnforced() throws Exception {
+        Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
+            put("className", "javax.jms.ConnectionFactory");
+            put("uris", "amqp://user:pass@host-0:10000/vhost,amqp://user:pass@host-1:10000/vhost");
+        }};
+
+        Object createdObject = rmqObjectFactory.getObjectInstance("anything but a javax.naming.Reference", new CompositeName("java:global/jms/TestConnectionFactory"), null, environment);
+
+        assertNotNull(createdObject);
+        assertEquals(RMQConnectionFactory.class, createdObject.getClass());
+
+        RMQConnectionFactory createdConFactory = (RMQConnectionFactory) createdObject;
+
+        assertEquals("user", createdConFactory.getUsername());
+        assertEquals("pass", createdConFactory.getPassword());
+        assertEquals("vhost", createdConFactory.getVirtualHost());
+        assertEquals("host-0", createdConFactory.getHost());
+
+        assertThat(createdConFactory.getUris())
+            .hasSize(2)
+            .containsExactly("amqp://user:pass@host-0:10000/vhost", "amqp://user:pass@host-1:10000/vhost");
     }
 
     @Test
