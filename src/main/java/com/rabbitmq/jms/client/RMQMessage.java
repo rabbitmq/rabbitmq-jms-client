@@ -1042,6 +1042,7 @@ public abstract class RMQMessage implements Message, Cloneable {
                || val instanceof Long
                || val instanceof Short
                || val instanceof Byte
+               || val instanceof Boolean
                )
                 hdrs.put(key, val);
     }
