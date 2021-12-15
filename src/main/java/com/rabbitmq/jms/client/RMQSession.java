@@ -923,18 +923,21 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             !durable && queueNameOverride != null && !dest.isQueue() : false;
 
         try { /* Declare the queue to RabbitMQ -- this creates it if it doesn't already exist */
-            this.logger.debug("declare RabbitMQ queue name({}), durable({}), exclusive({}), auto-delete({}), arguments({})",
-                              queueName, durable, exclusive, false, queueDeclareArguments);
+            this.logger.debug("declare RabbitMQ queue name({}), durable({}), exclusive({}), auto-delete({}), arguments({} + {})",
+                              queueName, durable, exclusive, false,
+                              this.queueDeclareArguments, dest.getQueueDeclareArguments());
+            Map<String, Object> arguments = merge(this.queueDeclareArguments, dest.getQueueDeclareArguments());
             this.channel.queueDeclare(queueName,
                                       durable,
                                       exclusive,
                                       autoDelete,
-                                      queueDeclareArguments);
+                                      arguments);
 
             /* Temporary or 'topic queues' are exclusive and therefore get deleted by RabbitMQ on close */
         } catch (Exception x) {
-            this.logger.error("RabbitMQ exception on queue declare name({}), durable({}), exclusive({}), auto-delete({}), arguments({})",
-                              queueName, durable, exclusive, autoDelete, queueDeclareArguments, x);
+            this.logger.error("RabbitMQ exception on queue declare name({}), durable({}), exclusive({}), auto-delete({}), arguments({} + {})",
+                              queueName, durable, exclusive, autoDelete, this.queueDeclareArguments,
+                              dest.getQueueDeclareArguments(), x);
             throw new RMQJMSException(x);
         }
 
@@ -1079,6 +1082,19 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             }
         } catch (Exception e) { // includes unchecked exceptions, e.g. ShutdownSignalException
             throw new RMQJMSException("Cannot create browsing channel", e);
+        }
+    }
+
+    private static Map<String, Object> merge(Map<String, Object> m1, Map<String, Object> m2) {
+        if (m1 == null) {
+            return m2;
+        } else if (m2 == null) {
+            return m1;
+        } else {
+            Map<String, Object> merged = new HashMap<>();
+            merged.putAll(m1);
+            merged.putAll(m2);
+            return merged;
         }
     }
 
