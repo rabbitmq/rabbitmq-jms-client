@@ -125,6 +125,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @param routingKey - the routing key used for this destination (if it is a topic)
      * @param isQueue - <code>true</code> if this is a queue, <code>false</code> if this is a topic
      * @param isTemporary true if this is a temporary destination
+     * @param queueDeclareArguments arguments to use when declaring the AMQP queue
      */
     private RMQDestination(String destName, boolean amqp, String exchangeName, String routingKey, String queueName, boolean isQueue, boolean isTemporary,
         Map<String, Object> queueDeclareArguments) {
