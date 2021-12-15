@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved. */
+/* Copyright (c) 2013-2021 VMware, Inc. or its affiliates. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
 import java.io.Serializable;
@@ -58,7 +58,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      */
     public RMQDestination() {
         this.isDeclared = false;    // transient field reset on deserialisation
-        this.queueDeclareArguments = Collections.emptyMap();
+        this.queueDeclareArguments = null;
     }
 
     /**
@@ -68,7 +68,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @param isTemporary true if this is a temporary destination
      */
     public RMQDestination(String destName, boolean isQueue, boolean isTemporary) {
-        this(destName, isQueue, isTemporary, Collections.emptyMap());
+        this(destName, isQueue, isTemporary, null);
     }
 
     /**
@@ -107,7 +107,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @param amqpQueueName - the queue name of the mapped resource
      */
     public RMQDestination(String destName, String amqpExchangeName, String amqpRoutingKey, String amqpQueueName) {
-        this(destName, true, amqpExchangeName, amqpRoutingKey, amqpQueueName, true, false, Collections.emptyMap());
+        this(destName, true, amqpExchangeName, amqpRoutingKey, amqpQueueName, true, false, null);
     }
 
     /**
@@ -148,8 +148,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
         this.isTemporary = isTemporary;
 
         this.isDeclared = false;
-        this.queueDeclareArguments = queueDeclareArguments == null ? Collections.emptyMap() :
-            Collections.unmodifiableMap(queueDeclareArguments);
+        this.queueDeclareArguments = queueDeclareArguments;
     }
 
     public boolean amqpWritable() {
@@ -290,7 +289,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     public Map<String, Object> getQueueDeclareArguments() {
-        return queueDeclareArguments;
+        return queueDeclareArguments == null ? null : Collections.unmodifiableMap(queueDeclareArguments);
     }
 
     /**

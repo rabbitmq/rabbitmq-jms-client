@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2021 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -30,7 +30,9 @@ public class StreamMessageSerializationIT extends AbstractITQueue {
 
     private static final String QUEUE_NAME = "test.queue." + StreamMessageSerializationIT.class.getCanonicalName();
     private static final long TEST_RECEIVE_TIMEOUT = 1000; // one second
-    private static final java.util.List<String> TRUSTED_PACKAGES = Arrays.asList("java.lang", "com.rabbitmq.jms");
+    private static final java.util.List<String> TRUSTED_PACKAGES = Arrays.asList(
+        "java.lang", "com.rabbitmq.jms"
+    );
 
     @Override
     protected void customise(RMQConnectionFactory connectionFactory) {
@@ -60,7 +62,7 @@ public class StreamMessageSerializationIT extends AbstractITQueue {
 
             queueSender.send(message);
         } finally {
-            reconnect(Arrays.asList("java.lang", "com.rabbitmq.jms"));
+            reconnect(TRUSTED_PACKAGES);
         }
 
         queueConn.start();
