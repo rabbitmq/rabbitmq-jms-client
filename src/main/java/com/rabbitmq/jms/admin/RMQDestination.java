@@ -1,8 +1,10 @@
-/* Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved. */
+/* Copyright (c) 2013-2021 VMware, Inc. or its affiliates. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
 import java.io.Serializable;
 
+import java.util.Collections;
+import java.util.Map;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Queue;
@@ -49,12 +51,14 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     private boolean isTemporary;
 
     private transient boolean isDeclared;   // field not serialised and not recovered
+    private final Map<String, Object> queueDeclareArguments;
 
     /**
      * Constructor used only for Java serialisation
      */
     public RMQDestination() {
         this.isDeclared = false;    // transient field reset on deserialisation
+        this.queueDeclareArguments = null;
     }
 
     /**
@@ -64,7 +68,18 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @param isTemporary true if this is a temporary destination
      */
     public RMQDestination(String destName, boolean isQueue, boolean isTemporary) {
-        this(destName, false, queueOrTopicExchangeName(isQueue, isTemporary), destName, destName, isQueue, isTemporary);
+        this(destName, isQueue, isTemporary, null);
+    }
+
+    /**
+     * Creates a destination for RJMS with arguments to declare the AMQP queue
+     * @param destName the name of the topic or queue
+     * @param isQueue true if this represent a queue
+     * @param isTemporary true if this is a temporary destination
+     * @param queueDeclareArguments arguments to use when declaring the AMQP queue
+     */
+    public RMQDestination(String destName, boolean isQueue, boolean isTemporary, Map<String, Object> queueDeclareArguments) {
+        this(destName, false, queueOrTopicExchangeName(isQueue, isTemporary), destName, destName, isQueue, isTemporary, queueDeclareArguments);
     }
 
     private static final String queueOrTopicExchangeName(boolean isQueue, boolean isTemporary) {
@@ -92,7 +107,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @param amqpQueueName - the queue name of the mapped resource
      */
     public RMQDestination(String destName, String amqpExchangeName, String amqpRoutingKey, String amqpQueueName) {
-        this(destName, true, amqpExchangeName, amqpRoutingKey, amqpQueueName, true, false);
+        this(destName, true, amqpExchangeName, amqpRoutingKey, amqpQueueName, true, false, null);
     }
 
     /**
@@ -110,8 +125,10 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @param routingKey - the routing key used for this destination (if it is a topic)
      * @param isQueue - <code>true</code> if this is a queue, <code>false</code> if this is a topic
      * @param isTemporary true if this is a temporary destination
+     * @param queueDeclareArguments arguments to use when declaring the AMQP queue
      */
-    private RMQDestination(String destName, boolean amqp, String exchangeName, String routingKey, String queueName, boolean isQueue, boolean isTemporary) {
+    private RMQDestination(String destName, boolean amqp, String exchangeName, String routingKey, String queueName, boolean isQueue, boolean isTemporary,
+        Map<String, Object> queueDeclareArguments) {
         this.destinationName = destName;
 
         if (amqp) {
@@ -131,6 +148,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
         this.isTemporary = isTemporary;
 
         this.isDeclared = false;
+        this.queueDeclareArguments = queueDeclareArguments;
     }
 
     public boolean amqpWritable() {
@@ -268,6 +286,10 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
         addStringProperty(ref, "amqpRoutingKey", this.amqpRoutingKey);
         addStringProperty(ref, "amqpQueueName", this.amqpQueueName);
         return ref;
+    }
+
+    public Map<String, Object> getQueueDeclareArguments() {
+        return queueDeclareArguments == null ? null : Collections.unmodifiableMap(queueDeclareArguments);
     }
 
     /**
