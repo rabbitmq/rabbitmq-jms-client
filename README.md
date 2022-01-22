@@ -5,7 +5,7 @@
 
 ## Overview
 
-This is a JMS 1.1 client library for RabbitMQ, working in concert with [rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-jms-topic-exchange),
+This is a JMS 1.1 client library for RabbitMQ, working in concert with [rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-server/tree/master/deps/rabbitmq_jms_topic_exchange),
 a RabbitMQ server plugin.
 
 ## Installation
@@ -55,7 +55,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for an overview of the development proc
 ### Integration Tests
 
 The integration tests assume a RabbitMQ node 
-with [rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-jms-topic-exchange/)
+with [rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-server/tree/master/deps/rabbitmq_jms_topic_exchange/)
 listening on localhost:5672 (the default settings).
 
 Connection recovery tests need `rabbitmqctl` to control the running node.
@@ -72,7 +72,7 @@ profile:
     ./mvn clean verify -P '!setup-test-node'
 
 The easiest way to run a test node is to clone
-[rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-jms-topic-exchange/) and use `make run-broker`.
+[rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-server/tree/master/deps/rabbitmq_jms_topic_exchange) and use `make run-broker`.
 
 ### JMS 1.1 Compliance Test Suite
 
