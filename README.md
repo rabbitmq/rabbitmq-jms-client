@@ -1,7 +1,7 @@
 # Java JMS Client for RabbitMQ
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.rabbitmq.jms/rabbitmq-jms/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.rabbitmq.jms/rabbitmq-jms)
-[![Travis CI](https://travis-ci.org/rabbitmq/rabbitmq-jms-client.svg?branch=main)](https://travis-ci.org/rabbitmq/rabbitmq-jms-client)
+![Build Status](https://github.com/rabbitmq/rabbitmq-jms-client/workflows/Build%20(Linux)/badge.svg?branch=main)
 
 ## Overview
 
