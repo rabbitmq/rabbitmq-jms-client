@@ -2,11 +2,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.rabbitmq.TestUtils.DisabledIfTlsNotEnabled;
 import javax.jms.DeliveryMode;
 import javax.jms.Session;
 import javax.jms.TextMessage;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Integration test
  */
+@DisabledIfTlsNotEnabled
 public class SSLSimpleTopicMessageIT extends AbstractITTopicSSL {
     private static final String TOPIC_NAME = "test.topic." + SSLSimpleTopicMessageIT.class.getCanonicalName();
 

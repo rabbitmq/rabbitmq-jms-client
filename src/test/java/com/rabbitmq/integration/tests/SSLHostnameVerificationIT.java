@@ -2,9 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2018-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2018-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
+import com.rabbitmq.TestUtils.DisabledIfTlsNotEnabled;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Integration test for hostname verification with TLS.
  */
+@DisabledIfTlsNotEnabled
 public class SSLHostnameVerificationIT {
 
     static SSLContext sslContext;

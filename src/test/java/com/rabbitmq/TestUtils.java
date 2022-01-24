@@ -2,11 +2,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2019-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2019-2022 VMware, Inc. or its affiliates. All rights reserved.
 
 package com.rabbitmq;
 
+import com.rabbitmq.jms.util.Shell;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.time.Duration;
+import org.junit.jupiter.api.extension.ConditionEvaluationResult;
+import org.junit.jupiter.api.extension.ExecutionCondition;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 public class TestUtils {
 
@@ -40,4 +50,36 @@ public class TestUtils {
 
     }
 
+    private static boolean tlsAvailable() {
+        if (Shell.rabbitmqctlCommand() == null) {
+            throw new IllegalStateException(
+                "rabbitmqctl.bin system property not set, cannot check if TLS is enabled");
+        } else {
+            try {
+                Process process = Shell.rabbitmqctl("status");
+                String output = Shell.capture(process.getInputStream());
+                return output.contains("amqp/ssl");
+            } catch (Exception e) {
+                throw new RuntimeException("Error while trying to detect TLS: " + e.getMessage());
+            }
+        }
+    }
+
+    private static class DisabledIfTlsNotEnabledCondition implements ExecutionCondition {
+
+        @Override
+        public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
+            if (tlsAvailable()) {
+                return ConditionEvaluationResult.enabled("TLS is enabled");
+            } else {
+                return ConditionEvaluationResult.disabled("TLS is disabled");
+            }
+        }
+    }
+
+    @Target({ElementType.TYPE, ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Documented
+    @ExtendWith(DisabledIfTlsNotEnabledCondition.class)
+    public @interface DisabledIfTlsNotEnabled {}
 }

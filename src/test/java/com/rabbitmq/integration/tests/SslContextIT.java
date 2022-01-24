@@ -2,9 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2016-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2016-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
+import com.rabbitmq.TestUtils.DisabledIfTlsNotEnabled;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@DisabledIfTlsNotEnabled
 public class SslContextIT {
 
     Connection connection = null;
