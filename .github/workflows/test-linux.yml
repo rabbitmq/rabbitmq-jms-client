@@ -1,0 +1,37 @@
+name: Build (Linux)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    services:
+      rabbitmq:
+        image: rabbitmq
+        ports:
+          - 5552:5552
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+      - name: Cache Maven packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Enable JMS Topic Exchange Plugin
+        run: docker exec ${{job.services.rabbitmq.id}} rabbitmq-plugins enable rabbitmq_jms_topic_exchange
+      - name: Test
+        run: ./mvnw verify -P '!setup-test-node' -Drabbitmqctl.bin=DOCKER:${{job.services.rabbitmq.id}}
