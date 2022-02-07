@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import javax.jms.*;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,6 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Integration test
  */
 public class SimpleTopicMessageIT extends AbstractITTopic {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SimpleTopicMessageIT.class);
+
     private static final String TOPIC_NAME = "test.topic." + SimpleTopicMessageIT.class.getCanonicalName();
     private static final String WILD_TOPIC_NAME = "test.topic.#";
     private static final String MESSAGE_TEXT_1 = "Hello " + SimpleTopicMessageIT.class.getName();
@@ -26,6 +31,7 @@ public class SimpleTopicMessageIT extends AbstractITTopic {
 
     @Test
     public void testSendAndReceiveTextMessage() throws Exception {
+        log("Starting testSendAndReceiveTextMessage");
         topicConn.start();
         TopicSession topicSession = topicConn.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         Topic topic = topicSession.createTopic(TOPIC_NAME);
@@ -37,12 +43,16 @@ public class SimpleTopicMessageIT extends AbstractITTopic {
         TextMessage message = topicSession.createTextMessage(MESSAGE_TEXT_1);
         sender.send(message);
 
+        log("Sent message");
+
         assertEquals(MESSAGE_TEXT_1, ((TextMessage) receiver1.receive()).getText());
         assertEquals(MESSAGE_TEXT_1, ((TextMessage) receiver2.receive()).getText());
 
         // check only one binding to each subscriber AMQP queue is created
         // see https://github.com/rabbitmq/rabbitmq-jms-client/issues/72
+        log("Listing bindings");
         List<Shell.Binding> bindings = Shell.listBindings(false);
+        log("Bindings listed, checking them");
         List<Shell.Binding> bindingsToTopic = bindings.stream()
                 .filter(b -> b.getRoutingKey().equals(TOPIC_NAME)) // bindings to the topic
                 .collect(toList());
@@ -54,10 +64,12 @@ public class SimpleTopicMessageIT extends AbstractITTopic {
                     .collect(Collectors.toList());
             assertEquals(1, subscriberAmqpQueueBinding.size());
         });
+        log("Test done");
     }
 
     @Test
     public void testSendAndReceiveWildTopicTestMessage() throws Exception {
+        log("Starting testSendAndReceiveWildTopicTestMessage");
         topicConn.start();
         TopicSession topicSession = topicConn.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         Topic explicitTopicDestination = topicSession.createTopic(TOPIC_NAME);
@@ -70,8 +82,15 @@ public class SimpleTopicMessageIT extends AbstractITTopic {
         TextMessage message = topicSession.createTextMessage(MESSAGE_TEXT_2);
         sender.send(message);
 
+        log("Sent message");
+
         TextMessage textMessage = (TextMessage) receiver.receive();
         assertEquals(MESSAGE_TEXT_2, textMessage.getText(), "Failed to receive proper text message");
         assertEquals(explicitTopicDestination, textMessage.getJMSDestination(), "Incorrect publisher destination on received message");
+        log("Test done");
+    }
+
+    private static void log(String message) {
+        LOGGER.debug(message);
     }
 }
