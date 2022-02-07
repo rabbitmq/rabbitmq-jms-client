@@ -56,8 +56,8 @@ public class Shell {
 
     public static List<Binding> listBindings(boolean includeDefaults) throws IOException {
         List<Binding> bindings = new ArrayList<>();
-        Process process = executeCommand(rabbitmqctlCommand() + rabbitmqctlNodenameArgument() + " list_bindings source_name destination_name routing_key --quiet");
-        String output = capture(process.getInputStream());
+        ProcessState process = executeCommand(rabbitmqctlCommand() + rabbitmqctlNodenameArgument() + " list_bindings source_name destination_name routing_key --quiet");
+        String output = process.output();
         String[] lines = output.split("\n");
         if (lines.length > 0) {
             for (int i = 1; i < lines.length; i++) {
@@ -71,28 +71,70 @@ public class Shell {
         return bindings;
     }
 
-    public static Process executeCommand(String command) throws IOException {
+    public static ProcessState executeCommand(String command) throws IOException {
         Process pr = executeCommandProcess(command);
+        InputStreamPumpState inputState = new InputStreamPumpState(pr.getInputStream());
+        InputStreamPumpState errorState = new InputStreamPumpState(pr.getErrorStream());
 
-        int ev = waitForExitValue(pr);
+        int ev = waitForExitValue(pr, inputState, errorState);
+        inputState.pump();
+        errorState.pump();
         if (ev != 0) {
-            String stdout = capture(pr.getInputStream());
-            String stderr = capture(pr.getErrorStream());
             throw new IOException("unexpected command exit value: " + ev +
                 "\ncommand: " + command + "\n" +
-                "\nstdout:\n" + stdout +
-                "\nstderr:\n" + stderr + "\n");
+                "\nstdout:\n" + inputState.buffer.toString() +
+                "\nstderr:\n" + errorState.buffer.toString() + "\n");
         }
-        return pr;
+        return new ProcessState(pr, inputState, errorState);
     }
 
-    private static int waitForExitValue(Process pr) {
-        while (true) {
+    public static class ProcessState {
+
+        private final Process process;
+        private final InputStreamPumpState inputState;
+        private final InputStreamPumpState errorState;
+
+        ProcessState(Process process, InputStreamPumpState inputState,
+            InputStreamPumpState errorState) {
+            this.process = process;
+            this.inputState = inputState;
+            this.errorState = errorState;
+        }
+
+        public String output() {
+            return inputState.buffer.toString();
+        }
+
+    }
+
+    private static class InputStreamPumpState {
+
+        private final BufferedReader reader;
+        private final StringBuilder buffer;
+
+        private InputStreamPumpState(InputStream in) {
+            this.reader = new BufferedReader(new InputStreamReader(in));
+            this.buffer = new StringBuilder();
+        }
+
+        void pump() throws IOException {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                buffer.append(line).append("\n");
+            }
+        }
+
+    }
+
+    private static int waitForExitValue(Process pr, InputStreamPumpState inputState,
+        InputStreamPumpState errorState) throws IOException {
+        while(true) {
             try {
+                inputState.pump();
+                errorState.pump();
                 pr.waitFor();
                 break;
-            } catch (InterruptedException ignored) {
-            }
+            } catch (InterruptedException ignored) {}
         }
         return pr.exitValue();
     }
@@ -130,7 +172,7 @@ public class Shell {
         return rabbitmqCtl.startsWith(DOCKER_PREFIX);
     }
 
-    public static Process rabbitmqctl(String command) throws IOException {
+    public static ProcessState rabbitmqctl(String command) throws IOException {
         return executeCommand(rabbitmqctlCommand() + rabbitmqctlNodenameArgument() + " " + command);
     }
 

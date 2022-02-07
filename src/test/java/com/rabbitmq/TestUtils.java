@@ -7,6 +7,7 @@
 package com.rabbitmq;
 
 import com.rabbitmq.jms.util.Shell;
+import com.rabbitmq.jms.util.Shell.ProcessState;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -56,8 +57,8 @@ public class TestUtils {
                 "rabbitmqctl.bin system property not set, cannot check if TLS is enabled");
         } else {
             try {
-                Process process = Shell.rabbitmqctl("status");
-                String output = Shell.capture(process.getInputStream());
+                ProcessState process = Shell.rabbitmqctl("status");
+                String output = process.output();
                 return output.contains("amqp/ssl");
             } catch (Exception e) {
                 throw new RuntimeException("Error while trying to detect TLS: " + e.getMessage());
