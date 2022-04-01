@@ -65,7 +65,7 @@
     <maven.gpg.plugin.version>3.0.1</maven.gpg.plugin.version>
     <maven.packagecloud.wagon.version>0.0.6</maven.packagecloud.wagon.version>
     <nexus-staging-maven-plugin.version>1.6.12</nexus-staging-maven-plugin.version>
-    <checksum.maven.plugin.version>1.8</checksum.maven.plugin.version>
+    <checksum.maven.plugin.version>1.11</checksum.maven.plugin.version>
 
     <java.compile.version>1.8</java.compile.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
