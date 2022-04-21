@@ -61,7 +61,7 @@
     <groovy.all.version>2.4.21</groovy.all.version>
     <keytool.maven.plugin.version>1.5</keytool.maven.plugin.version>
     <maven.sources.plugin.version>3.2.1</maven.sources.plugin.version>
-    <maven.javadoc.plugin.version>3.3.2</maven.javadoc.plugin.version>
+    <maven.javadoc.plugin.version>3.4.0</maven.javadoc.plugin.version>
     <maven.gpg.plugin.version>3.0.1</maven.gpg.plugin.version>
     <maven.packagecloud.wagon.version>0.0.6</maven.packagecloud.wagon.version>
     <nexus-staging-maven-plugin.version>1.6.12</nexus-staging-maven-plugin.version>
