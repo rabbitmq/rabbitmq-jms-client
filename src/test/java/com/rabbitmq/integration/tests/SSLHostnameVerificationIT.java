@@ -19,6 +19,8 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
 import java.security.KeyStore;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -27,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Integration test for hostname verification with TLS.
  */
 @DisabledIfTlsNotEnabled
+@EnabledForJreRange(min = JRE.JAVA_11)
 public class SSLHostnameVerificationIT {
 
     static SSLContext sslContext;
