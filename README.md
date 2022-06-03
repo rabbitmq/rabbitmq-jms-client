@@ -17,11 +17,12 @@ This package is published to several Maven package repositories:
  * [Maven Central](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.rabbitmq.jms%22%20AND%20a%3A%22rabbitmq-jms%22)
  * [RabbitMQ Maven Milestones repository](https://packagecloud.io/rabbitmq/maven-milestones)
  * [Sonatype OSS snapshot repository](https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/jms/rabbitmq-jms/)
- 
+
+#### Latest Stable
 
 Add the following to `pom.xml` for Maven:
 
-``` xml
+```xml
 <dependency>
   <groupId>com.rabbitmq.jms</groupId>
   <artifactId>rabbitmq-jms</artifactId>
@@ -31,8 +32,52 @@ Add the following to `pom.xml` for Maven:
 
 Or the following to `build.gradle` for Gradle:
 
-```
+```groovy
 compile 'com.rabbitmq.jms:rabbitmq-jms:2.4.0'
+```
+
+#### Snapshot
+
+
+Add the following to `pom.xml` for Maven:
+
+```xml
+<dependency>
+  <groupId>com.rabbitmq.jms</groupId>
+  <artifactId>rabbitmq-jms</artifactId>
+  <version>2.5.0-SNAPSHOT</version>
+</dependency>
+```
+
+You need to declare the snapshot repository as well:
+
+```xml
+<repositories>
+
+  <repository>
+    <id>ossrh</id>
+    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    <snapshots><enabled>true</enabled></snapshots>
+    <releases><enabled>false</enabled></releases>
+  </repository>
+
+</repositories>
+```
+
+
+Or the following to `build.gradle` for Gradle:
+
+```groovy
+compile 'com.rabbitmq.jms:rabbitmq-jms:2.5.0-SNAPSHOT'
+```
+
+You need to declare the snapshot repository as well:
+
+```groovy
+repositories {
+  maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+  mavenCentral()
+}
 ```
 
 ### Building from Source
