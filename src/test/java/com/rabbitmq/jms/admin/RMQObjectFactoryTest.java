@@ -5,6 +5,7 @@
 // Copyright (c) 2018-2020 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.admin;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import javax.jms.ConnectionFactory;
@@ -199,4 +200,124 @@ public class RMQObjectFactoryTest {
         }
     }
 
+    @Test
+    void getObjectInstanceShouldCreateDestinationWithConvertedQueueDeclareArguments() throws Exception {
+        String queueDeclareArguments = "x-expires=10000,"
+            + "x-message-ttl=5000,"
+            + "x-dead-letter-exchange=dlq,"
+            + "x-dead-letter-routing-key=dlrq,"
+            + "x-dead-letter-strategy=at-least-once,"
+            + "x-max-length=42,"
+            + "x-max-length-bytes=420,"
+            + "x-max-in-memory-length=33,"
+            + "x-max-in-memory-bytes=330,"
+            + "x-max-priority=5,"
+            + "x-overflow=drop-head,"
+            + "x-queue-mode=default,"
+            + "x-queue-version=2,"
+            + "x-single-active-consumer=true,"
+            + "x-queue-type=stream,"
+            + "x-quorum-initial-group-size=3,"
+            + "x-max-age=7D,"
+            + "x-stream-max-segment-size-bytes=7,"
+            + "x-initial-cluster-size=5,"
+            + "x-queue-leader-locator=client-local,"
+            + "random-key=random-value"
+            ;
+        Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
+            put("className", "javax.jms.Queue");
+            put("destinationName", "TEST_QUEUE");
+            put("queueDeclareArguments", queueDeclareArguments);
+        }};
+
+        Object createdObject = rmqObjectFactory.getObjectInstance(
+            "anything but a javax.naming.Reference",
+            new CompositeName("java:global/jms/TestQueue"), null, environment
+        );
+
+        assertNotNull(createdObject);
+        assertEquals(RMQDestination.class, createdObject.getClass());
+
+        RMQDestination createdDestination = (RMQDestination) createdObject;
+
+        assertEquals("TEST_QUEUE", createdDestination.getDestinationName());
+        assertEquals("TEST_QUEUE", createdDestination.getQueueName());
+        assertThat(createdDestination.getQueueDeclareArguments())
+            .containsEntry("x-expires", 10_000)
+            .containsEntry("x-message-ttl", 5_000)
+            .containsEntry("x-dead-letter-exchange", "dlq")
+            .containsEntry("x-dead-letter-routing-key", "dlrq")
+            .containsEntry("x-dead-letter-strategy", "at-least-once")
+            .containsEntry("x-max-length", 42)
+            .containsEntry("x-max-length-bytes", 420)
+            .containsEntry("x-max-in-memory-length", 33)
+            .containsEntry("x-max-in-memory-bytes", 330)
+            .containsEntry("x-max-priority", 5)
+            .containsEntry("x-overflow", "drop-head")
+            .containsEntry("x-queue-mode", "default")
+            .containsEntry("x-queue-version", 2)
+            .containsEntry("x-single-active-consumer", true)
+            .containsEntry("x-queue-type", "stream")
+            .containsEntry("x-quorum-initial-group-size", 3)
+            .containsEntry("x-max-age", "7D")
+            .containsEntry("x-stream-max-segment-size-bytes", 7)
+            .containsEntry("x-initial-cluster-size", 5)
+            .containsEntry("x-queue-leader-locator", "client-local")
+            .containsEntry("random-key", "random-value")
+        ;
+    }
+
+    @Test
+    void getObjectInstanceQueueDeclareArgumentsShouldKeepOriginalValueIfConversionFails() throws Exception {
+        // the conversion will fail but we keep the original value
+        String queueDeclareArguments = "x-expires=bad-value";
+        Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
+            put("className", "javax.jms.Queue");
+            put("destinationName", "TEST_QUEUE");
+            put("queueDeclareArguments", queueDeclareArguments);
+        }};
+
+        Object createdObject = rmqObjectFactory.getObjectInstance(
+            "anything but a javax.naming.Reference",
+            new CompositeName("java:global/jms/TestQueue"), null, environment
+        );
+
+        assertNotNull(createdObject);
+        assertEquals(RMQDestination.class, createdObject.getClass());
+
+        RMQDestination createdDestination = (RMQDestination) createdObject;
+
+        assertEquals("TEST_QUEUE", createdDestination.getDestinationName());
+        assertEquals("TEST_QUEUE", createdDestination.getQueueName());
+        assertThat(createdDestination.getQueueDeclareArguments())
+            .containsEntry("x-expires", "bad-value");
+    }
+
+    @Test
+    void getObjectInstanceQueueDeclareArgumentsAreIgnoredForAmqpDestination() throws Exception {
+        String queueDeclareArguments = "x-expires=1000";
+        Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
+            put("className", "javax.jms.Queue");
+            put("destinationName", "TEST_QUEUE");
+            put("amqp", "true");
+            put("amqpExchangeName", "ex");
+            put("amqpRoutingKey", "rk");
+            put("amqpQueueName", "queue");
+            put("queueDeclareArguments", queueDeclareArguments);
+        }};
+
+        Object createdObject = rmqObjectFactory.getObjectInstance(
+            "anything but a javax.naming.Reference",
+            new CompositeName("java:global/jms/TestQueue"), null, environment
+        );
+
+        assertNotNull(createdObject);
+        assertEquals(RMQDestination.class, createdObject.getClass());
+
+        RMQDestination createdDestination = (RMQDestination) createdObject;
+
+        assertEquals("TEST_QUEUE", createdDestination.getDestinationName());
+        assertEquals("TEST_QUEUE", createdDestination.getQueueName());
+        assertThat(createdDestination.getQueueDeclareArguments()).isNull();
+    }
 }

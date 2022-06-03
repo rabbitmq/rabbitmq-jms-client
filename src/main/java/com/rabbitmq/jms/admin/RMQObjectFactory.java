@@ -1,10 +1,15 @@
-/* Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved. */
+/* Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Hashtable;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
@@ -117,7 +122,7 @@ public class RMQObjectFactory implements ObjectFactory {
 
     private static final String ENV_CLASS_NAME = "className";
 
-    private final Logger logger = LoggerFactory.getLogger(RMQObjectFactory.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RMQObjectFactory.class);
 
     /**
      * {@inheritDoc}
@@ -184,13 +189,13 @@ public class RMQObjectFactory implements ObjectFactory {
      * @throws NamingException if a required property is missing or invalid
      */
     public Object createConnectionFactory(Reference ref, Hashtable<?, ?> environment, Name name) throws NamingException {
-        this.logger.trace("Creating connection factory ref '{}', name '{}'.", ref, name);
+        LOGGER.trace("Creating connection factory ref '{}', name '{}'.", ref, name);
         RMQConnectionFactory f = new RMQConnectionFactory();
 
         try { // set uri first, which may fail if it doesn't parse
             f.setUri(getStringProperty(ref, environment, "uri", true, f.getUri()));
         } catch (JMSException e) {
-            this.logger.warn("Failed to set RMQConnectionFactory properties by URI--defaults taken initially.", e);
+            LOGGER.warn("Failed to set RMQConnectionFactory properties by URI--defaults taken initially.", e);
         }
 
         String urisString = getStringProperty(ref, environment, "uris", true, null);
@@ -198,7 +203,7 @@ public class RMQObjectFactory implements ObjectFactory {
             try {
                 f.setUris(Arrays.stream(urisString.split(",")).map(String::trim).collect(Collectors.toList()));
             } catch (JMSException e) {
-                this.logger.warn("Failed to set RMQConnectionFactory properties by URIs.", e);
+                LOGGER.warn("Failed to set RMQConnectionFactory properties by URIs.", e);
             }
         }
 
@@ -234,16 +239,22 @@ public class RMQObjectFactory implements ObjectFactory {
      * @throws NamingException if the <code>destinationName</code> property is missing
      */
     public Object createDestination(Reference ref, Hashtable<?, ?> environment, Name name, boolean topic) throws NamingException {
-        this.logger.trace("Creating destination ref '{}', name '{}' (topic={}).", ref, name, topic);
+        LOGGER.trace("Creating destination ref '{}', name '{}' (topic={}).", ref, name, topic);
         String dname = getStringProperty(ref, environment, "destinationName", false, null);
+        Map<String, Object> queueDeclareArguments = convertQueueDeclareArguments(getMapProperty(
+          ref, environment, "queueDeclareArguments", true, null
+        ));
         boolean amqp = getBooleanProperty(ref, environment, "amqp", true, false);
         if (amqp) {
+            if (queueDeclareArguments != null) {
+                LOGGER.warn("Queue declare arguments are ignored for AMQP destinations");
+            }
             String amqpExchangeName = getStringProperty(ref, environment, "amqpExchangeName", true, null);
             String amqpRoutingKey = getStringProperty(ref, environment,"amqpRoutingKey", true, null);
             String amqpQueueName = getStringProperty(ref, environment, "amqpQueueName", true, null);
             return new RMQDestination(dname, amqpExchangeName, amqpRoutingKey, amqpQueueName);
         } else {
-            return new RMQDestination(dname, !topic, false);
+            return new RMQDestination(dname, !topic, false, queueDeclareArguments);
         }
     }
 
@@ -257,7 +268,7 @@ public class RMQObjectFactory implements ObjectFactory {
      * @return the String value for the property
      * @throws NamingException if the property is missing and <code>mayBeNull==false</code>
      */
-    private String getStringProperty(Reference ref,
+    private static String getStringProperty(Reference ref,
                                      Hashtable<?, ?> environment,
                                      String propertyName,
                                      boolean mayBeNull,
@@ -277,7 +288,7 @@ public class RMQObjectFactory implements ObjectFactory {
      * @return the boolean value of the property
      * @throws NamingException if the property is missing and <code>mayBeNull==false</code>
      */
-    private boolean getBooleanProperty(Reference ref,
+    private static boolean getBooleanProperty(Reference ref,
                                        Hashtable<?, ?> environment,
                                        String propertyName,
                                        boolean mayBeNull,
@@ -297,7 +308,7 @@ public class RMQObjectFactory implements ObjectFactory {
      * @return the integer value representing the property value
      * @throws NamingException if the property is missing while mayBeNull is set to false, or a number format exception happened
      */
-    private int getIntProperty(Reference ref,
+    private static int getIntProperty(Reference ref,
                                Hashtable<?, ?> environment,
                                String propertyName,
                                boolean mayBeNull,
@@ -323,7 +334,7 @@ public class RMQObjectFactory implements ObjectFactory {
      * @return the long integer value representing the property value
      * @throws NamingException if the property is missing while mayBeNull is set to false, or a number format exception happened
      */
-    private long getLongProperty(Reference ref,
+    private static long getLongProperty(Reference ref,
                                  Hashtable<?, ?> environment,
                                  String propertyName,
                                  boolean mayBeNull,
@@ -334,6 +345,38 @@ public class RMQObjectFactory implements ObjectFactory {
             return Long.parseLong(content);
         } catch (Exception x) {
             NamingException nx = new NamingException(String.format("Property [%s] is present but is not a long integer value [%s]", propertyName, content));
+            nx.setRootCause(x);
+            throw nx;
+        }
+    }
+
+    /**
+     * Reads a property from the reference and returns the map value it represents
+     * @param ref the Reference containing the value
+     * @param environment the environment Hashtable containing the value
+     * @param propertyName the name of the property
+     * @param mayBeNull true if the property may be missing, in which case <code>defaultValue</code> will be returned
+     * @param defaultValue the default value to return if <code>mayBeNull</code> is set to true
+     * @return the map value representing the property value
+     * @throws NamingException if the property is missing while mayBeNull is set to false, or a conversion exception happened
+     */
+    private static Map<String, String> getMapProperty(Reference ref,
+        Hashtable<?, ?> environment,
+        String propertyName,
+        boolean mayBeNull,
+        Map<String, String> defaultValue) throws NamingException {
+        String content = propertyContent(ref, environment, propertyName, mayBeNull);
+        if (content == null) return defaultValue;
+        try {
+            Map<String, String> result = new LinkedHashMap<>();
+            String [] entries = content.split(",");
+            for (String entry : entries) {
+                String [] keyValue = entry.split("=");
+                result.put(keyValue[0], keyValue[1]);
+            }
+            return result;
+        } catch (Exception x) {
+            NamingException nx = new NamingException(String.format("Property [%s] is present but is not a map value [%s]", propertyName, content));
             nx.setRootCause(x);
             throw nx;
         }
@@ -357,4 +400,52 @@ public class RMQObjectFactory implements ObjectFactory {
         }
         return content;
     }
+
+    // from rabbit_amqqueue:declare_args/0
+    private static final Map<String, Function<String, Object>> QUEUE_DECLARE_ARGUMENTS_RULES =
+                        new ConcurrentHashMap<String, Function<String, Object>>(){{
+        put("x-expires", Integer::parseInt);
+        put("x-message-ttl", Integer::parseInt);
+        put("x-dead-letter-exchange", String::valueOf);
+        put("x-dead-letter-routing-key", String::valueOf);
+        put("x-dead-letter-strategy", String::valueOf);
+        put("x-max-length", Integer::parseInt);
+        put("x-max-length-bytes", Integer::parseInt);
+        put("x-max-in-memory-length", Integer::parseInt);
+        put("x-max-in-memory-bytes", Integer::parseInt);
+        put("x-max-priority", Integer::parseInt);
+        put("x-overflow", String::valueOf);
+        put("x-queue-mode", String::valueOf);
+        put("x-queue-version", Integer::valueOf);
+        put("x-single-active-consumer", Boolean::valueOf);
+        put("x-queue-type", String::valueOf);
+        put("x-quorum-initial-group-size", Integer::parseInt);
+        put("x-max-age", String::valueOf);
+        put("x-stream-max-segment-size-bytes", Integer::parseInt);
+        put("x-initial-cluster-size", Integer::parseInt);
+        put("x-queue-leader-locator", String::valueOf);
+    }};
+
+    private static Map<String, Object> convertQueueDeclareArguments(
+        Map<String, String> queueDeclareArguments) {
+        if (queueDeclareArguments == null) {
+            return null;
+        }
+        LinkedHashMap<String, Object> result = new LinkedHashMap<>(queueDeclareArguments.size());
+        for (Entry<String, String> entry : queueDeclareArguments.entrySet()) {
+            String key = entry.getKey();
+            String rawValue = entry.getValue();
+            Function<String, Object> conversionRule = QUEUE_DECLARE_ARGUMENTS_RULES.get(key);
+            Object convertedValue = rawValue;
+            try {
+                convertedValue = conversionRule == null ? rawValue : conversionRule.apply(rawValue);
+            } catch (Exception e) {
+                LOGGER.info("Could not convert queue declare argument {} = {} to appropriate type, "
+                    + "using string value. Error message: {}", key, rawValue, e.getMessage());
+            }
+            result.put(key, convertedValue);
+        }
+        return result;
+    }
+
 }
