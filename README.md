@@ -8,6 +8,8 @@
 This is a JMS 1.1 client library for RabbitMQ, working in concert with [rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-server/tree/master/deps/rabbitmq_jms_topic_exchange),
 a RabbitMQ server plugin.
 
+[Documentation](https://rabbitmq.com/jms-client.html)
+
 ## Installation
 
 ### With Maven or Gradle
