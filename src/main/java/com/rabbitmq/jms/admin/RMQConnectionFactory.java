@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2021 VMware, Inc. or its affiliates. All rights reserved. */
+/* Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
 import com.rabbitmq.client.AMQP;
@@ -160,6 +160,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     private ConfirmListener confirmListener;
 
+    private boolean autoJmsTypeHeaderForTextMessages = false;
+
 
     /** Default not to use ssl */
     private boolean ssl = false;
@@ -290,6 +292,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setConfirmListener(confirmListener)
             .setTrustedPackages(this.trustedPackages)
             .setRequeueOnTimeout(this.requeueOnTimeout)
+            .setAutoJmsTypeHeaderForTextMessages(this.autoJmsTypeHeaderForTextMessages)
         );
         logger.debug("Connection {} created.", conn);
         return conn;
@@ -1034,6 +1037,10 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.requeueOnTimeout = requeueOnTimeout;
     }
 
+    public void setAutoJmsTypeHeaderForTextMessages(boolean autoJmsTypeHeaderForTextMessages) {
+        this.autoJmsTypeHeaderForTextMessages = autoJmsTypeHeaderForTextMessages;
+    }
+
     @FunctionalInterface
     private interface ConnectionCreator {
         com.rabbitmq.client.Connection create(com.rabbitmq.client.ConnectionFactory cf) throws Exception;
@@ -1128,4 +1135,3 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         public void accept(ReceivingContext receivingContext) { }
     }
 }
-

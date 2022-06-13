@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2016-2021 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2016-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.AMQP;
@@ -108,6 +108,8 @@ public class SessionParams {
      * @since 1.13.0
      */
     private ConfirmListener confirmListener;
+
+    private boolean autoJmsTypeHeaderForTextMessages = false;
 
     private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
 
@@ -226,6 +228,15 @@ public class SessionParams {
 
     public ConfirmListener getConfirmListener() {
         return confirmListener;
+    }
+
+    public SessionParams setAutoJmsTypeHeaderForTextMessages(boolean autoJmsTypeHeaderForTextMessages) {
+        this.autoJmsTypeHeaderForTextMessages = autoJmsTypeHeaderForTextMessages;
+        return this;
+    }
+
+    public boolean isAutoJmsTypeHeaderForTextMessages() {
+        return autoJmsTypeHeaderForTextMessages;
     }
 
     public SessionParams setTrustedPackages(List<String> trustedPackages) {
