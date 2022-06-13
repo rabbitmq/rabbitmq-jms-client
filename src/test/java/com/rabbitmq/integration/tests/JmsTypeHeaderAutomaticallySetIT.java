@@ -65,7 +65,6 @@ public class JmsTypeHeaderAutomaticallySetIT {
   @Test
   void jmsTypeHeaderShouldNotBeSetIfOptionDisabled() throws Exception {
     this.connFactory = connectionFactory();
-    this.connFactory.setAutoJmsTypeHeaderForTextMessages(false);
     this.queueConn = connFactory.createQueueConnection();
 
     queueConn.start();
