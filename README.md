@@ -86,7 +86,7 @@ repositories {
 
 This project is managed by Maven, so use
 
-    ./mvnw clean install
+    ./mvnw clean install -Dmaven.test.skip=true -P '!setup-test-node'
 
 to build it from source and install into the local repository.
 
