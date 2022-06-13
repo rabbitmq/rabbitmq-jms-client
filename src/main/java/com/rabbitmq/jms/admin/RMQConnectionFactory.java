@@ -1,21 +1,25 @@
-/* Copyright (c) 2013-2021 VMware, Inc. or its affiliates. All rights reserved. */
+/* Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved. */
 package com.rabbitmq.jms.admin;
+
+import static com.rabbitmq.jms.util.UriCodec.encHost;
+import static com.rabbitmq.jms.util.UriCodec.encSegment;
+import static com.rabbitmq.jms.util.UriCodec.encUserinfo;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.MetricsCollector;
-import com.rabbitmq.jms.client.*;
+import com.rabbitmq.jms.client.ConfirmListener;
+import com.rabbitmq.jms.client.ConnectionParams;
+import com.rabbitmq.jms.client.RMQConnection;
+import com.rabbitmq.jms.client.RMQMessage;
+import com.rabbitmq.jms.client.ReceivingContext;
+import com.rabbitmq.jms.client.ReceivingContextConsumer;
+import com.rabbitmq.jms.client.SendingContext;
+import com.rabbitmq.jms.client.SendingContextConsumer;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.RMQJMSSecurityException;
 import com.rabbitmq.jms.util.WhiteListObjectInputStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jms.*;
-import javax.naming.*;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
@@ -27,8 +31,28 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
-import static com.rabbitmq.jms.util.UriCodec.*;
+import javax.jms.BytesMessage;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.QueueConnection;
+import javax.jms.QueueConnectionFactory;
+import javax.jms.TextMessage;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
+import javax.naming.NamingException;
+import javax.naming.RefAddr;
+import javax.naming.Reference;
+import javax.naming.Referenceable;
+import javax.naming.StringRefAddr;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * RabbitMQ Implementation of JMS {@link ConnectionFactory}
@@ -160,6 +184,21 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     private ConfirmListener confirmListener;
 
+    /**
+     * Flag to insert automatically an interoperability hint in outbound {@link TextMessage}s.
+     *
+     * <p>When set to <code>true</code>, the AMQP <code>JMSType</code> header will be set
+     * automatically to <code>"TextMessage"</code> for {@link TextMessage}s published to AMQP-backed
+     * {@link Destination}s. This way JMS consumers will receive {@link TextMessage}s instead of
+     * {@link BytesMessage}.
+     *
+     * <p>Enabling the feature avoids some additional work in the application code of publishers.
+     *
+     * <p>The default is false.
+     *
+     * @since 2.5.0
+     */
+    private boolean autoJmsTypeHeaderForTextMessages = false;
 
     /** Default not to use ssl */
     private boolean ssl = false;
@@ -290,6 +329,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setConfirmListener(confirmListener)
             .setTrustedPackages(this.trustedPackages)
             .setRequeueOnTimeout(this.requeueOnTimeout)
+            .setAutoJmsTypeHeaderForTextMessages(this.autoJmsTypeHeaderForTextMessages)
         );
         logger.debug("Connection {} created.", conn);
         return conn;
@@ -1034,6 +1074,10 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.requeueOnTimeout = requeueOnTimeout;
     }
 
+    public void setAutoJmsTypeHeaderForTextMessages(boolean autoJmsTypeHeaderForTextMessages) {
+        this.autoJmsTypeHeaderForTextMessages = autoJmsTypeHeaderForTextMessages;
+    }
+
     @FunctionalInterface
     private interface ConnectionCreator {
         com.rabbitmq.client.Connection create(com.rabbitmq.client.ConnectionFactory cf) throws Exception;
@@ -1128,4 +1172,3 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         public void accept(ReceivingContext receivingContext) { }
     }
 }
-

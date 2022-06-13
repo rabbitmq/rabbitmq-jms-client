@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.BasicProperties;
@@ -59,6 +59,10 @@ public abstract class RMQMessage implements Message, Cloneable {
     protected final Logger logger = LoggerFactory.getLogger(RMQMessage.class);
 
     private static final String DIRECT_REPLY_TO = "amq.rabbitmq.reply-to";
+
+    static final String JMS_TYPE_HEADER = "JMSType";
+
+    static final String TEXT_MESSAGE_HEADER_VALUE = "TextMessage";
 
     protected void loggerDebugByteArray(String format, byte[] buffer, Object arg) {
         if (logger.isDebugEnabled()) {
@@ -886,7 +890,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         hdrs.put("JMSTimestamp", this.getJMSTimestamp());
         hdrs.put("JMSPriority", this.getJMSPriority());
         putIfNotNull(hdrs, "JMSCorrelationID", this.getJMSCorrelationID());
-        putIfNotNull(hdrs, "JMSType", this.getJMSType());
+        putIfNotNull(hdrs, JMS_TYPE_HEADER, this.getJMSType());
 
         return hdrs;
     }
@@ -1015,7 +1019,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * </blockquote>
      */
     Map<String, Object> toAmqpHeaders() throws IOException, JMSException {
-        Map<String, Object> hdrs = new HashMap<String, Object>();
+        Map<String, Object> hdrs = new HashMap<>();
 
         // set non-null user properties
         for (Map.Entry<String, Serializable> e : this.userJmsProperties.entrySet()) {
@@ -1028,7 +1032,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         hdrs.put("JMSTimestamp", this.getJMSTimestamp());
         hdrs.put("JMSPriority", this.getJMSPriority());
         putIfNotNull(hdrs, "JMSCorrelationID", this.getJMSCorrelationID());
-        putIfNotNull(hdrs, "JMSType", this.getJMSType());
+        putIfNotNull(hdrs, JMS_TYPE_HEADER, this.getJMSType());
 
         return hdrs;
     }
@@ -1423,7 +1427,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         String ci = props.getCorrelationId();  // This is AMQP's correlation ID
         if (null!=ci)   this.setJMSCorrelationID(ci);
 
-        this.setJMSType(isAmqpTextMessage(props.getHeaders()) ? "TextMessage" : "BytesMessage");
+        this.setJMSType(isAmqpTextMessage(props.getHeaders()) ? TEXT_MESSAGE_HEADER_VALUE : "BytesMessage");
 
         // now set properties from header: these may overwrite the ones that have already been set above
         Map<String, Object> hdrs = props.getHeaders();
@@ -1436,7 +1440,7 @@ public abstract class RMQMessage implements Message, Cloneable {
                 else if (key.equals("JMSTimestamp"))    { this.setJMSTimestamp(objectToLong(val, 0l));}
                 else if (key.equals("JMSMessageID"))    { this.setJMSMessageID(val.toString());}
                 else if (key.equals("JMSCorrelationID")){ this.setJMSCorrelationID(val.toString());}
-                else if (key.equals("JMSType"))         { this.setJMSType(val.toString());}
+                else if (key.equals(JMS_TYPE_HEADER))   { this.setJMSType(val.toString());}
                 else if (key.startsWith(PREFIX))        {} // avoid setting this internal field
                 else if (key.startsWith("JMS"))         {} // avoid setting this field
                 else                                    { this.userJmsProperties.put(key, val.toString());}
@@ -1447,8 +1451,8 @@ public abstract class RMQMessage implements Message, Cloneable {
     private static boolean isAmqpTextMessage(Map<String, Object> hdrs) {
         boolean isTextMessage = false;
         if(hdrs != null) {
-            Object headerJMSType = hdrs.get("JMSType");
-            isTextMessage = (headerJMSType != null && "TextMessage".equals(headerJMSType.toString()));
+            Object headerJMSType = hdrs.get(JMS_TYPE_HEADER);
+            isTextMessage = (headerJMSType != null && TEXT_MESSAGE_HEADER_VALUE.equals(headerJMSType.toString()));
         }
         return isTextMessage;
     }

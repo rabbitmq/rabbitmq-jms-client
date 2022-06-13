@@ -2,10 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2018-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2018-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.admin;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import javax.jms.ConnectionFactory;
@@ -72,7 +71,23 @@ public class RMQObjectFactoryTest {
         assertEquals("/fake", createdConFactory.getVirtualHost());
         assertEquals("fakeHost", createdConFactory.getHost());
         assertEquals(10, createdConFactory.getChannelsQos());
+        assertThat(createdConFactory).hasFieldOrPropertyWithValue("autoJmsTypeHeaderForTextMessages", false);
 
+    }
+
+    @Test
+    public void autoJmsTypeHeaderForTextMessagesIsSetPropertyOnConnectionFactory() throws Exception {
+        Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
+            put("className", "javax.jms.ConnectionFactory");
+            put("autoJmsTypeHeaderForTextMessages", "true");
+        }};
+
+        Object createdObject = rmqObjectFactory.getObjectInstance("anything but a javax.naming.Reference", new CompositeName("java:global/jms/TestConnectionFactory"), null, environment);
+
+        assertNotNull(createdObject);
+        assertEquals(RMQConnectionFactory.class, createdObject.getClass());
+        RMQConnectionFactory createdConFactory = (RMQConnectionFactory) createdObject;
+        assertThat(createdConFactory).hasFieldOrPropertyWithValue("autoJmsTypeHeaderForTextMessages", true);
     }
 
     @Test

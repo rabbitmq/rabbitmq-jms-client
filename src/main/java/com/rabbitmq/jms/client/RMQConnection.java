@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2021 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
@@ -158,6 +158,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     private final List<String> trustedPackages;
 
+    private final boolean autoJmsTypeHeaderForTextMessages;
+
     /**
      * Creates an RMQConnection object.
      * @param connectionParams parameters for this connection
@@ -184,6 +186,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.confirmListener = connectionParams.getConfirmListener();
         this.trustedPackages = connectionParams.getTrustedPackages();
         this.requeueOnTimeout = connectionParams.willRequeueOnTimeout();
+        this.autoJmsTypeHeaderForTextMessages = connectionParams.isAutoJmsTypeHeaderForTextMessages();
     }
 
     /**
@@ -239,6 +242,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setConfirmListener(this.confirmListener)
             .setTrustedPackages(this.trustedPackages)
             .setRequeueOnTimeout(this.requeueOnTimeout)
+            .setAutoJmsTypeHeaderForTextMessages(this.autoJmsTypeHeaderForTextMessages)
         );
         this.sessions.add(session);
         return session;

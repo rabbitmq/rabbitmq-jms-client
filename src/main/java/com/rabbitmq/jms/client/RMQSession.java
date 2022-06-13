@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2021 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
@@ -191,12 +191,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private static Map<String, SqlExpressionType> generateJMSTypeIdents() {
         Map<String, SqlExpressionType> map = new HashMap<String, SqlExpressionType>(6);  // six elements only
-        map.put("JMSDeliveryMode",  SqlExpressionType.STRING);
-        map.put("JMSPriority",      SqlExpressionType.ARITH );
-        map.put("JMSMessageID",     SqlExpressionType.STRING);
-        map.put("JMSTimestamp",     SqlExpressionType.ARITH );
-        map.put("JMSCorrelationID", SqlExpressionType.STRING);
-        map.put("JMSType",          SqlExpressionType.STRING);
+        map.put("JMSDeliveryMode",          SqlExpressionType.STRING);
+        map.put("JMSPriority",              SqlExpressionType.ARITH );
+        map.put("JMSMessageID",             SqlExpressionType.STRING);
+        map.put("JMSTimestamp",             SqlExpressionType.ARITH );
+        map.put("JMSCorrelationID",         SqlExpressionType.STRING);
+        map.put(RMQMessage.JMS_TYPE_HEADER, SqlExpressionType.STRING);
         return Collections.unmodifiableMap(map);
     }
     static final Map<String, SqlExpressionType> JMS_TYPE_IDENTS = generateJMSTypeIdents();
@@ -222,6 +222,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @since 1.14.0
      */
     private Map<String, Object> queueDeclareArguments = null;
+
+    private final boolean autoJmsTypeHeaderForTextMessages;
 
     /**
      * Creates a session object associated with a connection
@@ -250,6 +252,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             ReceivingContextConsumer.NO_OP : sessionParams.getReceivingContextConsumer();
         this.trustedPackages = sessionParams.getTrustedPackages();
         this.requeueOnTimeout = sessionParams.willRequeueOnTimeout();
+        this.autoJmsTypeHeaderForTextMessages = sessionParams.isAutoJmsTypeHeaderForTextMessages();
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;
@@ -685,7 +688,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         RMQDestination dest = (RMQDestination) destination;
         declareDestinationIfNecessary(dest);
         RMQMessageProducer producer = new RMQMessageProducer(this, dest, this.preferProducerMessageProperty,
-            this.amqpPropertiesCustomiser, this.sendingContextConsumer, this.publishingListener);
+            this.amqpPropertiesCustomiser, this.sendingContextConsumer, this.publishingListener,
+            this.autoJmsTypeHeaderForTextMessages);
         this.producers.add(producer);
         return producer;
     }

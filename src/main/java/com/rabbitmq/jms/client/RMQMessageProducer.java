@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.AMQP;
@@ -11,6 +11,7 @@ import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.util.RMQJMSException;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,10 +82,13 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     private final BeforePublishingCallback beforePublishingCallback;
 
+    private final boolean autoJmsTypeHeaderForTextMessages;
+
     RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty,
                               BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser,
                               SendingContextConsumer sendingContextConsumer,
-                              PublishingListener publishingListener) {
+                              PublishingListener publishingListener,
+                              boolean autoJmsTypeHeaderForTextMessages) {
         this.session = session;
         this.destination = destination;
         if (preferProducerMessageProperty) {
@@ -99,12 +103,14 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         } else {
             this.beforePublishingCallback = (message, channel) -> publishingListener.publish(message, channel.getNextPublishSeqNo());
         }
+        this.autoJmsTypeHeaderForTextMessages = autoJmsTypeHeaderForTextMessages;
     }
 
     public RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty,
             BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser,
             SendingContextConsumer sendingContextConsumer) {
-        this(session, destination, preferProducerMessageProperty, amqpPropertiesCustomiser, sendingContextConsumer, null);
+        this(session, destination, preferProducerMessageProperty, amqpPropertiesCustomiser, sendingContextConsumer, null,
+            false);
     }
 
     public RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty,
@@ -329,7 +335,12 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
                 bob.deliveryMode(RMQMessage.rmqDeliveryMode(deliveryMode));
                 bob.priority(priority);
                 bob.expiration(rmqExpiration(timeToLive));
-                bob.headers(msg.toAmqpHeaders());
+                Map<String, Object> messageHeaders = msg.toAmqpHeaders();
+                if (this.autoJmsTypeHeaderForTextMessages && msg instanceof RMQTextMessage) {
+                    messageHeaders.put(RMQMessage.JMS_TYPE_HEADER,
+                                       RMQMessage.TEXT_MESSAGE_HEADER_VALUE);
+                }
+                bob.headers(messageHeaders);
 
                 maybeSetReplyToPropertyToDirectReplyTo(bob, msg);
 
