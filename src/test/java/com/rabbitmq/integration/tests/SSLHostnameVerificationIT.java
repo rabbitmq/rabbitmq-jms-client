@@ -5,89 +5,84 @@
 // Copyright (c) 2018-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import com.rabbitmq.TestUtils.DisabledIfTlsNotEnabled;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
+import java.io.FileInputStream;
+import java.security.KeyStore;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.JMSSecurityException;
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
-import java.io.FileInputStream;
-import java.security.KeyStore;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-/**
- * Integration test for hostname verification with TLS.
- */
+/** Integration test for hostname verification with TLS. */
 @DisabledIfTlsNotEnabled
 @EnabledForJreRange(min = JRE.JAVA_11)
 public class SSLHostnameVerificationIT {
 
-    static SSLContext sslContext;
-    RMQConnectionFactory cf;
+  static SSLContext sslContext;
+  RMQConnectionFactory cf;
 
-    @BeforeAll
-    static void initCrypto() throws Exception {
-        String keystorePath = System.getProperty("test-keystore.ca");
-        assertNotNull(keystorePath);
-        String keystorePasswd = System.getProperty("test-keystore.password");
-        assertNotNull(keystorePasswd);
-        char[] keystorePassword = keystorePasswd.toCharArray();
+  @BeforeAll
+  static void initCrypto() throws Exception {
+    sslContext = SSLContext.getInstance("TLSv1.2");
 
-        KeyStore tks = KeyStore.getInstance("JKS");
-        tks.load(new FileInputStream(keystorePath), keystorePassword);
+    KeyStore ks = KeyStore.getInstance("JKS");
+    ks.load(null, null);
+    ks.setCertificateEntry("default", caCertificate());
+    TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+    tmf.init(ks);
+    sslContext.init(null, tmf.getTrustManagers(), null);
+  }
 
-        TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
-        tmf.init(tks);
+  static X509Certificate caCertificate() throws Exception {
+    return loadCertificate(caCertificateFile());
+  }
 
-        String p12Path = System.getProperty("test-client-cert.path");
-        assertNotNull(p12Path);
-        String p12Passwd = System.getProperty("test-client-cert.password");
-        assertNotNull(p12Passwd);
+  static String caCertificateFile() {
+    return System.getProperty("test-tls-certs.dir") + "/testca/cacert.pem";
+  }
 
-        KeyStore ks = KeyStore.getInstance("PKCS12");
-        char[] p12Password = p12Passwd.toCharArray();
-        ks.load(new FileInputStream(p12Path), p12Password);
-
-        KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-        kmf.init(ks, p12Password);
-
-        sslContext = SSLContext.getInstance("TLSv1.2");
-        sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+  static X509Certificate loadCertificate(String file) throws Exception {
+    try (FileInputStream inputStream = new FileInputStream(file)) {
+      CertificateFactory fact = CertificateFactory.getInstance("X.509");
+      X509Certificate certificate = (X509Certificate) fact.generateCertificate(inputStream);
+      return certificate;
     }
+  }
 
-    @BeforeEach
-    public void init() {
-        cf = new RMQConnectionFactory();
-        cf.useSslProtocol(sslContext);
-        cf.setHostnameVerification(true);
-    }
+  @BeforeEach
+  public void init() {
+    cf = new RMQConnectionFactory();
+    cf.useSslProtocol(sslContext);
+    cf.setHostnameVerification(true);
+  }
 
-    @Test
-    public void hostnameVerificationEnabledShouldPassForLocalhost() throws JMSException {
-        cf.setHost("localhost");
-        Connection connection = null;
-        try {
-            connection = cf.createConnection();
-        } finally {
-            if (connection != null) {
-                connection.close();
-            }
-        }
+  @Test
+  public void hostnameVerificationEnabledShouldPassForLocalhost() throws JMSException {
+    cf.setHost("localhost");
+    Connection connection = null;
+    try {
+      connection = cf.createConnection();
+    } finally {
+      if (connection != null) {
+        connection.close();
+      }
     }
+  }
 
-    @Test
-    public void hostnameVerificationEnabledShouldFailForLoopbackInterface() throws JMSException {
-        cf.setHost("127.0.0.1");
-        assertThrows(JMSSecurityException.class, () -> cf.createConnection());
-    }
+  @Test
+  public void hostnameVerificationEnabledShouldFailForLoopbackInterface() throws JMSException {
+    cf.setHost("127.0.0.1");
+    assertThrows(JMSSecurityException.class, () -> cf.createConnection());
+  }
 }
