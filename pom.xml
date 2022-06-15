@@ -67,6 +67,7 @@
     <java.compile.version>1.8</java.compile.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <javadoc.opts>-Xdoclint:none</javadoc.opts>
+    <maven.javadoc.skip>true</maven.javadoc.skip>
 
     <test-broker.A.nodename>rabbit@localhost</test-broker.A.nodename>
 
@@ -300,6 +301,7 @@
     <profile>
       <id>snapshots</id>
       <properties>
+        <maven.javadoc.skip>false</maven.javadoc.skip>
         <gpg.skip>false</gpg.skip>
       </properties>
       <distributionManagement>
@@ -316,6 +318,7 @@
     <profile>
       <id>release</id>
       <properties>
+        <maven.javadoc.skip>false</maven.javadoc.skip>
         <gpg.skip>false</gpg.skip>
       </properties>
       <build>
@@ -350,6 +353,7 @@
     <profile>
       <id>milestone</id>
       <properties>
+        <maven.javadoc.skip>false</maven.javadoc.skip>
         <gpg.skip>false</gpg.skip>
       </properties>
       <build>
