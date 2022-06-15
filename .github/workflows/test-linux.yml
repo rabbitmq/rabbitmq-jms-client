@@ -29,4 +29,4 @@ jobs:
       - name: Enable JMS Topic Exchange Plugin
         run: docker exec ${{job.services.rabbitmq.id}} rabbitmq-plugins enable rabbitmq_jms_topic_exchange
       - name: Test
-        run: ./mvnw verify -P '!setup-test-node' -Drabbitmqctl.bin=DOCKER:${{job.services.rabbitmq.id}}
+        run: ./mvnw verify -Drabbitmqctl.bin=DOCKER:${{job.services.rabbitmq.id}}
