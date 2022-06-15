@@ -191,9 +191,6 @@
           <additionalOptions>${javadoc.opts}</additionalOptions>
           <quiet>true</quiet>
           <detectJavaApiLink>false</detectJavaApiLink>
-          <links>
-            <link>https://docs.oracle.com/javase/8/docs/api/</link>
-          </links>
         </configuration>
         <executions>
           <execution>
