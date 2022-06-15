@@ -72,6 +72,7 @@
 
     <!-- to sign artifacts when releasing -->
     <gpg.keyname>6026DFCA</gpg.keyname>
+    <gpg.skip>true</gpg.skip>
   </properties>
 
   <dependencies>
@@ -298,6 +299,9 @@
 
     <profile>
       <id>snapshots</id>
+      <properties>
+        <gpg.skip>false</gpg.skip>
+      </properties>
       <distributionManagement>
         <snapshotRepository>
           <id>ossrh</id>
@@ -311,6 +315,9 @@
     -->
     <profile>
       <id>release</id>
+      <properties>
+        <gpg.skip>false</gpg.skip>
+      </properties>
       <build>
         <plugins>
 
@@ -342,6 +349,9 @@
     -->
     <profile>
       <id>milestone</id>
+      <properties>
+        <gpg.skip>false</gpg.skip>
+      </properties>
       <build>
         <plugins>
 
