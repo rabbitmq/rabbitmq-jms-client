@@ -27,6 +27,10 @@ jobs:
           java-version: '17'
           cache: 'maven'
       - name: Enable JMS Topic Exchange Plugin
-        run: docker exec ${{job.services.rabbitmq.id}} rabbitmq-plugins enable rabbitmq_jms_topic_exchange
+        run: docker exec ${{job.services.rabbitmq.id}} rabbitmq-plugins enable rabbitmq_jms_topic_exchange --offline
+      - name: Stop RabbitMQ application
+        run: docker exec ${{job.services.rabbitmq.id}} rabbitmqctl stop_app
+      - name: Start RabbitMQ application
+        run: docker exec ${{job.services.rabbitmq.id}} rabbitmqctl start_app
       - name: Test
         run: ./mvnw verify -Drabbitmqctl.bin=DOCKER:${{job.services.rabbitmq.id}}
