@@ -1,6 +1,6 @@
 ///usr/bin/env jbang "$0" "$@" ; exit $?
 //REPOS mavencentral,ossrh-staging=https://oss.sonatype.org/content/groups/staging/,rabbitmq-packagecloud-milestones=https://packagecloud.io/rabbitmq/maven-milestones/maven2
-//DEPS com.rabbitmq.jms:rabbitmq-jms:2.5.0.RC1
+//DEPS com.rabbitmq.jms:rabbitmq-jms:${version}
 //DEPS org.slf4j:slf4j-simple:1.7.36
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
