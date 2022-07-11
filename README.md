@@ -128,7 +128,7 @@ repositories {
 
 This project is managed by Maven, so use
 
-    ./mvnw clean install -Dmaven.test.skip=true -P '!setup-test-node'
+    ./mvnw clean install -Dmaven.test.skip=true
 
 to build it from source and install into the local repository.
 
@@ -143,25 +143,25 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for an overview of the development proc
 
 ### Integration Tests
 
-The integration tests assume a RabbitMQ node 
-with [rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-server/tree/master/deps/rabbitmq_jms_topic_exchange/)
-listening on localhost:5672 (the default settings).
+#### Running Integration Tests with Docker
 
-Connection recovery tests need `rabbitmqctl` to control the running node.
+Launch the broker:
 
-Maven will start this node with the appropriate configuration by default when
-launching the `verify` command:
+    docker run -it --rm --name rabbitmq -p 5672:5672 rabbitmq
 
-    ./mvnw clean verify
+Enable the JMS Topic Exchange plugin:
 
-You can also provide your own broker node. To disable the
-automatic test node setup, disable the `setup-test-node` Maven
-profile:
+    docker exec rabbitmq rabbitmq-plugins enable rabbitmq_jms_topic_exchange
 
-    ./mvn clean verify -P '!setup-test-node'
+Launch the tests:
 
-The easiest way to run a test node is to clone
-[rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-server/tree/master/deps/rabbitmq_jms_topic_exchange) and use `make run-broker`.
+    ./mvnw verify -Drabbitmqctl.bin=DOCKER:rabbitmq
+
+#### Running Integration Tests with a Local Broker
+
+To launch the test suite (requires a local RabbitMQ node with JMS Topic Exchange plugin enabled):
+
+    ./mvnw verify -Drabbitmqctl.bin=/path/to/rabbitmqctl
 
 ### JMS 1.1 Compliance Test Suite
 
@@ -179,7 +179,7 @@ for the support timeline of this library.
 
 ## License and Copyright
 
-(c) 2007-2021 VMware, Inc. or its affiliates.
+(c) 2007-2022 VMware, Inc. or its affiliates.
 
 This package, the RabbitMQ JMS client library, is double-licensed
 under the Apache License version 2 ("ASL") and the Mozilla Public License
