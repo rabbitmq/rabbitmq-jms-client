@@ -223,7 +223,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     private Map<String, Object> queueDeclareArguments = null;
 
-    private final boolean autoJmsTypeHeaderForTextMessages;
+    private final boolean keepTextMessageType;
 
     /**
      * Creates a session object associated with a connection
@@ -252,7 +252,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             ReceivingContextConsumer.NO_OP : sessionParams.getReceivingContextConsumer();
         this.trustedPackages = sessionParams.getTrustedPackages();
         this.requeueOnTimeout = sessionParams.willRequeueOnTimeout();
-        this.autoJmsTypeHeaderForTextMessages = sessionParams.isAutoJmsTypeHeaderForTextMessages();
+        this.keepTextMessageType = sessionParams.isKeepTextMessageType();
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;
@@ -689,7 +689,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         declareDestinationIfNecessary(dest);
         RMQMessageProducer producer = new RMQMessageProducer(this, dest, this.preferProducerMessageProperty,
             this.amqpPropertiesCustomiser, this.sendingContextConsumer, this.publishingListener,
-            this.autoJmsTypeHeaderForTextMessages);
+            this.keepTextMessageType);
         this.producers.add(producer);
         return producer;
     }

@@ -184,21 +184,22 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     private ConfirmListener confirmListener;
 
-    /**
-     * Flag to insert automatically an interoperability hint in outbound {@link TextMessage}s.
-     *
-     * <p>When set to <code>true</code>, the AMQP <code>JMSType</code> header will be set
-     * automatically to <code>"TextMessage"</code> for {@link TextMessage}s published to AMQP-backed
-     * {@link Destination}s. This way JMS consumers will receive {@link TextMessage}s instead of
-     * {@link BytesMessage}.
-     *
-     * <p>Enabling the feature avoids some additional work in the application code of publishers.
-     *
-     * <p>The default is false.
-     *
-     * @since 2.5.0
-     */
-    private boolean autoJmsTypeHeaderForTextMessages = false;
+  /**
+   * Flag to insert automatically an interoperability hint in outbound {@link TextMessage}s.
+   *
+   * <p>When set to <code>true</code>, the AMQP <code>JMSType</code> header will be set
+   * automatically to <code>"TextMessage"</code> for {@link TextMessage}s published to AMQP-backed
+   * {@link Destination}s. This way JMS consumers will receive {@link TextMessage}s instead of
+   * {@link BytesMessage}.
+   *
+   * <p>Enabling the feature avoids some additional work in the application code of publishers,
+   * making the publishing and consuming of {@link TextMessage}s through AMQP resources transparent.
+   *
+   * <p>The default is false.
+   *
+   * @since 2.5.0
+   */
+  private boolean keepTextMessageType = false;
 
     /** Default not to use ssl */
     private boolean ssl = false;
@@ -329,7 +330,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setConfirmListener(confirmListener)
             .setTrustedPackages(this.trustedPackages)
             .setRequeueOnTimeout(this.requeueOnTimeout)
-            .setAutoJmsTypeHeaderForTextMessages(this.autoJmsTypeHeaderForTextMessages)
+            .setKeepTextMessageType(this.keepTextMessageType)
         );
         logger.debug("Connection {} created.", conn);
         return conn;
@@ -1074,8 +1075,8 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.requeueOnTimeout = requeueOnTimeout;
     }
 
-    public void setAutoJmsTypeHeaderForTextMessages(boolean autoJmsTypeHeaderForTextMessages) {
-        this.autoJmsTypeHeaderForTextMessages = autoJmsTypeHeaderForTextMessages;
+    public void setKeepTextMessageType(boolean keepTextMessageType) {
+        this.keepTextMessageType = keepTextMessageType;
     }
 
     @FunctionalInterface

@@ -226,7 +226,7 @@ public class RMQObjectFactory implements ObjectFactory {
         f.setVirtualHost        (getStringProperty (ref, environment, "virtualHost",         true, f.getVirtualHost()        ));
         f.setCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose(getBooleanProperty(ref, environment, "cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose",                 true, f.isCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose()                 ));
         f.setDeclareReplyToDestination(getBooleanProperty(ref, environment, "declareReplyToDestination", true, true));
-        f.setAutoJmsTypeHeaderForTextMessages(getBooleanProperty(ref, environment, "autoJmsTypeHeaderForTextMessages", true, false));
+        f.setKeepTextMessageType(getBooleanProperty(ref, environment, "keepTextMessageType", true, false));
         return f;
     }
 

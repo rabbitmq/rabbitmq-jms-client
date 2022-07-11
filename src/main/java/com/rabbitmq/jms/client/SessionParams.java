@@ -109,7 +109,7 @@ public class SessionParams {
      */
     private ConfirmListener confirmListener;
 
-    private boolean autoJmsTypeHeaderForTextMessages = false;
+    private boolean keepTextMessageType = false;
 
     private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
 
@@ -230,13 +230,13 @@ public class SessionParams {
         return confirmListener;
     }
 
-    public SessionParams setAutoJmsTypeHeaderForTextMessages(boolean autoJmsTypeHeaderForTextMessages) {
-        this.autoJmsTypeHeaderForTextMessages = autoJmsTypeHeaderForTextMessages;
+    public SessionParams setKeepTextMessageType(boolean keepTextMessageType) {
+        this.keepTextMessageType = keepTextMessageType;
         return this;
     }
 
-    public boolean isAutoJmsTypeHeaderForTextMessages() {
-        return autoJmsTypeHeaderForTextMessages;
+    public boolean isKeepTextMessageType() {
+        return keepTextMessageType;
     }
 
     public SessionParams setTrustedPackages(List<String> trustedPackages) {

@@ -82,13 +82,13 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     private final BeforePublishingCallback beforePublishingCallback;
 
-    private final boolean autoJmsTypeHeaderForTextMessages;
+    private final boolean keepTextMessageType;
 
     RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty,
                               BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser,
                               SendingContextConsumer sendingContextConsumer,
                               PublishingListener publishingListener,
-                              boolean autoJmsTypeHeaderForTextMessages) {
+                              boolean keepTextMessageType) {
         this.session = session;
         this.destination = destination;
         if (preferProducerMessageProperty) {
@@ -103,7 +103,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         } else {
             this.beforePublishingCallback = (message, channel) -> publishingListener.publish(message, channel.getNextPublishSeqNo());
         }
-        this.autoJmsTypeHeaderForTextMessages = autoJmsTypeHeaderForTextMessages;
+        this.keepTextMessageType = keepTextMessageType;
     }
 
     public RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty,
@@ -336,7 +336,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
                 bob.priority(priority);
                 bob.expiration(rmqExpiration(timeToLive));
                 Map<String, Object> messageHeaders = msg.toAmqpHeaders();
-                if (this.autoJmsTypeHeaderForTextMessages && msg instanceof RMQTextMessage) {
+                if (this.keepTextMessageType && msg instanceof RMQTextMessage) {
                     messageHeaders.put(RMQMessage.JMS_TYPE_HEADER,
                                        RMQMessage.TEXT_MESSAGE_HEADER_VALUE);
                 }

@@ -113,7 +113,7 @@ public class ConnectionParams {
      */
     private ConfirmListener confirmListener;
 
-    private boolean autoJmsTypeHeaderForTextMessages = false;
+    private boolean keepTextMessageType = false;
 
     private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
 
@@ -234,13 +234,13 @@ public class ConnectionParams {
         return confirmListener;
     }
 
-    public ConnectionParams setAutoJmsTypeHeaderForTextMessages(boolean autoJmsTypeHeaderForTextMessages) {
-        this.autoJmsTypeHeaderForTextMessages = autoJmsTypeHeaderForTextMessages;
+    public ConnectionParams setKeepTextMessageType(boolean keepTextMessageType) {
+        this.keepTextMessageType = keepTextMessageType;
         return this;
     }
 
-    public boolean isAutoJmsTypeHeaderForTextMessages() {
-        return autoJmsTypeHeaderForTextMessages;
+    public boolean isKeepTextMessageType() {
+        return keepTextMessageType;
     }
 
     public ConnectionParams setTrustedPackages(List<String> trustedPackages) {

@@ -71,15 +71,15 @@ public class RMQObjectFactoryTest {
         assertEquals("/fake", createdConFactory.getVirtualHost());
         assertEquals("fakeHost", createdConFactory.getHost());
         assertEquals(10, createdConFactory.getChannelsQos());
-        assertThat(createdConFactory).hasFieldOrPropertyWithValue("autoJmsTypeHeaderForTextMessages", false);
+        assertThat(createdConFactory).hasFieldOrPropertyWithValue("keepTextMessageType", false);
 
     }
 
     @Test
-    public void autoJmsTypeHeaderForTextMessagesIsSetPropertyOnConnectionFactory() throws Exception {
+    public void keepTextMessageTypePropertyIsSetOnConnectionFactory() throws Exception {
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
             put("className", "javax.jms.ConnectionFactory");
-            put("autoJmsTypeHeaderForTextMessages", "true");
+            put("keepTextMessageType", "true");
         }};
 
         Object createdObject = rmqObjectFactory.getObjectInstance("anything but a javax.naming.Reference", new CompositeName("java:global/jms/TestConnectionFactory"), null, environment);
@@ -87,7 +87,7 @@ public class RMQObjectFactoryTest {
         assertNotNull(createdObject);
         assertEquals(RMQConnectionFactory.class, createdObject.getClass());
         RMQConnectionFactory createdConFactory = (RMQConnectionFactory) createdObject;
-        assertThat(createdConFactory).hasFieldOrPropertyWithValue("autoJmsTypeHeaderForTextMessages", true);
+        assertThat(createdConFactory).hasFieldOrPropertyWithValue("keepTextMessageType", true);
     }
 
     @Test

@@ -158,7 +158,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
      */
     private final List<String> trustedPackages;
 
-    private final boolean autoJmsTypeHeaderForTextMessages;
+    private final boolean keepTextMessageType;
 
     /**
      * Creates an RMQConnection object.
@@ -186,7 +186,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.confirmListener = connectionParams.getConfirmListener();
         this.trustedPackages = connectionParams.getTrustedPackages();
         this.requeueOnTimeout = connectionParams.willRequeueOnTimeout();
-        this.autoJmsTypeHeaderForTextMessages = connectionParams.isAutoJmsTypeHeaderForTextMessages();
+        this.keepTextMessageType = connectionParams.isKeepTextMessageType();
     }
 
     /**
@@ -242,7 +242,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setConfirmListener(this.confirmListener)
             .setTrustedPackages(this.trustedPackages)
             .setRequeueOnTimeout(this.requeueOnTimeout)
-            .setAutoJmsTypeHeaderForTextMessages(this.autoJmsTypeHeaderForTextMessages)
+            .setKeepTextMessageType(this.keepTextMessageType)
         );
         this.sessions.add(session);
         return session;
