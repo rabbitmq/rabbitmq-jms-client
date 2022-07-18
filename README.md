@@ -28,58 +28,14 @@ Add the following to `pom.xml` for Maven:
 <dependency>
   <groupId>com.rabbitmq.jms</groupId>
   <artifactId>rabbitmq-jms</artifactId>
-  <version>2.4.0</version>
+  <version>2.5.0</version>
 </dependency>
 ```
 
 Or the following to `build.gradle` for Gradle:
 
 ```groovy
-compile 'com.rabbitmq.jms:rabbitmq-jms:2.4.0'
-```
-
-#### Milestone
-
-Add the following to `pom.xml` for Maven:
-
-```xml
-<dependency>
-  <groupId>com.rabbitmq.jms</groupId>
-  <artifactId>rabbitmq-jms</artifactId>
-  <version>2.5.0.RC1</version>
-</dependency>
-```
-
-You need to declare the milestone repository as well:
-
-```xml
-<repositories>
-
-  <repositories>
-    <repository>
-      <id>packagecloud-rabbitmq-maven-milestones</id>
-      <url>https://packagecloud.io/rabbitmq/maven-milestones/maven2</url>
-      <releases><enabled>true</enabled></releases>
-      <snapshots><enabled>false</enabled></snapshots>
-    </repository>
-  </repositories>
-
-</repositories>
-```
-
-Or the following to `build.gradle` for Gradle:
-
-```groovy
-compile 'com.rabbitmq.jms:rabbitmq-jms:2.5.0.RC1'
-```
-
-You need to declare the milestone repository as well:
-
-```groovy
-repositories {
-  maven { url 'https://packagecloud.io/rabbitmq/maven-milestones/maven2' }
-  mavenCentral()
-}
+compile 'com.rabbitmq.jms:rabbitmq-jms:2.5.0'
 ```
 
 #### Snapshot
@@ -90,7 +46,7 @@ Add the following to `pom.xml` for Maven:
 <dependency>
   <groupId>com.rabbitmq.jms</groupId>
   <artifactId>rabbitmq-jms</artifactId>
-  <version>2.5.0-SNAPSHOT</version>
+  <version>2.6.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -112,7 +68,7 @@ You need to declare the snapshot repository as well:
 Or the following to `build.gradle` for Gradle:
 
 ```groovy
-compile 'com.rabbitmq.jms:rabbitmq-jms:2.5.0-SNAPSHOT'
+compile 'com.rabbitmq.jms:rabbitmq-jms:2.6.0-SNAPSHOT'
 ```
 
 You need to declare the snapshot repository as well:
