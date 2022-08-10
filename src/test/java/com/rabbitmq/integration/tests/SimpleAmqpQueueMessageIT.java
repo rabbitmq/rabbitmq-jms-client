@@ -169,7 +169,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
         assertNotNull(message, "No message received");
 
-        byte[] bytes = new byte[BYTE_ARRAY.length+2];
+        byte[] bytes = new byte[BYTE_ARRAY.length];
         int bytesIn = message.readBytes(bytes);
         assertEquals(BYTE_ARRAY.length, bytesIn, "Message payload not correct size");
         byte[] bytesTrunc = new byte[bytesIn];
