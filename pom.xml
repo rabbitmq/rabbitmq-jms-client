@@ -80,8 +80,8 @@
     <!-- compile scope -->
     <dependency>
       <groupId>javax.jms</groupId>
-      <artifactId>jms</artifactId>
-      <version>1.1</version>
+      <artifactId>jms-api</artifactId>
+      <version>1.1-rev-1</version>
     </dependency>
     <dependency>
       <groupId>com.rabbitmq</groupId>
@@ -397,21 +397,6 @@
 
   <repositories>
     <repository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/content/repositories/releases</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-    </repository>
-    <repository>
-      <id>jboss.org</id>
-      <name>Jboss Maven 2 Repository</name>
-      <url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
-    </repository>
-    <repository>
       <id>packagecloud-rabbitmq-maven-milestones</id>
       <url>https://packagecloud.io/rabbitmq/maven-milestones/maven2</url>
       <releases>
@@ -422,4 +407,5 @@
       </snapshots>
     </repository>
   </repositories>
+
 </project>
