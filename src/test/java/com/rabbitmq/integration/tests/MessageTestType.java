@@ -15,8 +15,10 @@ import java.io.Serializable;
 
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.Objects;
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
+import javax.jms.Destination;
 import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.MessageFormatException;
@@ -154,12 +156,34 @@ enum MessageTestType {
         Message gen(QueueSession s, Serializable obj) throws Exception {
             ObjectMessage message = s.createObjectMessage();
             message.setObjectProperty("objectProp", "This is an object property"); // try setting an object property, too
-            message.setObject(obj);
+            if (obj instanceof Destination) {
+                // we ignore destinations
+                message.setObject(MESSAGE_OBJECT);
+            } else {
+                message.setObject(obj);
+            }
             return message; }
         @Override
         void check(Message m, Serializable obj) throws Exception {
-            Serializable robj = (Serializable) goodObject(m).getObject();
-            assertEquals(obj, robj, "Object not read correctly;"); }
+            assertThat(m.isBodyAssignableTo(Object.class)).isTrue();
+            assertThat(m.isBodyAssignableTo(Serializable.class)).isTrue();
+            assertThat(m.isBodyAssignableTo(Connection.class)).isFalse();
+            assertThatThrownBy(() -> m.getBody(Connection.class)).isInstanceOf(
+                MessageFormatException.class);
+            Serializable robj = goodObject(m).getObject();
+            if (obj instanceof Destination) {
+                assertThat(robj).as("Object not read correctly").isEqualTo(MESSAGE_OBJECT);
+                assertThat(m.isBodyAssignableTo(StockObject.class)).isTrue();
+                StockObject body = m.getBody(StockObject.class);
+                assertThat(body).isEqualTo(MESSAGE_OBJECT);
+            } else {
+                assertThat(robj).as("Object not read correctly").isEqualTo(obj);
+                assertThat(m.isBodyAssignableTo(obj.getClass())).isTrue();
+                Serializable body = m.getBody(Serializable.class);
+                assertThat(body).as("Object not read correctly").isEqualTo(obj);
+            }
+        }
+
     };
     abstract Message gen(QueueSession s, Serializable obj) throws Exception;
     abstract void check(Message m, Serializable obj) throws Exception;
@@ -186,5 +210,92 @@ enum MessageTestType {
             sb.append(CHAR[i % CHARLEN]);
         }
         return sb.toString();
+    }
+
+    private static StockObject MESSAGE_OBJECT = new StockObject(
+       "NAME", 256, 1664186274, 5, "INFO"
+    );
+
+    public static class StockObject implements Serializable {
+
+        private static final long serialVersionUID = 9167825719999094717L;
+
+        String stockName;
+        double stockValue;
+        long stockTime;
+        double stockDiff;
+        String stockInfo;
+
+        public StockObject(String stockName, double stockValue, long stockTime, double stockDiff,
+            String stockInfo) {
+            this.stockName = stockName;
+            this.stockValue = stockValue;
+            this.stockTime = stockTime;
+            this.stockDiff = stockDiff;
+            this.stockInfo = stockInfo;
+        }
+
+        public StockObject() {
+
+        }
+
+        public String getStockName() {
+            return stockName;
+        }
+
+        public void setStockName(String stockName) {
+            this.stockName = stockName;
+        }
+
+        public double getStockValue() {
+            return stockValue;
+        }
+
+        public void setStockValue(double stockValue) {
+            this.stockValue = stockValue;
+        }
+
+        public long getStockTime() {
+            return stockTime;
+        }
+
+        public void setStockTime(long stockTime) {
+            this.stockTime = stockTime;
+        }
+
+        public double getStockDiff() {
+            return stockDiff;
+        }
+
+        public void setStockDiff(double stockDiff) {
+            this.stockDiff = stockDiff;
+        }
+
+        public String getStockInfo() {
+            return stockInfo;
+        }
+
+        public void setStockInfo(String stockInfo) {
+            this.stockInfo = stockInfo;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            StockObject that = (StockObject) o;
+            return Double.compare(that.stockValue, stockValue) == 0 && stockTime == that.stockTime
+                && Double.compare(that.stockDiff, stockDiff) == 0 && stockName.equals(
+                that.stockName) && stockInfo.equals(that.stockInfo);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(stockName, stockValue, stockTime, stockDiff, stockInfo);
+        }
     }
 }
