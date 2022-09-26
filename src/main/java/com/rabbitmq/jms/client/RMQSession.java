@@ -1385,4 +1385,45 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             this.uncommittedMessageTags.clear();
         }
     }
+
+    @Override
+    public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName) {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName,
+        String messageSelector) {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
+    public MessageConsumer createDurableConsumer(Topic topic, String name) {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public MessageConsumer createDurableConsumer(Topic topic, String name, String messageSelector,
+        boolean noLocal) {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public MessageConsumer createSharedDurableConsumer(Topic topic, String name) {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public MessageConsumer createSharedDurableConsumer(Topic topic, String name,
+        String messageSelector) {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
 }

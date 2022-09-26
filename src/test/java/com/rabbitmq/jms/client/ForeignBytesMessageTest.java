@@ -226,6 +226,26 @@ public class ForeignBytesMessageTest {
 
             return new String(byteArr, UTF8_CHARSET);
         }
+
+        @Override
+        public long getJMSDeliveryTime() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setJMSDeliveryTime(long deliveryTime) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public <T> T getBody(Class<T> c) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isBodyAssignableTo(Class c) {
+            throw new UnsupportedOperationException();
+        }
     }
 
 }

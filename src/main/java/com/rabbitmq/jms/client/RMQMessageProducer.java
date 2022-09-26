@@ -12,6 +12,7 @@ import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.util.RMQJMSException;
 import java.util.Map;
+import javax.jms.CompletionListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -549,4 +550,43 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     }
 
+    @Override
+    public void setDeliveryDelay(long deliveryDelay) throws JMSException {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long getDeliveryDelay() {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void send(Message message, CompletionListener completionListener) throws JMSException {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void send(Message message, int deliveryMode, int priority, long timeToLive,
+        CompletionListener completionListener) throws JMSException {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void send(Destination destination, Message message,
+        CompletionListener completionListener)
+        throws JMSException {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void send(Destination destination, Message message, int deliveryMode, int priority,
+        long timeToLive, CompletionListener completionListener) throws JMSException {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
 }

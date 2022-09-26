@@ -35,6 +35,7 @@ import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
+import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
@@ -241,7 +242,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      *
      * @since 1.10.0
      */
-    private List<URI> uris = Collections.EMPTY_LIST;
+    private List<URI> uris = Collections.emptyList();
 
     /**
      * Whether <code>replyTo</code> destination for consumed messages should be declared.
@@ -283,7 +284,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         }
     }
 
-    public Connection createConnection(String username, String password, List<Address> endpoints)
+  public Connection createConnection(String username, String password, List<Address> endpoints)
         throws JMSException {
         return createConnection(username, password, cf -> cf.newConnection(endpoints));
     }
@@ -443,7 +444,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             }).collect(Collectors.toList());
             this.setUri(urisAsStrings.get(0));
         } else {
-            this.uris = Collections.EMPTY_LIST;
+            this.uris = Collections.emptyList();
             setUri(null);
         }
     }
@@ -1172,4 +1173,29 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         @Override
         public void accept(ReceivingContext receivingContext) { }
     }
+
+  @Override
+  public JMSContext createContext() {
+    // TODO JMS 2.0
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public JMSContext createContext(String userName, String password) {
+    // TODO JMS 2.0
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public JMSContext createContext(String userName, String password, int sessionMode) {
+    // TODO JMS 2.0
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public JMSContext createContext(int sessionMode) {
+    // TODO JMS 2.0
+    throw new UnsupportedOperationException();
+  }
+
 }

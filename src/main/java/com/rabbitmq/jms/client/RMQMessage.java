@@ -1516,4 +1516,28 @@ public abstract class RMQMessage implements Message, Cloneable {
             rmqMsg.setObjectProperty(name, msg.getObjectProperty(name));
         }
     }
+
+    @Override
+    public long getJMSDeliveryTime() {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setJMSDeliveryTime(long deliveryTime) {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <T> T getBody(Class<T> c) {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isBodyAssignableTo(Class c) {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
 }

@@ -8,6 +8,7 @@ package com.rabbitmq.integration.tests;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.util.RMQJMSException;
+import javax.jms.JMSContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -292,5 +293,32 @@ public class RpcSpringJmsIT {
         public Connection createConnection(String userName, String password) {
             return connection;
         }
+
+        @Override
+        public JMSContext createContext() {
+            // TODO JMS 2.0
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public JMSContext createContext(String userName, String password) {
+            // TODO JMS 2.0
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public JMSContext createContext(String userName, String password, int sessionMode) {
+            // TODO JMS 2.0
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public JMSContext createContext(int sessionMode) {
+            // TODO JMS 2.0
+            throw new UnsupportedOperationException();
+        }
+
     }
+
+
 }

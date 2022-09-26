@@ -523,4 +523,30 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         }
     }
 
+    @Override
+    public Session createSession(int sessionMode) throws JMSException {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Session createSession() throws JMSException {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ConnectionConsumer createSharedConnectionConsumer(Topic topic, String subscriptionName,
+        String messageSelector, ServerSessionPool sessionPool, int maxMessages) {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ConnectionConsumer createSharedDurableConnectionConsumer(Topic topic,
+        String subscriptionName, String messageSelector, ServerSessionPool sessionPool,
+        int maxMessages) {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
 }

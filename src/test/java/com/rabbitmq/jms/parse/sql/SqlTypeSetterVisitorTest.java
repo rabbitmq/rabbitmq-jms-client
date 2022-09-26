@@ -431,6 +431,7 @@ public class SqlTypeSetterVisitorTest {
         private TripleSTaSETSET(SqlToken f, SqlExpressionType[] s, SqlExpressionType t) { super(f, s, t); }
     };
 
+    @SuppressWarnings("unchecked")
     private static <Obj> Obj[] os(Obj... objs) { return objs; }
     // os doesn't work as expected when Obj is already an Array and there is a single argument. Hence following special case:
     private static SqlExpressionType[][][] o1(SqlExpressionType[][] aaset) { SqlExpressionType[][][] aaaset = new SqlExpressionType[1][][]; aaaset[0] = aaset; return aaaset; }
