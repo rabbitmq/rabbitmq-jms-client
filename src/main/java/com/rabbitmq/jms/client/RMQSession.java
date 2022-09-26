@@ -1005,19 +1005,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         dest.setDeclared(true);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public TopicSubscriber createDurableSubscriber(Topic topic, String name) throws JMSException {
-        return createDurableSubscriber(topic, name, null, false);
+    public MessageConsumer createDurableConsumer(Topic topic, String name) throws JMSException {
+        return createDurableConsumer(topic, name, null, false);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
+    public MessageConsumer createDurableConsumer(Topic topic, String name, String messageSelector,
+        boolean noLocal) throws JMSException {
         illegalStateExceptionIfClosed();
 
         RMQDestination topicDest = (RMQDestination) topic;
@@ -1040,12 +1035,30 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             }
         }
         // Create a new subscription
-        RMQMessageConsumer consumer = (RMQMessageConsumer)createConsumerInternal(topicDest, name, true, messageSelector);
+        RMQMessageConsumer consumer = createConsumerInternal(topicDest, name, true, messageSelector);
         consumer.setDurable(true);
         consumer.setNoLocal(noLocal);
         this.subscriptions.put(name, consumer);
         return consumer;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TopicSubscriber createDurableSubscriber(Topic topic, String name) throws JMSException {
+        return createDurableSubscriber(topic, name, null, false);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
+        return (TopicSubscriber) createDurableConsumer(topic, name, messageSelector, noLocal);
+    }
+
+
 
     /**
      * {@inheritDoc}
@@ -1395,20 +1408,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName,
         String messageSelector) {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
-    }
-
-
-    @Override
-    public MessageConsumer createDurableConsumer(Topic topic, String name) {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public MessageConsumer createDurableConsumer(Topic topic, String name, String messageSelector,
-        boolean noLocal) {
         // TODO JMS 2.0
         throw new UnsupportedOperationException();
     }
