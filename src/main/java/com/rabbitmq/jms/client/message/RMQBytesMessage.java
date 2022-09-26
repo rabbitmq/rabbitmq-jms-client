@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client.message;
 
 import java.io.ByteArrayInputStream;
@@ -11,7 +11,6 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.io.Serializable;
 
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
@@ -570,6 +569,26 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             return rmqBMsg;
         } catch (OutOfMemoryError e) {
             throw new RMQJMSException("Body too large for conversion to RMQMessage.", e);
+        }
+    }
+
+    @Override
+    public boolean isBodyAssignableTo(Class c) {
+        return this.buf == null ? true : c.isAssignableFrom(byte[].class);
+    }
+
+    @Override
+    protected <T> T doGetBody(Class<T> c) throws JMSException {
+        if (!this.reading) {
+            throw new MessageNotReadableException(NOT_READABLE);
+        }
+        reset();
+        if (this.buf == null) {
+            return null;
+        } else {
+            byte [] copy = new byte[this.buf.length];
+            System.arraycopy(this.buf, 0, copy, 0, this.buf.length);
+            return (T) copy;
         }
     }
 }

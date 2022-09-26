@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client.message;
 
 import java.io.ByteArrayInputStream;
@@ -149,4 +149,18 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         return rmqOMsg;
     }
 
+    @Override
+    public boolean isBodyAssignableTo(Class c) throws JMSException {
+        Serializable object = this.getObject();
+        if (object == null) {
+            return true;
+        } else {
+            return Serializable.class == c || Object.class == c || c.isInstance(getObject());
+        }
+    }
+
+    @Override
+    protected <T> T doGetBody(Class<T> c) throws JMSException {
+        return (T) this.getObject();
+    }
 }

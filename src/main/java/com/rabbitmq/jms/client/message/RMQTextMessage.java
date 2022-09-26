@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client.message;
 
 import java.io.ByteArrayInputStream;
@@ -47,7 +47,7 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
      * {@inheritDoc}
      */
     @Override
-    protected void clearBodyInternal() throws JMSException {
+    protected void clearBodyInternal() {
         this.text = null;
     }
 
@@ -89,9 +89,21 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
     }
 
     @Override
+    protected <T> T doGetBody(Class<T> c) throws JMSException {
+        return (T) this.getText();
+    }
+
+    @Override
     protected void writeAmqpBody(ByteArrayOutputStream out) throws IOException {
         out.write((this.text!=null ? this.text : "").getBytes("UTF-8"));
     }
+
+    @Override
+    public boolean isBodyAssignableTo(Class c) {
+        return c.isAssignableFrom(String.class);
+    }
+
+
 
     public static RMQMessage recreate(TextMessage msg) throws JMSException {
         RMQTextMessage rmqTMsg = new RMQTextMessage();

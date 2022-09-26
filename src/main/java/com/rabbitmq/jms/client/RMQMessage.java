@@ -1530,14 +1530,14 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
 
     @Override
-    public <T> T getBody(Class<T> c) {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
+    public <T> T getBody(Class<T> c) throws JMSException {
+        if (this.isBodyAssignableTo(c)) {
+            return doGetBody(c);
+        } else {
+            throw new MessageFormatException("Message body is assignable to " + c);
+        }
     }
 
-    @Override
-    public boolean isBodyAssignableTo(Class c) {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
-    }
+    protected abstract <T> T doGetBody(Class<T> c) throws JMSException;
+
 }

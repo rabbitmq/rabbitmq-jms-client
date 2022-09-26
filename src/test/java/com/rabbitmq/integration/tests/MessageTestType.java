@@ -2,18 +2,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2014-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2014-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.Serializable;
 
+import java.util.Enumeration;
+import java.util.Map;
 import javax.jms.BytesMessage;
+import javax.jms.Connection;
 import javax.jms.MapMessage;
 import javax.jms.Message;
+import javax.jms.MessageFormatException;
 import javax.jms.ObjectMessage;
 import javax.jms.QueueSession;
 import javax.jms.StreamMessage;
@@ -31,13 +37,31 @@ enum MessageTestType {
         @Override
         Message gen(QueueSession s, Serializable obj) throws Exception { return s.createTextMessage(LONG_TEXT_BODY); }
         @Override
-        void check(Message m, Serializable obj) throws Exception { assertEquals(LONG_TEXT_BODY, goodText(m).getText()); }
+        void check(Message m, Serializable obj) throws Exception {
+            assertThat(goodText(m).getText()).isEqualTo(LONG_TEXT_BODY);
+            assertThat(m.isBodyAssignableTo(String.class)).isTrue();
+            assertThat(m.isBodyAssignableTo(Object.class)).isTrue();
+            assertThat(m.isBodyAssignableTo(Serializable.class)).isTrue();
+            assertThat(m.isBodyAssignableTo(Connection.class)).isFalse();
+            assertThat(m.getBody(String.class)).isEqualTo(LONG_TEXT_BODY);
+            assertThatThrownBy(() -> m.getBody(Connection.class)).isInstanceOf(
+                MessageFormatException.class);
+        }
     },
     TEXT {
         @Override
         Message gen(QueueSession s, Serializable obj) throws Exception { return s.createTextMessage(MESSAGE); }
         @Override
-        void check(Message m, Serializable obj) throws Exception { assertEquals(MESSAGE, goodText(m).getText()); }
+        void check(Message m, Serializable obj) throws Exception {
+            assertThat(goodText(m).getText()).isEqualTo(MESSAGE);
+            assertThat(m.isBodyAssignableTo(String.class)).isTrue();
+            assertThat(m.isBodyAssignableTo(Object.class)).isTrue();
+            assertThat(m.isBodyAssignableTo(Serializable.class)).isTrue();
+            assertThat(m.isBodyAssignableTo(Connection.class)).isFalse();
+            assertThat(m.getBody(String.class)).isEqualTo(MESSAGE);
+            assertThatThrownBy(() -> m.getBody(Connection.class)).isInstanceOf(
+                MessageFormatException.class);
+        }
     },
     BYTES {
         @Override
@@ -46,7 +70,20 @@ enum MessageTestType {
             TestMessages.writeBytesMessage(message);
             return message; }
         @Override
-        void check(Message m, Serializable obj) throws Exception { TestMessages.readBytesMessage(goodBytes(m)); }
+        void check(Message m, Serializable obj) throws Exception {
+            TestMessages.readBytesMessage(goodBytes(m));
+            assertThat(m.isBodyAssignableTo(byte[].class)).isTrue();
+            assertThat(m.isBodyAssignableTo(Object.class)).isTrue();
+            assertThat(m.isBodyAssignableTo(Serializable.class)).isTrue();
+            assertThat(m.isBodyAssignableTo(Connection.class)).isFalse();
+            BytesMessage bytesMessage = (BytesMessage) m;
+            bytesMessage.reset();
+            byte [] body = new byte[(int) bytesMessage.getBodyLength()];
+            bytesMessage.readBytes(body);
+            assertThat(m.getBody(byte[].class)).isEqualTo(body);
+            assertThatThrownBy(() -> m.getBody(Connection.class)).isInstanceOf(
+                MessageFormatException.class);
+        }
     },
     LONG_BYTES {
         @Override
@@ -55,7 +92,20 @@ enum MessageTestType {
             TestMessages.writeLongBytesMessage(message);
             return message; }
         @Override
-        void check(Message m, Serializable obj) throws Exception { TestMessages.readLongBytesMessage(goodBytes(m)); }
+        void check(Message m, Serializable obj) throws Exception {
+            TestMessages.readLongBytesMessage(goodBytes(m));
+            assertThat(m.isBodyAssignableTo(byte[].class)).isTrue();
+            assertThat(m.isBodyAssignableTo(Object.class)).isTrue();
+            assertThat(m.isBodyAssignableTo(Serializable.class)).isTrue();
+            assertThat(m.isBodyAssignableTo(Connection.class)).isFalse();
+            BytesMessage bytesMessage = (BytesMessage) m;
+            bytesMessage.reset();
+            byte [] body = new byte[(int) bytesMessage.getBodyLength()];
+            bytesMessage.readBytes(body);
+            assertThat(m.getBody(byte[].class)).isEqualTo(body);
+            assertThatThrownBy(() -> m.getBody(Connection.class)).isInstanceOf(
+                MessageFormatException.class);
+        }
     },
     MAP {
         @Override
@@ -63,8 +113,27 @@ enum MessageTestType {
             MapMessage message = s.createMapMessage();
             TestMessages.writeMapMessage(message);
             return message; }
+        @SuppressWarnings("unchecked")
         @Override
-        void check(Message m, Serializable obj) throws Exception { TestMessages.readMapMessage(goodMap(m)); }
+        void check(Message m, Serializable obj) throws Exception {
+            TestMessages.readMapMessage(goodMap(m));
+            assertThat(m.isBodyAssignableTo(Map.class)).isTrue();
+            assertThat(m.isBodyAssignableTo(Object.class)).isTrue();
+            assertThat(m.isBodyAssignableTo(Serializable.class)).isTrue();
+            assertThat(m.isBodyAssignableTo(Connection.class)).isFalse();
+            assertThatThrownBy(() -> m.getBody(Connection.class)).isInstanceOf(
+                MessageFormatException.class);
+            MapMessage mapMessage = (MapMessage) m;
+            Map<String, Serializable> body = mapMessage.getBody(Map.class);
+            Enumeration mapNames = mapMessage.getMapNames();
+            int keyCount = 0;
+            while (mapNames.hasMoreElements()) {
+                String key = mapNames.nextElement().toString();
+                assertThat(body).containsEntry(key, (Serializable) mapMessage.getObject(key));
+                keyCount++;
+            }
+            assertThat(body).hasSize(keyCount);
+        }
     },
     STREAM {
         @Override
@@ -73,7 +142,12 @@ enum MessageTestType {
             TestMessages.writeStreamMessage(message);
             return message; }
         @Override
-        void check(Message m, Serializable obj) throws Exception { TestMessages.readStreamMessage(goodStream(m)); }
+        void check(Message m, Serializable obj) throws Exception {
+            TestMessages.readStreamMessage(goodStream(m));
+            assertThat(m.isBodyAssignableTo(Object.class)).isFalse();
+            assertThatThrownBy(() -> m.getBody(Object.class))
+                .isInstanceOf(MessageFormatException.class);
+        }
     },
     OBJECT {
         @Override
