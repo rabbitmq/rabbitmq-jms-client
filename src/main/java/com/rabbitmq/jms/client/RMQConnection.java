@@ -525,14 +525,16 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
     @Override
     public Session createSession(int sessionMode) throws JMSException {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
+        if (sessionMode == JMSContext.SESSION_TRANSACTED) {
+            return this.createSession(true, sessionMode);
+        } else {
+            return this.createSession(false, sessionMode);
+        }
     }
 
     @Override
     public Session createSession() throws JMSException {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
+        return this.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
     @Override
