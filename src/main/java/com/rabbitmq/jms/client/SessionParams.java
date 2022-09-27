@@ -111,6 +111,8 @@ public class SessionParams {
 
     private boolean keepTextMessageType = false;
 
+    private boolean validateSubscriptionNames = false;
+
     private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
 
     public RMQConnection getConnection() {
@@ -255,5 +257,14 @@ public class SessionParams {
 
     public boolean willRequeueOnTimeout() {
         return requeueOnTimeout;
+    }
+
+    public SessionParams setValidateSubscriptionNames(boolean validateSubscriptionNames) {
+        this.validateSubscriptionNames = validateSubscriptionNames;
+        return this;
+    }
+
+    public boolean isValidateSubscriptionNames() {
+        return validateSubscriptionNames;
     }
 }

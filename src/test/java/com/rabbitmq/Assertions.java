@@ -13,6 +13,10 @@ import org.assertj.core.api.AbstractObjectAssert;
 
 public abstract class Assertions {
 
+  private Assertions() {
+
+  }
+
   public static JmsMessageAssert assertThat(Message message) {
     return new JmsMessageAssert(message);
   }

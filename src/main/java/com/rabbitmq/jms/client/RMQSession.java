@@ -225,6 +225,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private final boolean keepTextMessageType;
 
+    private final boolean validateSubscriptionNames;
+
     /**
      * Creates a session object associated with a connection
      * @param sessionParams parameters for this session
@@ -253,6 +255,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.trustedPackages = sessionParams.getTrustedPackages();
         this.requeueOnTimeout = sessionParams.willRequeueOnTimeout();
         this.keepTextMessageType = sessionParams.isKeepTextMessageType();
+        this.validateSubscriptionNames = sessionParams.isValidateSubscriptionNames();
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;
@@ -1014,6 +1017,17 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public MessageConsumer createDurableConsumer(Topic topic, String name, String messageSelector,
         boolean noLocal) throws JMSException {
         illegalStateExceptionIfClosed();
+
+        if (this.validateSubscriptionNames) {
+            boolean subscriptionIsValid = Utils.SUBSCRIPTION_NAME_PREDICATE.test(name);
+            if (!subscriptionIsValid) {
+                // the specification is not clear on which exception to throw when the
+                // subscription name is not valid, so throwing a JMSException.
+                throw new JMSException("This subscription name is not valid: " + name + ". "
+                    + "It must not be more than 128 characters and should contain only "
+                    + "Java letters, digits, '_', '.', and '-'.");
+            }
+        }
 
         RMQDestination topicDest = (RMQDestination) topic;
         RMQMessageConsumer previousConsumer = this.subscriptions.get(name);

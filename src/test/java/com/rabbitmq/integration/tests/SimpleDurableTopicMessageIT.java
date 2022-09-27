@@ -5,10 +5,13 @@
 // Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import javax.jms.DeliveryMode;
+import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
@@ -31,6 +34,12 @@ public class SimpleDurableTopicMessageIT extends AbstractITTopic {
     private static final int RECEIVE_TIMEOUT = 1000; // ms
 
     private static final String MESSAGE_TEXT_1 = "Hello " + SimpleDurableTopicMessageIT.class.getName();
+
+    @Override
+    protected void customise(RMQConnectionFactory connectionFactory) {
+       super.customise(connectionFactory);
+       connectionFactory.setValidateSubscriptionNames(true);
+    }
 
     @Test
     public void testSendAndReceiveTextMessage() throws Exception {
@@ -83,4 +92,13 @@ public class SimpleDurableTopicMessageIT extends AbstractITTopic {
         }
     }
 
+    @Test
+    public void subscriptionShouldFailWhenSubscriptionNameIsNotValid() throws Exception {
+        topicConn.start();
+        TopicSession topicSession = topicConn.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        Topic topic = topicSession.createTopic(TOPIC_NAME);
+        assertThatThrownBy(() -> topicSession.createDurableConsumer(topic, "invalid?subscription?name"))
+            .isInstanceOf(JMSException.class)
+            .hasMessageContainingAll("This subscription name is not valid");
+    }
 }
