@@ -186,7 +186,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
             propNameSet.add((String) propNames.nextElement());
         }
 
-        assertEquals(new HashSet<>(Arrays.asList(USER_STRING_PROPERTY_NAME, "DummyProp"))
+        assertEquals(new HashSet<>(Arrays.asList(USER_STRING_PROPERTY_NAME, "DummyProp", "JMSXDeliveryCount"))
                     , propNameSet
                     , "Headers not set correctly");
 
@@ -238,7 +238,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
             propNameSet.add((String) propNames.nextElement());
         }
 
-        assertEquals(new HashSet<>(Arrays.asList(USER_STRING_PROPERTY_NAME, "DummyProp"))
+        assertEquals(new HashSet<>(Arrays.asList(USER_STRING_PROPERTY_NAME, "DummyProp", "JMSXDeliveryCount"))
                      , propNameSet
                      , "Headers not set correctly");
 

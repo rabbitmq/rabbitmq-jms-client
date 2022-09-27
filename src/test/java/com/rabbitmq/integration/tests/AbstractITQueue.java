@@ -2,11 +2,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.jms.client.RMQConnection;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.concurrent.TimeoutException;
 import javax.jms.Message;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
@@ -60,5 +66,27 @@ public abstract class AbstractITQueue {
     public void afterTests() throws Exception {
         if (queueConn != null)
             queueConn.close();
+    }
+
+    protected Connection amqpConnection() {
+        Connection amqpConnection = null;
+        if (this.queueConn != null) {
+            try {
+                Field connectionField = RMQConnection.class.getDeclaredField("rabbitConnection");
+                connectionField.setAccessible(true);
+                amqpConnection = (Connection) connectionField.get(this.queueConn);
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return amqpConnection;
+    }
+
+    protected void deleteQueue(String queue) {
+        try (Channel ch = amqpConnection().createChannel()) {
+            ch.queueDelete(queue);
+        } catch (IOException | TimeoutException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

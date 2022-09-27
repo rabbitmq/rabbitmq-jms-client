@@ -13,7 +13,10 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Method;
 import java.time.Duration;
+import java.util.UUID;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -83,4 +86,15 @@ public class TestUtils {
     @Documented
     @ExtendWith(DisabledIfTlsNotEnabledCondition.class)
     public @interface DisabledIfTlsNotEnabled {}
+
+    public static String queueName(TestInfo info) {
+        return queueName(info.getTestClass().get(), info.getTestMethod().get());
+    }
+
+    private static String queueName(Class<?> testClass, Method testMethod) {
+        String uuid = UUID.randomUUID().toString();
+        return String.format(
+            "%s_%s%s",
+            testClass.getSimpleName(), testMethod.getName(), uuid.substring(uuid.length() / 2));
+    }
 }

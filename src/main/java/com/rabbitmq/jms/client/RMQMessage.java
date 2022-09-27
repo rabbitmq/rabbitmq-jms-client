@@ -120,6 +120,11 @@ public abstract class RMQMessage implements Message, Cloneable {
     static final String JMS_MESSAGE_PRIORITY = PREFIX + "jms.message.priority";
 
     /**
+     * JMS Defined Properties
+     */
+    private static final String JMS_X_DELIVERY_COUNT = "JMSXDeliveryCount";
+
+    /**
      * For turning {@link String}s into <code>byte[]</code> and back we use this {@link Charset} instance.
      * This is used for {@link RMQMessage#getJMSCorrelationIDAsBytes()}.
      */
@@ -128,7 +133,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     /** Here we store the JMS_ properties that would have been fields */
     private final Map<String, Serializable> rmqProperties = new HashMap<String, Serializable>();
     /** Here we store the user’s custom JMS properties */
-    private final Map<String, Serializable> userJmsProperties = new HashMap<String, Serializable>();
+    private final Map<String, Serializable> userJmsProperties = new HashMap<>();
     /**
      * We generate a unique message ID each time we send a message
      * It is stored here. This is also used for
@@ -917,7 +922,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         RMQMessage message = fromMessage(response.getBody(), session.getTrustedPackages());
 
         message.setSession(session);                                            // Insert session in received message for Message.acknowledge
-        message.setJMSRedelivered(response.getEnvelope().isRedeliver());        // Set the redelivered flag
+        message = handleJmsRedeliveredAndDeliveryCount(response, message);
         message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());  // Insert delivery tag in received message for Message.acknowledge
         // message.setJMSDestination(dest);                                     // DO NOT set the destination bug#57214768
         // JMSProperties already set
@@ -937,7 +942,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             message = RMQMessage.fromAmqpMessage(response.getBody(), message);      // Deserialize the message payload from the byte[] body
 
             message.setSession(session);                                            // Insert session in received message for Message.acknowledge
-            message.setJMSRedelivered(response.getEnvelope().isRedeliver());        // Set the redelivered flag
+            message = handleJmsRedeliveredAndDeliveryCount(response, message);
             message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());  // Insert delivery tag in received message for Message.acknowledge
             message.setJMSDestination(dest);                                        // We cannot know the original destination, so set local one
             message.setJMSPropertiesFromAmqpProperties(props);
@@ -950,6 +955,26 @@ public abstract class RMQMessage implements Message, Cloneable {
         } catch (IOException x) {
             throw new RMQJMSException(x);
         }
+    }
+
+    private static RMQMessage handleJmsRedeliveredAndDeliveryCount(GetResponse response, RMQMessage message)
+        throws JMSException {
+        boolean redelivered = response.getEnvelope().isRedeliver();
+        message.setJMSRedelivered(redelivered);
+        if (redelivered) {
+            Number deliveryCount = (Number) response.getProps().getHeaders().get("x-delivery-count");
+            if (deliveryCount == null) {
+                message.setIntProperty(JMS_X_DELIVERY_COUNT, 2);
+            } else {
+                // We add one, as the count starts at 0 for RabbitMQ.
+                // This is modeled after the AMQP 1.0 "delivery-count" transport header for a message
+                // (AMQP 1.0 specification, section 3.2.1)
+                message.setIntProperty(JMS_X_DELIVERY_COUNT, deliveryCount.intValue() + 1);
+            }
+        } else {
+            message.setIntProperty(JMS_X_DELIVERY_COUNT, 1);
+        }
+        return message;
     }
 
     /**
