@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 
 import javax.jms.BytesMessage;
@@ -145,17 +146,18 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private volatile MessageListener messageListener;
     /** A list of all the producers created by this session.
      * When a producer is closed, it will be removed from this list */
-    private final ArrayList<RMQMessageProducer> producers = new ArrayList<RMQMessageProducer>();
+    private final ArrayList<RMQMessageProducer> producers = new ArrayList<>();
     /** A list of all the consumers created by this session.
      * When a consumer is closed, it will be removed from this list */
-    private final ArrayList<RMQMessageConsumer> consumers = new ArrayList<RMQMessageConsumer>();
+    private final ArrayList<RMQMessageConsumer> consumers = new ArrayList<>();
     /** We keep an ordered set of the message tags (acknowledgement tags) for all messages received and unacknowledged.
      * Each message acknowledgement must ACK all (unacknowledged) messages received up to this point, and
      * we must never acknowledge a message more than once (nor acknowledge a message that doesn't exist). */
-    private final SortedSet<Long> unackedMessageTags = Collections.synchronizedSortedSet(new TreeSet<Long>());
+    private final SortedSet<Long> unackedMessageTags = Collections.synchronizedSortedSet(
+        new TreeSet<>());
 
     /* Holds the uncommited tags to commit a nack on rollback */
-    private final List<Long> uncommittedMessageTags = new ArrayList<Long>(); // GuardedBy("commitLock");
+    private final List<Long> uncommittedMessageTags = new ArrayList<>(); // GuardedBy("commitLock");
 
     /** List of all our durable subscriptions so we can track them */
     private final Map<String, RMQMessageConsumer> subscriptions;
@@ -227,6 +229,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private final boolean validateSubscriptionNames;
 
+    private final AtomicBoolean confirmSelectCalledOnChannel = new AtomicBoolean(false);
+
     /**
      * Creates a session object associated with a connection
      * @param sessionParams parameters for this session
@@ -270,11 +274,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         try {
             this.channel = connection.createRabbitChannel(transacted);
             if (sessionParams.getConfirmListener() != null) {
+                enablePublishConfirmOnChannel();
                 this.publishingListener = PublisherConfirmsUtils.configurePublisherConfirmsSupport(
                         this.channel, sessionParams.getConfirmListener()
                 );
             } else {
-                this.publishingListener = null;
+                this.publishingListener = PublisherConfirmsUtils.configurePublisherConfirmsSupport(
+                    this.channel, context -> { }
+                );
             }
         } catch (Exception x) { // includes unchecked exceptions, e.g. ShutdownSignalException
             throw new RMQJMSException(x);
@@ -298,6 +305,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             .setMode(mode)
             .setSubscriptions(subscriptions)
         );
+    }
+
+    void enablePublishConfirmOnChannel() throws IOException {
+        if (this.confirmSelectCalledOnChannel.compareAndSet(false, true)) {
+            this.channel.confirmSelect();
+        }
     }
 
     /**

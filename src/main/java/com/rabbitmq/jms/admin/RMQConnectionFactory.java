@@ -32,6 +32,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.jms.BytesMessage;
+import javax.jms.CompletionListener;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
@@ -1061,13 +1062,22 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * When this property is set, publisher confirms are enabled for all
      * the underlying AMQP {@link com.rabbitmq.client.Channel}s created by
      * this {@link ConnectionFactory}.
+     * <p>
+     * This API is deprecated since the library supports JMS 2.0 Asynchronous Send
+     * (<code>CompletionListener</code> API). It will be removed in RabbitMQ JMS Client 3.0.
      *
      * @param confirmListener the callback
      * @see <a href="https://www.rabbitmq.com/confirms.html#publisher-confirms">Publisher Confirms</a>
      * @see <a href="https://www.rabbitmq.com/publishers.html#data-safety">Publisher Guide</a>
      * @see ConfirmListener
+     * @see javax.jms.MessageProducer#send(Message, CompletionListener)
+     * @see javax.jms.MessageProducer#send(Destination, Message, CompletionListener)
+     * @see javax.jms.MessageProducer#send(Message, int, int, long, CompletionListener)
+     * @see javax.jms.MessageProducer#send(Destination, Message, int, int, long, CompletionListener)
      * @since 1.13.0
+     * @deprecated Use the {@link javax.jms.MessageProducer} <code>send</code> methods with a {@link javax.jms.CompletionListener}
      */
+    @Deprecated
     public void setConfirmListener(ConfirmListener confirmListener) {
         this.confirmListener = confirmListener;
     }

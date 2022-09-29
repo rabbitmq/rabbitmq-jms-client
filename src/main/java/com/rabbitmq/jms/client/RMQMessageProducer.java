@@ -12,6 +12,7 @@ import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.util.RMQJMSException;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jms.CompletionListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,18 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     private final Logger logger = LoggerFactory.getLogger(RMQMessageProducer.class);
 
     private static final String DIRECT_REPLY_TO = "amq.rabbitmq.reply-to";
+
+    private static final CompletionListener NO_OP_COMPLETION_LISTENER = new CompletionListener() {
+        @Override
+        public void onCompletion(Message message) {
+
+        }
+
+        @Override
+        public void onException(Message message, Exception exception) {
+
+        }
+    };
 
     /**
      * The destination that we send our message to
@@ -85,6 +98,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     private final boolean keepTextMessageType;
 
+    private final AtomicBoolean publishConfirmedEnabled = new AtomicBoolean(false);
+
     RMQMessageProducer(RMQSession session, RMQDestination destination, boolean preferProducerMessageProperty,
                               BiFunction<AMQP.BasicProperties.Builder, Message, AMQP.BasicProperties.Builder> amqpPropertiesCustomiser,
                               SendingContextConsumer sendingContextConsumer,
@@ -100,9 +115,10 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         this.amqpPropertiesCustomiser = amqpPropertiesCustomiser == null ? (builder, message) -> builder : amqpPropertiesCustomiser;
         this.sendingContextConsumer = sendingContextConsumer == null ? ctx -> {} : sendingContextConsumer;
         if (publishingListener == null) {
-            this.beforePublishingCallback = (message, channel) -> {};
+            this.beforePublishingCallback = (message, completionListener, channel) -> {};
         } else {
-            this.beforePublishingCallback = (message, channel) -> publishingListener.publish(message, channel.getNextPublishSeqNo());
+            this.beforePublishingCallback = (message, completionListener, channel) ->
+                publishingListener.publish(message, completionListener, channel.getNextPublishSeqNo());
         }
         this.keepTextMessageType = keepTextMessageType;
     }
@@ -247,7 +263,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void send(Message message) throws JMSException {
-        this.sendingStrategy.send(this.destination, message);
+        this.sendingStrategy.send(this.destination, message, NO_OP_COMPLETION_LISTENER);
     }
 
     /**
@@ -255,7 +271,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void send(Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        this.sendingStrategy.send(this.destination, message, deliveryMode, priority, timeToLive);
+        this.sendingStrategy.send(this.destination, message, NO_OP_COMPLETION_LISTENER,
+            deliveryMode, priority, timeToLive);
     }
 
     /**
@@ -264,7 +281,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     @Override
     public void send(Destination destination, Message message) throws JMSException {
         this.checkUnidentifiedMessageProducer(destination);
-        this.sendingStrategy.send(destination, message);
+        this.sendingStrategy.send(destination, message, NO_OP_COMPLETION_LISTENER);
     }
 
     private void checkUnidentifiedMessageProducer(Destination destination) {
@@ -278,10 +295,13 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         this.checkUnidentifiedMessageProducer(destination);
-        this.sendingStrategy.send(destination, message, deliveryMode, priority, timeToLive);
+        this.sendingStrategy.send(destination, message, NO_OP_COMPLETION_LISTENER,
+            deliveryMode, priority, timeToLive);
     }
 
-    private void internalSend(RMQDestination destination, Message message, int deliveryMode, int priority, long timeToLiveOrExpiration, MessageExpirationType messageExpirationType) throws JMSException {
+    private void internalSend(RMQDestination destination, Message message, CompletionListener completionListener,
+                              int deliveryMode, int priority, long timeToLiveOrExpiration,
+                              MessageExpirationType messageExpirationType) throws JMSException {
         logger.trace("send/publish message({}) to destination({}) with properties deliveryMode({}), priority({}), timeToLive({})", message, destination, deliveryMode, priority, timeToLiveOrExpiration);
 
         this.sendingContextConsumer.accept(new SendingContext(destination, message));
@@ -317,13 +337,17 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
         /* Now send it */
         if (destination.isAmqp()) {
-            sendAMQPMessage(destination, rmqMessage, message, deliveryMode, priority, ttl);
+            sendAMQPMessage(destination, rmqMessage, message, completionListener,
+                deliveryMode, priority, ttl);
         } else {
-            sendJMSMessage(destination, rmqMessage, message, deliveryMode, priority, ttl);
+            sendJMSMessage(destination, rmqMessage, message, completionListener,
+                deliveryMode, priority, ttl);
         }
     }
 
-    private void sendAMQPMessage(RMQDestination destination, RMQMessage msg, Message originalMessage, int deliveryMode, int priority, long timeToLive) throws JMSException {
+    private void sendAMQPMessage(RMQDestination destination, RMQMessage msg, Message originalMessage,
+                                 CompletionListener completionListener, int deliveryMode,
+                                 int priority, long timeToLive) throws JMSException {
         if (!destination.amqpWritable()) {
             this.logger.error("Cannot write to AMQP destination {}", destination);
             throw new RMQJMSException("Cannot write to AMQP destination", new UnsupportedOperationException("MessageProducer.send to undefined AMQP resource"));
@@ -349,7 +373,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
                 byte[] data = msg.toAmqpByteArray();
 
-                this.beforePublishingCallback.beforePublishing(originalMessage, this.session.getChannel());
+                this.beforePublishingCallback.beforePublishing(originalMessage, completionListener,
+                            this.session.getChannel());
                 this.session.getChannel().basicPublish(destination.getAmqpExchangeName(), destination.getAmqpRoutingKey(), bob.build(), data);
             } catch (IOException x) {
                 throw new RMQJMSException(x);
@@ -361,7 +386,9 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     }
 
     // protected for testing
-    protected void sendJMSMessage(RMQDestination destination, RMQMessage msg, Message originalMessage, int deliveryMode, int priority, long timeToLive) throws JMSException {
+    protected void sendJMSMessage(RMQDestination destination, RMQMessage msg, Message originalMessage,
+                                  CompletionListener completionListener,
+                                  int deliveryMode, int priority, long timeToLive) throws JMSException {
         this.session.declareDestinationIfNecessary(destination);
         try {
             AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
@@ -375,7 +402,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
             byte[] data = msg.toByteArray();
 
-            this.beforePublishingCallback.beforePublishing(originalMessage, this.session.getChannel());
+            this.beforePublishingCallback.beforePublishing(originalMessage, completionListener,
+                this.session.getChannel());
             this.session.getChannel().basicPublish(destination.getAmqpExchangeName(), destination.getAmqpRoutingKey(), bob.build(), data);
         } catch (IOException x) {
             throw new RMQJMSException(x);
@@ -438,7 +466,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void send(Queue queue, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        this.sendingStrategy.send(queue, message, deliveryMode, priority, timeToLive);
+        this.sendingStrategy.send(queue, message, NO_OP_COMPLETION_LISTENER,
+            deliveryMode, priority, timeToLive);
     }
 
     /**
@@ -446,7 +475,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void send(Queue queue, Message message) throws JMSException {
-        this.sendingStrategy.send(queue, message);
+        this.sendingStrategy.send(queue, message, NO_OP_COMPLETION_LISTENER);
     }
 
     /**
@@ -462,7 +491,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void publish(Message message) throws JMSException {
-        this.sendingStrategy.send(this.getTopic(), message);
+        this.sendingStrategy.send(this.getTopic(), message, NO_OP_COMPLETION_LISTENER);
     }
 
     /**
@@ -470,7 +499,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void publish(Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        this.sendingStrategy.send(this.getTopic(), message, deliveryMode, priority, timeToLive);
+        this.sendingStrategy.send(this.getTopic(), message, NO_OP_COMPLETION_LISTENER,
+            deliveryMode, priority, timeToLive);
     }
 
     /**
@@ -478,7 +508,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void publish(Topic topic, Message message) throws JMSException {
-        this.sendingStrategy.send(topic, message);
+        this.sendingStrategy.send(topic, message, NO_OP_COMPLETION_LISTENER);
     }
 
     /**
@@ -486,7 +516,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     @Override
     public void publish(Topic topic, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        this.sendingStrategy.send(topic, message, deliveryMode, priority, timeToLive);
+        this.sendingStrategy.send(topic, message, NO_OP_COMPLETION_LISTENER,
+            deliveryMode, priority, timeToLive);
     }
 
     /**
@@ -494,9 +525,11 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      */
     private interface SendingStrategy {
 
-        void send(Destination destination, Message message) throws JMSException;
+        void send(Destination destination, Message message, CompletionListener completionListener)
+            throws JMSException;
 
-        void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException;
+        void send(Destination destination, Message message, CompletionListener completionListener,
+            int deliveryMode, int priority, long timeToLive) throws JMSException;
 
     }
 
@@ -507,13 +540,16 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     private class PreferMessageProducerPropertySendingStategy implements SendingStrategy {
 
         @Override
-        public void send(Destination destination, Message message) throws JMSException {
-            internalSend((RMQDestination) destination, message, getDeliveryMode(), getPriority(), getTimeToLive(), MessageExpirationType.TTL);
+        public void send(Destination destination, Message message, CompletionListener completionListener)
+            throws JMSException {
+            internalSend((RMQDestination) destination, message, completionListener,
+                getDeliveryMode(), getPriority(), getTimeToLive(), MessageExpirationType.TTL);
         }
 
         @Override
-        public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-            internalSend((RMQDestination) destination, message, deliveryMode, priority, timeToLive, MessageExpirationType.TTL);
+        public void send(Destination destination, Message message, CompletionListener completionListener,
+            int deliveryMode, int priority, long timeToLive) throws JMSException {
+            internalSend((RMQDestination) destination, message, completionListener, deliveryMode, priority, timeToLive, MessageExpirationType.TTL);
         }
 
     }
@@ -525,8 +561,9 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     private class PreferMessagePropertySendingStrategy implements SendingStrategy {
 
         @Override
-        public void send(Destination destination, Message message) throws JMSException {
-            internalSend((RMQDestination) destination, message,
+        public void send(Destination destination, Message message, CompletionListener completionListener)
+            throws JMSException {
+            internalSend((RMQDestination) destination, message, completionListener,
                 message.propertyExists(JMS_MESSAGE_DELIVERY_MODE) ? message.getJMSDeliveryMode() : getDeliveryMode(),
                 message.propertyExists(JMS_MESSAGE_PRIORITY) ? message.getJMSPriority() : getPriority(),
                 message.propertyExists(JMS_MESSAGE_EXPIRATION) ? message.getJMSExpiration() : getTimeToLive(),
@@ -534,8 +571,10 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         }
 
         @Override
-        public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-            internalSend((RMQDestination) destination, message, deliveryMode, priority, timeToLive, MessageExpirationType.TTL);
+        public void send(Destination destination, Message message, CompletionListener completionListener,
+            int deliveryMode, int priority, long timeToLive) throws JMSException {
+            internalSend((RMQDestination) destination, message, completionListener,
+                deliveryMode, priority, timeToLive, MessageExpirationType.TTL);
         }
 
     }
@@ -546,7 +585,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     interface BeforePublishingCallback {
 
-        void beforePublishing(Message message, Channel channel);
+        void beforePublishing(Message message, CompletionListener completionListener, Channel channel);
 
     }
 
@@ -564,29 +603,53 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     @Override
     public void send(Message message, CompletionListener completionListener) throws JMSException {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
+        checkCompletionListenerNotNull(completionListener);
+        enablePublishConfirm();
+        this.sendingStrategy.send(this.destination, message, completionListener);
     }
 
     @Override
     public void send(Message message, int deliveryMode, int priority, long timeToLive,
         CompletionListener completionListener) throws JMSException {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
+        checkCompletionListenerNotNull(completionListener);
+        enablePublishConfirm();
+        this.sendingStrategy.send(this.destination, message, completionListener,
+            deliveryMode, priority, timeToLive);
     }
 
     @Override
     public void send(Destination destination, Message message,
         CompletionListener completionListener)
         throws JMSException {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
+        this.checkUnidentifiedMessageProducer(destination);
+        checkCompletionListenerNotNull(completionListener);
+        enablePublishConfirm();
+        this.sendingStrategy.send(destination, message, completionListener);
     }
 
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority,
         long timeToLive, CompletionListener completionListener) throws JMSException {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
+        this.checkUnidentifiedMessageProducer(destination);
+        checkCompletionListenerNotNull(completionListener);
+        enablePublishConfirm();
+        this.sendingStrategy.send(destination, message, completionListener,
+            deliveryMode, priority, timeToLive);
+    }
+
+    private static void checkCompletionListenerNotNull(CompletionListener completionListener) {
+        if (completionListener == null) {
+            throw new IllegalArgumentException("The completion listener cannot be null");
+        }
+    }
+
+    private void enablePublishConfirm() throws JMSException {
+        if (this.publishConfirmedEnabled.compareAndSet(false, true)) {
+            try {
+                this.session.enablePublishConfirmOnChannel();
+            } catch (IOException e) {
+                throw new RMQJMSException(e);
+            }
+        }
     }
 }

@@ -424,9 +424,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         if (transactional) {
             channel.txSelect();
         }
-        if (this.confirmListener != null) {
-            channel.confirmSelect();
-        }
         return channel;
     }
 

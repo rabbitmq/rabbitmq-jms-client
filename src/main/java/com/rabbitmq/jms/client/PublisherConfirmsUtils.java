@@ -2,16 +2,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2019-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2019-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.Channel;
 
+import javax.jms.CompletionListener;
+import javax.jms.JMSException;
 import javax.jms.Message;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class to handle publisher confirms.
@@ -19,6 +23,8 @@ import java.util.function.Consumer;
  * @since 1.13.0
  */
 class PublisherConfirmsUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PublisherConfirmsUtils.class);
 
     /**
      * Enables publisher confirms support.
@@ -34,17 +40,26 @@ class PublisherConfirmsUtils {
      * @return
      */
     static PublishingListener configurePublisherConfirmsSupport(Channel channel, ConfirmListener confirmListener) {
-        final Map<Long, Message> outstandingConfirms = new ConcurrentHashMap<>();
+        final Map<Long, OutboundMessageContext> outstandingConfirms = new ConcurrentHashMap<>();
         final AtomicLong multipleLowerBound = new AtomicLong(1);
-        PublishingListener publishingListener = (message, sequenceNumber) -> {
-            outstandingConfirms.put(sequenceNumber, message);
+        PublishingListener publishingListener = (message, completionListener, sequenceNumber) -> {
+            outstandingConfirms.put(sequenceNumber, new OutboundMessageContext(message, completionListener));
         };
         channel.addConfirmListener(new com.rabbitmq.client.ConfirmListener() {
             @Override
             public void handleAck(long deliveryTag, boolean multiple) {
                 cleanPublisherConfirmsCorrelation(
                         outstandingConfirms, multipleLowerBound,
-                        deliveryTag, multiple, message -> confirmListener.handle(new PublisherConfirmContext(message, true))
+                        deliveryTag, multiple, context -> {
+                            executeSafely(
+                                () -> context.completionListener.onCompletion(context.message),
+                                "CompletionListener"
+                            );
+                            executeSafely(
+                                () -> confirmListener.handle(new PublisherConfirmContext(context.message, true)),
+                                "ConfirmListener"
+                            );
+                        }
                 );
             }
 
@@ -52,11 +67,30 @@ class PublisherConfirmsUtils {
             public void handleNack(long deliveryTag, boolean multiple) {
                 cleanPublisherConfirmsCorrelation(
                         outstandingConfirms, multipleLowerBound,
-                        deliveryTag, multiple, message -> confirmListener.handle(new PublisherConfirmContext(message, false))
+                        deliveryTag, multiple, context -> {
+                            executeSafely(
+                                () -> context.completionListener.onException(context.message,
+                                    new JMSException("Outbound message was negatively acknowledged")),
+                                "CompletionListener"
+                            );
+                            executeSafely(
+                                () -> confirmListener.handle(
+                                    new PublisherConfirmContext(context.message, false)),
+                                "ConfirmListener"
+                            );
+                        }
                 );
             }
         });
         return publishingListener;
+    }
+
+    private static void executeSafely(VoidCallable callable, String object) {
+        try {
+            callable.call();
+        } catch (Exception e) {
+            LOGGER.warn("Error while executing {}: {}", object, e.getMessage());
+        }
     }
 
     /**
@@ -70,25 +104,44 @@ class PublisherConfirmsUtils {
      * @param multiple
      * @param messageConsumer
      */
-    private static void cleanPublisherConfirmsCorrelation(Map<Long, Message> outstandingConfirms, AtomicLong multipleLowerBound,
-                                                          long deliveryTag, boolean multiple, Consumer<Message> messageConsumer) {
+    private static void cleanPublisherConfirmsCorrelation(Map<Long, OutboundMessageContext> outstandingConfirms, AtomicLong multipleLowerBound,
+                                                          long deliveryTag, boolean multiple, Consumer<OutboundMessageContext> messageConsumer) {
         Long lowerBound = multipleLowerBound.get();
         if (multiple) {
             for (long i = lowerBound; i <= deliveryTag; i++) {
-                Message message = outstandingConfirms.remove(i);
-                if (message != null) {
-                    messageConsumer.accept(message);
+                OutboundMessageContext context = outstandingConfirms.remove(i);
+                if (context != null) {
+                    messageConsumer.accept(context);
                 }
             }
         } else {
-            Message message = outstandingConfirms.remove(deliveryTag);
-            if (message != null) {
-                messageConsumer.accept(message);
+            OutboundMessageContext context = outstandingConfirms.remove(deliveryTag);
+            if (context != null) {
+                messageConsumer.accept(context);
             }
             if (deliveryTag == lowerBound + 1) {
                 multipleLowerBound.compareAndSet(lowerBound, deliveryTag);
             }
         }
+    }
+
+    private static class OutboundMessageContext {
+
+        private final Message message;
+        private final CompletionListener completionListener;
+
+
+        private OutboundMessageContext(Message message, CompletionListener completionListener) {
+            this.message = message;
+            this.completionListener = completionListener;
+        }
+    }
+
+    @FunctionalInterface
+    private interface VoidCallable {
+
+        void call() throws Exception;
+
     }
 
 }

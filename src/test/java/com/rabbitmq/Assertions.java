@@ -9,6 +9,7 @@ package com.rabbitmq;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.TextMessage;
 import org.assertj.core.api.AbstractObjectAssert;
 
 public abstract class Assertions {
@@ -46,6 +47,23 @@ public abstract class Assertions {
       int actualDeliveryCount = this.actual.getIntProperty(JMS_X_DELIVERY_COUNT);
       if (actualDeliveryCount != expectedDeliveryCount) {
         failWithMessage("Delivery count is expected to be %d but is %d", expectedDeliveryCount, actualDeliveryCount);
+      }
+      return this;
+    }
+
+    public JmsMessageAssert isTextMessage() {
+      isNotNull();
+      if (!(this.actual instanceof TextMessage)) {
+        failWithMessage("Expected a text message, but is %s", this.actual.getClass().getName());
+      }
+      return this;
+    }
+
+    public JmsMessageAssert hasText(String expected) throws JMSException {
+      isNotNull();
+      isTextMessage();
+      if (!expected.equals(this.actual.getBody(String.class))) {
+        failWithMessage("Expected %s but got %s", expected, this.actual.getBody(String.class));
       }
       return this;
     }
