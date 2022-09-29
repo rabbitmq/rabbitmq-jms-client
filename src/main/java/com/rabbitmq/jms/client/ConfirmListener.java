@@ -25,6 +25,9 @@ import javax.jms.Message;
  * <p>
  * This interface is deprecated since the library supports JMS 2.0 Asynchronous Send
  * (<code>CompletionListener</code> API). It will be removed in RabbitMQ JMS Client 3.0.
+ * <p>
+ * Do not use async send methods and the {@link ConfirmListener} API
+ * at the same time, the behavior when they are both in use is not determined.
  *
  * @see <a href="https://www.rabbitmq.com/confirms.html#publisher-confirms">Publisher Confirms</a>
  * @see <a href="https://www.rabbitmq.com/publishers.html#data-safety">Publisher Guide</a>
