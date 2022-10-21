@@ -5,6 +5,8 @@
 // Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
+import com.rabbitmq.jms.client.Subscription.Context;
+import com.rabbitmq.jms.client.Subscription.PostAction;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -16,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
@@ -23,8 +26,8 @@ import java.util.function.BiFunction;
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
 import javax.jms.IllegalStateException;
-import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
+import javax.jms.JMSRuntimeException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -59,13 +62,7 @@ import com.rabbitmq.jms.client.message.RMQMapMessage;
 import com.rabbitmq.jms.client.message.RMQObjectMessage;
 import com.rabbitmq.jms.client.message.RMQStreamMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
-import com.rabbitmq.jms.parse.sql.SqlCompiler;
-import com.rabbitmq.jms.parse.sql.SqlEvaluator;
-import com.rabbitmq.jms.parse.sql.SqlExpressionType;
-import com.rabbitmq.jms.parse.sql.SqlParser;
-import com.rabbitmq.jms.parse.sql.SqlTokenStream;
 import com.rabbitmq.jms.util.RMQJMSException;
-import com.rabbitmq.jms.util.RMQJMSSelectorException;
 import com.rabbitmq.jms.util.Util;
 /**
  * RabbitMQ implementation of JMS {@link Session}
@@ -159,8 +156,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     /* Holds the uncommited tags to commit a nack on rollback */
     private final List<Long> uncommittedMessageTags = new ArrayList<>(); // GuardedBy("commitLock");
 
-    /** List of all our durable subscriptions so we can track them */
-    private final Map<String, RMQMessageConsumer> subscriptions;
+    /** List of all our topic subscriptions so we can track them */
+    private final Subscriptions subscriptions;
 
     /** Lock for waiting for close */
     private final Object closeLock = new Object();
@@ -173,7 +170,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     /** Client version obtained from compiled class. */
     private static final GenericVersion CLIENT_VERSION = new GenericVersion(RMQSession.class.getPackage().getImplementationVersion());
 
-    private static final String RJMS_CLIENT_VERSION = CLIENT_VERSION.toString();
+    static final String RJMS_CLIENT_VERSION = CLIENT_VERSION.toString();
     static {
         if (RJMS_CLIENT_VERSION.equals("0.0.0"))
             System.out.println("WARNING: Running test version of RJMS Client with no version information.");
@@ -183,32 +180,19 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private volatile String durableTopicSelectorExchange;
     /** Selector exchange for topic selection */
     private volatile String nonDurableTopicSelectorExchange;
-    /** Selector exchange arg key for erlang selector expression */
-    private static final String RJMS_COMPILED_SELECTOR_ARG = "rjms_erlang_selector";
     /** Selector exchange arg key for client version */
     private static final String RJMS_VERSION_ARG = "rjms_version";
     /** Selector exchange arguments */
     private static final Map<String, Object> RJMS_SELECTOR_EXCHANGE_ARGS
         = Collections.singletonMap(RJMS_VERSION_ARG, RJMS_CLIENT_VERSION);
 
-    private static Map<String, SqlExpressionType> generateJMSTypeIdents() {
-        Map<String, SqlExpressionType> map = new HashMap<String, SqlExpressionType>(6);  // six elements only
-        map.put("JMSDeliveryMode",          SqlExpressionType.STRING);
-        map.put("JMSPriority",              SqlExpressionType.ARITH );
-        map.put("JMSMessageID",             SqlExpressionType.STRING);
-        map.put("JMSTimestamp",             SqlExpressionType.ARITH );
-        map.put("JMSCorrelationID",         SqlExpressionType.STRING);
-        map.put(RMQMessage.JMS_TYPE_HEADER, SqlExpressionType.STRING);
-        return Collections.unmodifiableMap(map);
-    }
-    static final Map<String, SqlExpressionType> JMS_TYPE_IDENTS = generateJMSTypeIdents();
 
     private static final String JMS_TOPIC_SELECTOR_EXCHANGE_TYPE = "x-jms-topic";
 
     private final DeliveryExecutor deliveryExecutor;
 
     /** The channels we use for browsing queues (there may be more than one in operation at a time) */
-    private Set<Channel> browsingChannels = new HashSet<Channel>(); // @GuardedBy(bcLock)
+    private Set<Channel> browsingChannels = new HashSet<>(); // @GuardedBy(bcLock)
     private final Object bcLock = new Object();
 
     /**
@@ -227,7 +211,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private final boolean keepTextMessageType;
 
-    private final boolean validateSubscriptionNames;
+    private final SubscriptionNameValidator subscriptionNameValidator;
 
     private final AtomicBoolean confirmSelectCalledOnChannel = new AtomicBoolean(false);
 
@@ -259,7 +243,20 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.trustedPackages = sessionParams.getTrustedPackages();
         this.requeueOnTimeout = sessionParams.willRequeueOnTimeout();
         this.keepTextMessageType = sessionParams.isKeepTextMessageType();
-        this.validateSubscriptionNames = sessionParams.isValidateSubscriptionNames();
+        if (sessionParams.isValidateSubscriptionNames()) {
+            this.subscriptionNameValidator = name -> {
+                boolean subscriptionIsValid = Utils.SUBSCRIPTION_NAME_PREDICATE.test(name);
+                if (!subscriptionIsValid) {
+                    // the specification is not clear on which exception to throw when the
+                    // subscription name is not valid, so throwing a JMSException.
+                    throw new JMSException("This subscription name is not valid: " + name + ". "
+                        + "It must not be more than 128 characters and should contain only "
+                        + "Java letters, digits, '_', '.', and '-'.");
+                }
+            };
+        } else {
+            this.subscriptionNameValidator = name -> { };
+        }
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;
@@ -297,7 +294,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @param subscriptions the connection's subscriptions, shared with all sessions
      * @throws JMSException if we fail to create a {@link Channel} object on the connection, or if the acknowledgement mode is incorrect
      */
-    public RMQSession(RMQConnection connection, boolean transacted, int onMessageTimeoutMs, int mode, Map<String, RMQMessageConsumer> subscriptions) throws JMSException {
+    public RMQSession(RMQConnection connection, boolean transacted, int onMessageTimeoutMs, int mode, Subscriptions subscriptions) throws JMSException {
         this(new SessionParams()
             .setConnection(connection)
             .setTransacted(transacted)
@@ -756,30 +753,19 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @see #createConsumer(Destination)
      */
     private RMQMessageConsumer createConsumerInternal(RMQDestination dest, String uuidTag, boolean durableSubscriber, String jmsSelector) throws JMSException {
-        String consumerTag = uuidTag != null ? uuidTag : Util.generateUUID("jms-cons-");
+        String consumerTag = uuidTag != null ? uuidTag : generateJmsConsumerQueueName();
         logger.trace("create consumer for destination '{}' with consumerTag '{}' and selector '{}'", dest, consumerTag, jmsSelector);
         declareDestinationIfNecessary(dest);
-
         if (!dest.isQueue()) {
-            // This is a topic, we need to define a queue, and bind to it.
-            // The queue name is distinct for each consumer.
-            try {
-                String queueName = consumerTag;
-                this.declareRMQQueue(dest, queueName, durableSubscriber, false);
-                if (nullOrEmpty(jmsSelector)) {
-                    // bind the queue to the exchange with the correct routing key
-                    this.channel.queueBind(queueName, dest.getAmqpExchangeName(), dest.getAmqpRoutingKey());
-                } else {
-                    // get this session's topic selector exchange (name)
-                    String selectionExchange = this.getSelectionExchange(durableSubscriber);
-                    // bind it to the topic exchange with the topic routing key
-                    this.channel.exchangeBind(selectionExchange, dest.getAmqpExchangeName(), dest.getAmqpRoutingKey());
-                    this.bindSelectorQueue(dest, jmsSelector, queueName, selectionExchange);
-                }
-            } catch (IOException x) {
-                logger.error("consumer with tag '{}' could not be created", consumerTag, x);
-                throw new RMQJMSException("RabbitMQ Exception creating Consumer", x);
+            String subscriptionName = consumerTag;
+            Subscription subscription = durableSubscriber ?
+                this.subscriptions.getDurable(subscriptionName) : this.subscriptions.getNonDurable(subscriptionName);
+            if (subscription == null) {
+                // it is unshared, non-durable, creating a transient subscription instance
+                subscription = new Subscription(subscriptionName, subscriptionName, false, false, jmsSelector, false);
             }
+            subscription.createTopology(dest, this, this.channel);
+            consumerTag = subscription.queue();
         }
         RMQMessageConsumer consumer = new RMQMessageConsumer(this, dest, consumerTag, getConnection().isStopped(),
             jmsSelector, this.requeueOnMessageListenerException, this.receivingContextConsumer,
@@ -788,18 +774,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         return consumer;
     }
 
-    private void bindSelectorQueue(RMQDestination dest, String jmsSelector, String queueName, String selectionExchange)
-            throws InvalidSelectorException, IOException {
-        SqlCompiler compiler = new SqlCompiler(new SqlEvaluator(new SqlParser(new SqlTokenStream(jmsSelector)), JMS_TYPE_IDENTS));
-        if (compiler.compileOk()) {
-            Map<String, Object> args = new HashMap<String, Object>(5);
-            args.put(RJMS_COMPILED_SELECTOR_ARG, (Object)compiler.compile());
-            args.put(RJMS_VERSION_ARG, (Object)RJMS_CLIENT_VERSION);
-            // bind the queue to the topic selector exchange with the jmsSelector expression as argument
-            this.channel.queueBind(queueName, selectionExchange, dest.getAmqpRoutingKey(), args);
-        } else {
-            throw new RMQJMSSelectorException(String.format("Selector expression failure: \"%s\".", jmsSelector));
-        }
+    private static String generateJmsConsumerQueueName() {
+       return Util.generateUUID("jms-cons-");
     }
 
     /**
@@ -808,7 +784,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @return this session's Selection Exchange
      * @throws IOException
      */
-    private String getSelectionExchange(boolean durableSubscriber) throws IOException {
+    String getSelectionExchange(boolean durableSubscriber) throws IOException {
         if (durableSubscriber) {
             return this.getDurableTopicSelectorExchange();
         } else {
@@ -897,7 +873,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @param durableSubscriber - true if the subscriber ius
      * @throws JMSException if an IOException occurs in the {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)} call
      */
-    private void declareRMQQueue(RMQDestination dest, String queueNameOverride, boolean durableSubscriber, boolean bind) throws JMSException {
+    void declareRMQQueue(RMQDestination dest, String queueNameOverride, boolean durableSubscriber, boolean bind) throws JMSException {
         logger.trace("declare RabbitMQ queue for destination '{}', explicitName '{}', durableSubscriber={}", dest, queueNameOverride, durableSubscriber);
         String queueName = queueNameOverride!=null ? queueNameOverride : dest.getQueueName();
 
@@ -1021,72 +997,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         dest.setDeclared(true);
     }
 
-    @Override
-    public MessageConsumer createDurableConsumer(Topic topic, String name) throws JMSException {
-        return createDurableConsumer(topic, name, null, false);
-    }
-
-    @Override
-    public MessageConsumer createDurableConsumer(Topic topic, String name, String messageSelector,
-        boolean noLocal) throws JMSException {
-        illegalStateExceptionIfClosed();
-
-        if (this.validateSubscriptionNames) {
-            boolean subscriptionIsValid = Utils.SUBSCRIPTION_NAME_PREDICATE.test(name);
-            if (!subscriptionIsValid) {
-                // the specification is not clear on which exception to throw when the
-                // subscription name is not valid, so throwing a JMSException.
-                throw new JMSException("This subscription name is not valid: " + name + ". "
-                    + "It must not be more than 128 characters and should contain only "
-                    + "Java letters, digits, '_', '.', and '-'.");
-            }
-        }
-
-        RMQDestination topicDest = (RMQDestination) topic;
-        RMQMessageConsumer previousConsumer = this.subscriptions.get(name);
-        if (previousConsumer!=null) {
-            // we are changing subscription, or not, if called with the same topic
-            RMQDestination prevDest = previousConsumer.getDestination();
-            if (prevDest.equals(topicDest)) {
-                if (previousConsumer.isClosed()) {
-                    // They called TopicSubscriber.close but didn't unsubscribe
-                    // and they are simply resubscribing with a new one
-                    logger.warn("Re-subscribing to topic '{}' with name '{}'", topicDest, name);
-                } else {
-                    logger.error("Subscription with name '{}' for topic '{}' already exists", name, topicDest);
-                    throw new JMSException(String.format("Subscription with name [%s] and topic [%s] already exists", name, topicDest));
-                }
-            } else {
-                logger.warn("Previous subscription with name '{}' was for topic '{}' and is replaced by one for topic '{}'", name, prevDest, topicDest);
-                unsubscribe(name);
-            }
-        }
-        // Create a new subscription
-        RMQMessageConsumer consumer = createConsumerInternal(topicDest, name, true, messageSelector);
-        consumer.setDurable(true);
-        consumer.setNoLocal(noLocal);
-        this.subscriptions.put(name, consumer);
-        return consumer;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public TopicSubscriber createDurableSubscriber(Topic topic, String name) throws JMSException {
-        return createDurableSubscriber(topic, name, null, false);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
-        return (TopicSubscriber) createDurableConsumer(topic, name, messageSelector, noLocal);
-    }
-
-
-
     /**
      * {@inheritDoc}
      */
@@ -1202,7 +1112,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public void unsubscribe(String name) throws JMSException {
         illegalStateExceptionIfClosed();
         try {
-            if (name != null && this.subscriptions.remove(name) != null) {
+            if (name != null && this.subscriptions.removeDurable(name) != null) {
                 // remove the queue
                 this.channel.queueDelete(name);
             } else {
@@ -1407,7 +1317,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
     }
 
-    private final boolean getIndividualAck() {
+    private boolean getIndividualAck() {
         return this.isIndividualAck;
     }
 
@@ -1427,29 +1337,91 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     @Override
+    public MessageConsumer createDurableConsumer(Topic topic, String name) throws JMSException {
+        return createDurableConsumer(topic, name, null, false);
+    }
+
+    @Override
+    public MessageConsumer createDurableConsumer(Topic topic, String name, String messageSelector,
+        boolean noLocal) throws JMSException {
+        return this.createTopicConsumer(topic, name, true, false, messageSelector, noLocal);
+    }
+
+    @Override
     public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName) {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
+       return wrap(() -> this.createTopicConsumer(topic, sharedSubscriptionName, false, true, null, false));
     }
 
     @Override
     public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName,
         String messageSelector) {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
+        return wrap(() -> this.createTopicConsumer(topic, sharedSubscriptionName, false, true, messageSelector, false));
     }
 
     @Override
     public MessageConsumer createSharedDurableConsumer(Topic topic, String name) {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
+        return wrap(() -> this.createTopicConsumer(topic, name, true, true, null, false));
     }
 
     @Override
     public MessageConsumer createSharedDurableConsumer(Topic topic, String name,
         String messageSelector) {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
+        return wrap(() -> this.createTopicConsumer(topic, name, true, true, messageSelector, false));
     }
 
+    private static MessageConsumer wrap(Callable<MessageConsumer> action) {
+        try {
+            return action.call();
+        } catch (JMSException e) {
+           throw new JMSRuntimeException(e.getMessage());
+        } catch (Exception e) {
+           throw new JMSRuntimeException(e.getMessage(), null, e);
+        }
+    }
+
+    private MessageConsumer createTopicConsumer(Topic topic, String name, boolean durable, boolean shared,
+        String messageSelector, boolean noLocal) throws JMSException {
+        illegalStateExceptionIfClosed();
+
+        this.subscriptionNameValidator.validate(name);
+
+        RMQDestination topicDest = (RMQDestination) topic;
+        String queueName = durable ? name : generateJmsConsumerQueueName();
+        Subscription subscription = this.subscriptions.register(name, queueName, durable, shared,
+            messageSelector, noLocal);
+        PostAction postAction = subscription.validateNewConsumer(topic, durable, shared,
+            messageSelector, noLocal);
+        postAction.run(new Context(this, this.subscriptions));
+        // look up the subscription again, the instance can have changed because topic/selector/noLocal
+        // are not the same
+        subscription = durable ? this.subscriptions.getDurable(name) : this.subscriptions.getNonDurable(name);
+        // create the consumer
+        RMQMessageConsumer consumer = createConsumerInternal(topicDest, name, durable, messageSelector);
+        consumer.setDurable(true);
+        consumer.setNoLocal(noLocal);
+        subscription.add(consumer);
+        return consumer;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TopicSubscriber createDurableSubscriber(Topic topic, String name) throws JMSException {
+        return createDurableSubscriber(topic, name, null, false);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
+        return (TopicSubscriber) createDurableConsumer(topic, name, messageSelector, noLocal);
+    }
+
+    private interface SubscriptionNameValidator {
+
+        void validate(String name) throws JMSException;
+
+    }
 }

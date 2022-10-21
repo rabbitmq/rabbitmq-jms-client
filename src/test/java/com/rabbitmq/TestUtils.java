@@ -16,6 +16,8 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.UUID;
+import javax.jms.JMSException;
+import javax.jms.Message;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
@@ -96,5 +98,13 @@ public class TestUtils {
         return String.format(
             "%s_%s%s",
             testClass.getSimpleName(), testMethod.getName(), uuid.substring(uuid.length() / 2));
+    }
+
+    public static String text(Message message) {
+        try {
+            return message.getBody(String.class);
+        } catch (JMSException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
