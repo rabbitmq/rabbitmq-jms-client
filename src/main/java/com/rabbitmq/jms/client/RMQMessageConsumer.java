@@ -6,6 +6,8 @@
 package com.rabbitmq.jms.client;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -78,6 +80,7 @@ class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscri
     private volatile boolean noLocal = false;
     /** For getting messages from {@link #receive} queues. */
     private final DelayedReceiver delayedReceiver;
+    private final List<ClosedListener> closedListeners = new CopyOnWriteArrayList<>();
     /** Record and preserve the need to acknowledge automatically */
     private final boolean autoAck;
     private final boolean requeueOnTimeout;
@@ -416,28 +419,39 @@ class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscri
      * Method called when message consumer is closed
      */
     void internalClose() throws JMSException {
-        logger.trace("close consumer({})", this);
-        this.closing = true;
-        /* If we are stopped, we must break that. This will release all threads waiting on the gate and effectively
-         * disable the use of the gate */
-        this.receiveManager.closeGate(); // stop any more entering receive region
-        this.receiveManager.abortWaiters(); // abort any that arrive now
-
-        this.delayedReceiver.close(); // close the synchronous receive, if any
-
-        /* stop and remove any active subscription - waits for onMessage processing to finish */
-        this.removeListenerConsumer();
-
         try {
-            this.abortables.abort(); // abort Consumers of both types that remain
-        } catch (JMSException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RMQJMSException(e);
+            logger.trace("close consumer({})", this);
+            this.closing = true;
+            /* If we are stopped, we must break that. This will release all threads waiting on the gate and effectively
+             * disable the use of the gate */
+            this.receiveManager.closeGate(); // stop any more entering receive region
+            this.receiveManager.abortWaiters(); // abort any that arrive now
+
+            this.delayedReceiver.close(); // close the synchronous receive, if any
+
+            /* stop and remove any active subscription - waits for onMessage processing to finish */
+            this.removeListenerConsumer();
+
+            try {
+                this.abortables.abort(); // abort Consumers of both types that remain
+            } catch (JMSException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new RMQJMSException(e);
+            }
+
+            this.closed = true;
+            this.closing = false;
+        } finally {
+            this.closedListeners.forEach(l -> {
+                try {
+                    l.closed(this);
+                } catch (Exception e) {
+                    logger.warn("Exception while calling consumer closing listener: {}", e.getMessage());
+                }
+            });
         }
 
-        this.closed = true;
-        this.closing = false;
     }
 
     /**
@@ -575,5 +589,16 @@ class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscri
 
     private boolean isDirectReplyTo() {
         return this.destination.isAmqp() && DIRECT_REPLY_TO.equals(this.destination.getDestinationName());
+    }
+
+    void addClosedListener(ClosedListener closedListener) {
+        this.closedListeners.add(closedListener);
+    }
+
+    @FunctionalInterface
+    interface ClosedListener  {
+
+        void closed(RMQMessageConsumer consumer);
+
     }
 }

@@ -758,8 +758,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         declareDestinationIfNecessary(dest);
         if (!dest.isQueue()) {
             String subscriptionName = consumerTag;
-            Subscription subscription = durableSubscriber ?
-                this.subscriptions.getDurable(subscriptionName) : this.subscriptions.getNonDurable(subscriptionName);
+            Subscription subscription = this.subscriptions.get(durableSubscriber, subscriptionName);
             if (subscription == null) {
                 // it is unshared, non-durable, creating a transient subscription instance
                 subscription = new Subscription(subscriptionName, subscriptionName, false, false, jmsSelector, false);
@@ -1112,7 +1111,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public void unsubscribe(String name) throws JMSException {
         illegalStateExceptionIfClosed();
         try {
-            if (name != null && this.subscriptions.removeDurable(name) != null) {
+            if (name != null && this.subscriptions.remove(true, name) != null) {
                 // remove the queue
                 this.channel.queueDelete(name);
             } else {
@@ -1387,20 +1386,22 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
         RMQDestination topicDest = (RMQDestination) topic;
         String queueName = durable ? name : generateJmsConsumerQueueName();
-        Subscription subscription = this.subscriptions.register(name, queueName, durable, shared,
-            messageSelector, noLocal);
-        PostAction postAction = subscription.validateNewConsumer(topic, durable, shared,
-            messageSelector, noLocal);
-        postAction.run(new Context(this, this.subscriptions));
-        // look up the subscription again, the instance can have changed because topic/selector/noLocal
-        // are not the same
-        subscription = durable ? this.subscriptions.getDurable(name) : this.subscriptions.getNonDurable(name);
-        // create the consumer
-        RMQMessageConsumer consumer = createConsumerInternal(topicDest, name, durable, messageSelector);
-        consumer.setDurable(true);
-        consumer.setNoLocal(noLocal);
-        subscription.add(consumer);
-        return consumer;
+        synchronized (this.subscriptions) {
+            Subscription subscription = this.subscriptions.register(name, queueName, durable, shared,
+                messageSelector, noLocal);
+            PostAction postAction = subscription.validateNewConsumer(topic, durable, shared,
+                messageSelector, noLocal);
+            postAction.run(new Context(this, this.subscriptions));
+            // look up the subscription again, the instance can have changed because topic/selector/noLocal
+            // are not the same
+            subscription = this.subscriptions.get(durable, name);
+            // create the consumer
+            RMQMessageConsumer consumer = createConsumerInternal(topicDest, name, durable, messageSelector);
+            consumer.setDurable(durable);
+            consumer.setNoLocal(noLocal);
+            subscription.add(consumer);
+            return consumer;
+        }
     }
 
     /**

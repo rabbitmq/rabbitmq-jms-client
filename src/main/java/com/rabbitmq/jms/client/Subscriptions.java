@@ -16,26 +16,18 @@ class Subscriptions {
 
   Subscription register(String name, String queue, boolean durable, boolean shared, String selector,
       boolean noLocal) {
-    if (durable) {
-      Subscription subscription = durableSubscriptions.computeIfAbsent(name,
-          n -> new Subscription(name, queue, durable, shared, selector, noLocal));
-      return subscription;
-    } else {
-      Subscription subscription = nonDurableSubscriptions.computeIfAbsent(name,
-          n -> new Subscription(name, queue, durable, shared, selector, noLocal));
-      return subscription;
-    }
+    Map<String, Subscription> subscriptions =
+        durable ? this.durableSubscriptions : this.nonDurableSubscriptions;
+    return subscriptions.computeIfAbsent(name,
+        n -> new Subscription(this, name, queue, durable, shared, selector, noLocal));
   }
 
-  Subscription getDurable(String name) {
-    return durableSubscriptions.get(name);
+  Subscription get(boolean durable, String name) {
+    return durable ? durableSubscriptions.get(name) : nonDurableSubscriptions.get(name);
   }
 
-  Subscription removeDurable(String name) {
-    return durableSubscriptions.remove(name);
-  }
-
-  Subscription getNonDurable(String name) {
-    return nonDurableSubscriptions.get(name);
+  Subscription remove(boolean durable, String name) {
+    return durable ? this.durableSubscriptions.remove(name)
+        : this.nonDurableSubscriptions.remove(name);
   }
 }

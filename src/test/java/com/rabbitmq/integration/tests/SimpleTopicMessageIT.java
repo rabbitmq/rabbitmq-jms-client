@@ -105,6 +105,9 @@ public class SimpleTopicMessageIT extends AbstractITTopic {
         // checking round-robin dispatching
         assertThat(messages1).hasSize(1).containsExactly("hello 1");
         assertThat(messages2).hasSize(1).containsExactly("hello 2");
+
+        receiver1.close();
+        receiver2.close();
     }
 
     @Test

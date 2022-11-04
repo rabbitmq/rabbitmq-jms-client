@@ -39,8 +39,7 @@ public class SimpleDurableTopicMessageIT extends AbstractITTopic {
 
     private static final int RECEIVE_TIMEOUT = 1000; // ms
 
-    private static final String MESSAGE_TEXT_1 = "Hello 1 " + SimpleDurableTopicMessageIT.class.getName();
-    private static final String MESSAGE_TEXT_2 = "Hello 2 " + SimpleDurableTopicMessageIT.class.getName();
+    private static final String MESSAGE_TEXT_1 = "Hello " + SimpleDurableTopicMessageIT.class.getName();
 
     @Override
     protected void customise(RMQConnectionFactory connectionFactory) {

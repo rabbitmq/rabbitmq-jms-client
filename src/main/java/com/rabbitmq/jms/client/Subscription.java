@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 import javax.jms.Destination;
 import javax.jms.IllegalStateException;
 import javax.jms.InvalidSelectorException;
@@ -45,29 +46,22 @@ class Subscription {
    */
   private static final String RJMS_VERSION_ARG = "rjms_version";
   private final List<RMQMessageConsumer> consumers = new CopyOnWriteArrayList<>();
+  private final Subscriptions subscriptions;
   private final String name, queue;
   private final boolean durable, shared;
 
-  // * shared non-durable
-  // ** new consumer, same ID, different topic or selector => JMSException or JMSRuntimeException
-
-  // * unshared durable
-  // ** if consumer active (not closed), new consumer, same ID => JMSException or JMSRuntimeException
-  // ** if no consumer active (not closed), new consumer, same ID, different topic, selector or noLocal
-  // => unsubscribe old one, create new one
-  // ** same namespace as shared durable, JMSException or JMSRuntimeException in case of collision
-
-  // * shared durable
-  // ** if active (not closed) consumer, new consumer, same ID, different topic or selector
-  // => JMSException or JMSRuntimeException
-  // ** if no active (not closed) consumers, new consumer, same ID, different topic or selector
-  // => unsubscribe old one, create a new one
-  // ** same namespace as unshared durable, JMSException or JMSRuntimeException in case of collision
   private final String selector;
   private final boolean noLocal;
 
   Subscription(String name, String queue, boolean durable, boolean shared, String selector,
       boolean noLocal) {
+    this(null, name, queue, durable, shared, selector, noLocal);
+  }
+
+  Subscription(Subscriptions subscriptions, String name, String queue, boolean durable,
+      boolean shared, String selector,
+      boolean noLocal) {
+    this.subscriptions = subscriptions;
     this.name = name;
     this.queue = queue;
     this.durable = durable;
@@ -113,51 +107,158 @@ class Subscription {
           this.name,
           this.shared ? "shared" : "unshared"));
     }
-    PostAction postAction = PostAction.NO_OP;
+    if (this.durable != durable) {
+      throw new IllegalArgumentException(
+          format("Cannot validate a %s consumer in a %s subscription",
+              durable ? "durable" : "non-durable", this.durable ? "durable" : "non-durable"));
+    }
+    PostAction postAction;
     if (this.durable) {
-      if (!this.shared) {
-        // shared durable
-        if (this.consumers.size() > 1) {
-          throw new IllegalStateException(
-              format("Subscription '%s' is unshared, it should not have %d consumers", this.name,
-                  this.consumers.size()));
-        } else if (this.consumers.size() == 1) {
-          RMQMessageConsumer consumer = this.consumers.get(0);
-          if (consumer.isClosed()) {
-            RMQDestination previousTopic = consumer.getDestination();
-            if (!topic.equals(previousTopic) || !messageSelectorEquals(selector, this.selector)
-                || noLocal != this.noLocal) {
-              // we unsubscribe and create a new subscription instance to replace this one
-              postAction = c -> {
-                c.session.unsubscribe(this.name);
-                c.subscriptions.register(this.name, this.queue, durable, shared, selector, noLocal);
-              };
-            }
-          } else {
-            throw new JMSException(
-                format("The '%s' subscription has already 1 active consumer", this.name));
-          }
+      if (this.shared) {
+        postAction = validateSharedDurable(topic, selector);
+      } else {
+        postAction = validateUnsharedDurable(topic, selector, noLocal);
+      }
+    } else {
+      postAction = validateSharedNonDurable(topic, selector);
+    }
+    return postAction;
+  }
+
+  private PostAction validateSharedDurable(Destination topic, String selector) throws JMSException {
+    // * shared durable
+    // ** if active (not closed) consumer, new consumer, same ID, different topic or selector
+    // => JMSException or JMSRuntimeException
+    // ** if no active (not closed) consumers, new consumer, same ID, different topic or selector
+    // => unsubscribe old one, create a new one
+    // ** same namespace as unshared durable, JMSException or JMSRuntimeException in case of collision
+    PostAction postAction = PostAction.NO_OP;
+    if (!this.consumers.isEmpty()) {
+      boolean atLeastOneActive = this.consumers.stream().filter(c -> !c.isClosed())
+          .count() > 0;
+      if (atLeastOneActive) {
+        RMQDestination previousTopic = this.consumers.get(0).getDestination();
+        if (!topic.equals(previousTopic) || !messageSelectorEquals(selector, this.selector)) {
+          throw new JMSException(
+              format("The '%s' subscription has at least 1 active consumer, "
+                      + "a new consumer must have the same destination and the same message selector",
+                  this.name));
         }
+      } else {
+        RMQDestination previousTopic = this.consumers.get(0).getDestination();
+        if (!topic.equals(previousTopic) || !messageSelectorEquals(selector, this.selector)) {
+          // we unsubscribe and create a new subscription instance to replace this one
+          postAction = c -> {
+            c.session.unsubscribe(this.name);
+            c.subscriptions.remove(this.durable, this.name);
+            c.subscriptions.register(this.name, this.queue, this.durable, this.shared, selector,
+                this.noLocal);
+          };
+          // the current subscription will go away, so let's clear the consumer list
+          this.consumers.clear();
+        }
+      }
+      // remove the closed consumers
+      List<RMQMessageConsumer> closedConsumers = this.consumers.stream()
+          .filter(c -> c.isClosed()).collect(
+              Collectors.toList());
+      if (!closedConsumers.isEmpty()) {
+        this.consumers.removeAll(closedConsumers);
       }
     }
     return postAction;
   }
 
+  private PostAction validateUnsharedDurable(Destination topic, String selector, boolean noLocal)
+      throws JMSException {
+    // * unshared durable
+    // ** if consumer active (not closed), new consumer, same ID => JMSException or JMSRuntimeException
+    // ** if no consumer active (not closed), new consumer, same ID, different topic, selector or noLocal
+    // => unsubscribe old one, create new one
+    // ** same namespace as shared durable, JMSException or JMSRuntimeException in case of collision
+    PostAction postAction = PostAction.NO_OP;
+    if (this.consumers.size() > 1) {
+      throw new IllegalStateException(
+          format("Subscription '%s' is unshared, it should not have %d consumers", this.name,
+              this.consumers.size()));
+    } else if (this.consumers.size() == 1) {
+      RMQMessageConsumer consumer = this.consumers.get(0);
+      if (consumer.isClosed()) {
+        RMQDestination previousTopic = consumer.getDestination();
+        if (!topic.equals(previousTopic) || !messageSelectorEquals(selector, this.selector)
+            || noLocal != this.noLocal) {
+          // we unsubscribe and create a new subscription instance to replace this one
+          postAction = c -> {
+            c.session.unsubscribe(this.name);
+            c.subscriptions.remove(this.durable, this.name);
+            c.subscriptions.register(this.name, this.queue, this.durable, this.shared, selector,
+                noLocal);
+          };
+          this.consumers.remove(consumer);
+        } else {
+          // the existing consumer is closed, we remove it from the consumer list
+          // we keep the same subscription though, it's still the same object
+          this.consumers.remove(consumer);
+        }
+      } else {
+        throw new JMSException(
+            format("The '%s' subscription has already 1 active consumer", this.name));
+      }
+    }
+    return postAction;
+  }
+
+  private PostAction validateSharedNonDurable(Destination topic, String selector)
+      throws JMSException {
+    // * shared non-durable
+    // ** new consumer, same ID, different topic or selector => JMSException or JMSRuntimeException
+    if (!this.shared) {
+      throw new IllegalStateException(
+          "Unshared non-durable subscriptions are not supported by this module");
+    }
+    if (!this.consumers.isEmpty()) {
+      boolean atLeastOneActive = this.consumers.stream().filter(c -> !c.isClosed())
+          .count() > 0;
+      if (atLeastOneActive) {
+        RMQDestination previousTopic = this.consumers.get(0).getDestination();
+        if (!topic.equals(previousTopic) || !messageSelectorEquals(selector, this.selector)) {
+          throw new JMSException(
+              format("The '%s' subscription has at least 1 active consumer, "
+                      + "a new consumer must have the same destination and the same message selector",
+                  this.name));
+        }
+      }
+    }
+    return PostAction.NO_OP;
+  }
+
   void add(RMQMessageConsumer consumer) {
-    // FIXME add a callback to unregister the non-durable, shared subscription
-    // when all the consumers are
     this.consumers.add(consumer);
+    if (this.shared && !this.durable) {
+      // shared non-durable subscriptions go away they no longer have consumers
+      // adding a listener to enforce this
+      consumer.addClosedListener(c -> {
+        synchronized (this.subscriptions) {
+          this.consumers.remove(c);
+          if (this.consumers.isEmpty()) {
+            this.subscriptions.remove(durable, this.name);
+          }
+        }
+      });
+    }
+  }
+
+  int consumerCount() {
+    return this.consumers.size();
   }
 
   void createTopology(RMQDestination topic, RMQSession session, Channel channel)
       throws JMSException {
     if (this.consumers.isEmpty()) {
       try {
-        // FIXME subscription name is only the name for durable subscriptions
         session.declareRMQQueue(topic, this.queue, this.durable, false);
         if (nullOrEmpty(this.selector)) {
           // bind the queue to the exchange with the correct routing key
-          // FIXME subscription name is only the name for durable subscriptions
           channel.queueBind(this.queue, topic.getAmqpExchangeName(), topic.getAmqpRoutingKey());
         } else {
           // get this session's topic selector exchange (name)
