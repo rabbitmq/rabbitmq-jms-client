@@ -11,8 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 class Subscriptions {
 
-  private final Map<String, Subscription> nonDurableSubscriptions = new ConcurrentHashMap();
-  private final Map<String, Subscription> durableSubscriptions = new ConcurrentHashMap();
+  private final Map<String, Subscription> nonDurableSubscriptions = new ConcurrentHashMap<>();
+  private final Map<String, Subscription> durableSubscriptions = new ConcurrentHashMap<>();
 
   Subscription register(String name, String queue, boolean durable, boolean shared, String selector,
       boolean noLocal) {

@@ -191,7 +191,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
 
     @Override
     public Enumeration<String> getMapNames() throws JMSException {
-        return new IteratorEnum<String>(this.data.keySet().iterator());
+        return new IteratorEnum<>(this.data.keySet().iterator());
     }
 
     @Override
@@ -393,12 +393,14 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public boolean isBodyAssignableTo(Class c) {
         return this.data == null ? true : c.isAssignableFrom(Map.class)
             || Serializable.class == c;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected <T> T doGetBody(Class<T> c) {
         if (this.data == null) {

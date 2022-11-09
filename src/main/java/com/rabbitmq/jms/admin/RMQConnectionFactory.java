@@ -13,8 +13,10 @@ import com.rabbitmq.jms.client.ConfirmListener;
 import com.rabbitmq.jms.client.ConnectionParams;
 import com.rabbitmq.jms.client.RMQConnection;
 import com.rabbitmq.jms.client.RMQMessage;
+import com.rabbitmq.jms.client.RMQSession;
 import com.rabbitmq.jms.client.ReceivingContext;
 import com.rabbitmq.jms.client.ReceivingContextConsumer;
+import com.rabbitmq.jms.client.RmqJmsContext;
 import com.rabbitmq.jms.client.SendingContext;
 import com.rabbitmq.jms.client.SendingContextConsumer;
 import com.rabbitmq.jms.util.RMQJMSException;
@@ -38,11 +40,13 @@ import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSContext;
 import javax.jms.JMSException;
+import javax.jms.JMSRuntimeException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
+import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
@@ -1112,7 +1116,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     this.validateSubscriptionNames = validateSubscriptionNames;
   }
 
-  @FunctionalInterface
+    @FunctionalInterface
     private interface ConnectionCreator {
         com.rabbitmq.client.Connection create(com.rabbitmq.client.ConnectionFactory cf) throws Exception;
     }
@@ -1208,26 +1212,28 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
   @Override
   public JMSContext createContext() {
-    // TODO JMS 2.0
-    throw new UnsupportedOperationException();
+    return createContext(this.username, this.password, Session.AUTO_ACKNOWLEDGE);
   }
 
   @Override
-  public JMSContext createContext(String userName, String password) {
-    // TODO JMS 2.0
-    throw new UnsupportedOperationException();
+  public JMSContext createContext(String username, String password) {
+    return createContext(username, password, Session.AUTO_ACKNOWLEDGE);
   }
 
   @Override
-  public JMSContext createContext(String userName, String password, int sessionMode) {
-    // TODO JMS 2.0
-    throw new UnsupportedOperationException();
+  public JMSContext createContext(String username, String password, int sessionMode) {
+    try {
+      RMQConnection connection = (RMQConnection) createConnection(username, password);
+      RMQSession session = (RMQSession) connection.createSession(sessionMode);
+      return new RmqJmsContext(connection, session);
+    } catch (JMSException e) {
+      throw new JMSRuntimeException("Error while creating JMSContext", e.getErrorCode(), e);
+    }
   }
 
   @Override
   public JMSContext createContext(int sessionMode) {
-    // TODO JMS 2.0
-    throw new UnsupportedOperationException();
+    return createContext(this.username, this.password, sessionMode);
   }
 
 }

@@ -171,6 +171,7 @@
         <configuration>
           <source>${java.compile.version}</source>
           <target>${java.compile.version}</target>
+          <compilerArgument>-Xlint:unchecked</compilerArgument>
         </configuration>
       </plugin>
 

@@ -88,6 +88,7 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected <T> T doGetBody(Class<T> c) throws JMSException {
         return (T) this.getText();
@@ -98,6 +99,7 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
         out.write((this.text!=null ? this.text : "").getBytes("UTF-8"));
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public boolean isBodyAssignableTo(Class c) {
         return c.isAssignableFrom(String.class);

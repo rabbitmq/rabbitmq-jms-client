@@ -42,7 +42,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     private static final String DIRECT_REPLY_TO = "amq.rabbitmq.reply-to";
 
-    private static final CompletionListener NO_OP_COMPLETION_LISTENER = new CompletionListener() {
+    static final CompletionListener NO_OP_COMPLETION_LISTENER = new CompletionListener() {
         @Override
         public void onCompletion(Message message) {
 

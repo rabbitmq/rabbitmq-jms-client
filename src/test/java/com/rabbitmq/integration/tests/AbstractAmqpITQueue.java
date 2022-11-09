@@ -17,7 +17,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
 public abstract class AbstractAmqpITQueue {
-    private QueueConnectionFactory connFactory;
+    protected QueueConnectionFactory connFactory;
     protected QueueConnection queueConn;
 
     private ConnectionFactory rabbitConnFactory = new ConnectionFactory();

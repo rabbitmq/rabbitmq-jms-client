@@ -572,11 +572,13 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public boolean isBodyAssignableTo(Class c) {
         return this.buf == null ? true : c.isAssignableFrom(byte[].class);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected <T> T doGetBody(Class<T> c) throws JMSException {
         if (!this.reading) {

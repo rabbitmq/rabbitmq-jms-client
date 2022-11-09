@@ -566,7 +566,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
     }
 
     @Override
-    public boolean isBodyAssignableTo(Class c) throws JMSException {
+    public boolean isBodyAssignableTo(Class c) {
         return false;
     }
 }

@@ -501,6 +501,10 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         }
     }
 
+    boolean hasSessions() {
+        return !this.sessions.isEmpty();
+    }
+
     long getTerminationTimeout() {
         return this.terminationTimeout;
     }

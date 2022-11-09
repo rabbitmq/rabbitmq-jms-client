@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -1269,6 +1270,20 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @param message - the message to be acknowledged, or the carrier to acknowledge all messages
      */
     void acknowledgeMessage(RMQMessage message) throws JMSException {
+       this.acknowledge(message.getRabbitDeliveryTag());
+    }
+
+    void acknowledgeMessages() {
+        try {
+            Long lastMessageTag = this.unackedMessageTags.last();
+            this.acknowledge(lastMessageTag);
+        } catch (NoSuchElementException | JMSException e) {
+           // do nothing
+        }
+    }
+
+
+    private void acknowledge(long messageTag) throws JMSException {
         illegalStateExceptionIfClosed();
 
         boolean individualAck = this.getIndividualAck();
@@ -1287,13 +1302,11 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             synchronized (this.unackedMessageTags) {
                 try {
                     if (individualAck) {
-                        long messageTag = message.getRabbitDeliveryTag();
                         if (!this.unackedMessageTags.contains(messageTag)) return; // this message already acknowledged
                         /* ACK a single message */
                         this.getChannel().basicAck(messageTag, false); // we ack the single message with this tag
                         this.unackedMessageTags.remove(messageTag);
                     } else if (groupAck) {
-                        long messageTag = message.getRabbitDeliveryTag();
                         /** The tags that precede the given one, and the given one, if unacknowledged */
                         SortedSet<Long> previousTags = this.unackedMessageTags.headSet(messageTag+1);
                         if (previousTags.isEmpty()) return; // no message to acknowledge
@@ -1309,7 +1322,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                         this.unackedMessageTags.clear();
                     }
                 } catch (IOException x) {
-                    this.logger.error("RabbitMQ exception on basicAck of message {}; on session '{}'", message, this, x);
+                    this.logger.error("RabbitMQ exception on basicAck of message {}; on session '{}'", messageTag, this, x);
                     throw new RMQJMSException(x);
                 }
             }

@@ -5,6 +5,7 @@
 // Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -79,7 +80,8 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
         { Map<String, Object> hdrs = response.getProps().getHeaders();
 
-          assertEquals(new HashSet<>(Arrays.asList("JMSMessageID","JMSDeliveryMode","JMSPriority","JMSTimestamp",USER_STRING_PROPERTY_NAME))
+          assertEquals(new HashSet<>(
+                  asList("JMSMessageID","JMSDeliveryMode","JMSPriority","JMSTimestamp",USER_STRING_PROPERTY_NAME))
                        , hdrs.keySet()
                        , "Some keys missing"
                       );
@@ -126,7 +128,9 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
         { Map<String, Object> hdrs = response.getProps().getHeaders();
 
-          assertEquals(new HashSet<String>(Arrays.asList("JMSMessageID","JMSDeliveryMode","JMSPriority","JMSTimestamp",USER_STRING_PROPERTY_NAME))
+          assertEquals(new HashSet<>(
+                  asList("JMSMessageID", "JMSDeliveryMode", "JMSPriority", "JMSTimestamp",
+                      USER_STRING_PROPERTY_NAME))
                        , hdrs.keySet()
                        , "Some keys missing"
                       );
@@ -186,7 +190,8 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
             propNameSet.add((String) propNames.nextElement());
         }
 
-        assertEquals(new HashSet<>(Arrays.asList(USER_STRING_PROPERTY_NAME, "DummyProp", "JMSXDeliveryCount"))
+        assertEquals(new HashSet<>(
+                asList(USER_STRING_PROPERTY_NAME, "DummyProp", "JMSXDeliveryCount"))
                     , propNameSet
                     , "Headers not set correctly");
 
@@ -238,7 +243,8 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
             propNameSet.add((String) propNames.nextElement());
         }
 
-        assertEquals(new HashSet<>(Arrays.asList(USER_STRING_PROPERTY_NAME, "DummyProp", "JMSXDeliveryCount"))
+        assertEquals(new HashSet<>(
+                asList(USER_STRING_PROPERTY_NAME, "DummyProp", "JMSXDeliveryCount"))
                      , propNameSet
                      , "Headers not set correctly");
 

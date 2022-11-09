@@ -149,6 +149,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         return rmqOMsg;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public boolean isBodyAssignableTo(Class c) throws JMSException {
         Serializable object = this.getObject();
@@ -159,6 +160,7 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected <T> T doGetBody(Class<T> c) throws JMSException {
         return (T) this.getObject();
