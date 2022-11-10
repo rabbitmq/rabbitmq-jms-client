@@ -11,11 +11,11 @@ import com.rabbitmq.jms.client.message.TestMessages;
 import com.rabbitmq.jms.util.RMQJMSException;
 import org.junit.jupiter.api.Test;
 
-import javax.jms.Queue;
-import javax.jms.QueueReceiver;
-import javax.jms.QueueSender;
-import javax.jms.QueueSession;
-import javax.jms.Session;
+import jakarta.jms.Queue;
+import jakarta.jms.QueueReceiver;
+import jakarta.jms.QueueSender;
+import jakarta.jms.QueueSession;
+import jakarta.jms.Session;
 import java.awt.*;
 import java.io.Serializable;
 import java.util.Arrays;

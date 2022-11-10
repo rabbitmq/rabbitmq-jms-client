@@ -6,8 +6,8 @@
 package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
-import javax.jms.TopicConnection;
-import javax.jms.TopicConnectionFactory;
+import jakarta.jms.TopicConnection;
+import jakarta.jms.TopicConnectionFactory;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

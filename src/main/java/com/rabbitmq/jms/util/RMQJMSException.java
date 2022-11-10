@@ -1,7 +1,7 @@
 /* Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved. */
 package com.rabbitmq.jms.util;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 /**
  * Wraps an exception as a {@link JMSException}.

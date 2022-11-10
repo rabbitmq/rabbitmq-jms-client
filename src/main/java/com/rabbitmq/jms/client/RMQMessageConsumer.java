@@ -12,16 +12,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.jms.IllegalStateException;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.Queue;
-import javax.jms.QueueReceiver;
-import javax.jms.Session;
-import javax.jms.Topic;
-import javax.jms.TopicSubscriber;
+import jakarta.jms.IllegalStateException;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageListener;
+import jakarta.jms.Queue;
+import jakarta.jms.QueueReceiver;
+import jakarta.jms.Session;
+import jakarta.jms.Topic;
+import jakarta.jms.TopicSubscriber;
 
 import com.rabbitmq.jms.util.RMQJMSException;
 import org.slf4j.Logger;
@@ -90,7 +90,7 @@ class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscri
 
     /**
      * Whether requeue message on {@link RuntimeException} in the
-     * {@link javax.jms.MessageListener} or not.
+     * {@link jakarta.jms.MessageListener} or not.
      */
     private final boolean requeueOnMessageListenerException;
 
@@ -103,7 +103,7 @@ class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscri
      * @param destination - the destination for this consumer
      * @param uuidTag - when creating queues to a topic, we need a unique queue name for each consumer. This is the
      *            unique name.
-     * @param paused - true if the connection is {@link javax.jms.Connection#stop}ped, false otherwise.
+     * @param paused - true if the connection is {@link jakarta.jms.Connection#stop}ped, false otherwise.
      * @param requeueOnMessageListenerException true to requeue message on RuntimeException in listener, false otherwise
      */
     RMQMessageConsumer(RMQSession session, RMQDestination destination, String uuidTag, boolean paused, String messageSelector, boolean requeueOnMessageListenerException,
@@ -248,12 +248,12 @@ class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscri
     /**
      * Receive a single message from the destination, waiting for up to <code>timeout</code> milliseconds if necessary.
      * <p>
-     * The JMS 1.1 specification for {@link javax.jms.Connection#stop()} says:
+     * The JMS 1.1 specification for {@link jakarta.jms.Connection#stop()} says:
      * </p>
      * <blockquote>
      * <p>
      * When the connection is stopped, delivery to all the connection's message consumers is inhibited: synchronous
-     * receives block, and messages are not delivered to message listeners. {@link javax.jms.Connection#stop()} blocks until
+     * receives block, and messages are not delivered to message listeners. {@link jakarta.jms.Connection#stop()} blocks until
      * receives and/or message listeners in progress have completed.
      * </p>
      * </blockquote>
@@ -321,11 +321,11 @@ class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscri
 
     String rmqQueueName() {
         if (this.destination.isQueue()) {
-            /* javax.jms.Queue we share a single AMQP queue among all consumers hence the name will the the name of the
+            /* jakarta.jms.Queue we share a single AMQP queue among all consumers hence the name will the the name of the
              * destination */
             return this.destination.getAmqpQueueName();
         } else {
-            /* javax.jms.Topic we created a unique AMQP queue for each consumer and that name is unique for this
+            /* jakarta.jms.Topic we created a unique AMQP queue for each consumer and that name is unique for this
              * consumer alone */
             return this.getUUIDTag();
         }
@@ -510,7 +510,7 @@ class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscri
 
     /**
      * Stops this consumer from receiving messages. This is called by the session indirectly when
-     * {@link javax.jms.Connection#stop()} is invoked. In this implementation, any async consumers will be cancelled,
+     * {@link jakarta.jms.Connection#stop()} is invoked. In this implementation, any async consumers will be cancelled,
      * only to be re-subscribed when <code>resume()</code>d.
      *
      * @throws InterruptedException if the thread is interrupted
@@ -524,8 +524,8 @@ class RMQMessageConsumer implements MessageConsumer, QueueReceiver, TopicSubscri
     /**
      * Resubscribes all async listeners and continues to receive messages
      *
-     * @see javax.jms.Connection#start()
-     * @throws javax.jms.JMSException if the thread is interrupted
+     * @see jakarta.jms.Connection#start()
+     * @throws jakarta.jms.JMSException if the thread is interrupted
      */
     void resume() throws JMSException {
         try {

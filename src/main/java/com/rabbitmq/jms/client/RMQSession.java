@@ -24,31 +24,31 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 
-import javax.jms.BytesMessage;
-import javax.jms.Destination;
-import javax.jms.IllegalStateException;
-import javax.jms.JMSException;
-import javax.jms.JMSRuntimeException;
-import javax.jms.MapMessage;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
-import javax.jms.Queue;
-import javax.jms.QueueBrowser;
-import javax.jms.QueueReceiver;
-import javax.jms.QueueSender;
-import javax.jms.QueueSession;
-import javax.jms.Session;
-import javax.jms.StreamMessage;
-import javax.jms.TemporaryQueue;
-import javax.jms.TemporaryTopic;
-import javax.jms.TextMessage;
-import javax.jms.Topic;
-import javax.jms.TopicPublisher;
-import javax.jms.TopicSession;
-import javax.jms.TopicSubscriber;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.Destination;
+import jakarta.jms.IllegalStateException;
+import jakarta.jms.JMSException;
+import jakarta.jms.JMSRuntimeException;
+import jakarta.jms.MapMessage;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageListener;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.ObjectMessage;
+import jakarta.jms.Queue;
+import jakarta.jms.QueueBrowser;
+import jakarta.jms.QueueReceiver;
+import jakarta.jms.QueueSender;
+import jakarta.jms.QueueSession;
+import jakarta.jms.Session;
+import jakarta.jms.StreamMessage;
+import jakarta.jms.TemporaryQueue;
+import jakarta.jms.TemporaryTopic;
+import jakarta.jms.TextMessage;
+import jakarta.jms.Topic;
+import jakarta.jms.TopicPublisher;
+import jakarta.jms.TopicSession;
+import jakarta.jms.TopicSubscriber;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.jms.util.WhiteListObjectInputStream;
@@ -94,7 +94,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * Whether requeue message on {@link RuntimeException} in the
-     * {@link javax.jms.MessageListener} or not.
+     * {@link jakarta.jms.MessageListener} or not.
      * Default is false.
      */
     private final boolean requeueOnMessageListenerException;
@@ -649,7 +649,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     public void recover() throws JMSException {
         illegalStateExceptionIfClosed();
         if (getTransactedNoException()) {
-            throw new javax.jms.IllegalStateException("Session is transacted.");
+            throw new jakarta.jms.IllegalStateException("Session is transacted.");
         } else {
             synchronized (this.unackedMessageTags) {
                 /* If we have messages to recover */
@@ -1222,11 +1222,11 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * Stops all consumers from receiving messages. This is called by the
-     * session indirectly after {@link javax.jms.Connection#stop()} has been
+     * session indirectly after {@link jakarta.jms.Connection#stop()} has been
      * invoked. In this implementation, any async consumers will be cancelled,
      * only to be re-subscribed when
      *
-     * @throws javax.jms.JMSException if the thread is interrupted
+     * @throws jakarta.jms.JMSException if the thread is interrupted
      */
     void pause() throws JMSException {
         for (RMQMessageConsumer consumer : this.consumers) {
@@ -1247,8 +1247,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     /**
      * Resubscribes all async listeners and continues to receive messages
      *
-     * @see javax.jms.Connection#stop()
-     * @throws javax.jms.JMSException if the thread is interrupted
+     * @see jakarta.jms.Connection#stop()
+     * @throws jakarta.jms.JMSException if the thread is interrupted
      */
     void resume() throws JMSException {
         for (RMQMessageConsumer consumer : this.consumers) {
@@ -1270,7 +1270,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /**
      * Acknowledges messages in this session.
-     * Invoked when the method {@link javax.jms.Message#acknowledge()} is called.
+     * Invoked when the method {@link jakarta.jms.Message#acknowledge()} is called.
      * @param message - the message to be acknowledged, or the carrier to acknowledge all messages
      */
     void acknowledgeMessage(RMQMessage message) throws JMSException {

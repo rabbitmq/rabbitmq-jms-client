@@ -7,7 +7,7 @@ package com.rabbitmq.integration.tests;
 
 import org.junit.jupiter.api.Test;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

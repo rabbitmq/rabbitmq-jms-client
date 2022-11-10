@@ -5,8 +5,8 @@
 // Copyright (c) 2019-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
-import javax.jms.CompletionListener;
-import javax.jms.Message;
+import jakarta.jms.CompletionListener;
+import jakarta.jms.Message;
 
 /**
  * Internal interface to notify about a published message when publisher confirms are enabled.

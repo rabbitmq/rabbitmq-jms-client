@@ -9,8 +9,8 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 
-import javax.jms.Message;
-import javax.jms.MessageProducer;
+import jakarta.jms.Message;
+import jakarta.jms.MessageProducer;
 import java.util.function.BiFunction;
 import java.util.List;
 
@@ -48,7 +48,7 @@ public class ConnectionParams {
 
     /**
      * Whether requeue message on {@link RuntimeException} in the
-     * {@link javax.jms.MessageListener} or not.
+     * {@link jakarta.jms.MessageListener} or not.
      * Default is false.
      *
      * @since 1.7.0

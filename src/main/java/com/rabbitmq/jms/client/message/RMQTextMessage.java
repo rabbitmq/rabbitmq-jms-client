@@ -12,9 +12,9 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.UnsupportedEncodingException;
 
-import javax.jms.JMSException;
-import javax.jms.MessageNotWriteableException;
-import javax.jms.TextMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageNotWriteableException;
+import jakarta.jms.TextMessage;
 
 import com.rabbitmq.jms.client.RMQMessage;
 

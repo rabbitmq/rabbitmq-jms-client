@@ -9,16 +9,16 @@ import static com.rabbitmq.jms.client.Utils.wrap;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import javax.jms.JMSConsumer;
-import javax.jms.JMSException;
-import javax.jms.JMSRuntimeException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageFormatException;
-import javax.jms.MessageFormatRuntimeException;
-import javax.jms.MessageListener;
-import javax.jms.Session;
-import javax.jms.StreamMessage;
+import jakarta.jms.JMSConsumer;
+import jakarta.jms.JMSException;
+import jakarta.jms.JMSRuntimeException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageFormatException;
+import jakarta.jms.MessageFormatRuntimeException;
+import jakarta.jms.MessageListener;
+import jakarta.jms.Session;
+import jakarta.jms.StreamMessage;
 
 class RmqJmsConsumer implements JMSConsumer {
 

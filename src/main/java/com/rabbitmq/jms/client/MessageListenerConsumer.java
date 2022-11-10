@@ -9,8 +9,8 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import javax.jms.JMSException;
-import javax.jms.MessageListener;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageListener;
 
 import com.rabbitmq.jms.util.RMQJMSException;
 import org.slf4j.Logger;
@@ -59,7 +59,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
      * Constructor
      * @param messageConsumer to which this Rabbit Consumer belongs
      * @param channel Rabbit channel this Consumer uses
-     * @param messageListener to call {@link MessageListener#onMessage(javax.jms.Message) onMessage(Message)} with received messages
+     * @param messageListener to call {@link MessageListener#onMessage(jakarta.jms.Message) onMessage(Message)} with received messages
      * @param terminationTimeout wait time (in nanoseconds) for cancel to take effect
      */
     MessageListenerConsumer(RMQMessageConsumer messageConsumer, Channel channel, MessageListener messageListener, long terminationTimeout,

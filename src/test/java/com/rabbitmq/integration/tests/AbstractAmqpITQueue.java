@@ -5,8 +5,8 @@
 // Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
+import jakarta.jms.QueueConnection;
+import jakarta.jms.QueueConnectionFactory;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

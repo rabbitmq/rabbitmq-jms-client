@@ -6,12 +6,12 @@
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.Channel;
-import javax.jms.CompletionListener;
+import jakarta.jms.CompletionListener;
 import org.junit.jupiter.api.Test;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.TextMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.TextMessage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

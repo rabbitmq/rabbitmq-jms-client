@@ -13,12 +13,12 @@ import com.rabbitmq.jms.client.RMQConnection;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.concurrent.TimeoutException;
-import javax.jms.Message;
-import javax.jms.Queue;
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
-import javax.jms.QueueReceiver;
-import javax.jms.QueueSession;
+import jakarta.jms.Message;
+import jakarta.jms.Queue;
+import jakarta.jms.QueueConnection;
+import jakarta.jms.QueueConnectionFactory;
+import jakarta.jms.QueueReceiver;
+import jakarta.jms.QueueSession;
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import org.junit.jupiter.api.AfterEach;

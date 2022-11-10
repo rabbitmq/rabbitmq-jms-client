@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;

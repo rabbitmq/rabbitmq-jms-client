@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.Test;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;

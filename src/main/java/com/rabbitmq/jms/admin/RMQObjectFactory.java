@@ -11,10 +11,10 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSException;
-import javax.jms.Queue;
-import javax.jms.Topic;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.JMSException;
+import jakarta.jms.Queue;
+import jakarta.jms.Topic;
 import javax.naming.Context;
 import javax.naming.Name;
 import javax.naming.NamingException;
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * An example Tomcat configuration for a {@link ConnectionFactory} would look like:
  * </p>
  * <pre>
- * &lt;Resource name=&quot;jms/ConnectionFactory&quot; type=&quot;javax.jms.ConnectionFactory&quot;
+ * &lt;Resource name=&quot;jms/ConnectionFactory&quot; type=&quot;jakarta.jms.ConnectionFactory&quot;
  *           factory=&quot;com.rabbitmq.jms.admin.RMQObjectFactory&quot;
  *           username=&quot;guest&quot;
  *           password=&quot;guest&quot;
@@ -41,20 +41,20 @@ import org.slf4j.LoggerFactory;
  * <p>Alternatively, a <a href="https://www.rabbitmq.com/uri-spec.html">AMQP uri</a> can be used:
  * </p>
  * <pre>
- * &lt;Resource name=&quot;jms/ConnectionFactory&quot; type=&quot;javax.jms.ConnectionFactory&quot;
+ * &lt;Resource name=&quot;jms/ConnectionFactory&quot; type=&quot;jakarta.jms.ConnectionFactory&quot;
  *           factory=&quot;com.rabbitmq.jms.admin.RMQObjectFactory&quot;
  *           uri=&quot;amqp://guest:guest@127.0.0.1&quot;
  * </pre>
  * <p>
- * the type attribute can be {@link javax.jms.ConnectionFactory}, {@link javax.jms.QueueConnectionFactory},
- * {@link javax.jms.TopicConnectionFactory} or the actual classname of the implementation,
+ * the type attribute can be {@link jakarta.jms.ConnectionFactory}, {@link jakarta.jms.QueueConnectionFactory},
+ * {@link jakarta.jms.TopicConnectionFactory} or the actual classname of the implementation,
  * {@link com.rabbitmq.jms.admin.RMQConnectionFactory}.
  * </p>
  * <p>
  * A destination, {@link Queue} or {@link Topic}, can be created using the following configuration ({@link Queue} first):
  * </p>
  * <pre>
- * &lt;Resource name=&quot;jms/Queue&quot; type=&quot;javax.jms.Queue&quot;
+ * &lt;Resource name=&quot;jms/Queue&quot; type=&quot;jakarta.jms.Queue&quot;
  *           factory=&quot;com.rabbitmq.jms.admin.RMQObjectFactory&quot;
  *           destinationName=&quot;queueName&quot;/&gt;
  * </pre>
@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
  * and a {@link Topic} would be created thus:
  * </p>
  * <pre>
- * &lt;Resource name=&quot;jms/Topic&quot; type=&quot;javax.jms.Topic&quot;
+ * &lt;Resource name=&quot;jms/Topic&quot; type=&quot;jakarta.jms.Topic&quot;
  *           factory=&quot;com.rabbitmq.jms.admin.RMQObjectFactory&quot;
  *           destinationName=&quot;topicName&quot;/&gt;
  * </pre>
@@ -72,7 +72,7 @@ import org.slf4j.LoggerFactory;
  * <pre>
  * &lt;object-factory name=&quot;java:global/jms/ConnectionFactory&quot; module=&quot;org.jboss.genericjms.provider&quot; class=&quot;com.rabbitmq.jms.admin.RMQObjectFactory&quot;&gt;
  *     &lt;environment&gt;
- *         &lt;property name=&quot;className&quot; value=&quot;javax.jms.ConnectionFactory&quot;/&gt;
+ *         &lt;property name=&quot;className&quot; value=&quot;jakarta.jms.ConnectionFactory&quot;/&gt;
  *         &lt;property name=&quot;username&quot; value=&quot;guest&quot;/&gt;
  *         &lt;property name=&quot;password&quot; value=&quot;guest&quot;/&gt;
  *         &lt;property name=&quot;virtualHost&quot; value=&quot;/&quot;/&gt;
@@ -84,11 +84,11 @@ import org.slf4j.LoggerFactory;
  * Valid types are:
  * </p>
  * <pre>
- * javax.jms.ConnectionFactory
- * javax.jms.QueueConnectionFactory
- * javax.jms.TopicConnectionFactory
- * javax.jms.Topic
- * javax.jms.Queue
+ * jakarta.jms.ConnectionFactory
+ * jakarta.jms.QueueConnectionFactory
+ * jakarta.jms.TopicConnectionFactory
+ * jakarta.jms.Topic
+ * jakarta.jms.Queue
  * </pre>
  * <p>
  * Valid properties for a {@link ConnectionFactory} are:
@@ -147,26 +147,26 @@ public class RMQObjectFactory implements ObjectFactory {
 
         /*
          * Valid class names are:
-         * javax.jms.ConnectionFactory
-         * javax.jms.QueueConnectionFactory
-         * javax.jms.TopicConnectionFactory
+         * jakarta.jms.ConnectionFactory
+         * jakarta.jms.QueueConnectionFactory
+         * jakarta.jms.TopicConnectionFactory
          * com.rabbitmq.jms.admin.RMQConnectionFactory
-         * javax.jms.Topic
-         * javax.jms.Queue
+         * jakarta.jms.Topic
+         * jakarta.jms.Queue
          * com.rabbitmq.jms.admin.RMQDestination
          *
          */
         boolean topic = false;
         boolean connectionFactory = false;
-        if (  javax.jms.QueueConnectionFactory.class.getName().equals(className)
-           || javax.jms.TopicConnectionFactory.class.getName().equals(className)
-           || javax.jms.ConnectionFactory.class.getName().equals(className)
+        if (  jakarta.jms.QueueConnectionFactory.class.getName().equals(className)
+           || jakarta.jms.TopicConnectionFactory.class.getName().equals(className)
+           || jakarta.jms.ConnectionFactory.class.getName().equals(className)
            || RMQConnectionFactory.class.getName().equals(className)
            ) {
             connectionFactory = true;
-        } else if (javax.jms.Topic.class.getName().equals(className)) {
+        } else if (jakarta.jms.Topic.class.getName().equals(className)) {
             topic = true;
-        } else if (javax.jms.Queue.class.getName().equals(className)) {
+        } else if (jakarta.jms.Queue.class.getName().equals(className)) {
         } else if (RMQDestination.class.getName().equals(className)) {
             topic = !getBooleanProperty(ref, environment, "isQueue", true, false);
         } else {

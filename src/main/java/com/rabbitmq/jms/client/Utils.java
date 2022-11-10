@@ -9,9 +9,9 @@ package com.rabbitmq.jms.client;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.function.Predicate;
-import javax.jms.JMSException;
-import javax.jms.JMSRuntimeException;
-import javax.jms.MessageFormatException;
+import jakarta.jms.JMSException;
+import jakarta.jms.JMSRuntimeException;
+import jakarta.jms.MessageFormatException;
 
 abstract class Utils {
 

@@ -16,7 +16,7 @@ import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.RMQMessageConsumer.ClosedListener;
 import com.rabbitmq.jms.client.Subscription.Context;
 import com.rabbitmq.jms.client.Subscription.PostAction;
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,7 +1,7 @@
 /* Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved. */
 package com.rabbitmq.jms.util;
 
-import javax.jms.Connection;
+import jakarta.jms.Connection;
 
 /**
  * Internal exception to indicate that waiting API call has been cancelled by other API action -- e.g. {@link Connection#close()}.

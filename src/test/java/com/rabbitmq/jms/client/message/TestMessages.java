@@ -17,12 +17,12 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.jms.BytesMessage;
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
-import javax.jms.ObjectMessage;
-import javax.jms.StreamMessage;
-import javax.jms.TextMessage;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.MapMessage;
+import jakarta.jms.ObjectMessage;
+import jakarta.jms.StreamMessage;
+import jakarta.jms.TextMessage;
 
 import com.rabbitmq.jms.util.RMQJMSException;
 import org.junit.jupiter.api.Test;

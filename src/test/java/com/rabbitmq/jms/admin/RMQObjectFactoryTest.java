@@ -7,7 +7,7 @@ package com.rabbitmq.jms.admin;
 
 import org.junit.jupiter.api.Test;
 
-import javax.jms.ConnectionFactory;
+import jakarta.jms.ConnectionFactory;
 import javax.naming.CompositeName;
 import javax.naming.NamingException;
 import javax.naming.Reference;
@@ -51,7 +51,7 @@ public class RMQObjectFactoryTest {
     public void getObjectInstanceShouldCreateAMQPConnectionFactoryViaEnvironment() throws Exception {
 
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
-            put("className", "javax.jms.ConnectionFactory");
+            put("className", "jakarta.jms.ConnectionFactory");
             put("username", "remi");
             put("password", "1234");
             put("virtualHost", "/fake");
@@ -78,7 +78,7 @@ public class RMQObjectFactoryTest {
     @Test
     public void keepTextMessageTypePropertyIsSetOnConnectionFactory() throws Exception {
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
-            put("className", "javax.jms.ConnectionFactory");
+            put("className", "jakarta.jms.ConnectionFactory");
             put("keepTextMessageType", "true");
         }};
 
@@ -93,7 +93,7 @@ public class RMQObjectFactoryTest {
     @Test
     public void urisOnRmqObjectFactoryShouldBeEnforced() throws Exception {
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
-            put("className", "javax.jms.ConnectionFactory");
+            put("className", "jakarta.jms.ConnectionFactory");
             put("uris", "amqp://user:pass@host-0:10000/vhost,amqp://user:pass@host-1:10000/vhost");
         }};
 
@@ -118,7 +118,7 @@ public class RMQObjectFactoryTest {
     public void getObjectInstanceShouldCreateAMQPDestinationQUEUEViaEnvironment() throws Exception {
 
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
-            put("className", "javax.jms.Queue");
+            put("className", "jakarta.jms.Queue");
             put("destinationName", "TEST_QUEUE");
         }};
 
@@ -139,7 +139,7 @@ public class RMQObjectFactoryTest {
     public void getObjectInstanceShouldCreateAMQPDestinationTOPICViaEnvironment() throws Exception {
 
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
-            put("className", "javax.jms.Topic");
+            put("className", "jakarta.jms.Topic");
             put("destinationName", "TEST_TOPIC");
         }};
 
@@ -160,7 +160,7 @@ public class RMQObjectFactoryTest {
     public void getObjectInstanceShouldThrowNamingExceptionWhenMissingRequiredPropertyViaEnvironment() throws Exception {
 
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
-            put("className", "javax.jms.Queue");
+            put("className", "jakarta.jms.Queue");
             put("amqp", "true");
         }};
 
@@ -240,7 +240,7 @@ public class RMQObjectFactoryTest {
             + "random-key=random-value"
             ;
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
-            put("className", "javax.jms.Queue");
+            put("className", "jakarta.jms.Queue");
             put("destinationName", "TEST_QUEUE");
             put("queueDeclareArguments", queueDeclareArguments);
         }};
@@ -287,7 +287,7 @@ public class RMQObjectFactoryTest {
         // the conversion will fail but we keep the original value
         String queueDeclareArguments = "x-expires=bad-value";
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
-            put("className", "javax.jms.Queue");
+            put("className", "jakarta.jms.Queue");
             put("destinationName", "TEST_QUEUE");
             put("queueDeclareArguments", queueDeclareArguments);
         }};
@@ -312,7 +312,7 @@ public class RMQObjectFactoryTest {
     void getObjectInstanceQueueDeclareArgumentsAreIgnoredForAmqpDestination() throws Exception {
         String queueDeclareArguments = "x-expires=1000";
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
-            put("className", "javax.jms.Queue");
+            put("className", "jakarta.jms.Queue");
             put("destinationName", "TEST_QUEUE");
             put("amqp", "true");
             put("amqpExchangeName", "ex");

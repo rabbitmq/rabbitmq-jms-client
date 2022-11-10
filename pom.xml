@@ -6,7 +6,7 @@
 
   <name>rabbitmq-jms</name>
   <description>RabbitMQ JMS Client</description>
-  <version>2.7.0-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
   <url>https://www.rabbitmq.com</url>
 
   <packaging>jar</packaging>
@@ -45,7 +45,7 @@
     <junit.jupiter.version>5.9.1</junit.jupiter.version>
     <mockito-core.version>4.8.1</mockito-core.version>
     <assertj.version>3.23.1</assertj.version>
-    <spring.version>5.3.23</spring.version>
+    <spring.version>6.0.0-RC4</spring.version>
     <logback.version>1.2.11</logback.version>
 
     <maven.dependency.plugin.version>3.3.0</maven.dependency.plugin.version>
@@ -62,8 +62,9 @@
     <maven.packagecloud.wagon.version>0.0.6</maven.packagecloud.wagon.version>
     <nexus-staging-maven-plugin.version>1.6.13</nexus-staging-maven-plugin.version>
     <checksum.maven.plugin.version>1.11</checksum.maven.plugin.version>
+    <build-helper-plugin.version>3.3.0</build-helper-plugin.version>
 
-    <java.compile.version>1.8</java.compile.version>
+    <java.compile.version>11</java.compile.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <javadoc.opts>-Xdoclint:none</javadoc.opts>
     <maven.javadoc.skip>true</maven.javadoc.skip>
@@ -79,9 +80,9 @@
 
     <!-- compile scope -->
     <dependency>
-      <groupId>javax.jms</groupId>
-      <artifactId>javax.jms-api</artifactId>
-      <version>2.0.1</version>
+      <groupId>jakarta.jms</groupId>
+      <artifactId>jakarta.jms-api</artifactId>
+      <version>3.0.0</version>
     </dependency>
 
     <dependency>
@@ -237,12 +238,6 @@
       </plugin>
 
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>${build.helper.maven.plugin.version}</version>
-      </plugin>
-
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
         <version>${maven.sources.plugin.version}</version>
@@ -294,7 +289,38 @@
 
   <profiles>
 
-    <profile>
+   <profile>
+     <id>spring-tests</id>
+     <activation>
+       <jdk>[17,)</jdk>
+     </activation>
+     <build>
+       <plugins>
+         <plugin>
+           <groupId>org.codehaus.mojo</groupId>
+           <artifactId>build-helper-maven-plugin</artifactId>
+           <version>${build-helper-plugin.version}</version>
+           <executions>
+             <execution>
+               <id>add-test-source</id>
+               <phase>generate-test-sources</phase>
+               <goals>
+                 <goal>add-test-source</goal>
+               </goals>
+               <configuration>
+                 <sources>
+                   <source>src/test/spring</source>
+                 </sources>
+               </configuration>
+             </execution>
+           </executions>
+         </plugin>
+       </plugins>
+     </build>
+
+   </profile>
+
+  <profile>
       <id>snapshots</id>
       <properties>
         <!--
@@ -405,6 +431,17 @@
     <repository>
       <id>packagecloud-rabbitmq-maven-milestones</id>
       <url>https://packagecloud.io/rabbitmq/maven-milestones/maven2</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>spring-milestone</id>
+      <name>Spring Milestone Repository</name>
+      <url>https://repo.spring.io/milestone</url>
       <releases>
         <enabled>true</enabled>
       </releases>

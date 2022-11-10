@@ -5,7 +5,7 @@
 // Copyright (c) 2019-2020 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
-import javax.jms.Message;
+import jakarta.jms.Message;
 
 /**
  * Information an outbound message being confirmed.

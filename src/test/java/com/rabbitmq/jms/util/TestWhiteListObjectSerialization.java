@@ -9,7 +9,7 @@ import com.rabbitmq.jms.client.message.RMQObjectMessage;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;

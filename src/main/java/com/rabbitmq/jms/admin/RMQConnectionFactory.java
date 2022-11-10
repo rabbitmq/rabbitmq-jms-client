@@ -13,7 +13,6 @@ import com.rabbitmq.jms.client.ConfirmListener;
 import com.rabbitmq.jms.client.ConnectionParams;
 import com.rabbitmq.jms.client.RMQConnection;
 import com.rabbitmq.jms.client.RMQMessage;
-import com.rabbitmq.jms.client.RMQSession;
 import com.rabbitmq.jms.client.ReceivingContext;
 import com.rabbitmq.jms.client.ReceivingContextConsumer;
 import com.rabbitmq.jms.client.RmqJmsContext;
@@ -33,23 +32,23 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import javax.jms.BytesMessage;
-import javax.jms.CompletionListener;
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
-import javax.jms.JMSContext;
-import javax.jms.JMSException;
-import javax.jms.JMSRuntimeException;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-import javax.jms.TopicConnection;
-import javax.jms.TopicConnectionFactory;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.CompletionListener;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSContext;
+import jakarta.jms.JMSException;
+import jakarta.jms.JMSRuntimeException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageListener;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.QueueConnection;
+import jakarta.jms.QueueConnectionFactory;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
+import jakarta.jms.TopicConnection;
+import jakarta.jms.TopicConnectionFactory;
 import javax.naming.NamingException;
 import javax.naming.RefAddr;
 import javax.naming.Reference;
@@ -96,7 +95,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     /**
      * Whether requeue message on {@link RuntimeException} in the
-     * {@link javax.jms.MessageListener} or not.
+     * {@link jakarta.jms.MessageListener} or not.
      * Default is false.
      *
      * @since 1.7.0
@@ -471,7 +470,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * @return list of package prefixes that are whitelisted for transfer over {@link javax.jms.ObjectMessage}
+     * @return list of package prefixes that are whitelisted for transfer over {@link jakarta.jms.ObjectMessage}
      */
     public List<String> getTrustedPackages() {
         return trustedPackages;
@@ -928,7 +927,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     /**
      * Whether requeue message on {@link RuntimeException} in the
-     * {@link javax.jms.MessageListener} or not.
+     * {@link jakarta.jms.MessageListener} or not.
      *
      * Default is false.
      *
@@ -1077,12 +1076,12 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * @see <a href="https://www.rabbitmq.com/confirms.html#publisher-confirms">Publisher Confirms</a>
      * @see <a href="https://www.rabbitmq.com/publishers.html#data-safety">Publisher Guide</a>
      * @see ConfirmListener
-     * @see javax.jms.MessageProducer#send(Message, CompletionListener)
-     * @see javax.jms.MessageProducer#send(Destination, Message, CompletionListener)
-     * @see javax.jms.MessageProducer#send(Message, int, int, long, CompletionListener)
-     * @see javax.jms.MessageProducer#send(Destination, Message, int, int, long, CompletionListener)
+     * @see jakarta.jms.MessageProducer#send(Message, CompletionListener)
+     * @see jakarta.jms.MessageProducer#send(Destination, Message, CompletionListener)
+     * @see jakarta.jms.MessageProducer#send(Message, int, int, long, CompletionListener)
+     * @see jakarta.jms.MessageProducer#send(Destination, Message, int, int, long, CompletionListener)
      * @since 1.13.0
-     * @deprecated Use the {@link javax.jms.MessageProducer} <code>send</code> methods with a {@link javax.jms.CompletionListener}
+     * @deprecated Use the {@link jakarta.jms.MessageProducer} <code>send</code> methods with a {@link jakarta.jms.CompletionListener}
      */
     @Deprecated
     public void setConfirmListener(ConfirmListener confirmListener) {

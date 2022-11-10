@@ -26,10 +26,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
-import javax.jms.Destination;
-import javax.jms.IllegalStateException;
-import javax.jms.InvalidSelectorException;
-import javax.jms.JMSException;
+import jakarta.jms.Destination;
+import jakarta.jms.IllegalStateException;
+import jakarta.jms.InvalidSelectorException;
+import jakarta.jms.JMSException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

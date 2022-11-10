@@ -5,9 +5,9 @@
 // Copyright (c) 2019-2020 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
-import javax.jms.CompletionListener;
-import javax.jms.Destination;
-import javax.jms.Message;
+import jakarta.jms.CompletionListener;
+import jakarta.jms.Destination;
+import jakarta.jms.Message;
 
 /**
  * Listener to be notified of publisher confirms.
@@ -32,12 +32,12 @@ import javax.jms.Message;
  * @see <a href="https://www.rabbitmq.com/confirms.html#publisher-confirms">Publisher Confirms</a>
  * @see <a href="https://www.rabbitmq.com/publishers.html#data-safety">Publisher Guide</a>
  * @see com.rabbitmq.jms.admin.RMQConnectionFactory#setConfirmListener(ConfirmListener)
- * @see javax.jms.MessageProducer#send(Message, CompletionListener)
- * @see javax.jms.MessageProducer#send(Destination, Message, CompletionListener)
- * @see javax.jms.MessageProducer#send(Message, int, int, long, CompletionListener)
- * @see javax.jms.MessageProducer#send(Destination, Message, int, int, long, CompletionListener)
+ * @see jakarta.jms.MessageProducer#send(Message, CompletionListener)
+ * @see jakarta.jms.MessageProducer#send(Destination, Message, CompletionListener)
+ * @see jakarta.jms.MessageProducer#send(Message, int, int, long, CompletionListener)
+ * @see jakarta.jms.MessageProducer#send(Destination, Message, int, int, long, CompletionListener)
  * @since 1.13.0
- * @deprecated Use the {@link javax.jms.MessageProducer} <code>send</code> methods with a {@link javax.jms.CompletionListener}
+ * @deprecated Use the {@link jakarta.jms.MessageProducer} <code>send</code> methods with a {@link jakarta.jms.CompletionListener}
  */
 @Deprecated
 @FunctionalInterface

@@ -9,7 +9,7 @@ import com.rabbitmq.jms.client.Completion;
 import com.rabbitmq.jms.util.Shell;
 import org.junit.jupiter.api.Test;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;

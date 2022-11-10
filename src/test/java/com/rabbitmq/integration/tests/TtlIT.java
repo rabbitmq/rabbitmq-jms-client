@@ -14,7 +14,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;

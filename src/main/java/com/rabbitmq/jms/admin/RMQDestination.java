@@ -5,12 +5,12 @@ import java.io.Serializable;
 
 import java.util.Collections;
 import java.util.Map;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Queue;
-import javax.jms.TemporaryQueue;
-import javax.jms.TemporaryTopic;
-import javax.jms.Topic;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.Queue;
+import jakarta.jms.TemporaryQueue;
+import jakarta.jms.TemporaryTopic;
+import jakarta.jms.Topic;
 import javax.naming.NamingException;
 import javax.naming.RefAddr;
 import javax.naming.Reference;

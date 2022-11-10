@@ -9,8 +9,8 @@ import static com.rabbitmq.jms.client.Subscription.JMS_TYPE_IDENTS;
 
 import java.util.Enumeration;
 
-import javax.jms.JMSException;
-import javax.jms.QueueBrowser;
+import jakarta.jms.JMSException;
+import jakarta.jms.QueueBrowser;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.jms.admin.RMQDestination;
@@ -49,7 +49,7 @@ class BrowsingMessageQueue implements QueueBrowser {
         return evaluator;
     }
     @Override
-    public javax.jms.Queue getQueue() throws JMSException {
+    public jakarta.jms.Queue getQueue() throws JMSException {
         return this.dest;
     }
 
