@@ -6,8 +6,8 @@
 
 package com.rabbitmq.jms.client;
 
-import javax.jms.Destination;
-import javax.jms.Message;
+import jakarta.jms.Destination;
+import jakarta.jms.Message;
 
 /**
  * Context when sending message.

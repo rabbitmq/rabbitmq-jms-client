@@ -7,8 +7,8 @@ package com.rabbitmq.jms.client;
 
 import java.util.Enumeration;
 
-import javax.jms.ConnectionMetaData;
-import javax.jms.JMSException;
+import jakarta.jms.ConnectionMetaData;
+import jakarta.jms.JMSException;
 
 /**
  * Meta data for {@link RMQConnection}

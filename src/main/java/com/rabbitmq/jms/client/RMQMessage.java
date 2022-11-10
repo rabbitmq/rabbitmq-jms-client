@@ -24,17 +24,17 @@ import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.BytesMessage;
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
-import javax.jms.Message;
-import javax.jms.MessageFormatException;
-import javax.jms.MessageNotWriteableException;
-import javax.jms.ObjectMessage;
-import javax.jms.StreamMessage;
-import javax.jms.TextMessage;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.MapMessage;
+import jakarta.jms.Message;
+import jakarta.jms.MessageFormatException;
+import jakarta.jms.MessageNotWriteableException;
+import jakarta.jms.ObjectMessage;
+import jakarta.jms.StreamMessage;
+import jakarta.jms.TextMessage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -77,7 +77,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     protected static final String NOT_READABLE = "Message not readable";
     /** Error message when the message is not writeable */
     protected static final String NOT_WRITEABLE = "Message not writeable";
-    /** Error message used when throwing {@link javax.jms.MessageFormatException} */
+    /** Error message used when throwing {@link jakarta.jms.MessageFormatException} */
     protected static final String UNABLE_TO_CAST = "Unable to cast the object, %s, into the specified type %s";
     /** Error message when we get an EOF exception */
     protected static final String MSG_EOF = "Message EOF";
@@ -1170,7 +1170,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @return RabbitMQ delivery mode value
      */
     static int rmqDeliveryMode(int deliveryMode) {
-        return (deliveryMode == javax.jms.DeliveryMode.PERSISTENT ? 2 : 1);
+        return (deliveryMode == jakarta.jms.DeliveryMode.PERSISTENT ? 2 : 1);
     }
 
     /**
@@ -1180,8 +1180,8 @@ public abstract class RMQMessage implements Message, Cloneable {
     private static int jmsDeliveryMode(Integer rmqDeliveryMode) {
         return ( ( rmqDeliveryMode != null
                 && rmqDeliveryMode == 2
-                 ) ? javax.jms.DeliveryMode.PERSISTENT
-                   : javax.jms.DeliveryMode.NON_PERSISTENT);
+                 ) ? jakarta.jms.DeliveryMode.PERSISTENT
+                   : jakarta.jms.DeliveryMode.NON_PERSISTENT);
     }
 
     /**

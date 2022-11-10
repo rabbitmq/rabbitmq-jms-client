@@ -4,8 +4,8 @@ package com.rabbitmq.jms.util;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import javax.jms.JMSException;
-import javax.jms.MessageFormatException;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageFormatException;
 
 public class RMQByteArrayOutputStream extends ByteArrayOutputStream {
 

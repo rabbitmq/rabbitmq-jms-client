@@ -15,12 +15,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.rabbitmq.TestUtils;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.JMSContext;
+import jakarta.jms.JMSProducer;
+import jakarta.jms.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.jms.DeliveryMode;
-import javax.jms.JMSContext;
-import javax.jms.JMSProducer;
-import javax.jms.Queue;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,7 +56,6 @@ public class RmqJmsProducerIT extends AbstractAmqpITQueue {
   @Test
   void send() throws Exception {
     try (JMSContext context = this.connFactory.createContext()) {
-
       JMSProducer producer = context.createProducer();
 
       producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
@@ -68,7 +67,9 @@ public class RmqJmsProducerIT extends AbstractAmqpITQueue {
       assertThat(response)
           .isNotNull()
           .hasBody(BYTE_ARRAY)
-          .headers().containsOnlyKeys(
+          .headers()
+          .hasSize(5)
+          .containsKeys(
               "JMSMessageID", "JMSDeliveryMode", "JMSPriority", "JMSTimestamp",
               USER_STRING_PROPERTY_NAME)
           .containsEntry("JMSPriority", 9)

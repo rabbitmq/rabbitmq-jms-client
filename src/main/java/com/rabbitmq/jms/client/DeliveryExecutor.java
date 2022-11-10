@@ -13,8 +13,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import javax.jms.JMSException;
-import javax.jms.MessageListener;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageListener;
 
 import com.rabbitmq.jms.util.RMQJMSException;
 

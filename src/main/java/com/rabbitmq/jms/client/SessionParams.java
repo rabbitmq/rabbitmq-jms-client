@@ -8,8 +8,8 @@ package com.rabbitmq.jms.client;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 
-import javax.jms.Message;
-import javax.jms.MessageProducer;
+import jakarta.jms.Message;
+import jakarta.jms.MessageProducer;
 import java.util.List;
 import java.util.function.BiFunction;
 
@@ -43,7 +43,7 @@ public class SessionParams {
 
     /**
      * Whether requeue message on {@link RuntimeException} in the
-     * {@link javax.jms.MessageListener} or not.
+     * {@link jakarta.jms.MessageListener} or not.
      * Default is false.
      *
      * @since 1.7.0
@@ -100,13 +100,6 @@ public class SessionParams {
      * @since 1.11.0
      */
     private ReceivingContextConsumer receivingContextConsumer;
-
-    /**
-     * Callback for publisher confirms.
-     *
-     * @since 1.13.0
-     */
-    private ConfirmListener confirmListener;
 
     private boolean keepTextMessageType = false;
 
@@ -220,15 +213,6 @@ public class SessionParams {
 
     public ReceivingContextConsumer getReceivingContextConsumer() {
         return receivingContextConsumer;
-    }
-
-    public SessionParams setConfirmListener(ConfirmListener confirmListener) {
-        this.confirmListener = confirmListener;
-        return this;
-    }
-
-    public ConfirmListener getConfirmListener() {
-        return confirmListener;
     }
 
     public SessionParams setKeepTextMessageType(boolean keepTextMessageType) {

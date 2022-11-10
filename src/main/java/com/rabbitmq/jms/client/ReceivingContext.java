@@ -5,7 +5,7 @@
 // Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
-import javax.jms.Message;
+import jakarta.jms.Message;
 
 /**
  * Context when receiving message.

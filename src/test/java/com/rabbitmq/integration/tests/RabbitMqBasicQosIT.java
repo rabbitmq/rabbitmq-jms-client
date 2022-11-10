@@ -9,7 +9,7 @@ import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.jms.client.RMQConnection;
 import org.junit.jupiter.api.Test;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -140,7 +140,7 @@ public class RabbitMqBasicQosIT extends AbstractITQueue {
         return queueConnection;
     }
 
-    private static class MessageListener implements javax.jms.MessageListener {
+    private static class MessageListener implements jakarta.jms.MessageListener {
         private final AtomicInteger messageCount = new AtomicInteger(0);
         private final CountDownLatch latch;
         private final CountDownLatch ackLatch;

@@ -4,7 +4,7 @@ import com.rabbitmq.jms.client.message.RMQTextMessage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import java.io.IOException;
 import java.util.Map;
 

@@ -13,19 +13,19 @@ import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.util.RMQJMSException;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.jms.CompletionListener;
+import jakarta.jms.CompletionListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.Destination;
-import javax.jms.InvalidDestinationException;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.QueueSender;
-import javax.jms.Topic;
-import javax.jms.TopicPublisher;
+import jakarta.jms.Destination;
+import jakarta.jms.InvalidDestinationException;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Queue;
+import jakarta.jms.QueueSender;
+import jakarta.jms.Topic;
+import jakarta.jms.TopicPublisher;
 import java.io.IOException;
 import java.util.function.BiFunction;
 
@@ -64,7 +64,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     private final RMQSession session;
     /**
      * The default delivery mode used when a message is sent.
-     * @see javax.jms.DeliveryMode
+     * @see jakarta.jms.DeliveryMode
      */
     private int deliveryMode = Message.DEFAULT_DELIVERY_MODE;
     /**
@@ -310,8 +310,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             destination = this.destination;
         if (destination == null)
             throw new InvalidDestinationException("No destination supplied, or implied.");
-        if (deliveryMode != javax.jms.DeliveryMode.PERSISTENT)
-            deliveryMode = javax.jms.DeliveryMode.NON_PERSISTENT;
+        if (deliveryMode != jakarta.jms.DeliveryMode.PERSISTENT)
+            deliveryMode = jakarta.jms.DeliveryMode.NON_PERSISTENT;
 
         /* Normalise message to internal form */
         RMQMessage rmqMessage = RMQMessage.normalise(message);

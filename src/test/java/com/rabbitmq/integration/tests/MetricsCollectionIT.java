@@ -11,12 +11,12 @@ import com.rabbitmq.client.impl.AbstractMetricsCollector;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import org.junit.jupiter.api.Test;
 
-import javax.jms.DeliveryMode;
-import javax.jms.Queue;
-import javax.jms.QueueReceiver;
-import javax.jms.QueueSender;
-import javax.jms.QueueSession;
-import javax.jms.Session;
+import jakarta.jms.DeliveryMode;
+import jakarta.jms.Queue;
+import jakarta.jms.QueueReceiver;
+import jakarta.jms.QueueSender;
+import jakarta.jms.QueueSession;
+import jakarta.jms.Session;
 import java.io.Serializable;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

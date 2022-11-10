@@ -13,10 +13,10 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Enumeration;
 
-import javax.jms.BytesMessage;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MessageFormatException;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.Destination;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageFormatException;
 
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import org.junit.jupiter.api.Test;

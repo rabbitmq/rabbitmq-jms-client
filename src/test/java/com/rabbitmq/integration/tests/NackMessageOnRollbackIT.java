@@ -18,7 +18,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;

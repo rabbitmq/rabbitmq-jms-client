@@ -16,16 +16,16 @@ import java.io.Serializable;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Objects;
-import javax.jms.BytesMessage;
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.MapMessage;
-import javax.jms.Message;
-import javax.jms.MessageFormatException;
-import javax.jms.ObjectMessage;
-import javax.jms.QueueSession;
-import javax.jms.StreamMessage;
-import javax.jms.TextMessage;
+import jakarta.jms.BytesMessage;
+import jakarta.jms.Connection;
+import jakarta.jms.Destination;
+import jakarta.jms.MapMessage;
+import jakarta.jms.Message;
+import jakarta.jms.MessageFormatException;
+import jakarta.jms.ObjectMessage;
+import jakarta.jms.QueueSession;
+import jakarta.jms.StreamMessage;
+import jakarta.jms.TextMessage;
 
 import com.rabbitmq.jms.client.message.TestMessages;
 

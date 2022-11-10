@@ -14,9 +14,9 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.List;
 
-import javax.jms.JMSException;
-import javax.jms.MessageNotWriteableException;
-import javax.jms.ObjectMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.MessageNotWriteableException;
+import jakarta.jms.ObjectMessage;
 
 import com.rabbitmq.jms.client.RMQMessage;
 import com.rabbitmq.jms.util.RMQJMSException;
