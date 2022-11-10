@@ -18,6 +18,8 @@ import java.util.stream.IntStream;
 import javax.jms.JMSConsumer;
 import javax.jms.JMSContext;
 import javax.jms.JMSProducer;
+import javax.jms.JMSRuntimeException;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,6 +63,26 @@ public class RmqJmsContextIT extends AbstractAmqpITQueue {
     // there should be no messages left in the queue
     org.assertj.core.api.Assertions.assertThat(
         TestUtils.waitUntil(() -> channel.queueDeclarePassive(queueName).getMessageCount() == 0));
+  }
+
+  @Test
+  void setClientIdShouldFailAfterSessionCreation() {
+    try (JMSContext context = this.connFactory.createContext()) {
+      context.createProducer();
+      Assertions.assertThatThrownBy(() -> context.setClientID("foo"));
+      Assertions.assertThat(context.getClientID()).isNull();
+    }
+  }
+
+  @Test
+  void setClientIdCanBeSetOnlyOnce() {
+    try (JMSContext context = this.connFactory.createContext()) {
+      context.setClientID("foo");
+      Assertions.assertThat(context.getClientID()).isEqualTo("foo");
+      Assertions.assertThatThrownBy(() -> context.setClientID("foo")).isInstanceOf(
+          JMSRuntimeException.class);
+      Assertions.assertThat(context.getClientID()).isEqualTo("foo");
+    }
   }
 
 }

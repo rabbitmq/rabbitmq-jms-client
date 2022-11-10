@@ -1224,8 +1224,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
   public JMSContext createContext(String username, String password, int sessionMode) {
     try {
       RMQConnection connection = (RMQConnection) createConnection(username, password);
-      RMQSession session = (RMQSession) connection.createSession(sessionMode);
-      return new RmqJmsContext(connection, session);
+      return new RmqJmsContext(connection, sessionMode);
     } catch (JMSException e) {
       throw new JMSRuntimeException("Error while creating JMSContext", e.getErrorCode(), e);
     }

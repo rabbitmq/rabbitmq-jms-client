@@ -216,13 +216,17 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private final AtomicBoolean confirmSelectCalledOnChannel = new AtomicBoolean(false);
 
+    static boolean validateSessionMode(int sessionMode) {
+       return sessionMode >= 0 && sessionMode <= CLIENT_INDIVIDUAL_ACKNOWLEDGE;
+    }
+
     /**
      * Creates a session object associated with a connection
      * @param sessionParams parameters for this session
      * @throws JMSException if we fail to create a {@link Channel} object on the connection, or if the acknowledgement mode is incorrect
      */
     public RMQSession(SessionParams sessionParams) throws JMSException {
-        if (sessionParams.getMode() < 0 || sessionParams.getMode() > CLIENT_INDIVIDUAL_ACKNOWLEDGE) {
+        if (!validateSessionMode(sessionParams.getMode())) {
             throw new JMSException(String.format("cannot create session with acknowledgement mode = %d.", sessionParams.getMode()));
         }
         if (sessionParams.willRequeueOnTimeout() && !sessionParams.willRequeueOnMessageListenerException()) {
