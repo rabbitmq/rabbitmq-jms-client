@@ -51,7 +51,7 @@ public class RmqJmsContext implements JMSContext {
 
   @Override
   public JMSProducer createProducer() {
-    return new RmqJmsProducer(session, wrap(() -> session.createProducer(null)));
+    return new RmqJmsProducer(session, wrap(() -> this.session.createProducer(null)));
   }
 
   @Override
@@ -77,7 +77,7 @@ public class RmqJmsContext implements JMSContext {
 
   @Override
   public ExceptionListener getExceptionListener() {
-    return wrap(() -> this.connection.getExceptionListener());
+    return wrap(this.connection::getExceptionListener);
   }
 
   @Override
@@ -87,12 +87,12 @@ public class RmqJmsContext implements JMSContext {
 
   @Override
   public void start() {
-    wrap(() -> this.connection.start());
+    wrap(this.connection::start);
   }
 
   @Override
   public void stop() {
-    wrap(() -> this.connection.stop());
+    wrap(this.connection::stop);
   }
 
   @Override
@@ -108,78 +108,78 @@ public class RmqJmsContext implements JMSContext {
   @Override
   public void close() {
     try {
-      wrap(() -> this.session.close());
+      wrap(this.session::close);
     } catch (Exception e) {
       LOGGER.warn("Error while closing context session: {}", e.getMessage());
     }
     if (!this.connection.hasSessions()) {
-      wrap(() -> this.connection.close());
+      wrap(this.connection::close);
     }
   }
 
   @Override
   public BytesMessage createBytesMessage() {
-    return wrap(() -> session.createBytesMessage());
+    return wrap(session::createBytesMessage);
   }
 
   @Override
   public MapMessage createMapMessage() {
-    return wrap(() -> session.createMapMessage());
+    return wrap(session::createMapMessage);
   }
 
   @Override
   public Message createMessage() {
-    return wrap(() -> session.createMessage());
+    return wrap(session::createMessage);
   }
 
   @Override
   public ObjectMessage createObjectMessage() {
-    return wrap(() -> session.createObjectMessage());
+    return wrap(() -> this.session.createObjectMessage());
   }
 
   @Override
   public ObjectMessage createObjectMessage(Serializable object) {
-    return wrap(() -> session.createObjectMessage(object));
+    return wrap(() -> this.session.createObjectMessage(object));
   }
 
   @Override
   public StreamMessage createStreamMessage() {
-    return wrap(() -> session.createStreamMessage());
+    return wrap(this.session::createStreamMessage);
   }
 
   @Override
   public TextMessage createTextMessage() {
-    return wrap(() -> session.createTextMessage());
+    return wrap(() -> this.session.createTextMessage());
   }
 
   @Override
   public TextMessage createTextMessage(String text) {
-    return wrap(() -> session.createTextMessage(text));
+    return wrap(() -> this.session.createTextMessage(text));
   }
 
   @Override
   public boolean getTransacted() {
-    return wrap(() -> this.session.getTransacted());
+    return wrap(this.session::getTransacted);
   }
 
   @Override
   public int getSessionMode() {
-    return wrap(() -> this.session.getAcknowledgeMode());
+    return wrap(this.session::getAcknowledgeMode);
   }
 
   @Override
   public void commit() {
-    wrap(() -> this.session.commit());
+    wrap(this.session::commit);
   }
 
   @Override
   public void rollback() {
-    wrap(() -> this.session.rollback());
+    wrap(this.session::rollback);
   }
 
   @Override
   public void recover() {
-    wrap(() -> this.session.recover());
+    wrap(this.session::recover);
   }
 
   @Override
@@ -266,12 +266,12 @@ public class RmqJmsContext implements JMSContext {
 
   @Override
   public TemporaryQueue createTemporaryQueue() {
-    return wrap(() -> this.session.createTemporaryQueue());
+    return wrap(this.session::createTemporaryQueue);
   }
 
   @Override
   public TemporaryTopic createTemporaryTopic() {
-    return wrap(() -> this.session.createTemporaryTopic());
+    return wrap(this.session::createTemporaryTopic);
   }
 
   @Override
@@ -281,8 +281,7 @@ public class RmqJmsContext implements JMSContext {
 
   @Override
   public void acknowledge() {
-    // TODO write a test for this method
-    wrap(() -> this.session.acknowledgeMessages());
+    wrap(this.session::acknowledgeMessages);
   }
 
 }

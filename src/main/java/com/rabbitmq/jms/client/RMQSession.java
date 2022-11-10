@@ -1273,12 +1273,12 @@ public class RMQSession implements Session, QueueSession, TopicSession {
        this.acknowledge(message.getRabbitDeliveryTag());
     }
 
-    void acknowledgeMessages() {
+    void acknowledgeMessages() throws JMSException {
         try {
             Long lastMessageTag = this.unackedMessageTags.last();
             this.acknowledge(lastMessageTag);
-        } catch (NoSuchElementException | JMSException e) {
-           // do nothing
+        } catch (NoSuchElementException e) {
+           // nothing to acknowledge
         }
     }
 
