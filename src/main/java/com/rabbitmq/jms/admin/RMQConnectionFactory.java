@@ -13,8 +13,10 @@ import com.rabbitmq.jms.client.ConfirmListener;
 import com.rabbitmq.jms.client.ConnectionParams;
 import com.rabbitmq.jms.client.RMQConnection;
 import com.rabbitmq.jms.client.RMQMessage;
+import com.rabbitmq.jms.client.RMQSession;
 import com.rabbitmq.jms.client.ReceivingContext;
 import com.rabbitmq.jms.client.ReceivingContextConsumer;
+import com.rabbitmq.jms.client.RmqJmsContext;
 import com.rabbitmq.jms.client.SendingContext;
 import com.rabbitmq.jms.client.SendingContextConsumer;
 import com.rabbitmq.jms.util.RMQJMSException;
@@ -32,15 +34,19 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.jms.BytesMessage;
+import javax.jms.CompletionListener;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
+import javax.jms.JMSContext;
 import javax.jms.JMSException;
+import javax.jms.JMSRuntimeException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
+import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
@@ -241,7 +247,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      *
      * @since 1.10.0
      */
-    private List<URI> uris = Collections.EMPTY_LIST;
+    private List<URI> uris = Collections.emptyList();
 
     /**
      * Whether <code>replyTo</code> destination for consumed messages should be declared.
@@ -249,6 +255,14 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * @since 1.11.0
      */
     private boolean declareReplyToDestination = true;
+
+  /**
+   * Whether to validate subscription names or not, according to JMS 2.0. Default is false (no
+   * validation).
+   *
+   * @since 2.7.0
+   */
+  private boolean validateSubscriptionNames = false;
 
     /**
      * {@inheritDoc}
@@ -283,7 +297,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         }
     }
 
-    public Connection createConnection(String username, String password, List<Address> endpoints)
+  public Connection createConnection(String username, String password, List<Address> endpoints)
         throws JMSException {
         return createConnection(username, password, cf -> cf.newConnection(endpoints));
     }
@@ -331,6 +345,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setTrustedPackages(this.trustedPackages)
             .setRequeueOnTimeout(this.requeueOnTimeout)
             .setKeepTextMessageType(this.keepTextMessageType)
+            .setValidateSubscriptionNames(this.validateSubscriptionNames)
         );
         logger.debug("Connection {} created.", conn);
         return conn;
@@ -443,7 +458,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             }).collect(Collectors.toList());
             this.setUri(urisAsStrings.get(0));
         } else {
-            this.uris = Collections.EMPTY_LIST;
+            this.uris = Collections.emptyList();
             setUri(null);
         }
     }
@@ -1051,13 +1066,25 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * When this property is set, publisher confirms are enabled for all
      * the underlying AMQP {@link com.rabbitmq.client.Channel}s created by
      * this {@link ConnectionFactory}.
+     * <p>
+     * This API is deprecated since the library supports JMS 2.0 Asynchronous Send
+     * (<code>CompletionListener</code> API). It will be removed in RabbitMQ JMS Client 3.0.
+     * <p>
+     * Do not use async send methods and the {@link ConfirmListener} API
+     * at the same time, the behavior when they are both in use is not determined.
      *
      * @param confirmListener the callback
      * @see <a href="https://www.rabbitmq.com/confirms.html#publisher-confirms">Publisher Confirms</a>
      * @see <a href="https://www.rabbitmq.com/publishers.html#data-safety">Publisher Guide</a>
      * @see ConfirmListener
+     * @see javax.jms.MessageProducer#send(Message, CompletionListener)
+     * @see javax.jms.MessageProducer#send(Destination, Message, CompletionListener)
+     * @see javax.jms.MessageProducer#send(Message, int, int, long, CompletionListener)
+     * @see javax.jms.MessageProducer#send(Destination, Message, int, int, long, CompletionListener)
      * @since 1.13.0
+     * @deprecated Use the {@link javax.jms.MessageProducer} <code>send</code> methods with a {@link javax.jms.CompletionListener}
      */
+    @Deprecated
     public void setConfirmListener(ConfirmListener confirmListener) {
         this.confirmListener = confirmListener;
     }
@@ -1078,6 +1105,16 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     public void setKeepTextMessageType(boolean keepTextMessageType) {
         this.keepTextMessageType = keepTextMessageType;
     }
+
+  /**
+   * Whether to validate subscription names or not, according to JMS 2.0. Default is false (no
+   * validation).
+   *
+   * @since 2.7.0
+   */
+  public void setValidateSubscriptionNames(boolean validateSubscriptionNames) {
+    this.validateSubscriptionNames = validateSubscriptionNames;
+  }
 
     @FunctionalInterface
     private interface ConnectionCreator {
@@ -1172,4 +1209,30 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         @Override
         public void accept(ReceivingContext receivingContext) { }
     }
+
+  @Override
+  public JMSContext createContext() {
+    return createContext(this.username, this.password, Session.AUTO_ACKNOWLEDGE);
+  }
+
+  @Override
+  public JMSContext createContext(String username, String password) {
+    return createContext(username, password, Session.AUTO_ACKNOWLEDGE);
+  }
+
+  @Override
+  public JMSContext createContext(String username, String password, int sessionMode) {
+    try {
+      RMQConnection connection = (RMQConnection) createConnection(username, password);
+      return new RmqJmsContext(connection, sessionMode);
+    } catch (JMSException e) {
+      throw new JMSRuntimeException("Error while creating JMSContext", e.getErrorCode(), e);
+    }
+  }
+
+  @Override
+  public JMSContext createContext(int sessionMode) {
+    return createContext(this.username, this.password, sessionMode);
+  }
+
 }

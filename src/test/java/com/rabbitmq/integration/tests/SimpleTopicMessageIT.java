@@ -2,10 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
+import com.rabbitmq.TestUtils;
 import com.rabbitmq.jms.util.Shell;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.Test;
 
 import javax.jms.*;
@@ -14,7 +18,9 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -65,6 +71,43 @@ public class SimpleTopicMessageIT extends AbstractITTopic {
             assertEquals(1, subscriberAmqpQueueBinding.size());
         });
         log("Test done");
+    }
+
+    @Test
+    public void testSendAndReceiveTextMessageOnSharedSubscription() throws Exception {
+        topicConn.start();
+        TopicSession topicSession = topicConn.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        Topic topic = topicSession.createTopic(TOPIC_NAME);
+        TopicPublisher sender = topicSession.createPublisher(topic);
+        String subscriptionName = "shared-subscription-name";
+        MessageConsumer receiver1 = topicSession.createSharedConsumer(topic, subscriptionName);
+        MessageConsumer receiver2 = topicSession.createSharedConsumer(topic, subscriptionName);
+
+        int messageCount = 100;
+        CountDownLatch latch = new CountDownLatch(messageCount);
+        Set<String> messages1 = ConcurrentHashMap.newKeySet(messageCount / 2);
+        Set<String> messages2 = ConcurrentHashMap.newKeySet(messageCount / 2);
+        receiver1.setMessageListener(message -> {
+            messages1.add(TestUtils.text(message));
+            latch.countDown();
+        });
+        receiver2.setMessageListener(message -> {
+            messages2.add(TestUtils.text(message));
+            latch.countDown();
+        });
+
+        sender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        for (int i = 0; i < messageCount; i++) {
+            sender.send(topicSession.createTextMessage("hello " + (i % 2 + 1)));
+        }
+
+        assertThat(latch.await(10, SECONDS)).isTrue();
+        // checking round-robin dispatching
+        assertThat(messages1).hasSize(1).containsExactly("hello 1");
+        assertThat(messages2).hasSize(1).containsExactly("hello 2");
+
+        receiver1.close();
+        receiver2.close();
     }
 
     @Test

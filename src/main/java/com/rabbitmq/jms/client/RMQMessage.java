@@ -20,6 +20,7 @@ import com.rabbitmq.jms.util.IteratorEnum;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.Util;
 import com.rabbitmq.jms.util.WhiteListObjectInputStream;
+import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,11 +107,11 @@ public abstract class RMQMessage implements Message, Cloneable {
     private static final String PREFIX = "rmq.";
     private static final String JMS_MESSAGE_ID = PREFIX + "jms.message.id";
     private static final String JMS_MESSAGE_TIMESTAMP = PREFIX + "jms.message.timestamp";
-    private static final String JMS_MESSAGE_CORR_ID = PREFIX + "jms.message.correlation.id";
-    private static final String JMS_MESSAGE_REPLY_TO = PREFIX + "jms.message.reply.to";
+    static final String JMS_MESSAGE_CORR_ID = PREFIX + "jms.message.correlation.id";
+    static final String JMS_MESSAGE_REPLY_TO = PREFIX + "jms.message.reply.to";
     private static final String JMS_MESSAGE_DESTINATION = PREFIX + "jms.message.destination";
     private static final String JMS_MESSAGE_REDELIVERED = PREFIX + "jms.message.redelivered";
-    private static final String JMS_MESSAGE_TYPE = PREFIX + "jms.message.type";
+    static final String JMS_MESSAGE_TYPE = PREFIX + "jms.message.type";
 
     /**
      * Those needs to be checked in the producer
@@ -120,15 +121,20 @@ public abstract class RMQMessage implements Message, Cloneable {
     static final String JMS_MESSAGE_PRIORITY = PREFIX + "jms.message.priority";
 
     /**
+     * JMS Defined Properties
+     */
+    private static final String JMS_X_DELIVERY_COUNT = "JMSXDeliveryCount";
+
+    /**
      * For turning {@link String}s into <code>byte[]</code> and back we use this {@link Charset} instance.
      * This is used for {@link RMQMessage#getJMSCorrelationIDAsBytes()}.
      */
-    private static final Charset CHARSET = Charset.forName("UTF-8");
+    private static final Charset CHARSET = StandardCharsets.UTF_8;
 
     /** Here we store the JMS_ properties that would have been fields */
-    private final Map<String, Serializable> rmqProperties = new HashMap<String, Serializable>();
+    private final Map<String, Serializable> rmqProperties = new HashMap<>();
     /** Here we store the user’s custom JMS properties */
-    private final Map<String, Serializable> userJmsProperties = new HashMap<String, Serializable>();
+    private final Map<String, Serializable> userJmsProperties = new HashMap<>();
     /**
      * We generate a unique message ID each time we send a message
      * It is stored here. This is also used for
@@ -254,7 +260,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         if (timestamp == null) {
             return 0L;
         } else {
-            return convertToLong(timestamp);
+            return Utils.convertToLong(timestamp);
         }
     }
 
@@ -428,7 +434,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * {@inheritDoc}
      */
     @Override
-    public boolean propertyExists(String name) throws JMSException {
+    public boolean propertyExists(String name) {
         return this.userJmsProperties.containsKey(name) || this.rmqProperties.containsKey(name);
     }
 
@@ -437,17 +443,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public boolean getBooleanProperty(String name) throws JMSException {
-        Object o = this.getObjectProperty(name);
-        if (o == null) {
-            //default value for null is false
-            return false;
-        } else if (o instanceof String) {
-            return Boolean.parseBoolean((String) o);
-        } else if (o instanceof Boolean) {
-            return (Boolean) o;
-        } else {
-            throw new MessageFormatException(String.format("Unable to convert from class [%s]", o.getClass().getName()));
-        }
+        return Utils.getBooleanProperty(propertiesFor(name), name);
     }
 
     /**
@@ -455,15 +451,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public byte getByteProperty(String name) throws JMSException {
-        Object o = this.getObjectProperty(name);
-        if (o == null)
-            throw new NumberFormatException("Null is not a valid byte");
-        else if (o instanceof String) {
-            return Byte.parseByte((String) o);
-        } else if (o instanceof Byte) {
-            return (Byte) o;
-        } else
-            throw new MessageFormatException(String.format("Unable to convert from class [%s]", o.getClass().getName()));
+        return Utils.getByteProperty(propertiesFor(name), name);
     }
 
     /**
@@ -471,17 +459,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public short getShortProperty(String name) throws JMSException {
-        Object o = this.getObjectProperty(name);
-        if (o == null)
-            throw new NumberFormatException("Null is not a valid short");
-        else if (o instanceof String) {
-            return Short.parseShort((String) o);
-        } else if (o instanceof Byte) {
-            return (Byte) o;
-        } else if (o instanceof Short) {
-            return (Short) o;
-        } else
-            throw new MessageFormatException(String.format("Unable to convert from class [%s]", o.getClass().getName()));
+        return Utils.getShortProperty(propertiesFor(name), name);
     }
 
     /**
@@ -489,19 +467,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public int getIntProperty(String name) throws JMSException {
-        Object o = this.getObjectProperty(name);
-        if (o == null)
-            throw new NumberFormatException("Null is not a valid int");
-        else if (o instanceof String) {
-            return Integer.parseInt((String) o);
-        } else if (o instanceof Byte) {
-            return (Byte) o;
-        } else if (o instanceof Short) {
-            return (Short) o;
-        } else if (o instanceof Integer) {
-            return (Integer) o;
-        } else
-            throw new MessageFormatException(String.format("Unable to convert from class [%s]", o.getClass().getName()));
+        return Utils.getIntProperty(propertiesFor(name), name);
     }
 
     /**
@@ -509,24 +475,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public long getLongProperty(String name) throws JMSException {
-        return convertToLong(this.getObjectProperty(name));
-    }
-
-    private static long convertToLong(Object o) throws JMSException {
-        if (o == null)
-            throw new NumberFormatException("Null is not a valid long");
-        else if (o instanceof String) {
-            return Long.parseLong((String) o);
-        } else if (o instanceof Byte) {
-            return (Byte) o;
-        } else if (o instanceof Short) {
-            return (Short) o;
-        } else if (o instanceof Integer) {
-            return (Integer) o;
-        } else if (o instanceof Long) {
-            return (Long) o;
-        } else
-            throw new MessageFormatException(String.format("Unable to convert from class [%s]", o.getClass().getName()));
+        return Utils.getLongProperty(propertiesFor(name), name);
     }
 
     /**
@@ -534,15 +483,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public float getFloatProperty(String name) throws JMSException {
-        Object o = this.getObjectProperty(name);
-        if (o == null)
-            throw new NumberFormatException("Null is not a valid float");
-        else if (o instanceof String) {
-            return Float.parseFloat((String) o);
-        } else if (o instanceof Float) {
-            return (Float) o;
-        } else
-            throw new MessageFormatException(String.format("Unable to convert from class [%s]", o.getClass().getName()));
+        return Utils.getFloatProperty(propertiesFor(name), name);
     }
 
     /**
@@ -550,17 +491,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public double getDoubleProperty(String name) throws JMSException {
-        Object o = this.getObjectProperty(name);
-        if (o == null)
-            throw new NumberFormatException("Null is not a valid double");
-        else if (o instanceof String) {
-            return Double.parseDouble((String) o);
-        } else if (o instanceof Float) {
-            return (Float) o;
-        } else if (o instanceof Double) {
-            return (Double) o;
-        } else
-            throw new MessageFormatException(String.format("Unable to convert from class [%s]", o.getClass().getName()));
+        return Utils.getDoubleProperty(propertiesFor(name), name);
     }
 
     /**
@@ -568,13 +499,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public String getStringProperty(String name) throws JMSException {
-        Object o = this.getObjectProperty(name);
-        if (o == null)
-            return null;
-        else if (o instanceof String)
-            return (String) o;
-        else
-            return o.toString();
+        return Utils.getStringProperty(propertiesFor(name), name);
     }
 
     /**
@@ -582,10 +507,11 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public Object getObjectProperty(String name) throws JMSException {
-        if (name.startsWith(PREFIX))
-            return this.rmqProperties.get(name);
-        else
-            return this.userJmsProperties.get(name);
+        return propertiesFor(name).get(name);
+    }
+
+    private Map<String, Serializable> propertiesFor(String name) {
+       return name.startsWith(PREFIX) ? this.rmqProperties : this.userJmsProperties;
     }
 
     /**
@@ -593,7 +519,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      */
     @Override
     public Enumeration<?> getPropertyNames() throws JMSException {
-        return new IteratorEnum<String>(this.userJmsProperties.keySet().iterator());
+        return new IteratorEnum<>(this.userJmsProperties.keySet().iterator());
     }
 
     /**
@@ -797,7 +723,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     protected abstract void clearBodyInternal() throws JMSException;
 
     /** @return the {@link Charset} used to convert a {@link TextMessage} to <code>byte[]</code> */
-    private static Charset getCharset() {
+    static Charset getCharset() {
         return CHARSET;
     }
 
@@ -877,7 +803,7 @@ public abstract class RMQMessage implements Message, Cloneable {
      * </blockquote>
      */
     Map<String, Object> toHeaders() throws IOException, JMSException {
-        Map<String, Object> hdrs = new HashMap<String, Object>();
+        Map<String, Object> hdrs = new HashMap<>();
 
         // set non-null user properties
         for (Map.Entry<String, Serializable> e : this.userJmsProperties.entrySet()) {
@@ -917,7 +843,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         RMQMessage message = fromMessage(response.getBody(), session.getTrustedPackages());
 
         message.setSession(session);                                            // Insert session in received message for Message.acknowledge
-        message.setJMSRedelivered(response.getEnvelope().isRedeliver());        // Set the redelivered flag
+        message = handleJmsRedeliveredAndDeliveryCount(response, message);
         message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());  // Insert delivery tag in received message for Message.acknowledge
         // message.setJMSDestination(dest);                                     // DO NOT set the destination bug#57214768
         // JMSProperties already set
@@ -937,7 +863,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             message = RMQMessage.fromAmqpMessage(response.getBody(), message);      // Deserialize the message payload from the byte[] body
 
             message.setSession(session);                                            // Insert session in received message for Message.acknowledge
-            message.setJMSRedelivered(response.getEnvelope().isRedeliver());        // Set the redelivered flag
+            message = handleJmsRedeliveredAndDeliveryCount(response, message);
             message.setRabbitDeliveryTag(response.getEnvelope().getDeliveryTag());  // Insert delivery tag in received message for Message.acknowledge
             message.setJMSDestination(dest);                                        // We cannot know the original destination, so set local one
             message.setJMSPropertiesFromAmqpProperties(props);
@@ -950,6 +876,26 @@ public abstract class RMQMessage implements Message, Cloneable {
         } catch (IOException x) {
             throw new RMQJMSException(x);
         }
+    }
+
+    private static RMQMessage handleJmsRedeliveredAndDeliveryCount(GetResponse response, RMQMessage message)
+        throws JMSException {
+        boolean redelivered = response.getEnvelope().isRedeliver();
+        message.setJMSRedelivered(redelivered);
+        if (redelivered) {
+            Number deliveryCount = (Number) response.getProps().getHeaders().get("x-delivery-count");
+            if (deliveryCount == null) {
+                message.setIntProperty(JMS_X_DELIVERY_COUNT, 2);
+            } else {
+                // We add one, as the count starts at 0 for RabbitMQ.
+                // This is modeled after the AMQP 1.0 "delivery-count" transport header for a message
+                // (AMQP 1.0 specification, section 3.2.1)
+                message.setIntProperty(JMS_X_DELIVERY_COUNT, deliveryCount.intValue() + 1);
+            }
+        } else {
+            message.setIntProperty(JMS_X_DELIVERY_COUNT, 1);
+        }
+        return message;
     }
 
     /**
@@ -1470,7 +1416,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         if (val==null) return dft;
         if (val instanceof Number) return ((Number) val).intValue();
         try {
-            if (val instanceof CharSequence) return Integer.valueOf(val.toString());
+            if (val instanceof CharSequence) return Integer.parseInt(val.toString());
         } catch (NumberFormatException e) { /*ignore*/ }
         return dft;
     }
@@ -1516,4 +1462,28 @@ public abstract class RMQMessage implements Message, Cloneable {
             rmqMsg.setObjectProperty(name, msg.getObjectProperty(name));
         }
     }
+
+    @Override
+    public long getJMSDeliveryTime() {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setJMSDeliveryTime(long deliveryTime) {
+        // TODO JMS 2.0
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <T> T getBody(Class<T> c) throws JMSException {
+        if (this.isBodyAssignableTo(c)) {
+            return doGetBody(c);
+        } else {
+            throw new MessageFormatException("Message body is assignable to " + c);
+        }
+    }
+
+    protected abstract <T> T doGetBody(Class<T> c) throws JMSException;
+
 }

@@ -13,7 +13,14 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Method;
 import java.time.Duration;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import javax.jms.CompletionListener;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,66 +28,127 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 public class TestUtils {
 
-    private static final long POLLING_INTERVAL = 100;
+  public static final Duration TEN_SECONDS = Duration.ofSeconds(10);
 
-    public static boolean waitUntil(Duration duration, ExceptionBooleanSupplier condition) {
-        long elapsed = 0;
+  private static final long POLLING_INTERVAL = 100;
+
+  public static boolean waitUntil(ExceptionBooleanSupplier condition) {
+    return waitUntil(TEN_SECONDS, condition);
+  }
+  public static boolean waitUntil(Duration duration, ExceptionBooleanSupplier condition) {
+    Boolean result = waitUntilNotNull(duration,
+        () -> condition.getAsBoolean() ? Boolean.TRUE : null);
+    return result != null;
+  }
+
+  public static <T> T waitUntilNotNull(Callable<T> operation) {
+    return waitUntilNotNull(TEN_SECONDS, operation);
+  }
+
+  public static <T> T waitUntilNotNull(Duration duration, Callable<T> operation) {
+    long elapsed = 0;
+    try {
+      T result = operation.call();
+      while (result == null && elapsed <= duration.toMillis()) {
         try {
-            while (!condition.getAsBoolean() && elapsed <= duration.toMillis()) {
+          Thread.sleep(POLLING_INTERVAL);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw new RuntimeException(e);
+        }
+        elapsed += POLLING_INTERVAL;
+        result = operation.call();
+      }
+      return result == null ? operation.call() : result;
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
 
-                try {
-                    Thread.sleep(POLLING_INTERVAL);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new RuntimeException(e);
-                }
-                elapsed += POLLING_INTERVAL;
-            }
-            return condition.getAsBoolean();
-        } catch (RuntimeException e) {
-            throw e;
+  }
+
+  public static CompletionListener onCompletion(CallableConsumer<Message> onCompletionListener) {
+    return new CompletionListener() {
+      @Override
+      public void onCompletion(Message message) {
+        try {
+          onCompletionListener.accept(message);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+          throw new RuntimeException(e);
         }
+      }
 
+      @Override
+      public void onException(Message message, Exception exception) {
+
+      }
+    };
+  }
+
+  private static boolean tlsAvailable() {
+    if (Shell.rabbitmqctlCommand() == null) {
+      throw new IllegalStateException(
+          "rabbitmqctl.bin system property not set, cannot check if TLS is enabled");
+    } else {
+      try {
+        ProcessState process = Shell.rabbitmqctl("status");
+        String output = process.output();
+        return output.contains("amqp/ssl");
+      } catch (Exception e) {
+        throw new RuntimeException("Error while trying to detect TLS: " + e.getMessage());
+      }
     }
+  }
 
-    public interface ExceptionBooleanSupplier {
+  public static String queueName(TestInfo info) {
+    return queueName(info.getTestClass().get(), info.getTestMethod().get());
+  }
 
-        boolean getAsBoolean() throws Exception;
+  private static String queueName(Class<?> testClass, Method testMethod) {
+    String uuid = UUID.randomUUID().toString();
+    return String.format(
+        "%s_%s%s",
+        testClass.getSimpleName(), testMethod.getName(), uuid.substring(uuid.length() / 2));
+  }
 
+  public static String text(Message message) {
+    try {
+      return message.getBody(String.class);
+    } catch (JMSException e) {
+      throw new RuntimeException(e);
     }
+  }
 
-    private static boolean tlsAvailable() {
-        if (Shell.rabbitmqctlCommand() == null) {
-            throw new IllegalStateException(
-                "rabbitmqctl.bin system property not set, cannot check if TLS is enabled");
-        } else {
-            try {
-                ProcessState process = Shell.rabbitmqctl("status");
-                String output = process.output();
-                return output.contains("amqp/ssl");
-            } catch (Exception e) {
-                throw new RuntimeException("Error while trying to detect TLS: " + e.getMessage());
-            }
-        }
+  public interface ExceptionBooleanSupplier {
+
+    boolean getAsBoolean() throws Exception;
+
+  }
+
+  @FunctionalInterface
+  public interface CallableConsumer<T> {
+
+    void accept(T t) throws Exception;
+  }
+
+  @Target({ElementType.TYPE, ElementType.METHOD})
+  @Retention(RetentionPolicy.RUNTIME)
+  @Documented
+  @ExtendWith(DisabledIfTlsNotEnabledCondition.class)
+  public @interface DisabledIfTlsNotEnabled {
+
+  }
+
+  private static class DisabledIfTlsNotEnabledCondition implements ExecutionCondition {
+
+    @Override
+    public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
+      if (tlsAvailable()) {
+        return ConditionEvaluationResult.enabled("TLS is enabled");
+      } else {
+        return ConditionEvaluationResult.disabled("TLS is disabled");
+      }
     }
-
-    private static class DisabledIfTlsNotEnabledCondition implements ExecutionCondition {
-
-        @Override
-        public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
-            if (tlsAvailable()) {
-                return ConditionEvaluationResult.enabled("TLS is enabled");
-            } else {
-                return ConditionEvaluationResult.disabled("TLS is disabled");
-            }
-        }
-    }
-
-    @Target({ElementType.TYPE, ElementType.METHOD})
-    @Retention(RetentionPolicy.RUNTIME)
-    @Documented
-    @ExtendWith(DisabledIfTlsNotEnabledCondition.class)
-    public @interface DisabledIfTlsNotEnabled {}
+  }
 }

@@ -117,6 +117,8 @@ public class ConnectionParams {
 
     private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
 
+    private boolean validateSubscriptionNames = false;
+
     public Connection getRabbitConnection() {
         return rabbitConnection;
     }
@@ -259,5 +261,14 @@ public class ConnectionParams {
 
     public boolean willRequeueOnTimeout() {
         return requeueOnTimeout;
+    }
+
+    public ConnectionParams setValidateSubscriptionNames(boolean validateSubscriptionNames) {
+        this.validateSubscriptionNames = validateSubscriptionNames;
+        return this;
+    }
+
+    public boolean isValidateSubscriptionNames() {
+        return validateSubscriptionNames;
     }
 }

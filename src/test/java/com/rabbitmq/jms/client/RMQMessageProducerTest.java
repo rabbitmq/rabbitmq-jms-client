@@ -2,13 +2,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2017-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2017-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
+import javax.jms.CompletionListener;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -109,7 +108,9 @@ public class RMQMessageProducerTest {
         }
 
         @Override
-        protected void sendJMSMessage(RMQDestination destination, RMQMessage msg, Message originalMessage, int deliveryMode, int priority, long timeToLive) throws JMSException {
+        protected void sendJMSMessage(RMQDestination destination, RMQMessage msg, Message originalMessage,
+            CompletionListener completionListener,
+            int deliveryMode, int priority, long timeToLive) throws JMSException {
             this.message = msg;
         }
     }

@@ -2,8 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2014-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2014-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
+
+import static com.rabbitmq.jms.client.Subscription.JMS_TYPE_IDENTS;
 
 import java.util.Enumeration;
 
@@ -41,7 +43,7 @@ class BrowsingMessageQueue implements QueueBrowser {
 
     private static final SqlEvaluator setEvaluator(String selector) throws JMSException {
         if (selector==null || selector.trim().isEmpty()) return null;
-        SqlEvaluator evaluator = new SqlEvaluator(new SqlParser(new SqlTokenStream(selector)), RMQSession.JMS_TYPE_IDENTS);
+        SqlEvaluator evaluator = new SqlEvaluator(new SqlParser(new SqlTokenStream(selector)), JMS_TYPE_IDENTS);
         if (!evaluator.evaluatorOk())
             throw new RMQJMSSelectorException(evaluator.getErrorMessage());
         return evaluator;

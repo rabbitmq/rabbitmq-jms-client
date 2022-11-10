@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import java.io.ByteArrayInputStream;
@@ -49,5 +49,15 @@ class RMQNullMessage extends RMQMessage {
         RMQNullMessage rmqNMsg = new RMQNullMessage();
         RMQMessage.copyAttributes(rmqNMsg, msg);
         return rmqNMsg;
+    }
+
+    @Override
+    public boolean isBodyAssignableTo(Class c) {
+        return true;
+    }
+
+    @Override
+    protected <T> T doGetBody(Class<T> c) {
+        return null;
     }
 }

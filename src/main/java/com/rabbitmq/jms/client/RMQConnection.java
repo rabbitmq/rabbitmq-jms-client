@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -67,10 +66,10 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     /** How long to wait for onMessage to return, in milliseconds */
     private final int onMessageTimeoutMs;
 
-    private static ConcurrentHashMap<String, String> CLIENT_IDS = new ConcurrentHashMap<String, String>();
+    private static ConcurrentHashMap<String, String> CLIENT_IDS = new ConcurrentHashMap<>();
 
-    /** List of all our durable subscriptions so we can track them on a per connection basis (maintained by sessions).*/
-    private final Map<String, RMQMessageConsumer> subscriptions = new ConcurrentHashMap<String, RMQMessageConsumer>();
+    /** List of all our topic subscriptions so we can track them on a per connection basis (maintained by sessions).*/
+    private final Subscriptions subscriptions = new Subscriptions();
 
     /** This is used for JMSCTS test cases, as ClientID should only be configurable right after the connection has been created */
     private volatile boolean canSetClientID = true;
@@ -160,6 +159,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
     private final boolean keepTextMessageType;
 
+    private final boolean validateSubscriptionNames;
+
     /**
      * Creates an RMQConnection object.
      * @param connectionParams parameters for this connection
@@ -187,6 +188,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.trustedPackages = connectionParams.getTrustedPackages();
         this.requeueOnTimeout = connectionParams.willRequeueOnTimeout();
         this.keepTextMessageType = connectionParams.isKeepTextMessageType();
+        this.validateSubscriptionNames = connectionParams.isValidateSubscriptionNames();
     }
 
     /**
@@ -243,6 +245,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setTrustedPackages(this.trustedPackages)
             .setRequeueOnTimeout(this.requeueOnTimeout)
             .setKeepTextMessageType(this.keepTextMessageType)
+            .setValidateSubscriptionNames(this.validateSubscriptionNames)
         );
         this.sessions.add(session);
         return session;
@@ -420,9 +423,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         if (transactional) {
             channel.txSelect();
         }
-        if (this.confirmListener != null) {
-            channel.confirmSelect();
-        }
         return channel;
     }
 
@@ -469,7 +469,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     public ConnectionConsumer createConnectionConsumer(Destination destination,
                                                        String messageSelector,
                                                        ServerSessionPool sessionPool,
-                                                       int maxMessages) throws JMSException {
+                                                       int maxMessages) {
         throw new UnsupportedOperationException();
     }
 
@@ -481,7 +481,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
                                                               String subscriptionName,
                                                               String messageSelector,
                                                               ServerSessionPool sessionPool,
-                                                              int maxMessages) throws JMSException {
+                                                              int maxMessages) {
         throw new UnsupportedOperationException();
     }
 
@@ -499,6 +499,10 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         if (this.sessions.remove(session)) {
             session.internalClose();
         }
+    }
+
+    boolean hasSessions() {
+        return !this.sessions.isEmpty();
     }
 
     long getTerminationTimeout() {
@@ -523,4 +527,36 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         }
     }
 
+    @Override
+    public Session createSession(int sessionMode) throws JMSException {
+        if (sessionMode == JMSContext.SESSION_TRANSACTED) {
+            return this.createSession(true, sessionMode);
+        } else {
+            return this.createSession(false, sessionMode);
+        }
+    }
+
+    @Override
+    public Session createSession() throws JMSException {
+        return this.createSession(false, Session.AUTO_ACKNOWLEDGE);
+    }
+
+    /**
+     * @throws UnsupportedOperationException - optional method not implemented
+     */
+    @Override
+    public ConnectionConsumer createSharedConnectionConsumer(Topic topic, String subscriptionName,
+        String messageSelector, ServerSessionPool sessionPool, int maxMessages) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @throws UnsupportedOperationException - optional method not implemented
+     */
+    @Override
+    public ConnectionConsumer createSharedDurableConnectionConsumer(Topic topic,
+        String subscriptionName, String messageSelector, ServerSessionPool sessionPool,
+        int maxMessages) {
+        throw new UnsupportedOperationException();
+    }
 }

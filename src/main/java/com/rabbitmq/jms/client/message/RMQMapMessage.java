@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client.message;
 
 import java.io.ByteArrayInputStream;
@@ -11,10 +11,12 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
+import java.util.Map.Entry;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.MessageFormatException;
@@ -30,7 +32,7 @@ import com.rabbitmq.jms.util.RMQMessageFormatException;
  */
 public class RMQMapMessage extends RMQMessage implements MapMessage {
 
-    private Map<String, Serializable> data = new HashMap<String, Serializable>();
+    private Map<String, Serializable> data = new HashMap<>();
 
     @Override
     public boolean getBoolean(String name) throws JMSException {
@@ -189,7 +191,7 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
 
     @Override
     public Enumeration<String> getMapNames() throws JMSException {
-        return new IteratorEnum<String>(this.data.keySet().iterator());
+        return new IteratorEnum<>(this.data.keySet().iterator());
     }
 
     @Override
@@ -388,6 +390,29 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
         while (mapNames.hasMoreElements()) {
             String name = mapNames.nextElement();
             rmqMsg.setObject(name, msg.getObject(name));
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public boolean isBodyAssignableTo(Class c) {
+        return this.data == null ? true : c.isAssignableFrom(Map.class)
+            || Serializable.class == c;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected <T> T doGetBody(Class<T> c) {
+        if (this.data == null) {
+            return null;
+        } else if (this.data.isEmpty()) {
+            return (T) Collections.emptyMap();
+        } else {
+            Map<String, Serializable> copy = new HashMap<>(this.data.size());
+            for (Entry<String, Serializable> entry : this.data.entrySet()) {
+                copy.put(entry.getKey(), entry.getValue());
+            }
+            return (T) copy;
         }
     }
 }

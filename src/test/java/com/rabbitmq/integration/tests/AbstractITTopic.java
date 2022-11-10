@@ -5,6 +5,7 @@
 // Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
+import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
 
@@ -20,7 +21,12 @@ public abstract class AbstractITTopic {
         this.connFactory =
                 (TopicConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                                                                       .getConnectionFactory();
+        customise((RMQConnectionFactory) connFactory);
         this.topicConn = connFactory.createTopicConnection();
+    }
+
+    protected void customise(RMQConnectionFactory connectionFactory) {
+
     }
 
     @AfterEach

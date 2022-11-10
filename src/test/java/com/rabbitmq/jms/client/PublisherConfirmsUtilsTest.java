@@ -2,10 +2,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2019-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2019-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.Channel;
+import javax.jms.CompletionListener;
 import org.junit.jupiter.api.Test;
 
 import javax.jms.JMSException;
@@ -28,6 +29,18 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class PublisherConfirmsUtilsTest {
+
+    private static final CompletionListener NO_OP_COMPLETION_LISTENER = new CompletionListener() {
+        @Override
+        public void onCompletion(Message message) {
+
+        }
+
+        @Override
+        public void onException(Message message, Exception exception) {
+
+        }
+    };
 
     static TextMessage message(String body) throws Exception {
         TextMessage message = mock(TextMessage.class);
@@ -112,7 +125,8 @@ public class PublisherConfirmsUtilsTest {
 
         for (int i = 1; i <= messageCount; i++) {
             TextMessage message = message(String.valueOf(i));
-            publishingListener.publish(message, clientPublishingSequence.getAndIncrement());
+            publishingListener.publish(message, NO_OP_COMPLETION_LISTENER,
+                clientPublishingSequence.getAndIncrement());
             messagesSentToServer.offer(message);
         }
 

@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2021 VMware, Inc. or its affiliates. All rights reserved. */
+/* Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
 import java.io.Serializable;
@@ -82,14 +82,14 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
         this(destName, false, queueOrTopicExchangeName(isQueue, isTemporary), destName, destName, isQueue, isTemporary, queueDeclareArguments);
     }
 
-    private static final String queueOrTopicExchangeName(boolean isQueue, boolean isTemporary) {
+    private static String queueOrTopicExchangeName(boolean isQueue, boolean isTemporary) {
         if (isQueue & isTemporary)              return JMS_TEMP_QUEUE_EXCHANGE_NAME;
         else if (isQueue & !isTemporary)        return JMS_DURABLE_QUEUE_EXCHANGE_NAME;
         else if (!isQueue & isTemporary)        return JMS_TEMP_TOPIC_EXCHANGE_NAME;
         else /* if (!isQueue & !isTemporary) */ return JMS_DURABLE_TOPIC_EXCHANGE_NAME;
     }
 
-    private static final String queueOrTopicExchangeType(boolean isQueue) {
+    private static String queueOrTopicExchangeType(boolean isQueue) {
         if (isQueue) return RABBITMQ_AMQ_DIRECT_EXCHANGE_TYPE;
         else         return RABBITMQ_AMQ_TOPIC_EXCHANGE_TYPE;
     }
@@ -240,7 +240,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     /** Internal use only */
     public boolean noNeedToDeclareExchange() {
-        return RABBITMQ_AMQ_TOPIC_EXCHANGE_NAME .equals(this.amqpExchangeName)
+        return RABBITMQ_AMQ_TOPIC_EXCHANGE_NAME.equals(this.amqpExchangeName)
             || RABBITMQ_AMQ_DIRECT_EXCHANGE_NAME.equals(this.amqpExchangeName)
             || RABBITMQ_UNNAMED_EXCHANGE.equals(this.amqpExchangeName);
     }

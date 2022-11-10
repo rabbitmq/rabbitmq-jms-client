@@ -11,7 +11,6 @@ import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import java.util.List;
-import java.util.Map;
 import java.util.function.BiFunction;
 
 /**
@@ -31,8 +30,8 @@ public class SessionParams {
     /** Acknowledgement mode for the session */
     int mode;
 
-    /** List of durable subscriptions */
-    private Map<String, RMQMessageConsumer> subscriptions;
+    /** List of topic subscriptions */
+    private Subscriptions subscriptions;
 
     /**
      * Whether {@link MessageProducer} properties (delivery mode,
@@ -111,6 +110,8 @@ public class SessionParams {
 
     private boolean keepTextMessageType = false;
 
+    private boolean validateSubscriptionNames = false;
+
     private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
 
     public RMQConnection getConnection() {
@@ -149,11 +150,11 @@ public class SessionParams {
         return this;
     }
 
-    public Map<String, RMQMessageConsumer> getSubscriptions() {
+    public Subscriptions getSubscriptions() {
         return subscriptions;
     }
 
-    public SessionParams setSubscriptions(Map<String, RMQMessageConsumer> subscriptions) {
+    public SessionParams setSubscriptions(Subscriptions subscriptions) {
         this.subscriptions = subscriptions;
         return this;
     }
@@ -255,5 +256,14 @@ public class SessionParams {
 
     public boolean willRequeueOnTimeout() {
         return requeueOnTimeout;
+    }
+
+    public SessionParams setValidateSubscriptionNames(boolean validateSubscriptionNames) {
+        this.validateSubscriptionNames = validateSubscriptionNames;
+        return this;
+    }
+
+    public boolean isValidateSubscriptionNames() {
+        return validateSubscriptionNames;
     }
 }
