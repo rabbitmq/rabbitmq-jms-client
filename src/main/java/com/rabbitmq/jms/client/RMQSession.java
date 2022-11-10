@@ -275,16 +275,9 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         }
         try {
             this.channel = connection.createRabbitChannel(transacted);
-            if (sessionParams.getConfirmListener() != null) {
-                enablePublishConfirmOnChannel();
-                this.publishingListener = PublisherConfirmsUtils.configurePublisherConfirmsSupport(
-                        this.channel, sessionParams.getConfirmListener()
-                );
-            } else {
-                this.publishingListener = PublisherConfirmsUtils.configurePublisherConfirmsSupport(
-                    this.channel, context -> { }
-                );
-            }
+            this.publishingListener = PublisherConfirmsUtils.configurePublisherConfirmsSupport(
+                this.channel
+            );
         } catch (Exception x) { // includes unchecked exceptions, e.g. ShutdownSignalException
             throw new RMQJMSException(x);
         }

@@ -30,18 +30,6 @@ import static org.mockito.Mockito.*;
 
 public class PublisherConfirmsUtilsTest {
 
-    private static final CompletionListener NO_OP_COMPLETION_LISTENER = new CompletionListener() {
-        @Override
-        public void onCompletion(Message message) {
-
-        }
-
-        @Override
-        public void onException(Message message, Exception exception) {
-
-        }
-    };
-
     static TextMessage message(String body) throws Exception {
         TextMessage message = mock(TextMessage.class);
         when(message.getText()).thenReturn(body);
@@ -70,13 +58,18 @@ public class PublisherConfirmsUtilsTest {
         List<Integer> acked = Collections.synchronizedList(new ArrayList<>());
         List<Integer> nacked = Collections.synchronizedList(new ArrayList<>());
         CountDownLatch latch = new CountDownLatch(messageCount);
-        ConfirmListener confirmListener = context -> {
-            if (context.isAck()) {
-                acked.add(toInt(context.getMessage()));
-            } else {
-                nacked.add(toInt(context.getMessage()));
+        CompletionListener completionListener = new CompletionListener() {
+            @Override
+            public void onCompletion(Message message) {
+                acked.add(toInt(message));
+                latch.countDown();
             }
-            latch.countDown();
+
+            @Override
+            public void onException(Message message, Exception exception) {
+                nacked.add(toInt(message));
+                latch.countDown();
+            }
         };
 
         BlockingQueue<TextMessage> messagesSentToServer = new LinkedBlockingQueue<>();
@@ -119,13 +112,13 @@ public class PublisherConfirmsUtilsTest {
         }).start();
 
         PublishingListener publishingListener = PublisherConfirmsUtils.configurePublisherConfirmsSupport(
-                channel, confirmListener
+                channel
         );
         AtomicLong clientPublishingSequence = new AtomicLong(1);
 
         for (int i = 1; i <= messageCount; i++) {
             TextMessage message = message(String.valueOf(i));
-            publishingListener.publish(message, NO_OP_COMPLETION_LISTENER,
+            publishingListener.publish(message, completionListener,
                 clientPublishingSequence.getAndIncrement());
             messagesSentToServer.offer(message);
         }

@@ -144,13 +144,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private final ReceivingContextConsumer receivingContextConsumer;
 
     /**
-     * Callback for publisher confirms.
-     *
-     * @since 1.13.0
-     */
-    private final ConfirmListener confirmListener;
-
-    /**
      * Classes in these packages can be transferred via ObjectMessage.
      *
      * @see WhiteListObjectInputStream
@@ -184,7 +177,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.amqpPropertiesCustomiser = connectionParams.getAmqpPropertiesCustomiser();
         this.sendingContextConsumer = connectionParams.getSendingContextConsumer();
         this.receivingContextConsumer = connectionParams.getReceivingContextConsumer();
-        this.confirmListener = connectionParams.getConfirmListener();
         this.trustedPackages = connectionParams.getTrustedPackages();
         this.requeueOnTimeout = connectionParams.willRequeueOnTimeout();
         this.keepTextMessageType = connectionParams.isKeepTextMessageType();
@@ -241,7 +233,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setAmqpPropertiesCustomiser(this.amqpPropertiesCustomiser)
             .setSendingContextConsumer(this.sendingContextConsumer)
             .setReceivingContextConsumer(this.receivingContextConsumer)
-            .setConfirmListener(this.confirmListener)
             .setTrustedPackages(this.trustedPackages)
             .setRequeueOnTimeout(this.requeueOnTimeout)
             .setKeepTextMessageType(this.keepTextMessageType)

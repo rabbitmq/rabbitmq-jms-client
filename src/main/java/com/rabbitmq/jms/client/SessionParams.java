@@ -101,13 +101,6 @@ public class SessionParams {
      */
     private ReceivingContextConsumer receivingContextConsumer;
 
-    /**
-     * Callback for publisher confirms.
-     *
-     * @since 1.13.0
-     */
-    private ConfirmListener confirmListener;
-
     private boolean keepTextMessageType = false;
 
     private boolean validateSubscriptionNames = false;
@@ -220,15 +213,6 @@ public class SessionParams {
 
     public ReceivingContextConsumer getReceivingContextConsumer() {
         return receivingContextConsumer;
-    }
-
-    public SessionParams setConfirmListener(ConfirmListener confirmListener) {
-        this.confirmListener = confirmListener;
-        return this;
-    }
-
-    public ConfirmListener getConfirmListener() {
-        return confirmListener;
     }
 
     public SessionParams setKeepTextMessageType(boolean keepTextMessageType) {

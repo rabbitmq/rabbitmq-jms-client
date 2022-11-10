@@ -9,7 +9,6 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.MetricsCollector;
-import com.rabbitmq.jms.client.ConfirmListener;
 import com.rabbitmq.jms.client.ConnectionParams;
 import com.rabbitmq.jms.client.RMQConnection;
 import com.rabbitmq.jms.client.RMQMessage;
@@ -175,20 +174,6 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     private ReceivingContextConsumer receivingContextConsumer = new NoOpSerializableReceivingContextConsumer();
 
-    /**
-     * Callback to be notified of publisher confirms.
-     * <p>
-     * When this property is set, publisher confirms are enabled for all
-     * the underlying AMQP {@link com.rabbitmq.client.Channel}s created by
-     * this {@link ConnectionFactory}.
-     *
-     * @see <a href="https://www.rabbitmq.com/confirms.html#publisher-confirms">Publisher Confirms</a>
-     * @see <a href="https://www.rabbitmq.com/publishers.html#data-safety">Publisher Guide</a>
-     * @see ConfirmListener
-     * @since 1.13.0
-     */
-    private ConfirmListener confirmListener;
-
   /**
    * Flag to insert automatically an interoperability hint in outbound {@link TextMessage}s.
    *
@@ -340,7 +325,6 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setAmqpPropertiesCustomiser(amqpPropertiesCustomiser)
             .setSendingContextConsumer(sendingContextConsumer)
             .setReceivingContextConsumer(rcc)
-            .setConfirmListener(confirmListener)
             .setTrustedPackages(this.trustedPackages)
             .setRequeueOnTimeout(this.requeueOnTimeout)
             .setKeepTextMessageType(this.keepTextMessageType)
@@ -1059,34 +1043,6 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.declareReplyToDestination = declareReplyToDestination;
     }
 
-    /**
-     * Set the callback to be notified of publisher confirms.
-     * <p>
-     * When this property is set, publisher confirms are enabled for all
-     * the underlying AMQP {@link com.rabbitmq.client.Channel}s created by
-     * this {@link ConnectionFactory}.
-     * <p>
-     * This API is deprecated since the library supports JMS 2.0 Asynchronous Send
-     * (<code>CompletionListener</code> API). It will be removed in RabbitMQ JMS Client 3.0.
-     * <p>
-     * Do not use async send methods and the {@link ConfirmListener} API
-     * at the same time, the behavior when they are both in use is not determined.
-     *
-     * @param confirmListener the callback
-     * @see <a href="https://www.rabbitmq.com/confirms.html#publisher-confirms">Publisher Confirms</a>
-     * @see <a href="https://www.rabbitmq.com/publishers.html#data-safety">Publisher Guide</a>
-     * @see ConfirmListener
-     * @see jakarta.jms.MessageProducer#send(Message, CompletionListener)
-     * @see jakarta.jms.MessageProducer#send(Destination, Message, CompletionListener)
-     * @see jakarta.jms.MessageProducer#send(Message, int, int, long, CompletionListener)
-     * @see jakarta.jms.MessageProducer#send(Destination, Message, int, int, long, CompletionListener)
-     * @since 1.13.0
-     * @deprecated Use the {@link jakarta.jms.MessageProducer} <code>send</code> methods with a {@link jakarta.jms.CompletionListener}
-     */
-    @Deprecated
-    public void setConfirmListener(ConfirmListener confirmListener) {
-        this.confirmListener = confirmListener;
-    }
 
     /**
      * Whether to requeue a message that timed out or not.

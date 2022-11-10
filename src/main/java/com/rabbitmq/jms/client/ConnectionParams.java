@@ -106,13 +106,6 @@ public class ConnectionParams {
      */
     private ReceivingContextConsumer receivingContextConsumer;
 
-    /**
-     * Callback for publisher confirms.
-     *
-     * @since 1.13.0
-     */
-    private ConfirmListener confirmListener;
-
     private boolean keepTextMessageType = false;
 
     private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
@@ -225,15 +218,6 @@ public class ConnectionParams {
     public ConnectionParams setReceivingContextConsumer(ReceivingContextConsumer receivingContextConsumer) {
         this.receivingContextConsumer = receivingContextConsumer;
         return this;
-    }
-
-    public ConnectionParams setConfirmListener(ConfirmListener confirmListener) {
-        this.confirmListener = confirmListener;
-        return this;
-    }
-
-    public ConfirmListener getConfirmListener() {
-        return confirmListener;
     }
 
     public ConnectionParams setKeepTextMessageType(boolean keepTextMessageType) {
