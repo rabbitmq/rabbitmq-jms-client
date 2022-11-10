@@ -3,10 +3,10 @@ name: Build (Linux)
 on:
   push:
     branches:
-      - main
+      - 2.x.x-stable
   pull_request:
     branches:
-      - main
+      - 2.x.x-stable
 
 jobs:
   build:
