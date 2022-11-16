@@ -5,8 +5,9 @@
 
 ## Overview
 
-This is a JMS 1.1 client library for RabbitMQ, working in concert with [rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-server/tree/master/deps/rabbitmq_jms_topic_exchange),
+This is a JMS client library for RabbitMQ, working in concert with [rabbitmq-jms-topic-exchange](https://github.com/rabbitmq/rabbitmq-server/tree/master/deps/rabbitmq_jms_topic_exchange),
 a RabbitMQ server plugin.
+It supports JMS 2.0 as of 2.7.0.
 
 [Documentation](https://rabbitmq.com/jms-client.html)
 
@@ -36,6 +37,50 @@ Or the following to `build.gradle` for Gradle:
 
 ```groovy
 compile 'com.rabbitmq.jms:rabbitmq-jms:2.6.0'
+```
+
+#### Milestone
+
+Add the following to `pom.xml` for Maven:
+
+```xml
+<dependency>
+  <groupId>com.rabbitmq.jms</groupId>
+  <artifactId>rabbitmq-jms</artifactId>
+  <version>2.7.0.RC1</version>
+</dependency>
+```
+
+You need to declare the milestone repository as well:
+
+```xml
+<repositories>
+
+  <repositories>
+    <repository>
+      <id>packagecloud-rabbitmq-maven-milestones</id>
+      <url>https://packagecloud.io/rabbitmq/maven-milestones/maven2</url>
+      <releases><enabled>true</enabled></releases>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+  </repositories>
+
+</repositories>
+```
+
+Or the following to `build.gradle` for Gradle:
+
+```groovy
+compile 'com.rabbitmq.jms:rabbitmq-jms:2.7.0.RC1'
+```
+
+You need to declare the milestone repository as well:
+
+```groovy
+repositories {
+  maven { url 'https://packagecloud.io/rabbitmq/maven-milestones/maven2' }
+  mavenCentral()
+}
 ```
 
 #### Snapshot
