@@ -240,14 +240,6 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     private boolean declareReplyToDestination = true;
 
-  /**
-   * Whether to validate subscription names or not, according to JMS 2.0. Default is false (no
-   * validation).
-   *
-   * @since 2.7.0
-   */
-  private boolean validateSubscriptionNames = false;
-
     /**
      * {@inheritDoc}
      */
@@ -328,7 +320,6 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setTrustedPackages(this.trustedPackages)
             .setRequeueOnTimeout(this.requeueOnTimeout)
             .setKeepTextMessageType(this.keepTextMessageType)
-            .setValidateSubscriptionNames(this.validateSubscriptionNames)
         );
         logger.debug("Connection {} created.", conn);
         return conn;
@@ -1060,16 +1051,6 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     public void setKeepTextMessageType(boolean keepTextMessageType) {
         this.keepTextMessageType = keepTextMessageType;
     }
-
-  /**
-   * Whether to validate subscription names or not, according to JMS 2.0. Default is false (no
-   * validation).
-   *
-   * @since 2.7.0
-   */
-  public void setValidateSubscriptionNames(boolean validateSubscriptionNames) {
-    this.validateSubscriptionNames = validateSubscriptionNames;
-  }
 
     @FunctionalInterface
     private interface ConnectionCreator {

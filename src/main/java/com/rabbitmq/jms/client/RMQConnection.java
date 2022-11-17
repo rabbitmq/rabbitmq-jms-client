@@ -152,8 +152,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
     private final boolean keepTextMessageType;
 
-    private final boolean validateSubscriptionNames;
-
     /**
      * Creates an RMQConnection object.
      * @param connectionParams parameters for this connection
@@ -180,7 +178,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.trustedPackages = connectionParams.getTrustedPackages();
         this.requeueOnTimeout = connectionParams.willRequeueOnTimeout();
         this.keepTextMessageType = connectionParams.isKeepTextMessageType();
-        this.validateSubscriptionNames = connectionParams.isValidateSubscriptionNames();
     }
 
     /**
@@ -236,7 +233,6 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setTrustedPackages(this.trustedPackages)
             .setRequeueOnTimeout(this.requeueOnTimeout)
             .setKeepTextMessageType(this.keepTextMessageType)
-            .setValidateSubscriptionNames(this.validateSubscriptionNames)
         );
         this.sessions.add(session);
         return session;

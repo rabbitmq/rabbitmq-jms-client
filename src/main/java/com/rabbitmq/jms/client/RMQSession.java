@@ -248,20 +248,16 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.trustedPackages = sessionParams.getTrustedPackages();
         this.requeueOnTimeout = sessionParams.willRequeueOnTimeout();
         this.keepTextMessageType = sessionParams.isKeepTextMessageType();
-        if (sessionParams.isValidateSubscriptionNames()) {
-            this.subscriptionNameValidator = name -> {
-                boolean subscriptionIsValid = Utils.SUBSCRIPTION_NAME_PREDICATE.test(name);
-                if (!subscriptionIsValid) {
-                    // the specification is not clear on which exception to throw when the
-                    // subscription name is not valid, so throwing a JMSException.
-                    throw new JMSException("This subscription name is not valid: " + name + ". "
-                        + "It must not be more than 128 characters and should contain only "
-                        + "Java letters, digits, '_', '.', and '-'.");
-                }
-            };
-        } else {
-            this.subscriptionNameValidator = name -> { };
-        }
+        this.subscriptionNameValidator = name -> {
+            boolean subscriptionIsValid = Utils.SUBSCRIPTION_NAME_PREDICATE.test(name);
+            if (!subscriptionIsValid) {
+                // the specification is not clear on which exception to throw when the
+                // subscription name is not valid, so throwing a JMSException.
+                throw new JMSException("This subscription name is not valid: " + name + ". "
+                    + "It must not be more than 128 characters and should contain only "
+                    + "Java letters, digits, '_', '.', and '-'.");
+            }
+        };
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;

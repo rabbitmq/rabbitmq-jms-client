@@ -44,7 +44,6 @@ public class SimpleDurableTopicMessageIT extends AbstractITTopic {
     @Override
     protected void customise(RMQConnectionFactory connectionFactory) {
        super.customise(connectionFactory);
-       connectionFactory.setValidateSubscriptionNames(true);
     }
 
     @Test
