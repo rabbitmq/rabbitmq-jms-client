@@ -1,9 +1,9 @@
-:2-stable: 2.6.0
-:2-milestone: 2.7.0.RC1
-:2-snapshot: 2.7.0-SNAPSHOT
+:2-stable: 2.7.0
+:2-milestone: 2.8.0.RC1
+:2-snapshot: 2.8.0-SNAPSHOT
 :3-stable: 3.0.0
-:3-milestone: 3.0.0.RC1
-:3-snapshot: 3.0.0-SNAPSHOT
+:3-milestone: 3.1.0.RC1
+:3-snapshot: 3.1.0-SNAPSHOT
 
 = Java JMS Client for RabbitMQ
 
@@ -57,6 +57,7 @@ Or the following to `build.gradle` for Gradle:
 compile 'com.rabbitmq.jms:rabbitmq-jms:{2-stable}'
 ----
 
+////
 ==== Milestone and Release Candidate
 
 For milestones and release candidates, declare the <<milestone-rc-repository,milestone repository>> in your dependency manager.
@@ -80,6 +81,7 @@ Or the following to `build.gradle` for Gradle:
 ----
 compile 'com.rabbitmq.jms:rabbitmq-jms:{2-milestone}'
 ----
+////
 
 ==== Snapshot
 
@@ -110,7 +112,6 @@ compile 'com.rabbitmq.jms:rabbitmq-jms:{2-snapshot}'
 
 RabbitMQ JMS Client implements JMS 3.0 as of 3.0.0.
 
-////
 ==== Stable
 
 Add the following to `pom.xml` for Maven:
@@ -133,8 +134,8 @@ Or the following to `build.gradle` for Gradle:
 compile 'com.rabbitmq.jms:rabbitmq-jms:{3-stable}'
 ----
 
-////
 
+////
 ==== Milestone and Release Candidate
 
 For milestones and release candidates, declare the <<milestone-rc-repository,milestone repository>> in your dependency manager.
@@ -158,6 +159,7 @@ Or the following to `build.gradle` for Gradle:
 ----
 compile 'com.rabbitmq.jms:rabbitmq-jms:{3-milestone}'
 ----
+////
 
 ==== Snapshot
 
