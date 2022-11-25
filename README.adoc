@@ -224,9 +224,9 @@ repositories {
 [[snapshot-repository]]
 === Snapshot Repository
 
-Snapshots are available on https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/http-client/[Sonatype OSS snapshot repository].
+Snapshots are available on https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/jms/rabbitmq-jms/[Sonatype OSS snapshot repository].
 
-Add the https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/http-client/[Sonatype OSS snapshot repository] to your dependency manager:
+Add the https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/jms/rabbitmq-jms/[Sonatype OSS snapshot repository] to your dependency manager:
 
 Maven:
 
