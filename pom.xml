@@ -6,7 +6,7 @@
 
   <name>rabbitmq-jms</name>
   <description>RabbitMQ JMS Client</description>
-  <version>3.0.0</version>
+  <version>3.1.0-SNAPSHOT</version>
   <url>https://www.rabbitmq.com</url>
 
   <packaging>jar</packaging>
@@ -37,7 +37,7 @@
     <url>https://github.com/rabbitmq/rabbitmq-jms-client</url>
     <connection>scm:git:git://github.com/rabbitmq/rabbitmq-jms-client.git</connection>
     <developerConnection>scm:git:git@github.com:rabbitmq/rabbitmq-jms-client.git</developerConnection>
-    <tag>v3.0.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <properties>
