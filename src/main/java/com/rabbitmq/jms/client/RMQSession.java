@@ -19,8 +19,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 
@@ -65,6 +64,7 @@ import com.rabbitmq.jms.client.message.RMQStreamMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.Util;
+
 /**
  * RabbitMQ implementation of JMS {@link Session}
  */
@@ -721,6 +721,85 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             }
         }
     }
+    private DelayedDestinationService delayedMessageService = new DelayedDestinationService();
+
+    static final String X_DELAYED_JMS_EXCHANGE = "x.delayed.jms.message";
+    static final String X_DELAY_HEADER = "x-delay";
+    static final String X_DELAYED_JMS_EXCHANGE_HEADER = "destination";
+
+    /**
+     * Prepare a message for delayed delivery. If deliveryDelayMs > 0, it declares the exchange X_DELAYED_JMS_EXCHANGE
+     * and binds to the target destination. It returns X_DELAYED_JMS_EXCHANGE and adds the following headers to the
+     * headers map:
+     * - x-delay : it has deliveryDelayMs
+     * - destination : it has the name of the target exchange
+     *
+     * If deliveryDelayMs < 1, it returns the name of exchange associated to the target destination.
+     *
+     * @param destination
+     * @param messageHeaders
+     * @param deliveryDelayMs
+     * @return
+     */
+    String delayMessage(RMQDestination destination, Map<String, Object> messageHeaders, long deliveryDelayMs) {
+        return delayedMessageService.delayMessage(destination, messageHeaders, deliveryDelayMs);
+    }
+
+    class DelayedDestinationService {
+        Map<RMQDestination, Boolean> delayedDestinations;
+        volatile boolean delayedExchangeDeclared;
+        Semaphore declaring = new Semaphore(1);
+
+        public DelayedDestinationService() {
+            this.delayedDestinations = new ConcurrentHashMap<>();
+        }
+
+        public String delayMessage(RMQDestination destination, Map<String, Object> messageHeaders, long deliveryDelayMs) {
+            if (deliveryDelayMs <= 0L) return destination.getAmqpExchangeName();
+
+            declareDelayedExchange();
+            delayedDestinations.computeIfAbsent(destination, destination1 -> {
+                bindDestinationToDelayedExchange(destination1);
+                return true;
+            });
+            messageHeaders.put(X_DELAY_HEADER, deliveryDelayMs);
+            messageHeaders.put(X_DELAYED_JMS_EXCHANGE_HEADER, destination.getAmqpExchangeName());
+            return X_DELAYED_JMS_EXCHANGE;
+        }
+        private void declareDelayedExchange() {
+            if (delayedExchangeDeclared) {
+                return;
+            }
+
+            try {
+                declaring.acquire();
+                if (delayedExchangeDeclared) return;
+
+                logger.trace("declare RabbitMQ delayed exchange");
+                Map<String, Object> args = new HashMap<>();
+                args.put("x-delayed-type", "headers");
+                channel.exchangeDeclare(X_DELAYED_JMS_EXCHANGE, "x-delayed-message", true,
+                        false, // autoDelete
+                        false, // internal
+                        args); // object properties
+                delayedExchangeDeclared = true;
+            } catch (Exception x) {
+                throw new RuntimeException(x);
+            } finally {
+                declaring.release();
+            }
+        }
+        private void bindDestinationToDelayedExchange(RMQDestination destination) {
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("destination", destination.getAmqpExchangeName());
+            try {
+                channel.exchangeBind(destination.getAmqpExchangeName(), X_DELAYED_JMS_EXCHANGE, "", map);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
 
     /**
      * {@inheritDoc}
@@ -812,6 +891,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         return this.nonDurableTopicSelectorExchange;
     }
 
+
+
     /**
      * {@inheritDoc}
      * @throws UnsupportedOperationException - method not implemented until we support selectors
@@ -868,6 +949,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         declareRMQQueue(dest, null, false, true);
         return dest;
     }
+
 
     /**
      * Invokes {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)} to define a queue on the RabbitMQ broker

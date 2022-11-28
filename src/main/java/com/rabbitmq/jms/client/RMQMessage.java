@@ -119,7 +119,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     static final String JMS_MESSAGE_DELIVERY_MODE = PREFIX + "jms.message.delivery.mode";
     static final String JMS_MESSAGE_EXPIRATION = PREFIX + "jms.message.expiration";
     static final String JMS_MESSAGE_PRIORITY = PREFIX + "jms.message.priority";
-
+    static final String JMS_MESSAGE_DELIVERY_TIME = PREFIX + "jms.message.delivery.type";
     /**
      * JMS Defined Properties
      */

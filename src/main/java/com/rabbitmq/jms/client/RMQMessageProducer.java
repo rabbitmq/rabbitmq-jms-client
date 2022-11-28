@@ -29,9 +29,7 @@ import javax.jms.TopicPublisher;
 import java.io.IOException;
 import java.util.function.BiFunction;
 
-import static com.rabbitmq.jms.client.RMQMessage.JMS_MESSAGE_DELIVERY_MODE;
-import static com.rabbitmq.jms.client.RMQMessage.JMS_MESSAGE_EXPIRATION;
-import static com.rabbitmq.jms.client.RMQMessage.JMS_MESSAGE_PRIORITY;
+import static com.rabbitmq.jms.client.RMQMessage.*;
 
 /**
  *
@@ -87,6 +85,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      * The default TTL value is 0 (zero), meaning indefinite (no time-out).
      */
     private long ttl = Message.DEFAULT_TIME_TO_LIVE;
+
+    private long deliveryDelay = Message.DEFAULT_DELIVERY_DELAY;
 
     private final SendingStrategy sendingStrategy;
 
@@ -301,8 +301,10 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     private void internalSend(RMQDestination destination, Message message, CompletionListener completionListener,
                               int deliveryMode, int priority, long timeToLiveOrExpiration,
-                              MessageExpirationType messageExpirationType) throws JMSException {
-        logger.trace("send/publish message({}) to destination({}) with properties deliveryMode({}), priority({}), timeToLive({})", message, destination, deliveryMode, priority, timeToLiveOrExpiration);
+                              MessageExpirationType messageExpirationType,
+                              DeliveryTimeSource deliveryTimeSource) throws JMSException {
+        logger.trace("send/publish message({}) to destination({}) with properties deliveryMode({}), priority({}), timeToLive({}), deliveryTimeSource({})",
+                message, destination, deliveryMode, priority, timeToLiveOrExpiration, deliveryTimeSource);
 
         this.sendingContextConsumer.accept(new SendingContext(destination, message));
 
@@ -334,20 +336,31 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         rmqMessage.setJMSDestination(destination);
         rmqMessage.setJMSTimestamp(currentTime);
         rmqMessage.generateInternalID();
-
+        long deliveryDelay = 0L;
+        switch (deliveryTimeSource) {
+            case producer:
+                if (getDeliveryDelay() > 0L) {
+                    deliveryDelay = getDeliveryDelay();
+                    rmqMessage.setJMSDeliveryTime(currentTime + getDeliveryDelay());
+                }
+                break;
+            case message:
+                deliveryDelay = message.getJMSDeliveryTime() - currentTime;
+                break;
+        }
         /* Now send it */
         if (destination.isAmqp()) {
             sendAMQPMessage(destination, rmqMessage, message, completionListener,
-                deliveryMode, priority, ttl);
+                deliveryMode, priority, ttl, deliveryDelay);
         } else {
             sendJMSMessage(destination, rmqMessage, message, completionListener,
-                deliveryMode, priority, ttl);
+                deliveryMode, priority, ttl, deliveryDelay);
         }
     }
 
     private void sendAMQPMessage(RMQDestination destination, RMQMessage msg, Message originalMessage,
                                  CompletionListener completionListener, int deliveryMode,
-                                 int priority, long timeToLive) throws JMSException {
+                                 int priority, long timeToLive, long deliveryDelay) throws JMSException {
         if (!destination.amqpWritable()) {
             this.logger.error("Cannot write to AMQP destination {}", destination);
             throw new RMQJMSException("Cannot write to AMQP destination", new UnsupportedOperationException("MessageProducer.send to undefined AMQP resource"));
@@ -365,6 +378,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
                     messageHeaders.put(RMQMessage.JMS_TYPE_HEADER,
                                        RMQMessage.TEXT_MESSAGE_HEADER_VALUE);
                 }
+                String targetAmqpExchangeName = session.delayMessage(destination, messageHeaders, deliveryDelay);
                 bob.headers(messageHeaders);
 
                 maybeSetReplyToPropertyToDirectReplyTo(bob, msg);
@@ -373,9 +387,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
                 byte[] data = msg.toAmqpByteArray();
 
-                this.beforePublishingCallback.beforePublishing(originalMessage, completionListener,
-                            this.session.getChannel());
-                this.session.getChannel().basicPublish(destination.getAmqpExchangeName(), destination.getAmqpRoutingKey(), bob.build(), data);
+                this.beforePublishingCallback.beforePublishing(originalMessage, completionListener, this.session.getChannel());
+                this.session.getChannel().basicPublish(targetAmqpExchangeName, destination.getAmqpRoutingKey(), bob.build(), data);
             } catch (IOException x) {
                 throw new RMQJMSException(x);
             }
@@ -388,7 +401,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     // protected for testing
     protected void sendJMSMessage(RMQDestination destination, RMQMessage msg, Message originalMessage,
                                   CompletionListener completionListener,
-                                  int deliveryMode, int priority, long timeToLive) throws JMSException {
+                                  int deliveryMode, int priority, long timeToLive, long deliveryDelay) throws JMSException {
         this.session.declareDestinationIfNecessary(destination);
         try {
             AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
@@ -396,7 +409,9 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             bob.deliveryMode(RMQMessage.rmqDeliveryMode(deliveryMode));
             bob.priority(priority);
             bob.expiration(rmqExpiration(timeToLive));
-            bob.headers(msg.toHeaders());
+            Map<String, Object> headers = msg.toHeaders();
+            String targetAmqpExchangeName = session.delayMessage(destination, headers, deliveryDelay);
+            bob.headers(headers);
 
             maybeSetReplyToPropertyToDirectReplyTo(bob, msg);
 
@@ -404,7 +419,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
             this.beforePublishingCallback.beforePublishing(originalMessage, completionListener,
                 this.session.getChannel());
-            this.session.getChannel().basicPublish(destination.getAmqpExchangeName(), destination.getAmqpRoutingKey(), bob.build(), data);
+            this.session.getChannel().basicPublish(targetAmqpExchangeName, destination.getAmqpRoutingKey(), bob.build(), data);
         } catch (IOException x) {
             throw new RMQJMSException(x);
         }
@@ -533,6 +548,11 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     }
 
+    private enum DeliveryTimeSource {
+        message, /** the message carries the delivery time */
+        producer /** the producer is configured with a delivery delay */
+    }
+
     /**
      * This implementation ignores message properties (delivery mode, priority, and expiration)
      * in favor of the message producer's properties.
@@ -543,13 +563,15 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         public void send(Destination destination, Message message, CompletionListener completionListener)
             throws JMSException {
             internalSend((RMQDestination) destination, message, completionListener,
-                getDeliveryMode(), getPriority(), getTimeToLive(), MessageExpirationType.TTL);
+                getDeliveryMode(), getPriority(), getTimeToLive(), MessageExpirationType.TTL,
+                    DeliveryTimeSource.producer);
         }
 
         @Override
         public void send(Destination destination, Message message, CompletionListener completionListener,
             int deliveryMode, int priority, long timeToLive) throws JMSException {
-            internalSend((RMQDestination) destination, message, completionListener, deliveryMode, priority, timeToLive, MessageExpirationType.TTL);
+            internalSend((RMQDestination) destination, message, completionListener, deliveryMode, priority,
+                    timeToLive, MessageExpirationType.TTL, DeliveryTimeSource.producer);
         }
 
     }
@@ -567,14 +589,15 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
                 message.propertyExists(JMS_MESSAGE_DELIVERY_MODE) ? message.getJMSDeliveryMode() : getDeliveryMode(),
                 message.propertyExists(JMS_MESSAGE_PRIORITY) ? message.getJMSPriority() : getPriority(),
                 message.propertyExists(JMS_MESSAGE_EXPIRATION) ? message.getJMSExpiration() : getTimeToLive(),
-                message.propertyExists(JMS_MESSAGE_EXPIRATION) ? MessageExpirationType.EXPIRATION : MessageExpirationType.TTL);
+                message.propertyExists(JMS_MESSAGE_EXPIRATION) ? MessageExpirationType.EXPIRATION : MessageExpirationType.TTL,
+                message.propertyExists(JMS_MESSAGE_DELIVERY_TIME) ? DeliveryTimeSource.message : DeliveryTimeSource.producer);
         }
 
         @Override
         public void send(Destination destination, Message message, CompletionListener completionListener,
             int deliveryMode, int priority, long timeToLive) throws JMSException {
             internalSend((RMQDestination) destination, message, completionListener,
-                deliveryMode, priority, timeToLive, MessageExpirationType.TTL);
+                deliveryMode, priority, timeToLive, MessageExpirationType.TTL, DeliveryTimeSource.message);
         }
 
     }
@@ -591,14 +614,12 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
 
     @Override
     public void setDeliveryDelay(long deliveryDelay) throws JMSException {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
+        this.deliveryDelay = deliveryDelay;
     }
 
     @Override
     public long getDeliveryDelay() {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
+        return deliveryDelay;
     }
 
     @Override
