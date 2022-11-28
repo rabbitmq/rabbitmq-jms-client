@@ -336,18 +336,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         rmqMessage.setJMSDestination(destination);
         rmqMessage.setJMSTimestamp(currentTime);
         rmqMessage.generateInternalID();
-        long deliveryDelay = 0L;
-        switch (deliveryTimeSource) {
-            case producer:
-                if (getDeliveryDelay() > 0L) {
-                    deliveryDelay = getDeliveryDelay();
-                    rmqMessage.setJMSDeliveryTime(currentTime + getDeliveryDelay());
-                }
-                break;
-            case message:
-                deliveryDelay = message.getJMSDeliveryTime() - currentTime;
-                break;
-        }
+        long deliveryDelay = getDeliveryDelayAndSetJMSDeliveryTimeIfNeeded(rmqMessage, deliveryTimeSource);
+
         /* Now send it */
         if (destination.isAmqp()) {
             sendAMQPMessage(destination, rmqMessage, message, completionListener,
@@ -356,6 +346,22 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             sendJMSMessage(destination, rmqMessage, message, completionListener,
                 deliveryMode, priority, ttl, deliveryDelay);
         }
+    }
+    private long getDeliveryDelayAndSetJMSDeliveryTimeIfNeeded(RMQMessage rmqMessage, DeliveryTimeSource deliveryTimeSource) throws JMSException {
+        long deliveryDelay = 0L;
+        long currentTime = System.currentTimeMillis();
+        switch (deliveryTimeSource) {
+            case producer:
+                if (getDeliveryDelay() > 0L) {
+                    deliveryDelay = getDeliveryDelay();
+                    rmqMessage.setJMSDeliveryTime(currentTime + getDeliveryDelay());
+                }
+                break;
+            case message:
+                deliveryDelay = rmqMessage.getJMSDeliveryTime() - currentTime;
+                break;
+        }
+        return deliveryDelay;
     }
 
     private void sendAMQPMessage(RMQDestination destination, RMQMessage msg, Message originalMessage,
