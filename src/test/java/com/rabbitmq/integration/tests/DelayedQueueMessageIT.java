@@ -7,23 +7,21 @@ package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.jms.util.Shell;
 import jakarta.jms.*;
-import org.junit.Before;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-import static com.rabbitmq.jms.util.Shell.rabbitmqPlugins;
-import static com.rabbitmq.jms.util.Shell.rabbitmqctlCommand;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Integration test
  */
-public class DelayedMessageIT extends AbstractITQueue {
+public class DelayedQueueMessageIT extends AbstractITQueue {
 
-    private static final String MESSAGE = "Hello " + DelayedMessageIT.class.getName();
+    private static final String MESSAGE = "Hello " + DelayedQueueMessageIT.class.getName();
 
     @BeforeEach
     public void beforeMethod() throws IOException {
@@ -31,7 +29,7 @@ public class DelayedMessageIT extends AbstractITQueue {
             Shell.rabbitmqPlugins("is_enabled rabbitmq_delayed_message_exchange");
         }catch(Exception e) {
             System.out.println("Skipped DelayedMessageIT. Plugin rabbitmq_delayed_message_exchange is not enabled");
-            org.junit.Assume.assumeTrue(false);
+            Assumptions.assumeTrue(false);
         }
     }
 
