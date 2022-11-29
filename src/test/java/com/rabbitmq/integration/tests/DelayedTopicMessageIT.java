@@ -13,8 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration test
@@ -38,24 +37,25 @@ public class DelayedTopicMessageIT extends AbstractITTopic {
         }
     }
     @Test
-    public void testSendAndReceiveTextMessage() throws Exception {
+    public void testSendMessageToTopicWithDelayedPublisher() throws Exception {
         topicConn.start();
         TopicSession topicSession = topicConn.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         Topic topic = topicSession.createTopic(TOPIC_NAME);
         TopicPublisher sender = topicSession.createPublisher(topic);
-        sender.setDeliveryDelay(1000L);
+        sender.setDeliveryDelay(4000L);
         TopicSubscriber receiver1 = topicSession.createSubscriber(topic);
 
+        // TODO probably ensure the topic is empty
         sender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         TextMessage message = topicSession.createTextMessage(MESSAGE_TEXT_1);
         sender.send(message);
 
+        assertNull(receiver1.receive(2000L));
         TextMessage receivedMessage = (TextMessage)receiver1.receive();
         assertTrue(receivedMessage.getJMSDeliveryTime() > 0);
         assertEquals(MESSAGE_TEXT_1, receivedMessage.getText());
 
     }
-
 
 
 }

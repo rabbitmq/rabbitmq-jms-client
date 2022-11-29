@@ -37,17 +37,19 @@ public class DelayedQueueMessageIT extends AbstractITQueue {
 
 
     @Test
-    public void testJMSTemporaryQueue() throws Exception {
+    public void testSendMessageToJMSTemporaryQueue() throws Exception {
         queueConn.start();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         Queue queue = queueSession.createTemporaryQueue();
         QueueSender queueSender = queueSession.createSender(queue);
-        queueSender.setDeliveryDelay(1000L);
+        queueSender.setDeliveryDelay(4000L);
         queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         TextMessage message = queueSession.createTextMessage(MESSAGE);
         queueSender.send(message);
+
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-        TextMessage receivedMessage = (TextMessage) queueReceiver.receive(2000L);
+        assertNull(queueReceiver.receive(2000L));
+        TextMessage receivedMessage = (TextMessage) queueReceiver.receive(3000L);
         assertNotNull(receivedMessage);
         assertTrue(receivedMessage.getJMSDeliveryTime() > 0);
         assertEquals(MESSAGE, receivedMessage.getText());
@@ -65,6 +67,7 @@ public class DelayedQueueMessageIT extends AbstractITQueue {
         TextMessage message = queueSession.createTextMessage(MESSAGE);
         message.setJMSDeliveryTime(System.currentTimeMillis() + 4000L);
         queueSender.send(message);
+        
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
         assertNull(queueReceiver.receive(2000L));
         TextMessage receivedMessage = (TextMessage)queueReceiver.receive(2000L);
