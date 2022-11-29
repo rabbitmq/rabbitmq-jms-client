@@ -350,16 +350,11 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     private long getDeliveryDelayAndSetJMSDeliveryTimeIfNeeded(RMQMessage rmqMessage, DeliveryTimeSource deliveryTimeSource) throws JMSException {
         long deliveryDelay = 0L;
         long currentTime = System.currentTimeMillis();
-        switch (deliveryTimeSource) {
-            case producer:
-                if (getDeliveryDelay() > 0L) {
-                    deliveryDelay = getDeliveryDelay();
-                    rmqMessage.setJMSDeliveryTime(currentTime + getDeliveryDelay());
-                }
-                break;
-            case message:
-                deliveryDelay = rmqMessage.getJMSDeliveryTime() - currentTime;
-                break;
+        if (DeliveryTimeSource.message.equals(deliveryTimeSource) || getDeliveryDelay() <= 0L) {
+            deliveryDelay = rmqMessage.getJMSDeliveryTime() - currentTime;
+        }else if (getDeliveryDelay() > 0L) {
+            deliveryDelay = getDeliveryDelay();
+            rmqMessage.setJMSDeliveryTime(currentTime + getDeliveryDelay());
         }
         return deliveryDelay;
     }
