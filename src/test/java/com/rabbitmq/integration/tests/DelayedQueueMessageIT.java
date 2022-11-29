@@ -13,8 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration test
@@ -23,11 +22,14 @@ public class DelayedQueueMessageIT extends AbstractITQueue {
 
     private static final String MESSAGE = "Hello " + DelayedQueueMessageIT.class.getName();
 
+    private static final String QUEUE_NAME = "delay.queue." + DelayedQueueMessageIT.class.getCanonicalName();
+
     @BeforeEach
     public void beforeMethod() throws IOException {
         try {
             Shell.rabbitmqPlugins("is_enabled rabbitmq_delayed_message_exchange");
         }catch(Exception e) {
+            e.printStackTrace();
             System.out.println("Skipped DelayedMessageIT. Plugin rabbitmq_delayed_message_exchange is not enabled");
             Assumptions.assumeTrue(false);
         }
@@ -35,7 +37,7 @@ public class DelayedQueueMessageIT extends AbstractITQueue {
 
 
     @Test
-    public void testJMSQueue() throws Exception {
+    public void testJMSTemporaryQueue() throws Exception {
         queueConn.start();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         Queue queue = queueSession.createTemporaryQueue();
@@ -45,10 +47,49 @@ public class DelayedQueueMessageIT extends AbstractITQueue {
         TextMessage message = queueSession.createTextMessage(MESSAGE);
         queueSender.send(message);
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-        message = (TextMessage) queueReceiver.receive(2000L);
-        assertNotNull(message);
-        assertEquals(MESSAGE, message.getText());
+        TextMessage receivedMessage = (TextMessage) queueReceiver.receive(2000L);
+        assertNotNull(receivedMessage);
+        assertTrue(receivedMessage.getJMSDeliveryTime() > 0);
+        assertEquals(MESSAGE, receivedMessage.getText());
     }
 
+
+    @Test
+    public void testSendDelayedMessageToJMSQueue() throws Exception {
+        queueConn.start();
+        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        Queue queue = queueSession.createQueue(QUEUE_NAME);
+        QueueSender queueSender = queueSession.createSender(queue);
+
+        queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        TextMessage message = queueSession.createTextMessage(MESSAGE);
+        message.setJMSDeliveryTime(System.currentTimeMillis() + 4000L);
+        queueSender.send(message);
+        QueueReceiver queueReceiver = queueSession.createReceiver(queue);
+        assertNull(queueReceiver.receive(2000L));
+        TextMessage receivedMessage = (TextMessage)queueReceiver.receive(2000L);
+        assertNotNull(receivedMessage);
+        assertEquals(message.getJMSDeliveryTime(), receivedMessage.getJMSDeliveryTime());
+        assertEquals(MESSAGE, receivedMessage.getText());
+    }
+
+    @Test
+    public void testSendMessageViaDelayedProducerToJMSQueue() throws Exception {
+        queueConn.start();
+        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        Queue queue = queueSession.createQueue(QUEUE_NAME);
+        QueueSender queueSender = queueSession.createSender(queue);
+        queueSender.setDeliveryDelay(4000L);
+        queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        TextMessage message = queueSession.createTextMessage(MESSAGE);
+        queueSender.send(message);
+
+        QueueReceiver queueReceiver = queueSession.createReceiver(queue);
+        assertNull(queueReceiver.receive(2000L));
+        TextMessage receivedMessage = (TextMessage)queueReceiver.receive(3000L);
+        assertNotNull(receivedMessage);
+        assertEquals(message.getJMSDeliveryTime(), receivedMessage.getJMSDeliveryTime());
+        assertEquals(MESSAGE, receivedMessage.getText());
+    }
 
 }
