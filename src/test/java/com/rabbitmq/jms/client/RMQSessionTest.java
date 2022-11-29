@@ -49,7 +49,6 @@ public class RMQSessionTest {
         assertEquals(destination.getAmqpExchangeName(), headers.get(RMQSession.X_DELAYED_JMS_EXCHANGE_HEADER));
         assertEquals(1L, headers.get(RMQSession.X_DELAY_HEADER));
 
-        Mockito.verify(channel);
         assertEquals("headers", delayedExchangeArguments.getValue().get("x-delayed-type"));
         assertEquals(destination.getAmqpExchangeName(), destinationExchangeBindingArguments.getValue()
                 .get(RMQSession.X_DELAYED_JMS_EXCHANGE_HEADER));
