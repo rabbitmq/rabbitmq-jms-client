@@ -29,8 +29,8 @@ public class DelayedAMQPQueueMessageIT extends AbstractAmqpITQueue {
     RMQDestination destination;
 
     @BeforeEach
-    void init(TestInfo info) throws Exception {
-        queueName = TestUtils.queueName(info);
+    void init() throws Exception {
+        queueName = "DelayedAMQPQueueMessageIT";
         destination = new RMQDestination(queueName, true, false);
     }
 
