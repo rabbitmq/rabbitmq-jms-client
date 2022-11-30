@@ -6,7 +6,7 @@
 package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.jms.util.Shell;
-import jakarta.jms.*;
+import javax.jms.*;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -161,6 +161,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
     private final boolean validateSubscriptionNames;
 
+    private final DelayedMessageService delayedMessageService;
+
     /**
      * Creates an RMQConnection object.
      * @param connectionParams parameters for this connection
@@ -189,6 +191,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.requeueOnTimeout = connectionParams.willRequeueOnTimeout();
         this.keepTextMessageType = connectionParams.isKeepTextMessageType();
         this.validateSubscriptionNames = connectionParams.isValidateSubscriptionNames();
+        this.delayedMessageService = new DelayedMessageService();
     }
 
     /**
@@ -246,6 +249,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setRequeueOnTimeout(this.requeueOnTimeout)
             .setKeepTextMessageType(this.keepTextMessageType)
             .setValidateSubscriptionNames(this.validateSubscriptionNames)
+            .setDelayedMessageService(this.delayedMessageService)
         );
         this.sessions.add(session);
         return session;
@@ -382,6 +386,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.exceptionListener.set(null);
 
         closeAllSessions();
+        this.delayedMessageService.close();
 
         try {
             this.rabbitConnection.close();

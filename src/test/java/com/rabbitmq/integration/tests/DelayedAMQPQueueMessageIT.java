@@ -5,19 +5,13 @@
 // Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
-import com.rabbitmq.TestUtils;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.util.Shell;
-import jakarta.jms.*;
+import javax.jms.*;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
-import java.util.stream.IntStream;
 
-import static com.rabbitmq.Assertions.assertThat;
-import static com.rabbitmq.TestUtils.onCompletion;
-import static java.lang.String.valueOf;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
