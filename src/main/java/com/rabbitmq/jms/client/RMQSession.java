@@ -216,6 +216,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private final AtomicBoolean confirmSelectCalledOnChannel = new AtomicBoolean(false);
 
+    private final DelayedMessageService delayedMessageService;
+
     static boolean validateSessionMode(int sessionMode) {
        return sessionMode >= 0 && sessionMode <= CLIENT_INDIVIDUAL_ACKNOWLEDGE;
     }
@@ -248,6 +250,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.trustedPackages = sessionParams.getTrustedPackages();
         this.requeueOnTimeout = sessionParams.willRequeueOnTimeout();
         this.keepTextMessageType = sessionParams.isKeepTextMessageType();
+        this.delayedMessageService = sessionParams.getDelayedMessageService();
         this.subscriptionNameValidator = name -> {
             boolean subscriptionIsValid = Utils.SUBSCRIPTION_NAME_PREDICATE.test(name);
             if (!subscriptionIsValid) {
@@ -288,13 +291,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @param subscriptions the connection's subscriptions, shared with all sessions
      * @throws JMSException if we fail to create a {@link Channel} object on the connection, or if the acknowledgement mode is incorrect
      */
-    public RMQSession(RMQConnection connection, boolean transacted, int onMessageTimeoutMs, int mode, Subscriptions subscriptions) throws JMSException {
+    public RMQSession(RMQConnection connection, boolean transacted, int onMessageTimeoutMs, int mode, Subscriptions subscriptions, DelayedMessageService delayedMessageService) throws JMSException {
         this(new SessionParams()
             .setConnection(connection)
             .setTransacted(transacted)
             .setOnMessageTimeoutMs(onMessageTimeoutMs)
             .setMode(mode)
             .setSubscriptions(subscriptions)
+            .setDelayedMessageService(delayedMessageService)
         );
     }
 
@@ -710,11 +714,6 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             }
         }
     }
-    private DelayedDestinationService delayedMessageService = new DelayedDestinationService();
-
-    static final String X_DELAYED_JMS_EXCHANGE = "x.delayed.jms.message";
-    static final String X_DELAY_HEADER = "x-delay";
-    static final String X_DELAYED_JMS_EXCHANGE_HEADER = "destination";
 
     /**
      * Prepare a message for delayed delivery. If deliveryDelayMs > 0, it declares the exchange X_DELAYED_JMS_EXCHANGE
@@ -731,62 +730,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @return
      */
     String delayMessage(RMQDestination destination, Map<String, Object> messageHeaders, long deliveryDelayMs) {
-        return delayedMessageService.delayMessage(destination, messageHeaders, deliveryDelayMs);
-    }
-
-    class DelayedDestinationService {
-        Map<RMQDestination, Boolean> delayedDestinations;
-        volatile boolean delayedExchangeDeclared;
-        Semaphore declaring = new Semaphore(1);
-
-        public DelayedDestinationService() {
-            this.delayedDestinations = new ConcurrentHashMap<>();
-        }
-
-        public String delayMessage(RMQDestination destination, Map<String, Object> messageHeaders, long deliveryDelayMs) {
-            if (deliveryDelayMs <= 0L) return destination.getAmqpExchangeName();
-
-            declareDelayedExchange();
-            delayedDestinations.computeIfAbsent(destination, destination1 -> {
-                bindDestinationToDelayedExchange(destination1);
-                return true;
-            });
-            messageHeaders.put(X_DELAY_HEADER, deliveryDelayMs);
-            messageHeaders.put(X_DELAYED_JMS_EXCHANGE_HEADER, destination.getAmqpExchangeName());
-            return X_DELAYED_JMS_EXCHANGE;
-        }
-        private void declareDelayedExchange() {
-            if (delayedExchangeDeclared) {
-                return;
-            }
-
-            try {
-                declaring.acquire();
-                if (delayedExchangeDeclared) return;
-
-                logger.trace("declare RabbitMQ delayed exchange");
-                Map<String, Object> args = new HashMap<>();
-                args.put("x-delayed-type", "headers");
-                channel.exchangeDeclare(X_DELAYED_JMS_EXCHANGE, "x-delayed-message", true,
-                        false, // autoDelete
-                        false, // internal
-                        args); // object properties
-                delayedExchangeDeclared = true;
-            } catch (Exception x) {
-                throw new RuntimeException(x);
-            } finally {
-                declaring.release();
-            }
-        }
-        private void bindDestinationToDelayedExchange(RMQDestination destination) {
-            HashMap<String, Object> map = new HashMap<>();
-            map.put("destination", destination.getAmqpExchangeName());
-            try {
-                channel.exchangeBind(destination.getAmqpExchangeName(), X_DELAYED_JMS_EXCHANGE, "", map);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        return delayedMessageService.delayMessage(channel, destination, messageHeaders, deliveryDelayMs);
     }
 
 
