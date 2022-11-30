@@ -19,12 +19,11 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class DelayedAMQPQueueMessageIT extends AbstractAmqpITQueue {
 
-    String queueName;
+    String queueName = "DelayedAMQPQueueMessageIT";
     RMQDestination destination;
 
     @BeforeEach
     void init() throws Exception {
-        queueName = "DelayedAMQPQueueMessageIT";
         destination = new RMQDestination(queueName, true, false);
     }
 
