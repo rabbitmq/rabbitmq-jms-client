@@ -22,7 +22,7 @@ public class DelayedQueueMessageIT extends AbstractITQueue {
 
     private static final String MESSAGE = "Hello " + DelayedQueueMessageIT.class.getName();
 
-    private static final String QUEUE_NAME = "delay.queue." + DelayedQueueMessageIT.class.getCanonicalName();
+    private static final String QUEUE_NAME = "delay.queue.";
 
     @BeforeEach
     public void beforeMethod() throws IOException {
@@ -60,17 +60,17 @@ public class DelayedQueueMessageIT extends AbstractITQueue {
     public void testSendDelayedMessageToJMSQueue() throws Exception {
         queueConn.start();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-        Queue queue = queueSession.createQueue(QUEUE_NAME);
+        Queue queue = queueSession.createQueue(QUEUE_NAME + System.currentTimeMillis());
         QueueSender queueSender = queueSession.createSender(queue);
 
         queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         TextMessage message = queueSession.createTextMessage(MESSAGE);
         message.setJMSDeliveryTime(System.currentTimeMillis() + 4000L);
         queueSender.send(message);
-        
+
         QueueReceiver queueReceiver = queueSession.createReceiver(queue);
         assertNull(queueReceiver.receive(2000L));
-        TextMessage receivedMessage = (TextMessage)queueReceiver.receive(2000L);
+        TextMessage receivedMessage = (TextMessage)queueReceiver.receive();
         assertNotNull(receivedMessage);
         assertEquals(message.getJMSDeliveryTime(), receivedMessage.getJMSDeliveryTime());
         assertEquals(MESSAGE, receivedMessage.getText());
@@ -80,7 +80,7 @@ public class DelayedQueueMessageIT extends AbstractITQueue {
     public void testSendMessageViaDelayedProducerToJMSQueue() throws Exception {
         queueConn.start();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-        Queue queue = queueSession.createQueue(QUEUE_NAME);
+        Queue queue = queueSession.createQueue(QUEUE_NAME + System.currentTimeMillis());
         QueueSender queueSender = queueSession.createSender(queue);
         queueSender.setDeliveryDelay(4000L);
         queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);

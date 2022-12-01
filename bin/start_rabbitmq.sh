@@ -2,8 +2,16 @@
 
 LOCAL_SCRIPT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-RABBITMQ_IMAGE_TAG=${RABBITMQ_IMAGE_TAG:-3.11}
-RABBITMQ_IMAGE=${RABBITMQ_IMAGE:-rabbitmq}
+RABBITMQ_IMAGE_TAG=${RABBITMQ_IMAGE_TAG:-3.11.0-rc.2.29.geee5757.dirty}
+RABBITMQ_IMAGE=${RABBITMQ_IMAGE:-pivotalrabbitmq/rabbitmq}
+
+wait_for_message() {
+  while ! docker logs $1 | grep -q "$2";
+  do
+      sleep 5
+      echo "Waiting 5sec for $1 to start ..."
+  done
+}
 
 echo "Download required plugins"
 wget https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/3.11.1/rabbitmq_delayed_message_exchange-3.11.1.ez
@@ -20,3 +28,6 @@ docker run -d --name rabbitmq \
     -v ${PWD}/enabled_plugins:/etc/rabbitmq/enabled_plugins \
     -v ${PWD}/rabbitmq_delayed_message_exchange-3.11.1.ez:/opt/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.11.1.ez \
     ${RABBITMQ_IMAGE}:${RABBITMQ_IMAGE_TAG}
+
+
+wait_for_message rabbitmq "Server startup complete"
