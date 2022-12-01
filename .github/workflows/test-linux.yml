@@ -12,12 +12,6 @@ jobs:
   build:
     runs-on: ubuntu-22.04
 
-    services:
-      rabbitmq:
-        image: rabbitmq
-        ports:
-          - 5672:5672
-
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK
@@ -26,11 +20,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           cache: 'maven'
-      - name: Enable JMS Topic Exchange Plugin
-        run: docker exec ${{job.services.rabbitmq.id}} rabbitmq-plugins enable rabbitmq_jms_topic_exchange --offline
-      - name: Stop RabbitMQ application
-        run: docker exec ${{job.services.rabbitmq.id}} rabbitmqctl stop_app
       - name: Start RabbitMQ application
-        run: docker exec ${{job.services.rabbitmq.id}} rabbitmqctl start_app
+        run: bin/start_rabbitmq.sh
       - name: Test
-        run: ./mvnw verify -Drabbitmqctl.bin=DOCKER:${{job.services.rabbitmq.id}}
+        run: ./mvnw verify -Drabbitmqctl.bin=DOCKER:rabbitmq -Drabbitmq_plugins.bin=DOCKER:rabbitmq
