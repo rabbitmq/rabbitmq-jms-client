@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 
 class DelayedMessageService {
-    static final String X_DELAYED_JMS_EXCHANGE = "x.delayed.jms.message";
+    static final String X_DELAYED_JMS_EXCHANGE = "x-delayed-jms-message";
     static final String X_DELAY_HEADER = "x-delay";
     static final String X_DELAYED_JMS_EXCHANGE_HEADER = "delayed-exchange";
 
