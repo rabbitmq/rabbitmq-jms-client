@@ -4,3 +4,5 @@ target/
 .settings
 .idea/*
 *.iml
+enabled_plugins
+*.ez
