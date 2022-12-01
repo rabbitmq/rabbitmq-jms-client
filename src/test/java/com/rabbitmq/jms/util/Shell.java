@@ -62,7 +62,7 @@ public class Shell {
         if (lines.length > 0) {
             for (int i = 1; i < lines.length; i++) {
                 String [] fields = lines[i].split("\t");
-                Binding binding = new Binding(fields[0], fields[1], fields[2]);
+                Binding binding = new Binding(fields[0], fields[1], fields.length > 2 ? fields[2] : "");
                 if (includeDefaults || !binding.isDefault()) {
                     bindings.add(binding);
                 }
