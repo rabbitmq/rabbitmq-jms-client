@@ -15,18 +15,18 @@ class DelayedMessageService {
     static final String X_DELAYED_JMS_EXCHANGE_HEADER = "delayed-exchange";
 
     /** Cache of exchanges which have been bound to the delayed exchange */
-    private Map<String, Boolean> delayedDestinations;
+    private final Map<String, Boolean> delayedDestinations;
     private volatile boolean delayedExchangeDeclared;
     private Semaphore declaring = new Semaphore(1);
 
     public DelayedMessageService() {
         this.delayedDestinations = new ConcurrentHashMap<>();
     }
-    public void close() {
+    void close() {
         delayedDestinations.clear();
     }
 
-    public String delayMessage(Channel channel, RMQDestination destination, Map<String, Object> messageHeaders, long deliveryDelayMs) {
+    String delayMessage(Channel channel, RMQDestination destination, Map<String, Object> messageHeaders, long deliveryDelayMs) {
         if (deliveryDelayMs <= 0L) return destination.getAmqpExchangeName();
 
         declareDelayedExchange(channel);
@@ -55,7 +55,7 @@ class DelayedMessageService {
                     args); // object properties
             delayedExchangeDeclared = true;
         } catch (Exception x) {
-            throw new RuntimeException(x);
+            throw new RuntimeException("Failed to declare exchange " + X_DELAYED_JMS_EXCHANGE, x);
         } finally {
             declaring.release();
         }
