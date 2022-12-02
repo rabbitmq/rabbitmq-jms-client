@@ -2,45 +2,38 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.TestUtils;
+import com.rabbitmq.TestUtils.DisabledIfDelayedMessageExchangePluginNotEnabled;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.util.Shell;
-import jakarta.jms.*;
-import org.junit.jupiter.api.*;
+import jakarta.jms.JMSConsumer;
+import jakarta.jms.JMSContext;
+import jakarta.jms.JMSProducer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
-import java.util.stream.IntStream;
 
-import static com.rabbitmq.Assertions.assertThat;
-import static com.rabbitmq.TestUtils.onCompletion;
-import static java.lang.String.valueOf;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Integration test
  */
+@DisabledIfDelayedMessageExchangePluginNotEnabled
 public class DelayedAMQPQueueMessageIT extends AbstractAmqpITQueue {
 
     String queueName = "DelayedAMQPQueueMessageIT";
     RMQDestination destination;
 
     @BeforeEach
-    void init() throws Exception {
+    void init() {
         destination = new RMQDestination(queueName, true, false);
-    }
-
-    @BeforeEach
-    public void beforeMethod() throws IOException {
-        try {
-            Shell.rabbitmqPlugins("is_enabled rabbitmq_delayed_message_exchange");
-        }catch(Exception e) {
-            System.out.println("Skipped DelayedMessageIT. Plugin rabbitmq_delayed_message_exchange is not enabled");
-            Assumptions.assumeTrue(false);
-        }
     }
 
     @AfterEach

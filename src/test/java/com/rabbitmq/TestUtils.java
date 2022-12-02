@@ -20,6 +20,7 @@ import java.util.concurrent.Callable;
 import jakarta.jms.CompletionListener;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
@@ -140,6 +141,14 @@ public class TestUtils {
 
   }
 
+  @Target({ElementType.TYPE, ElementType.METHOD})
+  @Retention(RetentionPolicy.RUNTIME)
+  @Documented
+  @ExtendWith(DisabledIfDelayedMessageExchangePluginNotEnabledCondition.class)
+  public @interface DisabledIfDelayedMessageExchangePluginNotEnabled {
+
+  }
+
   private static class DisabledIfTlsNotEnabledCondition implements ExecutionCondition {
 
     @Override
@@ -151,4 +160,18 @@ public class TestUtils {
       }
     }
   }
+  private static class DisabledIfDelayedMessageExchangePluginNotEnabledCondition implements ExecutionCondition {
+
+    @Override
+    public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
+      try {
+        Shell.rabbitmqPlugins("is_enabled rabbitmq_delayed_message_exchange");
+        return ConditionEvaluationResult.enabled("rabbitmq_delayed_message_exchange is enabled");
+      } catch(Exception e) {
+        return ConditionEvaluationResult.disabled("rabbitmq_delayed_message_exchange is disabled");
+      }
+    }
+  }
+
+
 }

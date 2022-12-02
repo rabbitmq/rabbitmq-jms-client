@@ -2,39 +2,28 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
+import com.rabbitmq.TestUtils;
+import com.rabbitmq.TestUtils.DisabledIfDelayedMessageExchangePluginNotEnabled;
 import com.rabbitmq.jms.util.Shell;
 import jakarta.jms.*;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration test
  */
+@DisabledIfDelayedMessageExchangePluginNotEnabled
 public class DelayedQueueMessageIT extends AbstractITQueue {
 
     private static final String MESSAGE = "Hello " + DelayedQueueMessageIT.class.getName();
 
     private static final String QUEUE_NAME = "delay.queue.";
-
-    @BeforeEach
-    public void beforeMethod() throws IOException {
-        try {
-            Shell.rabbitmqPlugins("is_enabled rabbitmq_delayed_message_exchange");
-        }catch(Exception e) {
-            e.printStackTrace();
-            System.out.println("Skipped DelayedMessageIT. Plugin rabbitmq_delayed_message_exchange is not enabled");
-            Assumptions.assumeTrue(false);
-        }
-    }
-
 
     @Test
     public void testSendMessageToJMSTemporaryQueue() throws Exception {

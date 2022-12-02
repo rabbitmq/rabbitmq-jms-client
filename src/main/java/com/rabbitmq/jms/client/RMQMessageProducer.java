@@ -350,7 +350,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     private long getDeliveryDelayAndSetJMSDeliveryTimeIfNeeded(RMQMessage rmqMessage, DeliveryTimeSource deliveryTimeSource) throws JMSException {
         long deliveryDelay = 0L;
         long currentTime = System.currentTimeMillis();
-        if (DeliveryTimeSource.message.equals(deliveryTimeSource) || getDeliveryDelay() <= 0L) {
+        if (DeliveryTimeSource.MESSAGE.equals(deliveryTimeSource) || getDeliveryDelay() <= 0L) {
             deliveryDelay = rmqMessage.getJMSDeliveryTime() - currentTime;
         }else if (getDeliveryDelay() > 0L) {
             deliveryDelay = getDeliveryDelay();
@@ -550,8 +550,8 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     }
 
     private enum DeliveryTimeSource {
-        message, /** the message carries the delivery time */
-        producer /** the producer is configured with a delivery delay */
+        MESSAGE, /** the message carries the delivery time */
+        PRODUCER /** the producer is configured with a delivery delay */
     }
 
     /**
@@ -565,14 +565,14 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             throws JMSException {
             internalSend((RMQDestination) destination, message, completionListener,
                 getDeliveryMode(), getPriority(), getTimeToLive(), MessageExpirationType.TTL,
-                    DeliveryTimeSource.producer);
+                    DeliveryTimeSource.PRODUCER);
         }
 
         @Override
         public void send(Destination destination, Message message, CompletionListener completionListener,
             int deliveryMode, int priority, long timeToLive) throws JMSException {
             internalSend((RMQDestination) destination, message, completionListener, deliveryMode, priority,
-                    timeToLive, MessageExpirationType.TTL, DeliveryTimeSource.producer);
+                    timeToLive, MessageExpirationType.TTL, DeliveryTimeSource.PRODUCER);
         }
 
     }
@@ -591,14 +591,14 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
                 message.propertyExists(JMS_MESSAGE_PRIORITY) ? message.getJMSPriority() : getPriority(),
                 message.propertyExists(JMS_MESSAGE_EXPIRATION) ? message.getJMSExpiration() : getTimeToLive(),
                 message.propertyExists(JMS_MESSAGE_EXPIRATION) ? MessageExpirationType.EXPIRATION : MessageExpirationType.TTL,
-                message.propertyExists(JMS_MESSAGE_DELIVERY_TIME) ? DeliveryTimeSource.message : DeliveryTimeSource.producer);
+                message.propertyExists(JMS_MESSAGE_DELIVERY_TIME) ? DeliveryTimeSource.MESSAGE : DeliveryTimeSource.PRODUCER);
         }
 
         @Override
         public void send(Destination destination, Message message, CompletionListener completionListener,
             int deliveryMode, int priority, long timeToLive) throws JMSException {
             internalSend((RMQDestination) destination, message, completionListener,
-                deliveryMode, priority, timeToLive, MessageExpirationType.TTL, DeliveryTimeSource.message);
+                deliveryMode, priority, timeToLive, MessageExpirationType.TTL, DeliveryTimeSource.MESSAGE);
         }
 
     }
