@@ -163,10 +163,6 @@ public class Shell {
     private static String rabbitmqctlNodenameArgument() {
         return isRabbitmqctlOnDocker() ? "" : " -n \'" + nodenameA() + "\'";
     }
-    private static String rabbitmqPluginsNodenameArgument() {
-        return isRabbitmqPluginsOnDocker() ? "" : " -n \'" + nodenameA() + "\'";
-    }
-
     public static boolean isRabbitmqctlOnDocker() {
         String rabbitmqCtl = System.getProperty("rabbitmqctl.bin");
         if (rabbitmqCtl == null) {
@@ -174,18 +170,8 @@ public class Shell {
         }
         return rabbitmqCtl.startsWith(DOCKER_PREFIX);
     }
-    public static boolean isRabbitmqPluginsOnDocker() {
-        String command = System.getProperty("rabbitmq_plugins.bin");
-        if (command == null) {
-            throw new IllegalStateException("Please define the rabbitmq_plugins.bin system property");
-        }
-        return command.startsWith(DOCKER_PREFIX);
-    }
     public static ProcessState rabbitmqctl(String command) throws IOException {
         return executeCommand(rabbitmqctlCommand() + rabbitmqctlNodenameArgument() + " " + command);
-    }
-    public static ProcessState rabbitmqPlugins(String command) throws IOException {
-        return executeCommand(rabbitmqPluginsCommand() + rabbitmqPluginsNodenameArgument() + " " + command);
     }
     public static String rabbitmqctlCommand() {
         String rabbitmqCtl = System.getProperty("rabbitmqctl.bin");
@@ -200,18 +186,6 @@ public class Shell {
         }
     }
 
-    public static String rabbitmqPluginsCommand() {
-        String rabbitmqPlugins = System.getProperty("rabbitmq_plugins.bin");
-        if (rabbitmqPlugins == null) {
-            throw new IllegalStateException("Please define the rabbitmq-plugins.bin system property");
-        }
-        if (rabbitmqPlugins.startsWith("DOCKER:")) {
-            String containerId = rabbitmqPlugins.split(":")[1];
-            return "docker exec " + containerId + " rabbitmq-plugins";
-        } else {
-            return rabbitmqPlugins;
-        }
-    }
     public static class Binding {
 
         private final String source, destination, routingKey;

@@ -5,12 +5,8 @@
 // Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
-import com.rabbitmq.TestUtils;
 import com.rabbitmq.TestUtils.DisabledIfDelayedMessageExchangePluginNotEnabled;
-import com.rabbitmq.jms.util.Shell;
 import jakarta.jms.*;
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

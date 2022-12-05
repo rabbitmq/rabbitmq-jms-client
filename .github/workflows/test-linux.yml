@@ -23,4 +23,4 @@ jobs:
       - name: Start RabbitMQ application
         run: bin/start_rabbitmq.sh
       - name: Test
-        run: ./mvnw verify -Drabbitmqctl.bin=DOCKER:rabbitmq -Drabbitmq_plugins.bin=DOCKER:rabbitmq
+        run: ./mvnw verify -Drabbitmqctl.bin=DOCKER:rabbitmq
