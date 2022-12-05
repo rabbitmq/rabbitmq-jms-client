@@ -100,6 +100,20 @@ public class TestUtils {
       }
     }
   }
+  private static boolean isPluginEnabled(String plugin) {
+    if (Shell.rabbitmqctlCommand() == null) {
+      throw new IllegalStateException(
+              "rabbitmqctl.bin system property not set, cannot check if TLS is enabled");
+    } else {
+      try {
+        ProcessState process = Shell.rabbitmqctl("status");
+        String output = process.output();
+        return output.contains(plugin);
+      } catch (Exception e) {
+        throw new RuntimeException("Error while detecting if plugin " + plugin + " is enabled: " + e.getMessage());
+      }
+    }
+  }
 
   public static String queueName(TestInfo info) {
     return queueName(info.getTestClass().get(), info.getTestMethod().get());
@@ -164,7 +178,7 @@ public class TestUtils {
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
       try {
-        Shell.rabbitmqPlugins("is_enabled rabbitmq_delayed_message_exchange");
+        isPluginEnabled("rabbitmq_delayed_message_exchange");
         return ConditionEvaluationResult.enabled("rabbitmq_delayed_message_exchange is enabled");
       } catch(Exception e) {
         return ConditionEvaluationResult.disabled("rabbitmq_delayed_message_exchange is disabled");

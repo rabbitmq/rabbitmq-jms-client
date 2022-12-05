@@ -614,7 +614,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     }
 
     @Override
-    public void setDeliveryDelay(long deliveryDelay) throws JMSException {
+    public void setDeliveryDelay(long deliveryDelay) {
         this.deliveryDelay = deliveryDelay;
     }
 
