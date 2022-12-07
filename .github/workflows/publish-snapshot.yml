@@ -1,4 +1,4 @@
-name: Test against RabbitMQ 3.11 stable
+name: Publish 3.x snapshot
 
 on: workflow_dispatch
 
