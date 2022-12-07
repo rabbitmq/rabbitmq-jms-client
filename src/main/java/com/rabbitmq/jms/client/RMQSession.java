@@ -19,8 +19,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 
@@ -65,6 +64,7 @@ import com.rabbitmq.jms.client.message.RMQStreamMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.Util;
+
 /**
  * RabbitMQ implementation of JMS {@link Session}
  */
@@ -216,6 +216,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private final AtomicBoolean confirmSelectCalledOnChannel = new AtomicBoolean(false);
 
+    private final DelayedMessageService delayedMessageService;
+
     static boolean validateSessionMode(int sessionMode) {
        return sessionMode >= 0 && sessionMode <= CLIENT_INDIVIDUAL_ACKNOWLEDGE;
     }
@@ -248,6 +250,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         this.trustedPackages = sessionParams.getTrustedPackages();
         this.requeueOnTimeout = sessionParams.willRequeueOnTimeout();
         this.keepTextMessageType = sessionParams.isKeepTextMessageType();
+        this.delayedMessageService = sessionParams.getDelayedMessageService();
         this.subscriptionNameValidator = name -> {
             boolean subscriptionIsValid = Utils.SUBSCRIPTION_NAME_PREDICATE.test(name);
             if (!subscriptionIsValid) {
@@ -288,13 +291,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * @param subscriptions the connection's subscriptions, shared with all sessions
      * @throws JMSException if we fail to create a {@link Channel} object on the connection, or if the acknowledgement mode is incorrect
      */
-    public RMQSession(RMQConnection connection, boolean transacted, int onMessageTimeoutMs, int mode, Subscriptions subscriptions) throws JMSException {
+    public RMQSession(RMQConnection connection, boolean transacted, int onMessageTimeoutMs, int mode, Subscriptions subscriptions, DelayedMessageService delayedMessageService) throws JMSException {
         this(new SessionParams()
             .setConnection(connection)
             .setTransacted(transacted)
             .setOnMessageTimeoutMs(onMessageTimeoutMs)
             .setMode(mode)
             .setSubscriptions(subscriptions)
+            .setDelayedMessageService(delayedMessageService)
         );
     }
 
@@ -712,6 +716,25 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     /**
+     * Prepare a message for delayed delivery. If deliveryDelayMs > 0, it declares the exchange X_DELAYED_JMS_EXCHANGE
+     * and binds to the target destination. It returns X_DELAYED_JMS_EXCHANGE and adds the following headers to the
+     * headers map:
+     * - x-delay : it has deliveryDelayMs
+     * - destination : it has the name of the target exchange
+     *
+     * If deliveryDelayMs < 1, it returns the name of exchange associated to the target destination.
+     *
+     * @param destination
+     * @param messageHeaders
+     * @param deliveryDelayMs
+     * @return
+     */
+    String delayMessage(RMQDestination destination, Map<String, Object> messageHeaders, long deliveryDelayMs) {
+        return delayedMessageService.delayMessage(channel, destination, messageHeaders, deliveryDelayMs);
+    }
+
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -801,6 +824,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         return this.nonDurableTopicSelectorExchange;
     }
 
+
+
     /**
      * {@inheritDoc}
      * @throws UnsupportedOperationException - method not implemented until we support selectors
@@ -857,6 +882,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         declareRMQQueue(dest, null, false, true);
         return dest;
     }
+
 
     /**
      * Invokes {@link Channel#queueDeclare(String, boolean, boolean, boolean, java.util.Map)} to define a queue on the RabbitMQ broker

@@ -5,7 +5,7 @@
 // Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
-import com.rabbitmq.TestUtils.DisabledIfTlsNotEnabled;
+import com.rabbitmq.TestUtils.SkipIfTlsNotActivated;
 import java.io.Serializable;
 
 import jakarta.jms.DeliveryMode;
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Integration test for simple point-to-point messaging.
  */
-@DisabledIfTlsNotEnabled
+@SkipIfTlsNotActivated
 public class SSLSimpleQueueMessageIT extends AbstractITQueueSSL {
 
     private static final String QUEUE_NAME = "test.queue."+SSLSimpleQueueMessageIT.class.getCanonicalName();

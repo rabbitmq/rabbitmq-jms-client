@@ -100,6 +100,20 @@ public class TestUtils {
       }
     }
   }
+  private static boolean isPluginActivated(String plugin) {
+    if (Shell.rabbitmqctlCommand() == null) {
+      throw new IllegalStateException(
+              "rabbitmqctl.bin system property not set, cannot check if TLS is enabled");
+    } else {
+      try {
+        ProcessState process = Shell.rabbitmqctl("status");
+        String output = process.output();
+        return output.contains(plugin);
+      } catch (Exception e) {
+        throw new RuntimeException("Error while detecting if plugin " + plugin + " is enabled: " + e.getMessage());
+      }
+    }
+  }
 
   public static String queueName(TestInfo info) {
     return queueName(info.getTestClass().get(), info.getTestMethod().get());
@@ -135,20 +149,44 @@ public class TestUtils {
   @Target({ElementType.TYPE, ElementType.METHOD})
   @Retention(RetentionPolicy.RUNTIME)
   @Documented
-  @ExtendWith(DisabledIfTlsNotEnabledCondition.class)
-  public @interface DisabledIfTlsNotEnabled {
+  @ExtendWith(SkipIfTlsNotActivatedCondition.class)
+  public @interface SkipIfTlsNotActivated {
 
   }
 
-  private static class DisabledIfTlsNotEnabledCondition implements ExecutionCondition {
+  @Target({ElementType.TYPE, ElementType.METHOD})
+  @Retention(RetentionPolicy.RUNTIME)
+  @Documented
+  @ExtendWith(SkipIfDelayedMessageExchangePluginNotActivatedCondition.class)
+  public @interface SkipIfDelayedMessageExchangePluginNotActivated {
+
+  }
+
+  private static class SkipIfTlsNotActivatedCondition implements ExecutionCondition {
 
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
       if (tlsAvailable()) {
-        return ConditionEvaluationResult.enabled("TLS is enabled");
+        return ConditionEvaluationResult.enabled("TLS is available");
       } else {
-        return ConditionEvaluationResult.disabled("TLS is disabled");
+        return ConditionEvaluationResult.disabled("TLS is not available");
       }
     }
   }
+  private static class SkipIfDelayedMessageExchangePluginNotActivatedCondition implements ExecutionCondition {
+
+    @Override
+    public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
+      String plugin = "rabbitmq_delayed_message_exchange";
+      try {
+        boolean activated = isPluginActivated(plugin);
+        return activated ? ConditionEvaluationResult.enabled(plugin + " plugin is activated") :
+            ConditionEvaluationResult.disabled(plugin + " plugin is not activated");
+      } catch(Exception e) {
+        return ConditionEvaluationResult.disabled(plugin + " plugin is not activated");
+      }
+    }
+  }
+
+
 }

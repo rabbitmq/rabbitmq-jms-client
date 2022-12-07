@@ -152,6 +152,8 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
 
     private final boolean keepTextMessageType;
 
+    private final DelayedMessageService delayedMessageService;
+
     /**
      * Creates an RMQConnection object.
      * @param connectionParams parameters for this connection
@@ -178,6 +180,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.trustedPackages = connectionParams.getTrustedPackages();
         this.requeueOnTimeout = connectionParams.willRequeueOnTimeout();
         this.keepTextMessageType = connectionParams.isKeepTextMessageType();
+        this.delayedMessageService = new DelayedMessageService();
     }
 
     /**
@@ -233,6 +236,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setTrustedPackages(this.trustedPackages)
             .setRequeueOnTimeout(this.requeueOnTimeout)
             .setKeepTextMessageType(this.keepTextMessageType)
+            .setDelayedMessageService(this.delayedMessageService)
         );
         this.sessions.add(session);
         return session;
@@ -369,6 +373,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.exceptionListener.set(null);
 
         closeAllSessions();
+        this.delayedMessageService.close();
 
         try {
             this.rabbitConnection.close();

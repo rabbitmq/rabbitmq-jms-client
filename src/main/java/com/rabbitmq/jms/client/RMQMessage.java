@@ -119,7 +119,7 @@ public abstract class RMQMessage implements Message, Cloneable {
     static final String JMS_MESSAGE_DELIVERY_MODE = PREFIX + "jms.message.delivery.mode";
     static final String JMS_MESSAGE_EXPIRATION = PREFIX + "jms.message.expiration";
     static final String JMS_MESSAGE_PRIORITY = PREFIX + "jms.message.priority";
-
+    static final String JMS_MESSAGE_DELIVERY_TIME = PREFIX + "jms.message.delivery.type";
     /**
      * JMS Defined Properties
      */
@@ -1464,15 +1464,18 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
 
     @Override
-    public long getJMSDeliveryTime() {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
+    public long getJMSDeliveryTime() throws JMSException {
+        Object deliveryTimeMs = this.getObjectProperty(JMS_MESSAGE_DELIVERY_TIME);
+        if (deliveryTimeMs == null) {
+            return 0L;
+        } else {
+            return Utils.convertToLong(deliveryTimeMs);
+        }
     }
 
     @Override
-    public void setJMSDeliveryTime(long deliveryTime) {
-        // TODO JMS 2.0
-        throw new UnsupportedOperationException();
+    public void setJMSDeliveryTime(long deliveryTime) throws JMSException {
+        this.setObjectProperty(JMS_MESSAGE_DELIVERY_TIME, deliveryTime);
     }
 
     @Override

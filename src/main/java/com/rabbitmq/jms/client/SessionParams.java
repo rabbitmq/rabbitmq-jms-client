@@ -105,6 +105,8 @@ public class SessionParams {
 
     private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
 
+    private DelayedMessageService delayedMessageService;
+
     public RMQConnection getConnection() {
         return connection;
     }
@@ -240,4 +242,12 @@ public class SessionParams {
         return requeueOnTimeout;
     }
 
+    public DelayedMessageService getDelayedMessageService() {
+        return delayedMessageService;
+    }
+
+    public SessionParams setDelayedMessageService(DelayedMessageService delayedMessageService) {
+        this.delayedMessageService = delayedMessageService;
+        return this;
+    }
 }

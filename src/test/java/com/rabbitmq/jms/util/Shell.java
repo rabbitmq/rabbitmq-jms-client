@@ -62,7 +62,7 @@ public class Shell {
         if (lines.length > 0) {
             for (int i = 1; i < lines.length; i++) {
                 String [] fields = lines[i].split("\t");
-                Binding binding = new Binding(fields[0], fields[1], fields[2]);
+                Binding binding = new Binding(fields[0], fields[1], fields.length > 2 ? fields[2] : "");
                 if (includeDefaults || !binding.isDefault()) {
                     bindings.add(binding);
                 }
@@ -161,21 +161,18 @@ public class Shell {
     }
 
     private static String rabbitmqctlNodenameArgument() {
-        return isOnDocker() ? "" : " -n \'" + nodenameA() + "\'";
+        return isRabbitmqctlOnDocker() ? "" : " -n \'" + nodenameA() + "\'";
     }
-
-    public static boolean isOnDocker() {
+    public static boolean isRabbitmqctlOnDocker() {
         String rabbitmqCtl = System.getProperty("rabbitmqctl.bin");
         if (rabbitmqCtl == null) {
             throw new IllegalStateException("Please define the rabbitmqctl.bin system property");
         }
         return rabbitmqCtl.startsWith(DOCKER_PREFIX);
     }
-
     public static ProcessState rabbitmqctl(String command) throws IOException {
         return executeCommand(rabbitmqctlCommand() + rabbitmqctlNodenameArgument() + " " + command);
     }
-
     public static String rabbitmqctlCommand() {
         String rabbitmqCtl = System.getProperty("rabbitmqctl.bin");
         if (rabbitmqCtl == null) {
