@@ -57,3 +57,4 @@ jobs:
         uses: peter-evans/repository-dispatch@v2
         with:
           event-type: new_client_snapshot
+          repository: rabbitmq/rabbitmq-jms-cts
