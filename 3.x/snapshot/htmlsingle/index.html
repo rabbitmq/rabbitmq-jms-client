@@ -554,21 +554,22 @@ table.CodeRay td.code{padding:0 0 0 .75em}
 <li><a href="#jms-amqp-0-9-1-destination-definitions">JMS AMQP 0-9-1 Destination Definitions</a></li>
 </ul>
 </li>
-<li><a href="#configuring-logging-for-the-jms-client">Configuring Logging for the JMS Client</a>
+<li><a href="#configuring-logging-for-the-jms-client">Configuring Logging for the JMS Client</a></li>
+<li><a href="#publisher-confirms">Publisher Confirms</a></li>
+<li><a href="#support-for-requestreply-a-k-a-rpc">Support for Request/Reply (a.k.a. RPC)</a>
 <ul class="sectlevel2">
 <li><a href="#with-jms-api">With JMS API</a></li>
 <li><a href="#with-spring-jms">With Spring JMS</a></li>
 </ul>
 </li>
-<li><a href="#jms_topic_support">JMS Topic Support</a></li>
-<li><a href="#queuebrowser-support">QueueBrowser Support</a>
+<li><a href="#implementation-details">Implementation Details</a>
 <ul class="sectlevel2">
-<li><a href="#overview-of-queue-browsers">Overview of queue browsers</a></li>
-<li><a href="#implementation">Implementation</a></li>
+<li><a href="#jms-topic-support">JMS Topic Support</a></li>
+<li><a href="#queuebrowser-support">QueueBrowser Support</a></li>
 <li><a href="#group-and-individual-acknowledgement">Group and individual acknowledgement</a></li>
+<li><a href="#arbitrary-message-support">Arbitrary Message support</a></li>
 </ul>
 </li>
-<li><a href="#arbitrary-message-support">Arbitrary Message support</a></li>
 <li><a href="#further-reading">Further Reading</a></li>
 </ul>
 </div>
@@ -1126,13 +1127,13 @@ messages from this destination, if <code>amqp</code> is <strong>true</strong>; t
 <div class="paragraph">
 <p>And here is the Spring XML configuration:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre>    &lt;bean id="jmsDestination" class="com.rabbitmq.jms.admin.RMQDestination" &gt;
-     &lt;property name="destinationName" value="myQueue" /&gt;
-     &lt;property name="amqp"            value="true" /&gt;
-     &lt;property name="amqpQueueName"   value="rabbitQueueName" /&gt;
-    &lt;/bean&gt;</pre>
+<pre class="CodeRay highlight"><code data-lang="xml">    <span class="tag">&lt;bean</span> <span class="attribute-name">id</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">jmsDestination</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">com.rabbitmq.jms.admin.RMQDestination</span><span class="delimiter">&quot;</span></span> <span class="tag">&gt;</span>
+     <span class="tag">&lt;property</span> <span class="attribute-name">name</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">destinationName</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">value</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">myQueue</span><span class="delimiter">&quot;</span></span> <span class="tag">/&gt;</span>
+     <span class="tag">&lt;property</span> <span class="attribute-name">name</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">amqp</span><span class="delimiter">&quot;</span></span>            <span class="attribute-name">value</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">true</span><span class="delimiter">&quot;</span></span> <span class="tag">/&gt;</span>
+     <span class="tag">&lt;property</span> <span class="attribute-name">name</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">amqpQueueName</span><span class="delimiter">&quot;</span></span>   <span class="attribute-name">value</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">rabbitQueueName</span><span class="delimiter">&quot;</span></span> <span class="tag">/&gt;</span>
+    <span class="tag">&lt;/bean&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1216,9 +1217,13 @@ list of the logging frameworks SLF4J supports.</p>
 </div>
 <div class="paragraph">
 <p>We highly recommend to use a dependency management tool like <a href="http://maven.apache.org/">Maven</a>
-or <a href="https://gradle.org/">Gradle</a> to manage dependencies.
-== Publisher Confirms</p>
+or <a href="https://gradle.org/">Gradle</a> to manage dependencies.</p>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="publisher-confirms"><a class="anchor" href="#publisher-confirms"></a>Publisher Confirms</h2>
+<div class="sectionbody">
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -1257,9 +1262,13 @@ tasks. Those should be executed in a dedicated thread, using e.g. an <code>Execu
 <div class="paragraph">
 <p>Typical operations in a <code>ConfirmListener</code> are logging or message re-publishing (in case
 of nacks). The <a href="https://rabbitmq.com/tutorials/tutorial-seven-java.html">publish confirms tutorial</a> provides more guidance. It aims for the
-AMQP Java client, but principles remain the same for the JMS client.
-== Support for Request/Reply (a.k.a. RPC)</p>
+AMQP Java client, but principles remain the same for the JMS client.</p>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="support-for-requestreply-a-k-a-rpc"><a class="anchor" href="#support-for-requestreply-a-k-a-rpc"></a>Support for Request/Reply (a.k.a. RPC)</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>It is possible to use JMS for synchronous request/reply use cases.
 This pattern is commonly known as <em>Remote Procedure Call</em> or <em>RPC</em>.</p>
@@ -1451,9 +1460,14 @@ Message response = tpl.execute(session -&gt; {
 <div class="paragraph">
 <p>See <a href="https://github.com/rabbitmq/rabbitmq-jms-client/blob/main/src/test/java/com/rabbitmq/integration/tests/RpcSpringJmsIT.java">this test</a>
 for a full example of RPC with Spring JMS, including using a <code>@JmsListener</code> bean
-for the server part.
-== Implementation Details</p>
+for the server part.</p>
 </div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="implementation-details"><a class="anchor" href="#implementation-details"></a>Implementation Details</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>This section provides additional implementation details for specific
 JMS API classes in the JMS Client.</p>
@@ -1462,12 +1476,8 @@ JMS API classes in the JMS Client.</p>
 <p>Deviations from the specification are implemented to support common
 acknowledgement behaviours.</p>
 </div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="jms_topic_support"><a class="anchor" href="#jms_topic_support"></a>JMS Topic Support</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="jms-topic-support"><a class="anchor" href="#jms-topic-support"></a>JMS Topic Support</h3>
 <div class="paragraph">
 <p>JMS topics are implemented using an AMQP <a href="https://rabbitmq.com/tutorials/amqp-concepts.html#exchange-topic">topic exchange</a>
 and a dedicated AMQP queue for each JMS topic subscriber. The AMQP
@@ -1523,12 +1533,10 @@ Note the <a href="#enable_topic_selector">Topic Selector Plugin</a> must be enab
 to work.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="queuebrowser-support"><a class="anchor" href="#queuebrowser-support"></a>QueueBrowser Support</h2>
-<div class="sectionbody">
 <div class="sect2">
-<h3 id="overview-of-queue-browsers"><a class="anchor" href="#overview-of-queue-browsers"></a>Overview of queue browsers</h3>
+<h3 id="queuebrowser-support"><a class="anchor" href="#queuebrowser-support"></a>QueueBrowser Support</h3>
+<div class="sect3">
+<h4 id="overview-of-queue-browsers"><a class="anchor" href="#overview-of-queue-browsers"></a>Overview of queue browsers</h4>
 <div class="paragraph">
 <p>The JMS API includes objects and methods to browse an existing queue
 destination, reading its messages <em>without</em> removing them from the
@@ -1546,8 +1554,8 @@ in the <code>Enumeration</code>. If a selector is supplied, then only those
 messages that satisfy the selector appear.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="implementation"><a class="anchor" href="#implementation"></a>Implementation</h3>
+<div class="sect3">
+<h4 id="implementation"><a class="anchor" href="#implementation"></a>Implementation</h4>
 <div class="paragraph">
 <p>The destination queue is read when the <code>getEnumeration()</code> method is
 called. A <em>snapshot</em> is taken of the messages in the queue; and the
@@ -1571,8 +1579,8 @@ may be re-issued, taking a <em>new</em> snapshot from the queue each time.</p>
 close, but a <code>QueueBrowser</code> may not be used after the session that
 created it has closed. <code>QueueBrowser.close()</code> has no effect.</p>
 </div>
-<div class="sect3">
-<h4 id="which-messages-are-included"><a class="anchor" href="#which-messages-are-included"></a>Which messages are included</h4>
+<div class="sect4">
+<h5 id="which-messages-are-included"><a class="anchor" href="#which-messages-are-included"></a>Which messages are included</h5>
 <div class="paragraph">
 <p>Messages that arrive, expire, are re-queued, or are removed after
 the <code>getEnumeration()</code> call have no effect on the contents of the
@@ -1586,8 +1594,8 @@ the <code>Enumeration</code>.</p>
 <p>Message copies do not "expire" from an <code>Enumeration</code>.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="order-of-messages"><a class="anchor" href="#order-of-messages"></a>Order of messages</h4>
+<div class="sect4">
+<h5 id="order-of-messages"><a class="anchor" href="#order-of-messages"></a>Order of messages</h5>
 <div class="paragraph">
 <p>If other client sessions read from a queue that is being browsed,
 then it is possible that some messages may subsequently be received out
@@ -1598,8 +1606,8 @@ of order.</p>
 the queue at the same time.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="memory-usage"><a class="anchor" href="#memory-usage"></a>Memory usage</h4>
+<div class="sect4">
+<h5 id="memory-usage"><a class="anchor" href="#memory-usage"></a>Memory usage</h5>
 <div class="paragraph">
 <p>When a message is read from the <code>Enumeration</code> (with <code>nextElement()</code>),
 then no reference to it is retained in the Java Client. This means the
@@ -1617,8 +1625,8 @@ against <code>OutOfMemoryError</code> conditions that may arise because of this.
 See the next section.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="setting-a-maximum-number-of-messages-to-browse"><a class="anchor" href="#setting-a-maximum-number-of-messages-to-browse"></a>Setting a maximum number of messages to browse</h4>
+<div class="sect4">
+<h5 id="setting-a-maximum-number-of-messages-to-browse"><a class="anchor" href="#setting-a-maximum-number-of-messages-to-browse"></a>Setting a maximum number of messages to browse</h5>
 <div class="paragraph">
 <p>Each connection is created with a limit on the number of messages that
 are examined by a <code>QueueBrowser</code>. The limit is set on the
@@ -1642,12 +1650,13 @@ is specified as <code>0</code> if this property is not set or is not an integer.
 then the limit set when the factory object was created is preserved.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="release-support"><a class="anchor" href="#release-support"></a>Release Support</h4>
+<div class="sect4">
+<h5 id="release-support"><a class="anchor" href="#release-support"></a>Release Support</h5>
 <div class="paragraph">
 <p>Support for <code>QueueBrowser</code>s is introduced in the JMS Client 1.2.0.
 Prior to that release, calling <code>Session.createBrowser(Queue queue[, String selector])</code>
 resulted in an <code>UnsupportedOperationException</code>.</p>
+</div>
 </div>
 </div>
 </div>
@@ -1687,11 +1696,8 @@ In particular the <code>getAcknowledgeMode()</code> method returns
 <code>RMQSession.CLIENT_INDIVIDUAL_ACKNOWLEDGE</code> has been set.</p>
 </div>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="arbitrary-message-support"><a class="anchor" href="#arbitrary-message-support"></a>Arbitrary Message support</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="arbitrary-message-support"><a class="anchor" href="#arbitrary-message-support"></a>Arbitrary Message support</h3>
 <div class="paragraph">
 <p>Any instance of a class that implements the <code>javax.jms.Message</code>
 interface can be <em>sent</em> by a JMS message producer.</p>
@@ -1713,6 +1719,7 @@ normal case, when the message is an instance of
 </div>
 </div>
 </div>
+</div>
 <div class="sect1">
 <h2 id="further-reading"><a class="anchor" href="#further-reading"></a>Further Reading</h2>
 <div class="sectionbody">
@@ -1729,7 +1736,7 @@ and browse our
 <div id="footer">
 <div id="footer-text">
 Version 3.1.0-SNAPSHOT<br>
-Last updated 2022-12-07 17:21:13 +0100
+Last updated 2022-12-07 17:23:42 +0100
 </div>
 </div>
 </body>
