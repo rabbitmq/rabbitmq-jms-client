@@ -2,11 +2,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
-import com.rabbitmq.TestUtils.DisabledIfDelayedMessageExchangePluginNotEnabled;
 import javax.jms.*;
+import com.rabbitmq.TestUtils.SkipIfDelayedMessageExchangePluginNotActivated;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Integration test
  */
-@DisabledIfDelayedMessageExchangePluginNotEnabled
+@SkipIfDelayedMessageExchangePluginNotActivated
 public class DelayedTopicMessageIT extends AbstractITTopic {
 
     private static final String TOPIC_NAME = "delay.topic." + DelayedTopicMessageIT.class.getCanonicalName();
@@ -28,15 +28,15 @@ public class DelayedTopicMessageIT extends AbstractITTopic {
         Topic topic = topicSession.createTopic(TOPIC_NAME);
         TopicPublisher sender = topicSession.createPublisher(topic);
         sender.setDeliveryDelay(4000L);
-        TopicSubscriber receiver1 = topicSession.createSubscriber(topic);
+        TopicSubscriber receiver = topicSession.createSubscriber(topic);
 
         // TODO probably ensure the topic is empty
         sender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         TextMessage message = topicSession.createTextMessage(MESSAGE_TEXT_1);
         sender.send(message);
 
-        assertNull(receiver1.receive(2000L));
-        TextMessage receivedMessage = (TextMessage)receiver1.receive();
+        assertNull(receiver.receive(2000L));
+        TextMessage receivedMessage = (TextMessage)receiver.receive();
         assertTrue(receivedMessage.getJMSDeliveryTime() > 0);
         assertEquals(MESSAGE_TEXT_1, receivedMessage.getText());
 

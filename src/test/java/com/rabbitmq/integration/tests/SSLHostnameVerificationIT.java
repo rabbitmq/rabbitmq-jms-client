@@ -7,7 +7,7 @@ package com.rabbitmq.integration.tests;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.rabbitmq.TestUtils.DisabledIfTlsNotEnabled;
+import com.rabbitmq.TestUtils.SkipIfTlsNotActivated;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import java.io.FileInputStream;
 import java.security.KeyStore;
@@ -25,7 +25,7 @@ import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
 
 /** Integration test for hostname verification with TLS. */
-@DisabledIfTlsNotEnabled
+@SkipIfTlsNotActivated
 @EnabledForJreRange(min = JRE.JAVA_11)
 public class SSLHostnameVerificationIT {
 

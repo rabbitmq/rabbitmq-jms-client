@@ -2,11 +2,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.integration.tests;
 
-import com.rabbitmq.TestUtils.DisabledIfDelayedMessageExchangePluginNotEnabled;
 import javax.jms.*;
+import com.rabbitmq.TestUtils.SkipIfDelayedMessageExchangePluginNotActivated;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Integration test
  */
-@DisabledIfDelayedMessageExchangePluginNotEnabled
+@SkipIfDelayedMessageExchangePluginNotActivated
 public class DelayedQueueMessageIT extends AbstractITQueue {
 
     private static final String MESSAGE = "Hello " + DelayedQueueMessageIT.class.getName();

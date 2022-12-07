@@ -1,3 +1,9 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// Copyright (c) 2022 VMware, Inc. or its affiliates. All rights reserved.
+
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.Channel;
@@ -8,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
+import javax.jms.JMSRuntimeException;
 
 class DelayedMessageService {
     static final String X_DELAYED_JMS_EXCHANGE = "x-delayed-jms-message";
@@ -45,7 +52,9 @@ class DelayedMessageService {
 
         try {
             declaring.acquire();
-            if (delayedExchangeDeclared) return;
+            if (delayedExchangeDeclared) {
+                return;
+            }
 
             Map<String, Object> args = new HashMap<>();
             args.put("x-delayed-type", "headers");
@@ -55,7 +64,8 @@ class DelayedMessageService {
                     args); // object properties
             delayedExchangeDeclared = true;
         } catch (Exception x) {
-            throw new RuntimeException("Failed to declare exchange " + X_DELAYED_JMS_EXCHANGE, x);
+            throw new JMSRuntimeException("Failed to declare exchange " + X_DELAYED_JMS_EXCHANGE,
+                "", x);
         } finally {
             declaring.release();
         }
