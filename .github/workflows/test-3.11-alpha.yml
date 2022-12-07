@@ -1,0 +1,44 @@
+name: Test against RabbitMQ 3.11 alpha
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  RABBITMQ_IMAGE_TAG: 3.11
+  RABBITMQ_IMAGE: pivotalrabbitmq/rabbitmq-dev
+  DELAYED_MESSAGE_EXCHANGE_PLUGIN_VERSION: 3.11.1
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Checkout tls-gen
+        uses: actions/checkout@v3
+        with:
+          repository: rabbitmq/tls-gen
+          path: './tls-gen'
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+      - name: Start RabbitMQ application
+        run: ci/start-broker.sh
+      - name: Test
+        run: |
+          ./mvnw verify -Drabbitmqctl.bin=DOCKER:rabbitmq \
+            -Dtest-broker.A.nodename=rabbit@$(hostname) \
+            -Dtest-tls-certs.dir=tls-gen/basic \
+            --no-transfer-progress
+      - name: Stop broker
+        run: docker stop rabbitmq && docker rm rabbitmq
