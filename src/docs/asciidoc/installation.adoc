@@ -1,0 +1,201 @@
+== Installing and Configuring
+
+=== Enabling the Topic Selector Plug-in[[enable_topic_selector]]
+
+The topic selector plugin is included with RabbitMQ. Like any RabbitMQ
+plugin, you need to enable the plugin in order to use it.
+
+Enable the plugin using the `rabbitmq-plugins` command:
+
+ rabbitmq-plugins enable rabbitmq_jms_topic_exchange
+
+
+You don't need to restart the broker to activate the plugin.
+
+[NOTE]
+====
+You need to enable this plugin only if you plan to use topic selectors
+in your JMS client applications
+====
+
+=== Enabling the JMS client in a Java container
+
+To enable the JMS Client in a Java container (e.g. Java EE application
+server, web container), you must install the JMS client JAR files and
+its dependencies in the container and then define JMS resources in
+the container's naming system so that JMS clients can look them up.
+The methods for accomplishing these tasks are container-specific, please
+refer to the vendors`' documentation.
+
+For standalone applications, you need to add the JMS client JAR files
+and its dependencies to the application classpath. The JMS resources
+can be defined programmatically or through a dependency injection
+framework like Spring.
+
+=== Defining the JMS Connection Factory
+
+To define the JMS `ConnectionFactory` in JNDI, e.g. in Tomcat:
+
+[source,xml]
+--------
+<Resource name="jms/ConnectionFactory"
+            type="javax.jms.ConnectionFactory"
+         factory="com.rabbitmq.jms.admin.RMQObjectFactory"
+        username="guest"
+        password="guest"
+     virtualHost="/"
+            host="localhost"
+            port="5672"/>
+--------
+
+To define the JMS `ConnectionFactory` in JNDI, e.g. in WildFly (as of JMS Client 1.7.0):
+
+[source,xml]
+--------
+<object-factory name="java:global/jms/ConnectionFactory"
+                   module="org.jboss.genericjms.provider"
+                   class="com.rabbitmq.jms.admin.RMQObjectFactory">
+     <environment>
+         <property name="className" value="javax.jms.ConnectionFactory"/>
+         <property name="username" value="guest"/>
+         <property name="password" value="guest"/>
+         <property name="virtualHost" value="/"/>
+         <property name="host" value="localhost"/>
+         <property name="port" value="5672"/>
+     </environment>
+</object-factory>
+--------
+
+Here is the equivalent Spring bean example (Java configuration):
+[source,java,indent=0]
+----
+@Bean
+public ConnectionFactory jmsConnectionFactory() {
+  RMQConnectionFactory connectionFactory = new RMQConnectionFactory();
+  connectionFactory.setUsername("guest");
+  connectionFactory.setPassword("guest");
+  connectionFactory.setVirtualHost("/");
+  connectionFactory.setHost("localhost");
+  connectionFactory.setPort(5672);
+  return connectionFactory;
+}
+----
+
+And here is the Spring XML configuration:
+
+[source,xml]
+--------
+<bean id="jmsConnectionFactory" class="com.rabbitmq.jms.admin.RMQConnectionFactory" >
+  <property name="username" value="guest" />
+  <property name="password" value="guest" />
+  <property name="virtualHost" value="/" />
+  <property name="host" value="localhost" />
+  <property name="port" value="5672" />
+</bean>
+--------
+
+The following table lists all of the attributes/properties that are available.
+
+|===
+| Attribute/Property | JNDI only? | Description |
+
+| `name`
+| Yes
+| Name in JNDI.
+|
+
+| `type`
+| Yes
+| Name of the JMS interface the object implements, usually `javax.jms.ConnectionFactory`. Other choices are `javax.jms.QueueConnectionFactory` and `javax.jms.TopicConnectionFactory`. You can also use the name of the (common) implementation class, `com.rabbitmq.jms.admin.RMQConnectionFactory`.
+|
+
+| `factory`
+| Yes
+| JMS Client for RabbitMQ `ObjectFactory` class, always `com.rabbitmq.jms.admin.RMQObjectFactory`.
+|
+
+| `username`
+| No
+| Name to use to authenticate a connection with the RabbitMQ broker. The default is "guest".
+|
+
+| `password`
+| No
+| Password to use to authenticate a connection with the RabbitMQ broker. The default is "guest".
+|
+
+| `virtualHost`
+| No
+| RabbitMQ link:./vhosts.html[virtual host] within which the application will operate. The default is "/".
+|
+
+| `host`
+| No
+| Host on which RabbitMQ is running. The default is "localhost".
+|
+
+| `port`
+| No
+| RabbitMQ port used for connections. The default is "5672" unless this is a link:https://rabbitmq.com/ssl.html[TLS connection], in which case the default is "5671".
+|
+
+| `ssl`
+| No
+| Whether to use an SSL connection to RabbitMQ. The default is "false". See the `useSslProtocol` methods for more information.
+|
+
+| `uri`
+| No
+| The link:https://rabbitmq.com/uri-spec.html[AMQP 0-9-1 URI] string used to establish a RabbitMQ connection. The value can encode the `host`, `port`, `username`, `password` and `virtualHost` in a single string. Both 'amqp' and 'amqps' schemes are accepted. Note: this property sets other properties and the set order is unspecified.
+|
+
+| `uris`
+| No
+| A list of link:https://rabbitmq.com/uri-spec.html[AMQP 0-9-1 URI] strings to establish a connection to one of the nodes of a RabbitMQ cluster. Each URI is processed in the same way as the `uri` property (`host`, `port`, `username`, etc). This has the same effect as specifying a https://rabbitmq.com/api-guide.html#endpoints-list[list of endpoints in the AMQP client]. The property is a `List<String>` in the `RMQConnectionFactory` and a `String` expecting a list of comma-separated URIs in the `RMQObjectFactory` (JNDI). Note: this property sets other properties and the set order is unspecified.
+|
+
+| `onMessageTimeoutMs`
+| No
+| How long to wait for `MessageListener#onMessage()` to return, in milliseconds. Default is 2000 ms.
+|
+
+| `preferProducerMessageProperty`
+| No
+| Whether `MessageProducer` properties (delivery mode, priority, TTL) take precedence over respective `Message` properties or not. Default is true (which is compliant to the JMS specification).
+|
+
+| `requeueOnMessageListenerException`
+| No
+| Whether requeuing messages on a `RuntimeException` in the `MessageListener` or not. Default is false.
+|
+
+| `queueBrowserReadMax`
+| No
+| The maximum number of messages to read on a queue browser. Default is 0 (no limit).
+|
+
+| `onMessageTimeoutMs`
+| No
+| The time in milliseconds `MessageListener#onMessage(Message)` can take to process a message. Default is 2000 ms.
+|
+
+| `channelsQos`
+| No
+| https://www.rabbitmq.com/consumer-prefetch.html[QoS setting] for channels created by the connection factory. Default is -1 (no QoS).
+|
+
+| `terminationTimeout`
+| No
+| The time in milliseconds a `Connection#close()` should wait for threads/tasks/listeners to complete. Default is 15,000 ms.
+|
+
+| `declareReplyToDestination`
+| No
+| Whether `replyTo` destination for consumed messages should be declared. Default is true.
+|
+
+| `keepTextMessageType`
+| No
+| When set to `true`, the AMQP `JMSType` header will be set automatically to `"TextMessage"` for ``TextMessage``s published to AMQP-backed ``Destination``s. Default is false.
+|
+|===

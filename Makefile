@@ -9,6 +9,8 @@ DEPS_DIR = deps
 endif
 endif
 
+export PATH := $(CURDIR):$(CURDIR)/scripts:$(PATH)
+
 MVN_FLAGS += -Ddeps.dir="$(abspath $(DEPS_DIR))"
 
 .PHONY: all deps tests clean distclean
@@ -33,3 +35,7 @@ distclean: clean
 	$(MAKE) -C $(DEPS_DIR)/rabbitmq_codegen clean
 
 .PHONY: cluster-other-node
+
+.PHONY: doc
+doc: ## Generate PerfTest documentation
+	@mvnw asciidoctor:process-asciidoc
