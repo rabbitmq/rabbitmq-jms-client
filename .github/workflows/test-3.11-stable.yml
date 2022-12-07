@@ -19,6 +19,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Checkout tls-gen
+        uses: actions/checkout@v3
+        with:
+          repository: rabbitmq/tls-gen
+          path: './tls-gen'
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
