@@ -1,4 +1,4 @@
-name: Publish 2.x snapshot
+name: Publish snapshot
 
 on: workflow_dispatch
 
