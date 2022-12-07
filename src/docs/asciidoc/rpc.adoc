@@ -1,3 +1,4 @@
+
 == Support for Request/Reply (a.k.a. RPC)
 
 It is possible to use JMS for synchronous request/reply use cases.
