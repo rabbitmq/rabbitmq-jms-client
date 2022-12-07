@@ -58,3 +58,4 @@ jobs:
         with:
           event-type: new_client_snapshot
           repository: rabbitmq/rabbitmq-jms-cts
+          token: ${{ secrets.CI_GITHUB_TOKEN }}
