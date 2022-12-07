@@ -7,7 +7,7 @@ package com.rabbitmq.integration.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.rabbitmq.TestUtils.DisabledIfTlsNotEnabled;
+import com.rabbitmq.TestUtils.SkipIfTlsNotActivated;
 import jakarta.jms.DeliveryMode;
 import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Integration test
  */
-@DisabledIfTlsNotEnabled
+@SkipIfTlsNotActivated
 public class SSLSimpleTopicMessageIT extends AbstractITTopicSSL {
     private static final String TOPIC_NAME = "test.topic." + SSLSimpleTopicMessageIT.class.getCanonicalName();
 
