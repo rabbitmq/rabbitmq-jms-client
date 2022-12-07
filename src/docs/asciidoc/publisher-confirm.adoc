@@ -1,3 +1,4 @@
+
 == Publisher Confirms
 
 NOTE: Publisher Confirms support is deprecated in favor of https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1.html#sending-messages-asynchronously-jms_spec-43[asynchronous sending] (JMS 2.0).

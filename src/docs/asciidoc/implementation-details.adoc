@@ -1,3 +1,4 @@
+
 == Implementation Details
 
 This section provides additional implementation details for specific
@@ -6,8 +7,7 @@ JMS API classes in the JMS Client.
 Deviations from the specification are implemented to support common
 acknowledgement behaviours.
 
-[#jms_topic_support]
-== JMS Topic Support
+=== JMS Topic Support
 
 JMS topics are implemented using an AMQP link:https://rabbitmq.com/tutorials/amqp-concepts.html#exchange-topic[topic exchange]
 and a dedicated AMQP queue for each JMS topic subscriber. The AMQP
@@ -43,9 +43,9 @@ Exchanges can be bound together thanks to a link:https://rabbitmq.com/e2e.html[R
 Note the <<enable_topic_selector, Topic Selector Plugin>> must be enabled for topic selectors
 to work.
 
-== QueueBrowser Support
+=== QueueBrowser Support
 
-=== Overview of queue browsers
+==== Overview of queue browsers
 
 The JMS API includes objects and methods to browse an existing queue
 destination, reading its messages _without_ removing them from the
@@ -60,7 +60,7 @@ If no selector is supplied, then all messages in the queue appear
 in the `Enumeration`. If a selector is supplied, then only those
 messages that satisfy the selector appear.
 
-=== Implementation
+==== Implementation
 
 The destination queue is read when the `getEnumeration()` method is
 called. A _snapshot_ is taken of the messages in the queue; and the
@@ -80,7 +80,7 @@ The contents of an `Enumeration` survive session and/or connection
 close, but a `QueueBrowser` may not be used after the session that
 created it has closed. `QueueBrowser.close()` has no effect.
 
-==== Which messages are included
+===== Which messages are included
 
 Messages that arrive, expire, are re-queued, or are removed after
 the `getEnumeration()` call have no effect on the contents of the
@@ -92,7 +92,7 @@ the `Enumeration`.
 
 Message copies do not "expire" from an `Enumeration`.
 
-==== Order of messages
+===== Order of messages
 
 If other client sessions read from a queue that is being browsed,
 then it is possible that some messages may subsequently be received out
@@ -101,7 +101,7 @@ of order.
 Message order will not be disturbed if no other client sessions read
 the queue at the same time.
 
-==== Memory usage
+===== Memory usage
 
 When a message is read from the `Enumeration` (with `nextElement()`),
 then no reference to it is retained in the Java Client. This means the
@@ -117,7 +117,7 @@ a few messages are selected. There is currently limited protection
 against `OutOfMemoryError` conditions that may arise because of this.
 See the next section.
 
-==== Setting a maximum number of messages to browse
+===== Setting a maximum number of messages to browse
 
 Each connection is created with a limit on the number of messages that
 are examined by a `QueueBrowser`. The limit is set on the
@@ -137,7 +137,7 @@ is specified as `0` if this property is not set or is not an integer.
 If a `RMQConnectionFactory` value is obtained from a JNDI provider,
 then the limit set when the factory object was created is preserved.
 
-==== Release Support
+===== Release Support
 
 Support for ``QueueBrowser``s is introduced in the JMS Client 1.2.0.
 Prior to that release, calling `Session.createBrowser(Queue queue[, String selector])`
@@ -173,7 +173,7 @@ In particular the `getAcknowledgeMode()` method returns
 `Session.CLIENT_ACKNOWLEDGE` even if
 `RMQSession.CLIENT_INDIVIDUAL_ACKNOWLEDGE` has been set.
 
-== Arbitrary Message support
+=== Arbitrary Message support
 
 Any instance of a class that implements the `javax.jms.Message`
 interface can be _sent_ by a JMS message producer.

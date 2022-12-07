@@ -129,14 +129,14 @@ This is the equivalent Spring bean example (Java configuration):
 
 And here is the Spring XML configuration:
 
-....
-
+[source,xml]
+----
     <bean id="jmsDestination" class="com.rabbitmq.jms.admin.RMQDestination" >
      <property name="destinationName" value="myQueue" />
      <property name="amqp"            value="true" />
      <property name="amqpQueueName"   value="rabbitQueueName" />
     </bean>
-....
+----
 
 Following is a _complete_ list of the attributes/properties that are
 available:
