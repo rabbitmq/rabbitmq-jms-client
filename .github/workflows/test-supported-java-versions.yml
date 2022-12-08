@@ -3,9 +3,7 @@ name: Test against supported Java versions
 on:
   schedule:
     - cron: '0 4 * * *'
-  push:
-    branches:
-      - 2.x.x-stable
+  workflow_dispatch:
 
 env:
   RABBITMQ_IMAGE_TAG: 3.11
