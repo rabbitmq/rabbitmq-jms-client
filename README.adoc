@@ -57,8 +57,9 @@ Or the following to `build.gradle` for Gradle:
 compile 'com.rabbitmq.jms:rabbitmq-jms:{2-stable}'
 ----
 
-////
 ==== Milestone and Release Candidate
+
+https://rabbitmq.github.io/rabbitmq-jms-client/2.x/milestone/htmlsingle/[Documentation]
 
 For milestones and release candidates, declare the <<milestone-rc-repository,milestone repository>> in your dependency manager.
 
@@ -81,9 +82,10 @@ Or the following to `build.gradle` for Gradle:
 ----
 compile 'com.rabbitmq.jms:rabbitmq-jms:{2-milestone}'
 ----
-////
 
 ==== Snapshot
+
+https://rabbitmq.github.io/rabbitmq-jms-client/2.x/snapshot/htmlsingle/[Documentation]
 
 For snapshots, declare the <<snapshot-repository,snapshot repository>> in your dependency manager.
 
@@ -134,9 +136,9 @@ Or the following to `build.gradle` for Gradle:
 compile 'com.rabbitmq.jms:rabbitmq-jms:{3-stable}'
 ----
 
-
-////
 ==== Milestone and Release Candidate
+
+https://rabbitmq.github.io/rabbitmq-jms-client/3.x/milestone/htmlsingle/[Documentation]
 
 For milestones and release candidates, declare the <<milestone-rc-repository,milestone repository>> in your dependency manager.
 
@@ -159,9 +161,10 @@ Or the following to `build.gradle` for Gradle:
 ----
 compile 'com.rabbitmq.jms:rabbitmq-jms:{3-milestone}'
 ----
-////
 
 ==== Snapshot
+
+https://rabbitmq.github.io/rabbitmq-jms-client/3.x/snapshot/htmlsingle/[Documentation]
 
 For snapshots, declare the <<snapshot-repository,snapshot repository>> in your dependency manager.
 
