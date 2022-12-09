@@ -580,7 +580,7 @@ table.CodeRay td.code{padding:0 0 0 .75em}
 <h2 id="introduction"><a class="anchor" href="#introduction"></a>Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>RabbitMQ is not a JMS provider but includes <a href="https://github.com/rabbitmq/rabbitmq-server/tree/v3.9.x/deps/rabbitmq_jms_topic_exchange">a plugin</a>
+<p>RabbitMQ is not a JMS provider but includes <a href="https://github.com/rabbitmq/rabbitmq-server/tree/main/deps/rabbitmq_jms_topic_exchange">a plugin</a>
 needed to support the JMS Queue and Topic messaging models. JMS Client
 for RabbitMQ implements the JMS specification on top of the
 <a href="https://rabbitmq.com/api-guide.html">RabbitMQ Java client</a>, thus allowing new and
@@ -610,7 +610,7 @@ of the RabbitMQ JMS Client library.</p>
 <p>the <a href="https://github.com/rabbitmq/rabbitmq-jms-client">JMS client library</a> and its dependent libraries.</p>
 </li>
 <li>
-<p><a href="https://github.com/rabbitmq/rabbitmq-server/tree/v3.9.x/deps/rabbitmq_jms_topic_exchange">RabbitMQ JMS topic selector plugin</a> that is included
+<p><a href="https://github.com/rabbitmq/rabbitmq-server/tree/main/deps/rabbitmq_jms_topic_exchange">RabbitMQ JMS topic selector plugin</a> that is included
 with RabbitMQ starting with version 3.6.3. To support message selectors for JMS
 topics, the RabbitMQ Topic Selector plugin must be installed on the
 RabbitMQ server. Message selectors allow a JMS application to filter
@@ -733,93 +733,59 @@ in your JMS client applications</p>
 </div>
 <div class="sect2">
 <h3 id="installing-jms-client-library"><a class="anchor" href="#installing-jms-client-library"></a>Installing JMS Client library</h3>
-<div class="sect3">
-<h4 id="with-maven-or-gradle"><a class="anchor" href="#with-maven-or-gradle"></a>With Maven or Gradle</h4>
 <div class="paragraph">
-<p>This package is published to several Maven package repositories:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><a href="https://search.maven.org/search?q=g:com.rabbitmq.jms%20AND%20a:rabbitmq-jms">Maven Central</a></p>
-</li>
-<li>
-<p><a href="https://packagecloud.io/rabbitmq/maven-milestones">RabbitMQ Maven Milestones repository</a></p>
-</li>
-<li>
-<p><a href="https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/jms/rabbitmq-jms/">Sonatype OSS snapshot repository</a></p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>RabbitMQ JMS Client implements JMS 3.0 as of 3.0.0.</p>
-</div>
+<p>Use your favorite build management tool to add the client dependencies to your project.</p>
 </div>
 <div class="sect3">
-<h4 id="stable"><a class="anchor" href="#stable"></a>Stable</h4>
-<div class="paragraph">
-<p>Add the following to <code>pom.xml</code> for Maven:</p>
-</div>
+<h4 id="maven"><a class="anchor" href="#maven"></a>Maven</h4>
 <div class="listingblock">
 <div class="title">pom.xml</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;dependency&gt;</span>
-  <span class="tag">&lt;groupId&gt;</span>com.rabbitmq.jms<span class="tag">&lt;/groupId&gt;</span>
-  <span class="tag">&lt;artifactId&gt;</span>rabbitmq-jms<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>3.0.0<span class="tag">&lt;/version&gt;</span>
-<span class="tag">&lt;/dependency&gt;</span></code></pre>
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;dependencies&gt;</span>
+
+  <span class="tag">&lt;dependency&gt;</span>
+    <span class="tag">&lt;groupId&gt;</span>com.rabbitmq.jms<span class="tag">&lt;/groupId&gt;</span>
+    <span class="tag">&lt;artifactId&gt;</span>rabbitmq-jms<span class="tag">&lt;/artifactId&gt;</span>
+    <span class="tag">&lt;version&gt;</span>3.1.0-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;/dependency&gt;</span>
+
+<span class="tag">&lt;/dependencies&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Or the following to <code>build.gradle</code> for Gradle:</p>
+<p>Milestones and release candidates require to declare the <a href="#milestone-rc-repository">appropriate repository</a>.
+Snapshots require to declare their <a href="#snapshot-repository">own repository</a> as well.</p>
 </div>
+</div>
+<div class="sect3">
+<h4 id="gradle"><a class="anchor" href="#gradle"></a>Gradle</h4>
 <div class="listingblock">
 <div class="title">build.gradle</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">compile <span class="string"><span class="delimiter">'</span><span class="content">com.rabbitmq.jms:rabbitmq-jms:3.0.0</span><span class="delimiter">'</span></span></code></pre>
+<pre class="CodeRay highlight"><code data-lang="groovy">dependencies {
+  compile <span class="string"><span class="delimiter">&quot;</span><span class="content">com.rabbitmq.jms:rabbitmq-jms:3.1.0-SNAPSHOT</span><span class="delimiter">&quot;</span></span>
+}</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>Milestones and release candidates require to declare the <a href="#milestone-rc-repository">appropriate repository</a>.
+Snapshots require to declare their <a href="#snapshot-repository">own repository</a> as well.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="snapshot"><a class="anchor" href="#snapshot"></a>Snapshot</h4>
+<h4 id="milestone-rc-repository"><a class="anchor" href="#milestone-rc-repository"></a>Milestones and Release Candidates</h4>
 <div class="paragraph">
-<p>For snapshots, declare the <a href="#snapshot-repository">snapshot repository</a> in your dependency manager.</p>
+<p>Releases are available from Maven Central, which does not require specific declaration.
+Milestones and release candidates are available from a repository that must be declared in the dependency management configuration.</p>
 </div>
 <div class="paragraph">
-<p>Then add the following to <code>pom.xml</code> for Maven:</p>
+<p>With Maven:</p>
 </div>
 <div class="listingblock">
-<div class="title">pom.xml</div>
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;dependency&gt;</span>
-  <span class="tag">&lt;groupId&gt;</span>com.rabbitmq.jms<span class="tag">&lt;/groupId&gt;</span>
-  <span class="tag">&lt;artifactId&gt;</span>rabbitmq-jms<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>3.1.0-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
-<span class="tag">&lt;/dependency&gt;</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Or the following to <code>build.gradle</code> for Gradle:</p>
-</div>
-<div class="listingblock">
-<div class="title">build.gradle</div>
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">compile <span class="string"><span class="delimiter">'</span><span class="content">com.rabbitmq.jms:rabbitmq-jms:3.1.0-SNAPSHOT</span><span class="delimiter">'</span></span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="milestone-rc-repository"><a class="anchor" href="#milestone-rc-repository"></a>Milestones and Release Candidates Repository</h4>
-<div class="paragraph">
-<p>Milestones and release candidates are available on the RabbitMQ Milestone Repository.</p>
-</div>
-<div class="paragraph">
-<p>Maven:</p>
-</div>
-<div class="listingblock">
-<div class="title">pom.xml</div>
+<div class="title">Milestone and release candidate repository declaration for Maven</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;repositories&gt;</span>
+
   <span class="tag">&lt;repository&gt;</span>
     <span class="tag">&lt;id&gt;</span>packagecloud-rabbitmq-maven-milestones<span class="tag">&lt;/id&gt;</span>
     <span class="tag">&lt;url&gt;</span>https://packagecloud.io/rabbitmq/maven-milestones/maven2<span class="tag">&lt;/url&gt;</span>
@@ -830,56 +796,52 @@ in your JMS client applications</p>
       <span class="tag">&lt;enabled&gt;</span>false<span class="tag">&lt;/enabled&gt;</span>
     <span class="tag">&lt;/snapshots&gt;</span>
   <span class="tag">&lt;/repository&gt;</span>
+
 <span class="tag">&lt;/repositories&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Gradle:</p>
+<p>With Gradle:</p>
 </div>
 <div class="listingblock">
-<div class="title">build.gradle</div>
+<div class="title">Milestone and release candidate repository declaration for Gradle:</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="groovy">repositories {
-  maven {
-    url <span class="string"><span class="delimiter">&quot;</span><span class="content">https://packagecloud.io/rabbitmq/maven-milestones/maven2</span><span class="delimiter">&quot;</span></span>
-  }
+  maven { url <span class="string"><span class="delimiter">&quot;</span><span class="content">https://packagecloud.io/rabbitmq/maven-milestones/maven2</span><span class="delimiter">&quot;</span></span> }
+  mavenCentral()
 }</code></pre>
 </div>
 </div>
 </div>
 <div class="sect3">
-<h4 id="snapshot-repository"><a class="anchor" href="#snapshot-repository"></a>Snapshot Repository</h4>
+<h4 id="snapshot-repository"><a class="anchor" href="#snapshot-repository"></a>Snapshots</h4>
 <div class="paragraph">
-<p>Snapshots are available on <a href="https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/jms/rabbitmq-jms/">Sonatype OSS snapshot repository</a>.</p>
+<p>Releases are available from Maven Central, which does not require specific declaration.
+Snapshots are available from a repository that must be declared in the dependency management configuration.</p>
 </div>
 <div class="paragraph">
-<p>Add the <a href="https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/jms/rabbitmq-jms/">Sonatype OSS snapshot repository</a> to your dependency manager:</p>
-</div>
-<div class="paragraph">
-<p>Maven:</p>
+<p>With Maven:</p>
 </div>
 <div class="listingblock">
-<div class="title">pom.xml</div>
+<div class="title">Snapshot repository declaration for Maven</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;repositories&gt;</span>
+
   <span class="tag">&lt;repository&gt;</span>
     <span class="tag">&lt;id&gt;</span>ossrh<span class="tag">&lt;/id&gt;</span>
     <span class="tag">&lt;url&gt;</span>https://oss.sonatype.org/content/repositories/snapshots<span class="tag">&lt;/url&gt;</span>
-    <span class="tag">&lt;snapshots&gt;</span>
-      <span class="tag">&lt;enabled&gt;</span>true<span class="tag">&lt;/enabled&gt;</span>
-    <span class="tag">&lt;/snapshots&gt;</span>
-    <span class="tag">&lt;releases&gt;</span>
-      <span class="tag">&lt;enabled&gt;</span>false<span class="tag">&lt;/enabled&gt;</span>
-    <span class="tag">&lt;/releases&gt;</span>
+    <span class="tag">&lt;snapshots&gt;</span><span class="tag">&lt;enabled&gt;</span>true<span class="tag">&lt;/enabled&gt;</span><span class="tag">&lt;/snapshots&gt;</span>
+    <span class="tag">&lt;releases&gt;</span><span class="tag">&lt;enabled&gt;</span>false<span class="tag">&lt;/enabled&gt;</span><span class="tag">&lt;/releases&gt;</span>
   <span class="tag">&lt;/repository&gt;</span>
+
 <span class="tag">&lt;/repositories&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Gradle:</p>
+<p>With Gradle:</p>
 </div>
 <div class="listingblock">
-<div class="title">build.gradle</div>
+<div class="title">Snapshot repository declaration for Gradle:</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="groovy">repositories {
   maven { url <span class="string"><span class="delimiter">'</span><span class="content">https://oss.sonatype.org/content/repositories/snapshots</span><span class="delimiter">'</span></span> }
@@ -1025,7 +987,7 @@ framework like Spring.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>virtualHost</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">RabbitMQ <a href="./vhosts.html">virtual host</a> within which the application will operate. The default is "/".</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">RabbitMQ <a href="https://www.rabbitmq.com/vhosts.html">virtual host</a> within which the application will operate. The default is "/".</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
@@ -1240,13 +1202,13 @@ messages from this destination, if <code>amqp</code> is <strong>true</strong>; t
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml">    <span class="tag">&lt;Resource</span>  <span class="attribute-name">name</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">jms/Queue</span><span class="delimiter">&quot;</span></span>
-               <span class="attribute-name">type</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">javax.jms.Queue</span><span class="delimiter">&quot;</span></span>
-            <span class="attribute-name">factory</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">com.rabbitmq.jms.admin.RMQObjectFactory</span><span class="delimiter">&quot;</span></span>
-    <span class="attribute-name">destinationName</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">myQueue</span><span class="delimiter">&quot;</span></span>
-               <span class="attribute-name">amqp</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">true</span><span class="delimiter">&quot;</span></span>
-      <span class="attribute-name">amqpQueueName</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">rabbitQueueName</span><span class="delimiter">&quot;</span></span>
-    <span class="tag">/&gt;</span></code></pre>
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;Resource</span>  <span class="attribute-name">name</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">jms/Queue</span><span class="delimiter">&quot;</span></span>
+           <span class="attribute-name">type</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">javax.jms.Queue</span><span class="delimiter">&quot;</span></span>
+        <span class="attribute-name">factory</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">com.rabbitmq.jms.admin.RMQObjectFactory</span><span class="delimiter">&quot;</span></span>
+<span class="attribute-name">destinationName</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">myQueue</span><span class="delimiter">&quot;</span></span>
+           <span class="attribute-name">amqp</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">true</span><span class="delimiter">&quot;</span></span>
+  <span class="attribute-name">amqpQueueName</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">rabbitQueueName</span><span class="delimiter">&quot;</span></span>
+<span class="tag">/&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1288,11 +1250,11 @@ messages from this destination, if <code>amqp</code> is <strong>true</strong>; t
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml">    <span class="tag">&lt;bean</span> <span class="attribute-name">id</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">jmsDestination</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">com.rabbitmq.jms.admin.RMQDestination</span><span class="delimiter">&quot;</span></span> <span class="tag">&gt;</span>
-     <span class="tag">&lt;property</span> <span class="attribute-name">name</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">destinationName</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">value</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">myQueue</span><span class="delimiter">&quot;</span></span> <span class="tag">/&gt;</span>
-     <span class="tag">&lt;property</span> <span class="attribute-name">name</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">amqp</span><span class="delimiter">&quot;</span></span>            <span class="attribute-name">value</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">true</span><span class="delimiter">&quot;</span></span> <span class="tag">/&gt;</span>
-     <span class="tag">&lt;property</span> <span class="attribute-name">name</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">amqpQueueName</span><span class="delimiter">&quot;</span></span>   <span class="attribute-name">value</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">rabbitQueueName</span><span class="delimiter">&quot;</span></span> <span class="tag">/&gt;</span>
-    <span class="tag">&lt;/bean&gt;</span></code></pre>
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;bean</span> <span class="attribute-name">id</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">jmsDestination</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">com.rabbitmq.jms.admin.RMQDestination</span><span class="delimiter">&quot;</span></span> <span class="tag">&gt;</span>
+  <span class="tag">&lt;property</span> <span class="attribute-name">name</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">destinationName</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">value</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">myQueue</span><span class="delimiter">&quot;</span></span> <span class="tag">/&gt;</span>
+  <span class="tag">&lt;property</span> <span class="attribute-name">name</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">amqp</span><span class="delimiter">&quot;</span></span>            <span class="attribute-name">value</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">true</span><span class="delimiter">&quot;</span></span> <span class="tag">/&gt;</span>
+  <span class="tag">&lt;property</span> <span class="attribute-name">name</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">amqpQueueName</span><span class="delimiter">&quot;</span></span>   <span class="attribute-name">value</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">rabbitQueueName</span><span class="delimiter">&quot;</span></span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;/bean&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1555,7 +1517,7 @@ on the client side.</p>
 <div class="sect2">
 <h3 id="with-spring-jms"><a class="anchor" href="#with-spring-jms"></a>With Spring JMS</h3>
 <div class="paragraph">
-<p><a href="https://docs.spring.io/spring/docs/5.1.0.RELEASE/spring-framework-reference/integration.html#jms">Spring JMS</a>
+<p><a href="https://docs.spring.io/spring-framework/docs/6.0.0/reference/html/integration.html#jms">Spring JMS</a>
 is a popular way to work with JMS as it avoids most of JMS boilerplate.</p>
 </div>
 <div class="paragraph">
@@ -1617,7 +1579,7 @@ Message response = tpl.execute(session -&gt; {
 </div>
 </div>
 <div class="paragraph">
-<p>See <a href="https://github.com/rabbitmq/rabbitmq-jms-client/blob/main/src/test/java/com/rabbitmq/integration/tests/RpcSpringJmsIT.java">this test</a>
+<p>See <a href="https://github.com/rabbitmq/rabbitmq-jms-client/blob/main/src/test/spring/com/rabbitmq/integration/tests/RpcSpringJmsIT.java">this test</a>
 for a full example of RPC with Spring JMS, including using a <code>@JmsListener</code> bean
 for the server part.</p>
 </div>
@@ -1887,7 +1849,7 @@ normal case, when the message is an instance of
 the RabbitMQ JMS client with AMQP 0-9-1 clients, you may wish to read an
 <a href="https://rabbitmq.com/tutorials/amqp-concepts.html">Introduction to RabbitMQ Concepts</a>
 and browse our
-<a href="amqp-0-9-1-quickref.html">AMQP 0-9-1 Quick Reference Guide</a>.</p>
+<a href="https://rabbitmq.com/amqp-0-9-1-quickref.html">AMQP 0-9-1 Quick Reference Guide</a>.</p>
 </div>
 </div>
 </div>
@@ -1895,7 +1857,7 @@ and browse our
 <div id="footer">
 <div id="footer-text">
 Version 3.1.0-SNAPSHOT<br>
-Last updated 2022-12-07 17:39:48 +0100
+Last updated 2022-12-09 11:50:45 +0100
 </div>
 </div>
 </body>
