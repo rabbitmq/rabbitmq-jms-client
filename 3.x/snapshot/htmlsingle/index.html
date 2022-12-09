@@ -556,7 +556,7 @@ table.CodeRay td.code{padding:0 0 0 .75em}
 </ul>
 </li>
 <li><a href="#configuring-logging-for-the-jms-client">Configuring Logging for the JMS Client</a></li>
-<li><a href="#publisher-confirms">Publisher Confirms</a></li>
+<li><a href="#asynchronous-sending">Asynchronous Sending</a></li>
 <li><a href="#support-for-requestreply-a-k-a-rpc">Support for Request/Reply (a.k.a. RPC)</a>
 <ul class="sectlevel2">
 <li><a href="#with-jms-api">With JMS API</a></li>
@@ -1343,47 +1343,14 @@ or <a href="https://gradle.org/">Gradle</a> to manage dependencies.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="publisher-confirms"><a class="anchor" href="#publisher-confirms"></a>Publisher Confirms</h2>
+<h2 id="asynchronous-sending"><a class="anchor" href="#asynchronous-sending"></a>Asynchronous Sending</h2>
 <div class="sectionbody">
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Publisher Confirms support is deprecated in favor of <a href="https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1.html#sending-messages-asynchronously-jms_spec-43">asynchronous sending</a> (JMS 2.0).
-</td>
-</tr>
-</table>
+<div class="paragraph">
+<p>The JMS client supports <a href="https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1.html#sending-messages-asynchronously-jms_spec-43">asynchronous sending</a> by using RabbitMQ <a href="https://rabbitmq.com/confirms.html#publisher-confirms">publisher confirms</a> mechanism.</p>
 </div>
 <div class="paragraph">
-<p><a href="https://rabbitmq.com/confirms.html#publisher-confirms">Publisher confirms</a> are a RabbitMQ extension to implement reliable
-publishing. This feature builds on top of the AMQP protocol, but the JMS client
-provides an API to use it. This allows to benefit from a reliability feature without
-diverging too much from the JMS API.</p>
-</div>
-<div class="paragraph">
-<p>Publisher confirms are deactivated by default. They can be activated by setting
-a <code>ConfirmListener</code> on the <code>RMQConnectionFactory</code>:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="java">RMQConnectionFactory connectionFactory = <span class="keyword">new</span> RMQConnectionFactory();
-connectionFactory.setConfirmListener(context -&gt; {
-    context.getMessage(); <span class="comment">// the message that is confirmed/nack-ed</span>
-    context.isAck(); <span class="comment">// whether the message is confirmed or nack-ed</span>
-});</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Note the <code>ConfirmListener</code> is not a good place to execute long-running
-tasks. Those should be executed in a dedicated thread, using e.g. an <code>ExecutorService</code>.</p>
-</div>
-<div class="paragraph">
-<p>Typical operations in a <code>ConfirmListener</code> are logging or message re-publishing (in case
-of nacks). The <a href="https://rabbitmq.com/tutorials/tutorial-seven-java.html">publish confirms tutorial</a> provides more guidance. It aims for the
-AMQP Java client, but principles remain the same for the JMS client.</p>
+<p>Note the <code>CompletionListener</code> is not a good place to execute long-running  tasks.
+Those should be executed in a dedicated thread, using e.g. an <code>ExecutorService</code>.</p>
 </div>
 </div>
 </div>
@@ -1857,7 +1824,7 @@ and browse our
 <div id="footer">
 <div id="footer-text">
 Version 3.1.0-SNAPSHOT<br>
-Last updated 2022-12-09 13:23:46 UTC
+Last updated 2022-12-09 14:15:32 UTC
 </div>
 </div>
 </body>
