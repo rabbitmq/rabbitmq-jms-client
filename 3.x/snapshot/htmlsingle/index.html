@@ -542,6 +542,7 @@ table.CodeRay td.code{padding:0 0 0 .75em}
 <li><a href="#installing-and-configuring">Installing and Configuring</a>
 <ul class="sectlevel2">
 <li><a href="#enabling-the-topic-selector-plug-in">Enabling the Topic Selector Plug-in</a></li>
+<li><a href="#installing-jms-client-library">Installing JMS Client library</a></li>
 <li><a href="#enabling-the-jms-client-in-a-java-container">Enabling the JMS client in a Java container</a></li>
 <li><a href="#defining-the-jms-connection-factory">Defining the JMS Connection Factory</a></li>
 </ul>
@@ -728,6 +729,164 @@ in your JMS client applications</p>
 </td>
 </tr>
 </table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="installing-jms-client-library"><a class="anchor" href="#installing-jms-client-library"></a>Installing JMS Client library</h3>
+<div class="sect3">
+<h4 id="with-maven-or-gradle"><a class="anchor" href="#with-maven-or-gradle"></a>With Maven or Gradle</h4>
+<div class="paragraph">
+<p>This package is published to several Maven package repositories:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://search.maven.org/search?q=g:com.rabbitmq.jms%20AND%20a:rabbitmq-jms">Maven Central</a></p>
+</li>
+<li>
+<p><a href="https://packagecloud.io/rabbitmq/maven-milestones">RabbitMQ Maven Milestones repository</a></p>
+</li>
+<li>
+<p><a href="https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/jms/rabbitmq-jms/">Sonatype OSS snapshot repository</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>RabbitMQ JMS Client implements JMS 3.0 as of 3.0.0.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="stable"><a class="anchor" href="#stable"></a>Stable</h4>
+<div class="paragraph">
+<p>Add the following to <code>pom.xml</code> for Maven:</p>
+</div>
+<div class="listingblock">
+<div class="title">pom.xml</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;dependency&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>com.rabbitmq.jms<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>rabbitmq-jms<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.0.0<span class="tag">&lt;/version&gt;</span>
+<span class="tag">&lt;/dependency&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Or the following to <code>build.gradle</code> for Gradle:</p>
+</div>
+<div class="listingblock">
+<div class="title">build.gradle</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="groovy">compile <span class="string"><span class="delimiter">'</span><span class="content">com.rabbitmq.jms:rabbitmq-jms:3.0.0</span><span class="delimiter">'</span></span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="snapshot"><a class="anchor" href="#snapshot"></a>Snapshot</h4>
+<div class="paragraph">
+<p>For snapshots, declare the <a href="#snapshot-repository">snapshot repository</a> in your dependency manager.</p>
+</div>
+<div class="paragraph">
+<p>Then add the following to <code>pom.xml</code> for Maven:</p>
+</div>
+<div class="listingblock">
+<div class="title">pom.xml</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;dependency&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>com.rabbitmq.jms<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>rabbitmq-jms<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="tag">&lt;version&gt;</span>3.1.0-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
+<span class="tag">&lt;/dependency&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Or the following to <code>build.gradle</code> for Gradle:</p>
+</div>
+<div class="listingblock">
+<div class="title">build.gradle</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="groovy">compile <span class="string"><span class="delimiter">'</span><span class="content">com.rabbitmq.jms:rabbitmq-jms:3.1.0-SNAPSHOT</span><span class="delimiter">'</span></span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="milestone-rc-repository"><a class="anchor" href="#milestone-rc-repository"></a>Milestones and Release Candidates Repository</h4>
+<div class="paragraph">
+<p>Milestones and release candidates are available on the RabbitMQ Milestone Repository.</p>
+</div>
+<div class="paragraph">
+<p>Maven:</p>
+</div>
+<div class="listingblock">
+<div class="title">pom.xml</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;repositories&gt;</span>
+  <span class="tag">&lt;repository&gt;</span>
+    <span class="tag">&lt;id&gt;</span>packagecloud-rabbitmq-maven-milestones<span class="tag">&lt;/id&gt;</span>
+    <span class="tag">&lt;url&gt;</span>https://packagecloud.io/rabbitmq/maven-milestones/maven2<span class="tag">&lt;/url&gt;</span>
+    <span class="tag">&lt;releases&gt;</span>
+      <span class="tag">&lt;enabled&gt;</span>true<span class="tag">&lt;/enabled&gt;</span>
+    <span class="tag">&lt;/releases&gt;</span>
+    <span class="tag">&lt;snapshots&gt;</span>
+      <span class="tag">&lt;enabled&gt;</span>false<span class="tag">&lt;/enabled&gt;</span>
+    <span class="tag">&lt;/snapshots&gt;</span>
+  <span class="tag">&lt;/repository&gt;</span>
+<span class="tag">&lt;/repositories&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Gradle:</p>
+</div>
+<div class="listingblock">
+<div class="title">build.gradle</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="groovy">repositories {
+  maven {
+    url <span class="string"><span class="delimiter">&quot;</span><span class="content">https://packagecloud.io/rabbitmq/maven-milestones/maven2</span><span class="delimiter">&quot;</span></span>
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="snapshot-repository"><a class="anchor" href="#snapshot-repository"></a>Snapshot Repository</h4>
+<div class="paragraph">
+<p>Snapshots are available on <a href="https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/jms/rabbitmq-jms/">Sonatype OSS snapshot repository</a>.</p>
+</div>
+<div class="paragraph">
+<p>Add the <a href="https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/jms/rabbitmq-jms/">Sonatype OSS snapshot repository</a> to your dependency manager:</p>
+</div>
+<div class="paragraph">
+<p>Maven:</p>
+</div>
+<div class="listingblock">
+<div class="title">pom.xml</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;repositories&gt;</span>
+  <span class="tag">&lt;repository&gt;</span>
+    <span class="tag">&lt;id&gt;</span>ossrh<span class="tag">&lt;/id&gt;</span>
+    <span class="tag">&lt;url&gt;</span>https://oss.sonatype.org/content/repositories/snapshots<span class="tag">&lt;/url&gt;</span>
+    <span class="tag">&lt;snapshots&gt;</span>
+      <span class="tag">&lt;enabled&gt;</span>true<span class="tag">&lt;/enabled&gt;</span>
+    <span class="tag">&lt;/snapshots&gt;</span>
+    <span class="tag">&lt;releases&gt;</span>
+      <span class="tag">&lt;enabled&gt;</span>false<span class="tag">&lt;/enabled&gt;</span>
+    <span class="tag">&lt;/releases&gt;</span>
+  <span class="tag">&lt;/repository&gt;</span>
+<span class="tag">&lt;/repositories&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Gradle:</p>
+</div>
+<div class="listingblock">
+<div class="title">build.gradle</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="groovy">repositories {
+  maven { url <span class="string"><span class="delimiter">'</span><span class="content">https://oss.sonatype.org/content/repositories/snapshots</span><span class="delimiter">'</span></span> }
+  mavenCentral()
+}</code></pre>
+</div>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -1736,7 +1895,7 @@ and browse our
 <div id="footer">
 <div id="footer-text">
 Version 3.1.0-SNAPSHOT<br>
-Last updated 2022-12-07 17:23:42 +0100
+Last updated 2022-12-07 17:39:48 +0100
 </div>
 </div>
 </body>
