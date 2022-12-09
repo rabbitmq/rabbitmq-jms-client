@@ -101,7 +101,7 @@ Using direct reply-to for JMS-based RPC has the following implications:
 
 * it uses automatically auto-acknowledgment
 * the response must be a `BytesMessage` or a `TextMessage` as direct reply-to
- is considered an <<destination-interoperability,AMQP destination>>. Use `response.setStringProperty("JMSType", "TextMessage")`
+ is considered an <<interoperability.adoc#destination-interoperability,AMQP destination>>. Use `response.setStringProperty("JMSType", "TextMessage")`
  on the response message in the RPC server if you want to receive a `TextMessage`
  on the client side.
 

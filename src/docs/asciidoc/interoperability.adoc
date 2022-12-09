@@ -1,4 +1,5 @@
-== JMS and AMQP 0-9-1 Destination Interoperability[[destination-interoperability]]
+[[destination-interoperability]]
+== JMS and AMQP 0-9-1 Destination Interoperability
 
 An interoperability feature allows you to define JMS 'amqp' destinations
 that read and/or write to non-JMS RabbitMQ resources. *_Note this feature

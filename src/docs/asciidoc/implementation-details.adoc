@@ -40,7 +40,7 @@ a durable `my.jms.topic` JMS topic with a selector:
  exchange with the `my.jms.topic` binding key.
 
 Exchanges can be bound together thanks to a link:https://rabbitmq.com/e2e.html[RabbitMQ extension].
-Note the <<enable_topic_selector, Topic Selector Plugin>> must be enabled for topic selectors
+Note the <<installation.adoc#enable_topic_selector, Topic Selector Plugin>> must be enabled for topic selectors
 to work.
 
 === QueueBrowser Support
