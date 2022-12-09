@@ -38,4 +38,4 @@ distclean: clean
 
 .PHONY: doc
 doc: ## Generate PerfTest documentation
-	@mvnw asciidoctor:process-asciidoc
+	@mvnw asciidoctor:process-asciidoc --no-transfer-progress
