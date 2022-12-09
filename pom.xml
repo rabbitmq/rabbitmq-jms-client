@@ -41,7 +41,6 @@
   </scm>
 
   <properties>
-    <project.version.stable>3.0.0</project.version.stable>
     <rabbitmq.version>5.16.0</rabbitmq.version>
     <junit.jupiter.version>5.9.1</junit.jupiter.version>
     <mockito-core.version>4.9.0</mockito-core.version>
@@ -303,10 +302,9 @@
           <!-- Attributes common to all output formats -->
           <backend>html5</backend>
           <attributes>
-            <endpoint-url>https://example.org</endpoint-url>
             <sourcedir>${project.build.sourceDirectory}</sourcedir>
             <project-version>${project.version}</project-version>
-            <project-version-stable>${project.version.stable}</project-version-stable>
+            <spring-version>${spring.version}</spring-version>
             <imagesdir>./images</imagesdir>
             <toc>left</toc>
             <icons>font</icons>
