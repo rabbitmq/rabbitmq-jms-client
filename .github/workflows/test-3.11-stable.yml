@@ -60,3 +60,12 @@ jobs:
           event-type: new_client_snapshot
           repository: rabbitmq/rabbitmq-jms-cts
           token: ${{ secrets.CI_GITHUB_TOKEN }}
+      - name: Generate documentation
+        if: ${{ github.event_name != 'pull_request' }}
+        run: make doc
+      - name: Publish documentation
+        if: ${{ github.event_name != 'pull_request' }}
+        run: |
+          git config user.name "rabbitmq-ci"
+          git config user.email "rabbitmq-ci@users.noreply.github.com"
+          ./publish-documentation-to-github-pages.sh
