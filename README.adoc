@@ -33,7 +33,7 @@ This package is published to several Maven package repositories:
 [[jms-2]]
 === JMS 1.1 and 2.0
 
-RabbitMQ JMS Client implements JMS 2.0 as of 2.7.0.
+RabbitMQ JMS Client implements JMS 2.0 as of 2.7.0. It requires Java 8 or more.
 
 ==== Stable
 
@@ -112,7 +112,7 @@ compile 'com.rabbitmq.jms:rabbitmq-jms:{2-snapshot}'
 [[jms-3]]
 === JMS 3.0
 
-RabbitMQ JMS Client implements JMS 3.0 as of 3.0.0.
+RabbitMQ JMS Client 3.x implements JMS 3.0 and requires Java 11 or more.
 
 ==== Stable
 
