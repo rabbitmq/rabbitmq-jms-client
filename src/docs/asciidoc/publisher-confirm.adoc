@@ -2,6 +2,8 @@
 == Publisher Confirms
 
 NOTE: Publisher Confirms support is deprecated in favor of https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1.html#sending-messages-asynchronously-jms_spec-43[asynchronous sending] (JMS 2.0).
+The same recommendation applies to the `CompletionListener`: it is not a good place to execute long-running tasks.
+Those should be executed in a dedicated thread, using e.g. an `ExecutorService`.
 
 link:https://rabbitmq.com/confirms.html#publisher-confirms[Publisher confirms] are a RabbitMQ extension to implement reliable
 publishing. This feature builds on top of the AMQP protocol, but the JMS client
@@ -20,8 +22,8 @@ connectionFactory.setConfirmListener(context -> {
 });
 ----
 
-Note the `ConfirmListener` is not a good place to execute long-running
-tasks. Those should be executed in a dedicated thread, using e.g. an `ExecutorService`.
+Note the `ConfirmListener` is not a good place to execute long-running tasks.
+Those should be executed in a dedicated thread, using e.g. an `ExecutorService`.
 
 Typical operations in a `ConfirmListener` are logging or message re-publishing (in case
 of nacks). The link:https://rabbitmq.com/tutorials/tutorial-seven-java.html[publish confirms tutorial] provides more guidance. It aims for the
