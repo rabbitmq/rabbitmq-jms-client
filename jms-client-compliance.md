@@ -688,14 +688,6 @@ The JMS for RabbitMQ client does not support server sessions.
 <td>Supported</td>
 </tr>
 <tr>
-<td><pre class="pre">void setDeliveryDelay(long deliveryDelay)</pre></td>
-<td>Supported</td>
-</tr>
-<tr>
-<td><pre class="pre">long getDeliveryDelay()</pre></td>
-<td>Supported</td>
-</tr>
-<tr>
 <td><pre class="pre">Destination getDestination()</pre></td>
 <td>Supported</td>
 </tr>
@@ -896,15 +888,6 @@ The JMS for RabbitMQ client does not support server sessions.
 </tr>
 <tr>
 <td><pre class="pre">void setJMSExpiration(long expiration)</pre></td>
-<td>Supported</td>
-</tr>
-<tr>
-<tr>
-<td><pre class="pre">long getJMSDeliveryTime()</pre></td>
-<td>Supported</td>
-</tr>
-<tr>
-<td><pre class="pre">void setJMSDeliveryTime(long deliveryTime)</pre></td>
 <td>Supported</td>
 </tr>
 <tr>
@@ -1585,3 +1568,5 @@ See [QueueBrowser support](jms-client.html#queue-browser-support) for implementa
 </tr>
 </tbody>
 </table>
+
+
