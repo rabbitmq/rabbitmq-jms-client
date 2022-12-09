@@ -54,8 +54,10 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
       - name: Generate documentation
+        if: ${{ github.event_name != 'pull_request' }}
         run: make doc
       - name: Publish documentation
+        if: ${{ github.event_name != 'pull_request' }}
         run: |
           git config user.name "rabbitmq-ci"
           git config user.email "rabbitmq-ci@users.noreply.github.com"
