@@ -18,6 +18,137 @@ You need to enable this plugin only if you plan to use topic selectors
 in your JMS client applications
 ====
 
+=== Installing JMS Client library
+
+==== With Maven or Gradle
+
+This package is published to several Maven package repositories:
+
+* https://search.maven.org/search?q=g:com.rabbitmq.jms%20AND%20a:rabbitmq-jms[Maven Central]
+* https://packagecloud.io/rabbitmq/maven-milestones[RabbitMQ Maven Milestones repository]
+* https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/jms/rabbitmq-jms/[Sonatype OSS snapshot repository]
+
+RabbitMQ JMS Client implements JMS 3.0 as of 3.0.0.
+
+==== Stable
+
+Add the following to `pom.xml` for Maven:
+
+.pom.xml
+[source,xml,subs="attributes,specialcharacters"]
+----
+<dependency>
+  <groupId>com.rabbitmq.jms</groupId>
+  <artifactId>rabbitmq-jms</artifactId>
+  <version>{project-version-stable}</version>
+</dependency>
+----
+
+Or the following to `build.gradle` for Gradle:
+
+.build.gradle
+[source,groovy,subs="attributes,specialcharacters"]
+----
+compile 'com.rabbitmq.jms:rabbitmq-jms:{project-version-stable}'
+----
+
+==== Snapshot
+
+For snapshots, declare the <<snapshot-repository,snapshot repository>> in your dependency manager.
+
+Then add the following to `pom.xml` for Maven:
+
+.pom.xml
+[source,xml,subs="attributes,specialcharacters"]
+----
+<dependency>
+  <groupId>com.rabbitmq.jms</groupId>
+  <artifactId>rabbitmq-jms</artifactId>
+  <version>{project-version}</version>
+</dependency>
+----
+
+Or the following to `build.gradle` for Gradle:
+
+.build.gradle
+[source,groovy,subs="attributes,specialcharacters"]
+----
+compile 'com.rabbitmq.jms:rabbitmq-jms:{project-version}'
+----
+
+[[milestone-rc-repository]]
+==== Milestones and Release Candidates Repository
+
+Milestones and release candidates are available on the RabbitMQ Milestone Repository.
+
+Maven:
+
+.pom.xml
+[source,xml,subs="attributes,specialcharacters"]
+----
+<repositories>
+  <repository>
+    <id>packagecloud-rabbitmq-maven-milestones</id>
+    <url>https://packagecloud.io/rabbitmq/maven-milestones/maven2</url>
+    <releases>
+      <enabled>true</enabled>
+    </releases>
+    <snapshots>
+      <enabled>false</enabled>
+    </snapshots>
+  </repository>
+</repositories>
+----
+
+Gradle:
+
+.build.gradle
+[source,groovy,subs="attributes,specialcharacters"]
+----
+repositories {
+  maven {
+    url "https://packagecloud.io/rabbitmq/maven-milestones/maven2"
+  }
+}
+----
+
+[[snapshot-repository]]
+==== Snapshot Repository
+
+Snapshots are available on https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/jms/rabbitmq-jms/[Sonatype OSS snapshot repository].
+
+Add the https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/jms/rabbitmq-jms/[Sonatype OSS snapshot repository] to your dependency manager:
+
+Maven:
+
+.pom.xml
+[source,xml,subs="attributes,specialcharacters"]
+----
+<repositories>
+  <repository>
+    <id>ossrh</id>
+    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    <snapshots>
+      <enabled>true</enabled>
+    </snapshots>
+    <releases>
+      <enabled>false</enabled>
+    </releases>
+  </repository>
+</repositories>
+----
+
+Gradle:
+
+.build.gradle
+[source,groovy,subs="attributes,specialcharacters"]
+----
+repositories {
+  maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+  mavenCentral()
+}
+----
+
 === Enabling the JMS client in a Java container
 
 To enable the JMS Client in a Java container (e.g. Java EE application
