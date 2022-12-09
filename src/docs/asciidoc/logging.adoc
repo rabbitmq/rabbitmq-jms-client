@@ -1,0 +1,11 @@
+== Configuring Logging for the JMS Client
+
+The JMS Client logs messages using SLF4J (Simple Logging Façade for Java).
+SLF4J delegates to a logging framework, such as https://logback.qos.ch/[Logback].
+If no other logging framework is
+enabled, SLF4J defaults to a built-in, no-op, logger.
+See the http://www.slf4j.org/docs.html[SLF4J] documentation for a
+list of the logging frameworks SLF4J supports.
+
+We highly recommend to use a dependency management tool like http://maven.apache.org/[Maven]
+or https://gradle.org/[Gradle] to manage dependencies.

@@ -1,0 +1,192 @@
+
+== Implementation Details
+
+This section provides additional implementation details for specific
+JMS API classes in the JMS Client.
+
+Deviations from the specification are implemented to support common
+acknowledgement behaviours.
+
+=== JMS Topic Support
+
+JMS topics are implemented using an AMQP link:https://rabbitmq.com/tutorials/amqp-concepts.html#exchange-topic[topic exchange]
+and a dedicated AMQP queue for each JMS topic subscriber. The AMQP
+topic exchange is `jms.temp.topic` or `jms.durable.topic`, depending
+on whether the JMS topic is temporary or not, respectively. Let's
+take an example with a subscription to a durable `my.jms.topic` JMS topic:
+
+* a dedicated AMQP queue is created for this subscriber, its name
+ will follow the pattern `+jms-cons-{UUID}+`.
+* the `+jms-cons-{UUID}+` AMQP queue is bound to the `jms.durable.topic`
+ exchange with the `my.jms.topic` binding key.
+
+If another subscriber subscribes to `my.jms.topic`, it will have
+its own AMQP queue and both subscribers will receive messages published
+to the `jms.durable.topic` exchange with the `my.jms.topic` routing key.
+
+The example above assumes no topic selector is used when declaring the
+subscribers. If a topic selector is in use, a `x-jms-topic`-typed exchange
+will sit between the `jms.durable.topic` topic exchange and the
+subscriber queue. So the topology is the following when subscribing to
+a durable `my.jms.topic` JMS topic with a selector:
+
+* a dedicated AMQP queue is created for this subscriber, its name
+ will follow the pattern `+jms-cons-{UUID}+`.
+* a `x-jms-topic`-typed exchange is bound to the subscriber AMQP queue with
+ the `my.jms.topic` binding key and some arguments related to the selector
+ expressions. Note this exchange is scoped to the JMS session and not only
+ to the subscriber.
+* the `x-jms-topic`-typed exchange is bound to the `jms.durable.topic`
+ exchange with the `my.jms.topic` binding key.
+
+Exchanges can be bound together thanks to a link:https://rabbitmq.com/e2e.html[RabbitMQ extension].
+Note the <<enable_topic_selector, Topic Selector Plugin>> must be enabled for topic selectors
+to work.
+
+=== QueueBrowser Support
+
+==== Overview of queue browsers
+
+The JMS API includes objects and methods to browse an existing queue
+destination, reading its messages _without_ removing them from the
+queue. Topic destinations cannot be browsed in this manner.
+
+A `QueueBrowser` can be created from a (queue) `Destination`,
+with or without a selector expression. The browser has a `getEnumeration()`
+method, which returns a Java `Enumeration` of ``Message``s copied from
+the queue.
+
+If no selector is supplied, then all messages in the queue appear
+in the `Enumeration`. If a selector is supplied, then only those
+messages that satisfy the selector appear.
+
+==== Implementation
+
+The destination queue is read when the `getEnumeration()` method is
+called. A _snapshot_ is taken of the messages in the queue; and the
+selector expression, if one is supplied, is used at this time to discard
+messages that do not match.
+
+The message copies may now be read using the `Enumeration` interface
+(`nextElement()` and `hasMoreElements()`).
+
+The selector expression and the destination queue of the `QueueBrowser`
+may not be adjusted after the `QueueBrowser` is created.
+
+An `Enumeration` cannot be "reset", but the `getEnumeration()` method
+may be re-issued, taking a _new_ snapshot from the queue each time.
+
+The contents of an `Enumeration` survive session and/or connection
+close, but a `QueueBrowser` may not be used after the session that
+created it has closed. `QueueBrowser.close()` has no effect.
+
+===== Which messages are included
+
+Messages that arrive, expire, are re-queued, or are removed after
+the `getEnumeration()` call have no effect on the contents of the
+`Enumeration` it produced. If the messages in the queue change
+_while the_ `Enumeration` _is being built_, they may or may not be
+included. In particular, if messages from the queue are simultaneously
+read by another client (or session), they may or may not appear in
+the `Enumeration`.
+
+Message copies do not "expire" from an `Enumeration`.
+
+===== Order of messages
+
+If other client sessions read from a queue that is being browsed,
+then it is possible that some messages may subsequently be received out
+of order.
+
+Message order will not be disturbed if no other client sessions read
+the queue at the same time.
+
+===== Memory usage
+
+When a message is read from the `Enumeration` (with `nextElement()`),
+then no reference to it is retained in the Java Client. This means the
+storage it occupies in the client is eligible for release
+(by garbage collection) if no other references are retained.
+Retaining an `Enumeration` will retain the storage for all message
+copies that remain in it.
+
+If the queue has many messages -- or the messages it contains are very
+large -- then a `getEnumeration()` method call may consume a large
+amount of memory in a very short time. This remains true even if only
+a few messages are selected. There is currently limited protection
+against `OutOfMemoryError` conditions that may arise because of this.
+See the next section.
+
+===== Setting a maximum number of messages to browse
+
+Each connection is created with a limit on the number of messages that
+are examined by a `QueueBrowser`. The limit is set on the
+`RMQConnectionFactory` by `RMQConnectionFactory.setQueueBrowserReadMax(int)`
+and is passed to each `Connection` subsequently created
+by `ConnectionFactory.createConnection()`.
+
+The limit is an integer that, if positive, stops the queue browser from
+reading more than this number of messages when building an enumeration.
+If it is zero or negative, it is interpreted as imposing no limit on
+the browser, and all of the messages on the queue are scanned.
+
+The default limit for a factory is determined by the
+`rabbit.jms.queueBrowserReadMax` system property, if set, and the value
+is specified as `0` if this property is not set or is not an integer.
+
+If a `RMQConnectionFactory` value is obtained from a JNDI provider,
+then the limit set when the factory object was created is preserved.
+
+===== Release Support
+
+Support for ``QueueBrowser``s is introduced in the JMS Client 1.2.0.
+Prior to that release, calling `Session.createBrowser(Queue queue[, String selector])`
+resulted in an `UnsupportedOperationException`.
+
+=== Group and individual acknowledgement
+
+Prior to version 1.2.0 of the JMS client, in client acknowledgement mode
+(`Session.CLIENT_ACKNOWLEDGE`), acknowledging any message from an open
+session would acknowledge _every_ unacknowledged message of that session,
+whether they were received before or after the message being acknowledged.
+
+Currently, the behaviour of `Session.CLIENT_ACKNOWLEDGE` mode is
+modified so that, when calling `msg.acknowledge()`, only the message
+`msg` _and all_ previously received _unacknowledged messages on that
+session_ are acknowledged. Messages received _after_ `msg` was received
+are not affected. This is a form of _group acknowledgement_,
+which differs slightly from the JMS specification but is likely to
+be more useful, and is compatible with the vast majority of uses of
+the existing acknowledge function.
+
+For even finer control, a new acknowledgement mode may be set when
+creating a session, called `RMQSession.CLIENT_INDIVIDUAL_ACKNOWLEDGE`.
+
+A session created with this acknowledgement mode will mean that messages
+received on that session will be acknowledged individually. That is,
+the call `msg.acknowledge()` will acknowledge only the message `msg`
+and not affect any other messages of that session.
+
+The acknowledgement mode `RMQSession.CLIENT_INDIVIDUAL_ACKNOWLEDGE`
+is equivalent to `Session.CLIENT_ACKNOWLEDGE` in all other respects.
+In particular the `getAcknowledgeMode()` method returns
+`Session.CLIENT_ACKNOWLEDGE` even if
+`RMQSession.CLIENT_INDIVIDUAL_ACKNOWLEDGE` has been set.
+
+=== Arbitrary Message support
+
+Any instance of a class that implements the `javax.jms.Message`
+interface can be _sent_ by a JMS message producer.
+
+All properties of the message required by `send()` are correctly
+interpreted except that the `JMSReplyTo` header and objects
+(as property values or the body of an `ObjectMessage`) that
+cannot be deserialized are ignored.
+
+The implementation extracts the properties and body from the `Message`
+instance using interface methods and recreates it as a message of
+the right (`RMQMessage`) type (`BytesMessage`, `MapMessage`, `ObjectMessage`,
+`TextMessage`, or `StreamMessage`) before sending it. This means
+that there is some performance loss due to the copying; but in the
+normal case, when the message is an instance of
+`com.rabbitmq.jms.client.RMQMessage`, no copying is done.

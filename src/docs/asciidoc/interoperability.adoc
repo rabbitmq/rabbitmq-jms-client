@@ -1,0 +1,182 @@
+== JMS and AMQP 0-9-1 Destination Interoperability[[destination-interoperability]]
+
+An interoperability feature allows you to define JMS 'amqp' destinations
+that read and/or write to non-JMS RabbitMQ resources. *_Note this feature
+does not support JMS topics_*.
+
+A single 'amqp' destination can be defined for both sending and consuming.
+
+=== Sending JMS Messages to an AMQP Exchange
+
+A JMS destination can be defined so that a JMS application can send
+``Message``s to a predefined RabbitMQ 'destination' (exchange/routing key)
+using the JMS API in the normal way. The messages are written
+"in the clear," which means that any AMQP 0-9-1 client can read them without
+having to understand the internal format of Java JMS messages.
+*_Only ``BytesMessage``s and ``TextMessage``s can be written in this way_*.
+
+When messages are sent to an 'amqp' Destination, JMS message properties
+are mapped onto AMQP 0-9-1 headers and properties as appropriate.
+For example, the `JMSPriority` property converts to the `priority` property
+for the AMQP 0-9-1 message. (It is also set as a header with the name
+"JMSPriority".) User-defined properties are set as named message header
+values, provided they are `boolean`, numeric or `String` types.
+
+=== Consuming Messages From an AMQP Queue
+
+Similarly, a JMS destination can be defined that reads messages from a
+predefined RabbitMQ queue. A JMS application can then read these
+messages using the JMS API. RabbitMQ JMS Client packs them up into
+JMS Messages automatically. Messages read in this way are, by default,
+``BytesMessage``s, but individual messages can be marked `TextMessage`
+(by adding an AMQP message header called "JMSType" whose value is
+"TextMessage"), which will interpret the byte-array payload as a UTF8
+encoded String and return them as ``TextMessage``s.
+
+When reading from an 'amqp' Destination, values are mapped back to
+JMS message properties, except that any explicit JMS property set as
+a message header overrides the natural AMQP 0-9-1 header value, unless
+this would misrepresent the message. For example,
+`JMSDeliveryMode` cannot be overridden in this way.
+
+=== JMS 'amqp' RMQDestination Constructor
+
+The `com.rabbitmq.jms.admin` package contains the `RMQDestination` class,
+which implements `Destination` in the JMS interface. This is extended
+with a new constructor:
+
+[source,java,indent=0]
+----
+  public RMQDestination(String destinationName, String amqpExchangeName,
+                      String amqpRoutingKey, String amqpQueueName);
+----
+
+This constructor creates a destination for JMS for RabbitMQ mapped
+onto an AMQP 0-9-1 resource. The parameters are the following:
+
+* `destinationName` - the name of the queue destination
+* `amqpExchangeName` - the exchange name for the mapped resource
+* `amqpRoutingKey` - the routing key for the mapped resource
+* `amqpQueueName` - the queue name of the mapped resource (to listen
+ messages from)
+
+Applications that declare destinations in this way can use them directly,
+or store them in a JNDI provider for JMS applications to retrieve.
+Such destinations are non-temporary, queue destinations.
+
+=== JMS AMQP 0-9-1 Destination Definitions
+
+The `RMQDestination` object has the following new instance fields:
+
+* `amqp` -- _boolean_, indicates if this is an AMQP 0-9-1 destination
+ (if *true*); the default is *false*.
+* `amqpExchangeName` -- _String_, the RabbitMQ exchange name to use when
+ sending messages to this destination, if `amqp` is *true*; the default
+ is *null*.
+* `amqpRoutingKey` -- _String_, the AMQP 0-9-1 routing key to use when sending
+ messages to this destination, if `amqp` is *true*; the default is *null*.
+* `amqpQueueName` -- _String_, the RabbitMQ queue name to use when reading
+ messages from this destination, if `amqp` is *true*; the default is *null*.
+
+There are getters and setters for these fields, which means that a JNDI
+ `<Resource/>` definition or an XML Spring bean definition can use them, for example
+ JNDI with Tomcat:
+
+[source,xml]
+----
+
+<Resource  name="jms/Queue"
+           type="javax.jms.Queue"
+        factory="com.rabbitmq.jms.admin.RMQObjectFactory"
+destinationName="myQueue"
+           amqp="true"
+  amqpQueueName="rabbitQueueName"
+/>
+----
+
+This is the equivalent with WildFly (as of JMS Client 1.7.0):
+
+[source,xml]
+----
+<bindings>
+    <object-factory name="java:global/jms/Queue"
+                    module="foo.bar"
+                    class="com.rabbitmq.jms.admin.RMQObjectFactory">
+        <environment>
+            <property name="className" value="javax.jms.Queue"/>
+            <property name="destinationName" value="myQueue"/>
+            <property name="amqp" value="true"/>
+            <property name="amqpQueueName" value="rabbitQueueName"/>
+        </environment>
+    </object-factory>
+</bindings>
+----
+
+
+This is the equivalent Spring bean example (Java configuration):
+
+[source,java,indent=0]
+----
+    @Bean
+    public Destination jmsDestination() {
+        RMQDestination jmsDestination = new RMQDestination();
+        jmsDestination.setDestinationName("myQueue");
+        jmsDestination.setAmqp(true);
+        jmsDestination.setAmqpQueueName("rabbitQueueName");
+        return jmsDestination;
+    }
+----
+
+And here is the Spring XML configuration:
+
+[source,xml]
+----
+<bean id="jmsDestination" class="com.rabbitmq.jms.admin.RMQDestination" >
+  <property name="destinationName" value="myQueue" />
+  <property name="amqp"            value="true" />
+  <property name="amqpQueueName"   value="rabbitQueueName" />
+</bean>
+----
+
+Following is a _complete_ list of the attributes/properties that are
+available:
+
+|===
+| Attribute/Property Name | JNDI Only? | Description
+
+| `name`
+| Yes
+| Name in JNDI.
+
+| `type`
+| Yes
+| Name of the JMS interface the object implements, usually `javax.jms.Queue`. Other choices are `javax.jms.Topic` and `javax.jms.Destination`. You can also use the name of the (common) implementation class, `com.rabbitmq.jms.admin.RMQDestination`.
+
+| `factory`
+| Yes
+| JMS Client for RabbitMQ `ObjectFactory` class, always `com.rabbitmq.jms.admin.RMQObjectFactory`.
+
+| `amqp`
+| No
+| "*true*" means this is an 'amqp' destination. Default "*false*".
+
+| `amqpExchangeName`
+| No
+| Name of the RabbitMQ exchange to publish messages to when an 'amqp' destination. This exchange must exist when messages are published.
+
+| `amqpRoutingKey`
+| No
+| The routing key to use when publishing messages when an 'amqp' destination.
+
+| `amqpQueueName`
+| No
+| Name of the RabbitMQ queue to receive messages from when an 'amqp' destination. This queue must exist when messages are received.
+
+| `destinationName`
+| No
+| Name of the JMS destination.
+
+| `queueDeclareArguments`
+| No
+| Arguments to use when declaring the AMQP queue. Use `key=value` pairs separated by commas for JNDI, e.g. `x-queue-type=quorum`.
+|===
