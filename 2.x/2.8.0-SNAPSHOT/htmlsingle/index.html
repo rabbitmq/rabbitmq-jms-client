@@ -1353,6 +1353,8 @@ or <a href="https://gradle.org/">Gradle</a> to manage dependencies.</p>
 </td>
 <td class="content">
 Publisher Confirms support is deprecated in favor of <a href="https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1.html#sending-messages-asynchronously-jms_spec-43">asynchronous sending</a> (JMS 2.0).
+The same recommendation applies to the <code>CompletionListener</code>: it is not a good place to execute long-running tasks.
+Those should be executed in a dedicated thread, using e.g. an <code>ExecutorService</code>.
 </td>
 </tr>
 </table>
@@ -1377,8 +1379,8 @@ connectionFactory.setConfirmListener(context -&gt; {
 </div>
 </div>
 <div class="paragraph">
-<p>Note the <code>ConfirmListener</code> is not a good place to execute long-running
-tasks. Those should be executed in a dedicated thread, using e.g. an <code>ExecutorService</code>.</p>
+<p>Note the <code>ConfirmListener</code> is not a good place to execute long-running tasks.
+Those should be executed in a dedicated thread, using e.g. an <code>ExecutorService</code>.</p>
 </div>
 <div class="paragraph">
 <p>Typical operations in a <code>ConfirmListener</code> are logging or message re-publishing (in case
@@ -1857,7 +1859,7 @@ and browse our
 <div id="footer">
 <div id="footer-text">
 Version 2.8.0-SNAPSHOT<br>
-Last updated 2022-12-09 13:09:42 UTC
+Last updated 2022-12-09 14:19:04 UTC
 </div>
 </div>
 </body>
