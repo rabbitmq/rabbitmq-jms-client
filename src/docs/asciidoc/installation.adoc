@@ -20,73 +20,53 @@ in your JMS client applications
 
 === Installing JMS Client library
 
-==== With Maven or Gradle
+Use your favorite build management tool to add the client dependencies to your project.
 
-This package is published to several Maven package repositories:
-
-* https://search.maven.org/search?q=g:com.rabbitmq.jms%20AND%20a:rabbitmq-jms[Maven Central]
-* https://packagecloud.io/rabbitmq/maven-milestones[RabbitMQ Maven Milestones repository]
-* https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/jms/rabbitmq-jms/[Sonatype OSS snapshot repository]
-
-RabbitMQ JMS Client implements JMS 3.0 as of 3.0.0.
-
-==== Stable
-
-Add the following to `pom.xml` for Maven:
+==== Maven
 
 .pom.xml
 [source,xml,subs="attributes,specialcharacters"]
 ----
-<dependency>
-  <groupId>com.rabbitmq.jms</groupId>
-  <artifactId>rabbitmq-jms</artifactId>
-  <version>{project-version-stable}</version>
-</dependency>
+<dependencies>
+
+  <dependency>
+    <groupId>com.rabbitmq.jms</groupId>
+    <artifactId>rabbitmq-jms</artifactId>
+    <version>{project-version}</version>
+  </dependency>
+
+</dependencies>
 ----
 
-Or the following to `build.gradle` for Gradle:
+Milestones and release candidates require to declare the <<milestone-rc-repository,appropriate repository>>.
+Snapshots require to declare their <<snapshot-repository,own repository>> as well.
+
+==== Gradle
 
 .build.gradle
 [source,groovy,subs="attributes,specialcharacters"]
 ----
-compile 'com.rabbitmq.jms:rabbitmq-jms:{project-version-stable}'
+dependencies {
+  compile "com.rabbitmq.jms:rabbitmq-jms:{project-version}"
+}
 ----
 
-==== Snapshot
-
-For snapshots, declare the <<snapshot-repository,snapshot repository>> in your dependency manager.
-
-Then add the following to `pom.xml` for Maven:
-
-.pom.xml
-[source,xml,subs="attributes,specialcharacters"]
-----
-<dependency>
-  <groupId>com.rabbitmq.jms</groupId>
-  <artifactId>rabbitmq-jms</artifactId>
-  <version>{project-version}</version>
-</dependency>
-----
-
-Or the following to `build.gradle` for Gradle:
-
-.build.gradle
-[source,groovy,subs="attributes,specialcharacters"]
-----
-compile 'com.rabbitmq.jms:rabbitmq-jms:{project-version}'
-----
+Milestones and release candidates require to declare the <<milestone-rc-repository,appropriate repository>>.
+Snapshots require to declare their <<snapshot-repository,own repository>> as well.
 
 [[milestone-rc-repository]]
-==== Milestones and Release Candidates Repository
+==== Milestones and Release Candidates
 
-Milestones and release candidates are available on the RabbitMQ Milestone Repository.
+Releases are available from Maven Central, which does not require specific declaration.
+Milestones and release candidates are available from a repository that must be declared in the dependency management configuration.
 
-Maven:
+With Maven:
 
-.pom.xml
+.Milestone and release candidate repository declaration for Maven
 [source,xml,subs="attributes,specialcharacters"]
 ----
 <repositories>
+
   <repository>
     <id>packagecloud-rabbitmq-maven-milestones</id>
     <url>https://packagecloud.io/rabbitmq/maven-milestones/maven2</url>
@@ -97,50 +77,47 @@ Maven:
       <enabled>false</enabled>
     </snapshots>
   </repository>
+
 </repositories>
 ----
 
-Gradle:
+With Gradle:
 
-.build.gradle
+.Milestone and release candidate repository declaration for Gradle:
 [source,groovy,subs="attributes,specialcharacters"]
 ----
 repositories {
-  maven {
-    url "https://packagecloud.io/rabbitmq/maven-milestones/maven2"
-  }
+  maven { url "https://packagecloud.io/rabbitmq/maven-milestones/maven2" }
+  mavenCentral()
 }
 ----
 
 [[snapshot-repository]]
-==== Snapshot Repository
+==== Snapshots
 
-Snapshots are available on https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/jms/rabbitmq-jms/[Sonatype OSS snapshot repository].
+Releases are available from Maven Central, which does not require specific declaration.
+Snapshots are available from a repository that must be declared in the dependency management configuration.
 
-Add the https://oss.sonatype.org/content/repositories/snapshots/com/rabbitmq/jms/rabbitmq-jms/[Sonatype OSS snapshot repository] to your dependency manager:
+With Maven:
 
-Maven:
-
-.pom.xml
+.Snapshot repository declaration for Maven
 [source,xml,subs="attributes,specialcharacters"]
 ----
 <repositories>
+
   <repository>
     <id>ossrh</id>
     <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    <snapshots>
-      <enabled>true</enabled>
-    </snapshots>
-    <releases>
-      <enabled>false</enabled>
-    </releases>
+    <snapshots><enabled>true</enabled></snapshots>
+    <releases><enabled>false</enabled></releases>
   </repository>
+
 </repositories>
 ----
 
-Gradle:
+With Gradle:
 
-.build.gradle
+.Snapshot repository declaration for Gradle:
 [source,groovy,subs="attributes,specialcharacters"]
 ----
 repositories {
@@ -257,7 +234,7 @@ The following table lists all of the attributes/properties that are available.
 
 | `virtualHost`
 | No
-| RabbitMQ link:./vhosts.html[virtual host] within which the application will operate. The default is "/".
+| RabbitMQ https://www.rabbitmq.com/vhosts.html[virtual host] within which the application will operate. The default is "/".
 |
 
 | `host`

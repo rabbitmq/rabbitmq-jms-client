@@ -7,7 +7,7 @@ ifndef::sourcedir[:sourcedir: ../../main/java]
 
 == Introduction
 
-RabbitMQ is not a JMS provider but includes https://github.com/rabbitmq/rabbitmq-server/tree/v3.9.x/deps/rabbitmq_jms_topic_exchange[a plugin]
+RabbitMQ is not a JMS provider but includes https://github.com/rabbitmq/rabbitmq-server/tree/main/deps/rabbitmq_jms_topic_exchange[a plugin]
 needed to support the JMS Queue and Topic messaging models. JMS Client
 for RabbitMQ implements the JMS specification on top of the
 link:https://rabbitmq.com/api-guide.html[RabbitMQ Java client], thus allowing new and
@@ -26,7 +26,7 @@ of the RabbitMQ JMS Client library.
 To fully leverage JMS with RabbitMQ, you need the following components:
 
 * the https://github.com/rabbitmq/rabbitmq-jms-client[JMS client library] and its dependent libraries.
-* https://github.com/rabbitmq/rabbitmq-server/tree/v3.9.x/deps/rabbitmq_jms_topic_exchange[RabbitMQ JMS topic selector plugin] that is included
+* https://github.com/rabbitmq/rabbitmq-server/tree/main/deps/rabbitmq_jms_topic_exchange[RabbitMQ JMS topic selector plugin] that is included
 with RabbitMQ starting with version 3.6.3. To support message selectors for JMS
 topics, the RabbitMQ Topic Selector plugin must be installed on the
 RabbitMQ server. Message selectors allow a JMS application to filter
@@ -94,4 +94,4 @@ To gain better understanding of AMQP 0-9-1 concepts and interoperability of
 the RabbitMQ JMS client with AMQP 0-9-1 clients, you may wish to read an
 link:https://rabbitmq.com/tutorials/amqp-concepts.html[Introduction to RabbitMQ Concepts]
 and browse our
-link:amqp-0-9-1-quickref.html[AMQP 0-9-1 Quick Reference Guide].
+link:https://rabbitmq.com/amqp-0-9-1-quickref.html[AMQP 0-9-1 Quick Reference Guide].

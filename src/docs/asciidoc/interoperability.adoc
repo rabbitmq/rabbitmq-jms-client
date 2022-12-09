@@ -85,13 +85,13 @@ There are getters and setters for these fields, which means that a JNDI
 [source,xml]
 ----
 
-    <Resource  name="jms/Queue"
-               type="javax.jms.Queue"
-            factory="com.rabbitmq.jms.admin.RMQObjectFactory"
-    destinationName="myQueue"
-               amqp="true"
-      amqpQueueName="rabbitQueueName"
-    />
+<Resource  name="jms/Queue"
+           type="javax.jms.Queue"
+        factory="com.rabbitmq.jms.admin.RMQObjectFactory"
+destinationName="myQueue"
+           amqp="true"
+  amqpQueueName="rabbitQueueName"
+/>
 ----
 
 This is the equivalent with WildFly (as of JMS Client 1.7.0):
@@ -131,11 +131,11 @@ And here is the Spring XML configuration:
 
 [source,xml]
 ----
-    <bean id="jmsDestination" class="com.rabbitmq.jms.admin.RMQDestination" >
-     <property name="destinationName" value="myQueue" />
-     <property name="amqp"            value="true" />
-     <property name="amqpQueueName"   value="rabbitQueueName" />
-    </bean>
+<bean id="jmsDestination" class="com.rabbitmq.jms.admin.RMQDestination" >
+  <property name="destinationName" value="myQueue" />
+  <property name="amqp"            value="true" />
+  <property name="amqpQueueName"   value="rabbitQueueName" />
+</bean>
 ----
 
 Following is a _complete_ list of the attributes/properties that are

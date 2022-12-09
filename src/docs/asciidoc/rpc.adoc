@@ -109,7 +109,7 @@ See https://github.com/rabbitmq/rabbitmq-jms-client/blob/main/src/test/java/com/
 
 === With Spring JMS
 
-https://docs.spring.io/spring/docs/5.1.0.RELEASE/spring-framework-reference/integration.html#jms[Spring JMS]
+https://docs.spring.io/spring-framework/docs/{spring-version}/reference/html/integration.html#jms[Spring JMS]
 is a popular way to work with JMS as it avoids most of JMS boilerplate.
 
 The following sample shows how a client can perform RPC with the
@@ -166,6 +166,6 @@ Message response = tpl.execute(session -> {
 });
 ----
 
-See https://github.com/rabbitmq/rabbitmq-jms-client/blob/main/src/test/java/com/rabbitmq/integration/tests/RpcSpringJmsIT.java[this test]
+See https://github.com/rabbitmq/rabbitmq-jms-client/blob/main/src/test/spring/com/rabbitmq/integration/tests/RpcSpringJmsIT.java[this test]
 for a full example of RPC with Spring JMS, including using a `@JmsListener` bean
 for the server part.
