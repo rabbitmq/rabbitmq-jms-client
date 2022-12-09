@@ -1,6 +1,7 @@
 == Installing and Configuring
 
-=== Enabling the Topic Selector Plug-in[[enable_topic_selector]]
+[[enable_topic_selector]]
+=== Enabling the Topic Selector Plug-in
 
 The topic selector plugin is included with RabbitMQ. Like any RabbitMQ
 plugin, you need to enable the plugin in order to use it.
