@@ -84,7 +84,7 @@ detailed list of supported JMS APIs.
 include::installation.adoc[]
 include::interoperability.adoc[]
 include::logging.adoc[]
-include::publisher-confirm.adoc[]
+include::asynchronous-sending.adoc[]
 include::rpc.adoc[]
 include::implementation-details.adoc[]
 

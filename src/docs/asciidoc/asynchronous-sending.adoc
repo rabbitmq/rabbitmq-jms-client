@@ -1,0 +1,7 @@
+
+== Asynchronous Sending
+
+The JMS client supports https://jakarta.ee/specifications/messaging/3.1/jakarta-messaging-spec-3.1.html#sending-messages-asynchronously-jms_spec-43[asynchronous sending] by using RabbitMQ link:https://rabbitmq.com/confirms.html#publisher-confirms[publisher confirms] mechanism.
+
+Note the `CompletionListener` is not a good place to execute long-running  tasks.
+Those should be executed in a dedicated thread, using e.g. an `ExecutorService`.
