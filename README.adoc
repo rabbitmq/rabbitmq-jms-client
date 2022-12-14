@@ -15,7 +15,7 @@ image:https://github.com/rabbitmq/rabbitmq-jms-client/actions/workflows/test-3.1
 
 This is a JMS client library for RabbitMQ, working in concert with https://github.com/rabbitmq/rabbitmq-server/tree/main/deps/rabbitmq_jms_topic_exchange[rabbitmq-jms-topic-exchange],
 a RabbitMQ server plugin.
-It supports JMS 2.0 as of <<jms-2, 2.7.0>> and JMS 3.0 as of <<jms-3, 3.0.0>>.
+It supports JMS 2.0 as of 2.7.0 and JMS 3.0 as of 3.0.0.
 Both 2.x and 3.x branches are maintained and supported.
 
 == JMS 1.1 and 2.0
