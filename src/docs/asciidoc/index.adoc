@@ -60,8 +60,7 @@ incompatible vendor implementations.
 Because JMS Client for RabbitMQ is implemented using the RabbitMQ Java
 client, it is compliant with both the JMS API and the AMQP 0-9-1 protocol.
 
-You can download the JMS 2.0 specification and API documentation from
-the https://download.oracle.com/otndocs/jcp/jms-2_0_rev_a-mrel-eval-spec/index.html[Oracle Technology Network Web site].
+You can read the https://jakarta.ee/specifications/messaging/3.0/jakarta-messaging-spec-3.0.html[JMS 3.0 specification] (https://jakarta.ee/specifications/messaging/3.0/jakarta-messaging-spec-3.0.pdf[PDF]) on the Jakarta EE website, as well as the https://jakarta.ee/specifications/messaging/3.0/apidocs/[API documentation].
 
 == Limitations
 
