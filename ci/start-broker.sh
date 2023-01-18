@@ -12,9 +12,6 @@ wait_for_message() {
   done
 }
 
-echo "Download required plugins"
-wget "https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/$DELAYED_MESSAGE_EXCHANGE_PLUGIN_VERSION/rabbitmq_delayed_message_exchange-$DELAYED_MESSAGE_EXCHANGE_PLUGIN_VERSION.ez"
-
 make -C "${PWD}"/tls-gen/basic
 
 mkdir -p rabbitmq-configuration/tls
@@ -39,7 +36,7 @@ docker rm -f rabbitmq 2>/dev/null || echo "rabbitmq was not running"
 docker run -d --name rabbitmq \
     --network host \
     -v "${PWD}"/rabbitmq-configuration:/etc/rabbitmq \
-    -v "${PWD}"/rabbitmq_delayed_message_exchange-3.11.1.ez:/opt/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.11.1.ez \
+    -v "${PWD}"/ci/rabbitmq_delayed_message_exchange-"${DELAYED_MESSAGE_EXCHANGE_PLUGIN_VERSION}".ez:/opt/rabbitmq/plugins/rabbitmq_delayed_message_exchange-"${DELAYED_MESSAGE_EXCHANGE_PLUGIN_VERSION}".ez \
     "${RABBITMQ_IMAGE}":"${RABBITMQ_IMAGE_TAG}"
 
 wait_for_message rabbitmq "completed with"
