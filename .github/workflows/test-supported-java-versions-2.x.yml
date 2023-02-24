@@ -39,6 +39,7 @@ jobs:
           ./mvnw verify -Drabbitmqctl.bin=DOCKER:rabbitmq \
             -Dtest-broker.A.nodename=rabbit@$(hostname) \
             -Dtest-tls-certs.dir=tls-gen/basic \
-            --no-transfer-progress
+            --no-transfer-progress \
+            -Dnet.bytebuddy.experimental=true
       - name: Stop broker
         run: docker stop rabbitmq && docker rm rabbitmq
