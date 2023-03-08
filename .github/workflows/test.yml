@@ -9,14 +9,15 @@ on:
   workflow_dispatch:
 
 env:
-  RABBITMQ_IMAGE_TAG: 3.11
-  RABBITMQ_IMAGE: pivotalrabbitmq/rabbitmq-dev
   DELAYED_MESSAGE_EXCHANGE_PLUGIN_VERSION: 3.11.1
 
 jobs:
   build:
     runs-on: ubuntu-22.04
-
+    strategy:
+      matrix:
+        rabbitmq-image: [ 'pivotalrabbitmq/rabbitmq:v3.11.x-otp-max-bazel', 'pivotalrabbitmq/rabbitmq:v3.12.x-otp-max-bazel' ]
+    name:  Test against ${{ matrix.rabbitmq-image }}
     steps:
       - uses: actions/checkout@v3
       - name: Checkout tls-gen

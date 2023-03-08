@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-RABBITMQ_IMAGE_TAG=${RABBITMQ_IMAGE_TAG:-3.11}
-RABBITMQ_IMAGE=${RABBITMQ_IMAGE:-rabbitmq}
+RABBITMQ_IMAGE=${RABBITMQ_IMAGE:-rabbitmq:3.11}
 DELAYED_MESSAGE_EXCHANGE_PLUGIN_VERSION=${DELAYED_MESSAGE_EXCHANGE_PLUGIN_VERSION:-3.11.1}
 
 wait_for_message() {
@@ -30,14 +29,14 @@ ssl_options.keyfile    = /etc/rabbitmq/tls/server_$(hostname)_key.pem
 ssl_options.verify     = verify_peer
 ssl_options.fail_if_no_peer_cert = false" > rabbitmq-configuration/rabbitmq.conf
 
-echo "Running RabbitMQ ${RABBITMQ_IMAGE}:${RABBITMQ_IMAGE_TAG}"
+echo "Running RabbitMQ ${RABBITMQ_IMAGE}"
 
 docker rm -f rabbitmq 2>/dev/null || echo "rabbitmq was not running"
 docker run -d --name rabbitmq \
     --network host \
     -v "${PWD}"/rabbitmq-configuration:/etc/rabbitmq \
     -v "${PWD}"/ci/rabbitmq_delayed_message_exchange-"${DELAYED_MESSAGE_EXCHANGE_PLUGIN_VERSION}".ez:/opt/rabbitmq/plugins/rabbitmq_delayed_message_exchange-"${DELAYED_MESSAGE_EXCHANGE_PLUGIN_VERSION}".ez \
-    "${RABBITMQ_IMAGE}":"${RABBITMQ_IMAGE_TAG}"
+    "${RABBITMQ_IMAGE}"
 
 wait_for_message rabbitmq "completed with"
 
