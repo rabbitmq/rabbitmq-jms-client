@@ -5,7 +5,7 @@ on:
     - cron: '0 4 * * *'
   push:
     branches:
-      - main
+      - 2.x.x-stable
   workflow_dispatch:
 
 env:
