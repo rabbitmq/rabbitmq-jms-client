@@ -107,9 +107,13 @@ public class TimeTracker {
 
     @Override
     public String toString() {
+        long timeoutMillis = TimeUnit.NANOSECONDS.toMillis(timeoutNanos);
+        long internalTimeoutMillis = TimeUnit.NANOSECONDS.toMillis(this.internalRemaining());
+
         return (new StringBuilder("TimeTracker(")
-               .append(TimeUnit.NANOSECONDS.toMillis(timeoutNanos))            .append("ms set, ")
-               .append(TimeUnit.NANOSECONDS.toMillis(this.internalRemaining())).append("ms rem)")
-               ).toString();
+                .append(timeoutMillis)
+                .append("ms set, ")
+                .append(internalTimeoutMillis).append("ms rem)")
+        ).toString();
     }
 }
