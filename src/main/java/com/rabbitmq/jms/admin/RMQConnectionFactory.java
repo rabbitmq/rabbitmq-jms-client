@@ -32,7 +32,6 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import jakarta.jms.BytesMessage;
-import jakarta.jms.CompletionListener;
 import jakarta.jms.Connection;
 import jakarta.jms.ConnectionFactory;
 import jakarta.jms.Destination;
@@ -360,7 +359,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * @return URI for RabbitMQ connection (as a coded String)
      */
     public String getUri() {
-        StringBuilder sb = new StringBuilder(scheme(isSsl())).append("://");
+        StringBuilder sb = new StringBuilder(getScheme(isSsl())).append("://");
         sb.append(uriUInfoEscape(this.username, this.password)).append('@');
         sb.append(uriHostEscape(this.host)).append(':').append(this.getPort()).append("/");
         sb.append(uriVirtualHostEscape(this.virtualHost));
@@ -578,7 +577,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.useDefaultSslContext(useDefaultSslContext);
     }
 
-    private static String scheme(boolean isSsl) {
+    private static String getScheme(boolean isSsl) {
         return (isSsl ? "amqps" : "amqp");
     }
 
