@@ -158,11 +158,7 @@ public class RMQObjectFactory implements ObjectFactory {
          */
         boolean topic = false;
         boolean connectionFactory = false;
-        if (  javax.jms.QueueConnectionFactory.class.getName().equals(className)
-           || javax.jms.TopicConnectionFactory.class.getName().equals(className)
-           || javax.jms.ConnectionFactory.class.getName().equals(className)
-           || RMQConnectionFactory.class.getName().equals(className)
-           ) {
+        if (isClassNameMatching(className)) {
             connectionFactory = true;
         } else if (javax.jms.Topic.class.getName().equals(className)) {
             topic = true;
@@ -447,6 +443,18 @@ public class RMQObjectFactory implements ObjectFactory {
             result.put(key, convertedValue);
         }
         return result;
+    }
+
+    /**
+     * Returns if the class name matches any of the connection factory names
+     * @param className
+     * @return the boolean value representing the result of conditional statement
+     */
+    private boolean isClassNameMatching(String className) {
+        return javax.jms.QueueConnectionFactory.class.getName().equals(className)
+                || javax.jms.TopicConnectionFactory.class.getName().equals(className)
+                || javax.jms.ConnectionFactory.class.getName().equals(className)
+                || RMQConnectionFactory.class.getName().equals(className);
     }
 
 }
