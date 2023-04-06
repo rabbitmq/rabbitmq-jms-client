@@ -1199,6 +1199,8 @@ public abstract class RMQMessage implements Message, Cloneable {
         }
     }
 
+    public abstract boolean isAmqpWritable();
+
     @Override
     public int hashCode() {
         final int prime = 31;

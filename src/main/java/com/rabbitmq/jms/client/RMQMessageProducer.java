@@ -367,7 +367,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             throw new RMQJMSException("Cannot write to AMQP destination", new UnsupportedOperationException("MessageProducer.send to undefined AMQP resource"));
         }
 
-        if (msg instanceof RMQBytesMessage || msg instanceof RMQTextMessage) {
+        if (msg.isAmqpWritable()) {
             try {
                 AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
                 bob.contentType("application/octet-stream");
