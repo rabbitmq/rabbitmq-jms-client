@@ -362,7 +362,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     private void sendAMQPMessage(RMQDestination destination, RMQMessage msg, Message originalMessage,
                                  CompletionListener completionListener, int deliveryMode,
                                  int priority, long timeToLive, long deliveryDelay) throws JMSException {
-        if (!destination.amqpWritable()) {
+        if (!destination.isAmqpWritable()) {
             this.logger.error("Cannot write to AMQP destination {}", destination);
             throw new RMQJMSException("Cannot write to AMQP destination", new UnsupportedOperationException("MessageProducer.send to undefined AMQP resource"));
         }

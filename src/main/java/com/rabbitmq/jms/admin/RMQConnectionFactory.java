@@ -13,7 +13,6 @@ import com.rabbitmq.jms.client.ConfirmListener;
 import com.rabbitmq.jms.client.ConnectionParams;
 import com.rabbitmq.jms.client.RMQConnection;
 import com.rabbitmq.jms.client.RMQMessage;
-import com.rabbitmq.jms.client.RMQSession;
 import com.rabbitmq.jms.client.ReceivingContext;
 import com.rabbitmq.jms.client.ReceivingContextConsumer;
 import com.rabbitmq.jms.client.RmqJmsContext;
@@ -386,7 +385,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * @return URI for RabbitMQ connection (as a coded String)
      */
     public String getUri() {
-        StringBuilder sb = new StringBuilder(scheme(isSsl())).append("://");
+        StringBuilder sb = new StringBuilder(getScheme(isSsl())).append("://");
         sb.append(uriUInfoEscape(this.username, this.password)).append('@');
         sb.append(uriHostEscape(this.host)).append(':').append(this.getPort()).append("/");
         sb.append(uriVirtualHostEscape(this.virtualHost));
@@ -604,7 +603,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.useDefaultSslContext(useDefaultSslContext);
     }
 
-    private static String scheme(boolean isSsl) {
+    private static String getScheme(boolean isSsl) {
         return (isSsl ? "amqps" : "amqp");
     }
 

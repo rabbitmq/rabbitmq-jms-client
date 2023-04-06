@@ -908,7 +908,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         String queueName = queueNameOverride!=null ? queueNameOverride : dest.getQueueName();
 
         String exchangeName = dest.getAmqpExchangeName();
-        String exchangeType = dest.amqpExchangeType();
+        String exchangeType = dest.getAmqpExchangeType();
 
         /*
          * We only want destinations to survive server restarts if
@@ -1010,7 +1010,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 this.channel.exchangeDeclare(/* the name of the exchange */
                                              dest.getAmqpExchangeName(),
                                              /* the type of exchange to use */
-                                             dest.amqpExchangeType(),
+                                             dest.getAmqpExchangeType(),
                                              /* durable for all except temporary topics */
                                              !dest.isTemporary(),
                                              // TODO: how do we delete exchanges used for temporary topics

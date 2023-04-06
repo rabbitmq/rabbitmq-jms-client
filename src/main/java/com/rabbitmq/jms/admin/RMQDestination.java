@@ -151,11 +151,11 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
         this.queueDeclareArguments = queueDeclareArguments;
     }
 
-    public boolean amqpWritable() {
+    public boolean isAmqpWritable() {
         return (this.amqp && null != this.amqpExchangeName && null != this.amqpRoutingKey);
     }
 
-    public boolean amqpReadable() {
+    public boolean isAmqpReadable() {
         return (this.amqp && null != this.amqpQueueName);
     }
 
@@ -234,7 +234,7 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * Internal use only
      * @return AMQP 0-9-1 exchange type used
      */
-    public String amqpExchangeType() {
+    public String getAmqpExchangeType() {
         return queueOrTopicExchangeType(this.isQueue);
     }
 
