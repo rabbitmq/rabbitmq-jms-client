@@ -47,8 +47,10 @@ class Subscription {
   private static final String RJMS_VERSION_ARG = "rjms_version";
   private final List<RMQMessageConsumer> consumers = new CopyOnWriteArrayList<>();
   private final Subscriptions subscriptions;
-  private final String name, queue;
-  private final boolean durable, shared;
+
+  public final String name, queue;
+
+  public final boolean durable, shared;
 
   private final String selector;
   private final boolean noLocal;
