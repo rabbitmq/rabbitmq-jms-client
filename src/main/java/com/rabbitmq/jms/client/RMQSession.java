@@ -1431,7 +1431,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             RMQMessageConsumer consumer = createConsumerInternal(topicDest, name, durable, messageSelector);
             consumer.setDurable(durable);
             consumer.setNoLocal(noLocal);
-            subscription.add(consumer);
+            subscriptions.add(consumer);
             return consumer;
         }
     }
