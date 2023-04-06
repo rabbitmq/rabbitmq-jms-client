@@ -165,4 +165,9 @@ public class RMQObjectMessage extends RMQMessage implements ObjectMessage {
     protected <T> T doGetBody(Class<T> c) throws JMSException {
         return (T) this.getObject();
     }
+
+    @Override
+    public boolean isAmqpWritable() {
+        return false;
+    }
 }

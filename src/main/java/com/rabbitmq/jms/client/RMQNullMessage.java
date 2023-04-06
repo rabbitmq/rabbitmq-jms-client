@@ -60,4 +60,9 @@ class RMQNullMessage extends RMQMessage {
     protected <T> T doGetBody(Class<T> c) {
         return null;
     }
+
+    @Override
+    public boolean isAmqpWritable() {
+        return false;
+    }
 }
