@@ -569,4 +569,9 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
     public boolean isBodyAssignableTo(Class c) {
         return false;
     }
+
+    @Override
+    public boolean isAmqpWritable() {
+        return false;
+    }
 }

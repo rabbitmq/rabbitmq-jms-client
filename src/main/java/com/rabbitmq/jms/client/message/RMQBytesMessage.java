@@ -593,4 +593,9 @@ public class RMQBytesMessage extends RMQMessage implements BytesMessage {
             return (T) copy;
         }
     }
+
+    @Override
+    public boolean isAmqpWritable() {
+        return true;
+    }
 }

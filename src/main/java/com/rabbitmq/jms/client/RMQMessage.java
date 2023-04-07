@@ -1199,6 +1199,8 @@ public abstract class RMQMessage implements Message, Cloneable {
         }
     }
 
+    public abstract boolean isAmqpWritable();
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -1377,6 +1379,10 @@ public abstract class RMQMessage implements Message, Cloneable {
 
         // now set properties from header: these may overwrite the ones that have already been set above
         Map<String, Object> hdrs = props.getHeaders();
+        setJMSPropertiesFromHeader(hdrs);
+    }
+
+    private void setJMSPropertiesFromHeader(Map<String, Object> hdrs) throws JMSException{
         if (hdrs!=null) {
             for (Entry<String, Object> e : hdrs.entrySet()) {
                 String key = e.getKey();

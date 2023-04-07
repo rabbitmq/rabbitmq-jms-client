@@ -415,4 +415,9 @@ public class RMQMapMessage extends RMQMessage implements MapMessage {
             return (T) copy;
         }
     }
+
+    @Override
+    public boolean isAmqpWritable() {
+        return false;
+    }
 }

@@ -115,4 +115,9 @@ public class RMQTextMessage extends RMQMessage implements TextMessage {
 
         return rmqTMsg;
     }
+
+    @Override
+    public boolean isAmqpWritable() {
+        return true;
+    }
 }

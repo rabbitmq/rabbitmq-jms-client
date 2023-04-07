@@ -15,7 +15,11 @@ import jakarta.jms.JMSException;
  */
 public class RMQConnectionMetaData implements ConnectionMetaData {
 
-    private static final String JMS_PROVIDER_NAME = "RabbitMQ";
+    JMSMetaData jmsMetaData;
+
+    public RMQConnectionMetaData() {
+        this.jmsMetaData = new JMSMetaData();
+    }
 
     private static final GenericVersion RABBITMQ_VERSION_OBJECT =
             new GenericVersion(com.rabbitmq.client.impl.Version.class.getPackage().getImplementationVersion());
@@ -23,9 +27,6 @@ public class RMQConnectionMetaData implements ConnectionMetaData {
     private static final int RABBITMQ_MAJOR_VERSION = RABBITMQ_VERSION_OBJECT.getMajor();
     private static final int RABBITMQ_MINOR_VERSION = RABBITMQ_VERSION_OBJECT.getMinor();
 
-    private static final String JMS_VERSION = "1.1";
-    private static final int JMS_MAJOR_VERSION = 1;
-    private static final int JMS_MINOR_VERSION = 1;
 
     /**
      * These two are currently not used, they are needed for a JMSCTS test
@@ -39,7 +40,7 @@ public class RMQConnectionMetaData implements ConnectionMetaData {
      */
     @Override
     public String getJMSVersion() throws JMSException {
-        return JMS_VERSION;
+        return jmsMetaData.getJMSVersion();
     }
 
     /**
@@ -47,7 +48,7 @@ public class RMQConnectionMetaData implements ConnectionMetaData {
      */
     @Override
     public int getJMSMajorVersion() throws JMSException {
-        return JMS_MAJOR_VERSION;
+        return jmsMetaData.getJMSMajorVersion();
     }
 
     /**
@@ -55,7 +56,7 @@ public class RMQConnectionMetaData implements ConnectionMetaData {
      */
     @Override
     public int getJMSMinorVersion() throws JMSException {
-        return JMS_MINOR_VERSION;
+        return jmsMetaData.getJMSMinorVersion();
     }
 
     /**
@@ -63,7 +64,7 @@ public class RMQConnectionMetaData implements ConnectionMetaData {
      */
     @Override
     public String getJMSProviderName() throws JMSException {
-        return JMS_PROVIDER_NAME;
+        return jmsMetaData.getJMSProviderName();
     }
 
     /**
@@ -96,25 +97,7 @@ public class RMQConnectionMetaData implements ConnectionMetaData {
      */
     @Override
     public Enumeration<String> getJMSXPropertyNames() throws JMSException {
-        return new JmsXEnumerator();
-    }
-
-    public class JmsXEnumerator implements Enumeration<String> {
-        int idx = 0;
-        @Override
-        public boolean hasMoreElements() {
-            return idx < 2;
-        }
-
-        @Override
-        public String nextElement() {
-            switch (idx++) {
-            case 0 : return JMSX_GROUP_ID_LABEL;
-            case 1 : return JMSX_GROUP_SEQ_LABEL;
-            default: return null;
-            }
-        }
-
+        return jmsMetaData.new JmsXEnumerator();
     }
 
 }
