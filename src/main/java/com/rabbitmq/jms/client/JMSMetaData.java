@@ -7,7 +7,7 @@ package com.rabbitmq.jms.client;
 
 import java.util.Enumeration;
 
-import jakarta.jms.JMSException;
+import javax.jms.JMSException;
 
 /**
  * Meta data for {@link JMSMetaData}
