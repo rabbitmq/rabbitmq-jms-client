@@ -6,34 +6,13 @@
 
 package com.rabbitmq.jms.client;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 class Subscriptions {
 
   private final Map<String, Subscription> nonDurableSubscriptions = new ConcurrentHashMap<>();
   private final Map<String, Subscription> durableSubscriptions = new ConcurrentHashMap<>();
-
-  Subscription subscription = new Subscription("Name", "Queue", true, true, "Selector", true);
-
-  private final List<RMQMessageConsumer> consumers = new CopyOnWriteArrayList<>();
-
-  void add(RMQMessageConsumer consumer) {
-    this.consumers.add(consumer);
-    if (subscription.shared && !subscription.durable) {
-
-      consumer.addClosedListener(c -> {
-        synchronized (this) {
-          this.consumers.remove(c);
-          if (this.consumers.isEmpty()) {
-            this.remove(subscription.durable, subscription.name);
-          }
-        }
-      });
-    }
-  }
 
   Subscription register(String name, String queue, boolean durable, boolean shared, String selector,
       boolean noLocal) {

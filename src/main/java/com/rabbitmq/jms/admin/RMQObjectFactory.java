@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved. */
+/* Copyright (c) 2013-2023 VMware, Inc. or its affiliates. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
 import java.security.NoSuchAlgorithmException;
@@ -450,7 +450,7 @@ public class RMQObjectFactory implements ObjectFactory {
      * @param className
      * @return the boolean value representing the result of conditional statement
      */
-    private boolean isClassNameMatching(String className) {
+    private static boolean isClassNameMatching(String className) {
         return javax.jms.QueueConnectionFactory.class.getName().equals(className)
                 || javax.jms.TopicConnectionFactory.class.getName().equals(className)
                 || javax.jms.ConnectionFactory.class.getName().equals(className)

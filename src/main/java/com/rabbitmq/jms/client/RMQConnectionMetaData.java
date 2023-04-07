@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2023 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import java.util.Enumeration;
@@ -97,7 +97,7 @@ public class RMQConnectionMetaData implements ConnectionMetaData {
      */
     @Override
     public Enumeration<String> getJMSXPropertyNames() throws JMSException {
-        return jmsMetaData.new JmsXEnumerator();
+        return new JMSMetaData.JmsXEnumerator();
     }
 
 }
