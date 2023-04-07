@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2023 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.jms.client.Subscription.Context;
@@ -1431,7 +1431,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             RMQMessageConsumer consumer = createConsumerInternal(topicDest, name, durable, messageSelector);
             consumer.setDurable(durable);
             consumer.setNoLocal(noLocal);
-            subscriptions.add(consumer);
+            subscription.add(consumer);
             return consumer;
         }
     }

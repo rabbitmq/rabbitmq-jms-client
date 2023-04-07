@@ -2,18 +2,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2013-2023 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import java.util.Enumeration;
 
-import jakarta.jms.ConnectionMetaData;
 import jakarta.jms.JMSException;
 
 /**
  * Meta data for {@link JMSMetaData}
  */
-public class JMSMetaData {
+class JMSMetaData {
     private static final String JMS_PROVIDER_NAME = "RabbitMQ";
     private static final String JMS_VERSION = "1.1";
     private static final int JMS_MAJOR_VERSION = 1;
@@ -42,7 +41,7 @@ public class JMSMetaData {
         return JMS_PROVIDER_NAME;
     }
 
-    public class JmsXEnumerator implements Enumeration<String> {
+    static class JmsXEnumerator implements Enumeration<String> {
         int idx = 0;
         @Override
         public boolean hasMoreElements() {

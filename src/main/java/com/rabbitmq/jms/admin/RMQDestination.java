@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2022 VMware, Inc. or its affiliates. All rights reserved. */
+/* Copyright (c) 2013-2023 VMware, Inc. or its affiliates. All rights reserved. */
 package com.rabbitmq.jms.admin;
 
 import java.io.Serializable;
