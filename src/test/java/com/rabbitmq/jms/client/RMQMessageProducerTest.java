@@ -155,6 +155,7 @@ public class RMQMessageProducerTest {
         verify(channel).basicPublish(eq("x"), anyString(), any(AMQP.BasicProperties.class), any(byte[].class));
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     @DisplayName("RMQMessageProducer::send should ensure that an AMQP message has the correlation id on the rabbit message")
     public void sendAMQPMessageWithCorrelationIdCopy() throws JMSException, IOException {
@@ -181,6 +182,7 @@ public class RMQMessageProducerTest {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     @DisplayName("RMQMessageProducer::send should ensure that a JMS message has the correlation id on the rabbit message")
     public void sendJMSMessageWithCorrelationIdCopy() throws JMSException, IOException {
@@ -208,6 +210,7 @@ public class RMQMessageProducerTest {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     @DisplayName("RMQMessageProducer::send should ensure that an AMQP message with a direct reply to is handled correctly")
     public void sendAMQPMessageWithDirectReplyTo() throws JMSException, IOException {
@@ -235,6 +238,7 @@ public class RMQMessageProducerTest {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     @DisplayName("RMQMessageProducer::send should ensure that an AMQP message with a forwarded direct reply to is handled correctly")
     public void sendAMQPMessageWithDirectReplyToForwardedId() throws JMSException, IOException {
@@ -262,6 +266,7 @@ public class RMQMessageProducerTest {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     @DisplayName("RMQMessageProducer::send should ensure that an AMQP message with a non-direct reply to is handled correctly")
     public void sendAMQPMessageWithGenericReplyTo() throws JMSException, IOException {
@@ -289,6 +294,7 @@ public class RMQMessageProducerTest {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     @DisplayName("RMQMessageProducer::send should ensure that a JMS message with a direct reply to is handled correctly")
     public void sendJMSMessageWithDirectReplyTo() throws JMSException, IOException {
@@ -318,6 +324,7 @@ public class RMQMessageProducerTest {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     @DisplayName("RMQMessageProducer::send should ensure that a JMS message with a forwarded direct reply to is handled correctly")
     public void sendJMSMessageWithDirectReplyToWithForwardedId() throws JMSException, IOException {
@@ -347,7 +354,7 @@ public class RMQMessageProducerTest {
         }
     }
 
-
+    @SuppressWarnings("unchecked")
     @Test
     @DisplayName("RMQMessageProducer::send should ensure that a JMS message with a non-direct reply to is handled correctly")
     public void sendJMSMessageWithGenericReplyTo() throws JMSException, IOException {
