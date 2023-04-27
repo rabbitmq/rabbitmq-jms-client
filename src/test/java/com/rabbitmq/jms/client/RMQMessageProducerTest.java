@@ -2,18 +2,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2017-2022 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2017-2023 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import javax.jms.CompletionListener;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import javax.jms.DeliveryMode;
@@ -21,6 +22,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 
 import java.io.IOException;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -32,10 +34,12 @@ public class RMQMessageProducerTest {
 
     RMQSession session;
     RMQDestination destination;
+    Channel channel;
 
     @BeforeEach public void init() {
         session = mock(RMQSession.class);
         destination = mock(RMQDestination.class);
+        channel = mock(Channel.class);
     }
 
     @Test public void preferProducerPropertyNoMessagePropertySpecified() throws Exception {
@@ -150,6 +154,229 @@ public class RMQMessageProducerTest {
         verify(session).declareDestinationIfNecessary(jmsQueueDestination);
         verify(channel).basicPublish(eq("x"), anyString(), any(AMQP.BasicProperties.class), any(byte[].class));
     }
+
+    @Test
+    @DisplayName("RMQMessageProducer::send should ensure that an AMQP message has the correlation id on the rabbit message")
+    public void sendAMQPMessageWithCorrelationIdCopy() throws JMSException, IOException {
+
+        try (RMQMessageProducer producer = new RMQMessageProducer(session, destination)) {
+            RMQTextMessage message = new RMQTextMessage();
+            message.setText("Test message");
+            message.setJMSCorrelationID("TESTID");
+
+            when(session.getChannel()).thenReturn(channel);
+            when(session.delayMessage(eq(destination), any(Map.class), any(Long.class))).thenReturn("targetExch");
+
+            when(destination.isAmqp()).thenReturn(true);
+            when(destination.isAmqpWritable()).thenReturn(true);
+            when(destination.getAmqpRoutingKey()).thenReturn("key");
+
+            producer.send(message);
+
+            ArgumentCaptor<com.rabbitmq.client.AMQP.BasicProperties> propCapture = ArgumentCaptor.forClass(com.rabbitmq.client.AMQP.BasicProperties.class);
+
+            verify(channel).basicPublish(eq("targetExch"), eq("key"), propCapture.capture(), eq("Test message".getBytes()));
+
+            assertEquals("TESTID", propCapture.getValue().getCorrelationId());
+        }
+    }
+
+    @Test
+    @DisplayName("RMQMessageProducer::send should ensure that a JMS message has the correlation id on the rabbit message")
+    public void sendJMSMessageWithCorrelationIdCopy() throws JMSException, IOException {
+
+        try (RMQMessageProducer producer = new RMQMessageProducer(session, destination)) {
+            RMQMessage message = mock(RMQMessage.class);
+
+            when(message.toByteArray()).thenReturn("Test message".getBytes());
+            when(message.getJMSCorrelationID()).thenReturn("TESTID");
+
+            when(session.getChannel()).thenReturn(channel);
+            when(session.delayMessage(eq(destination), any(Map.class), any(Long.class))).thenReturn("targetExch");
+
+            when(destination.isAmqp()).thenReturn(false);
+            when(destination.isAmqpWritable()).thenReturn(true);
+            when(destination.getAmqpRoutingKey()).thenReturn("key");
+
+            producer.send(message);
+
+            ArgumentCaptor<com.rabbitmq.client.AMQP.BasicProperties> propCapture = ArgumentCaptor.forClass(com.rabbitmq.client.AMQP.BasicProperties.class);
+
+            verify(channel).basicPublish(eq("targetExch"), eq("key"), propCapture.capture(), eq("Test message".getBytes()));
+
+            assertEquals("TESTID", propCapture.getValue().getCorrelationId());
+        }
+    }
+
+    @Test
+    @DisplayName("RMQMessageProducer::send should ensure that an AMQP message with a direct reply to is handled correctly")
+    public void sendAMQPMessageWithDirectReplyTo() throws JMSException, IOException {
+
+        try (RMQMessageProducer producer = new RMQMessageProducer(session, destination)) {
+            RMQTextMessage message = new RMQTextMessage();
+            message.setText("Test message");
+            message.setJMSCorrelationID("TESTID");
+            message.setJMSReplyTo(new RMQDestination("amq.rabbitmq.reply-to", "", "amq.rabbitmq.reply-to", "amq.rabbitmq.reply-to"));
+
+            when(session.getChannel()).thenReturn(channel);
+            when(session.delayMessage(eq(destination), any(Map.class), any(Long.class))).thenReturn("targetExch");
+
+            when(destination.isAmqp()).thenReturn(true);
+            when(destination.isAmqpWritable()).thenReturn(true);
+            when(destination.getAmqpRoutingKey()).thenReturn("key");
+
+            producer.send(message);
+
+            ArgumentCaptor<com.rabbitmq.client.AMQP.BasicProperties> propCapture = ArgumentCaptor.forClass(com.rabbitmq.client.AMQP.BasicProperties.class);
+
+            verify(channel).basicPublish(eq("targetExch"), eq("key"), propCapture.capture(), eq("Test message".getBytes()));
+
+            assertEquals("amq.rabbitmq.reply-to", propCapture.getValue().getReplyTo());
+        }
+    }
+
+    @Test
+    @DisplayName("RMQMessageProducer::send should ensure that an AMQP message with a forwarded direct reply to is handled correctly")
+    public void sendAMQPMessageWithDirectReplyToForwardedId() throws JMSException, IOException {
+
+        try (RMQMessageProducer producer = new RMQMessageProducer(session, destination)) {
+            RMQTextMessage message = new RMQTextMessage();
+            message.setText("Test message");
+            message.setJMSCorrelationID("TESTID");
+            message.setJMSReplyTo(new RMQDestination("amq.rabbitmq.reply-to", "", "amq.rabbitmq.reply-to-replyToID", "amq.rabbitmq.reply-to"));
+
+            when(session.getChannel()).thenReturn(channel);
+            when(session.delayMessage(eq(destination), any(Map.class), any(Long.class))).thenReturn("targetExch");
+
+            when(destination.isAmqp()).thenReturn(true);
+            when(destination.isAmqpWritable()).thenReturn(true);
+            when(destination.getAmqpRoutingKey()).thenReturn("key");
+
+            producer.send(message);
+
+            ArgumentCaptor<com.rabbitmq.client.AMQP.BasicProperties> propCapture = ArgumentCaptor.forClass(com.rabbitmq.client.AMQP.BasicProperties.class);
+
+            verify(channel).basicPublish(eq("targetExch"), eq("key"), propCapture.capture(), eq("Test message".getBytes()));
+
+            assertEquals("amq.rabbitmq.reply-to-replyToID", propCapture.getValue().getReplyTo());
+        }
+    }
+
+    @Test
+    @DisplayName("RMQMessageProducer::send should ensure that an AMQP message with a non-direct reply to is handled correctly")
+    public void sendAMQPMessageWithGenericReplyTo() throws JMSException, IOException {
+
+        try (RMQMessageProducer producer = new RMQMessageProducer(session, destination)) {
+            RMQTextMessage message = new RMQTextMessage();
+            message.setText("Test message");
+            message.setJMSCorrelationID("TESTID");
+            message.setJMSReplyTo(new RMQDestination("other-replyto", "exch", "other-replyto", "other-replyto"));
+
+            when(session.getChannel()).thenReturn(channel);
+            when(session.delayMessage(eq(destination), any(Map.class), any(Long.class))).thenReturn("targetExch");
+
+            when(destination.isAmqp()).thenReturn(true);
+            when(destination.isAmqpWritable()).thenReturn(true);
+            when(destination.getAmqpRoutingKey()).thenReturn("key");
+
+            producer.send(message);
+
+            ArgumentCaptor<com.rabbitmq.client.AMQP.BasicProperties> propCapture = ArgumentCaptor.forClass(com.rabbitmq.client.AMQP.BasicProperties.class);
+
+            verify(channel).basicPublish(eq("targetExch"), eq("key"), propCapture.capture(), eq("Test message".getBytes()));
+
+            assertEquals("other-replyto", propCapture.getValue().getReplyTo());
+        }
+    }
+
+    @Test
+    @DisplayName("RMQMessageProducer::send should ensure that a JMS message with a direct reply to is handled correctly")
+    public void sendJMSMessageWithDirectReplyTo() throws JMSException, IOException {
+
+        try (RMQMessageProducer producer = new RMQMessageProducer(session, destination)) {
+            RMQMessage message = mock(RMQMessage.class);
+
+            when(message.toByteArray()).thenReturn("Test message".getBytes());
+            when(message.getJMSCorrelationID()).thenReturn("TESTID");
+            when(message.getJMSReplyTo()).thenReturn(new RMQDestination("amq.rabbitmq.reply-to", "", "amq.rabbitmq.reply-to", "amq.rabbitmq.reply-to"));
+
+
+            when(session.getChannel()).thenReturn(channel);
+            when(session.delayMessage(eq(destination), any(Map.class), any(Long.class))).thenReturn("targetExch");
+
+            when(destination.isAmqp()).thenReturn(false);
+            when(destination.isAmqpWritable()).thenReturn(true);
+            when(destination.getAmqpRoutingKey()).thenReturn("key");
+
+            producer.send(message);
+
+            ArgumentCaptor<com.rabbitmq.client.AMQP.BasicProperties> propCapture = ArgumentCaptor.forClass(com.rabbitmq.client.AMQP.BasicProperties.class);
+
+            verify(channel).basicPublish(eq("targetExch"), eq("key"), propCapture.capture(), eq("Test message".getBytes()));
+
+            assertEquals("amq.rabbitmq.reply-to", propCapture.getValue().getReplyTo());
+        }
+    }
+
+    @Test
+    @DisplayName("RMQMessageProducer::send should ensure that a JMS message with a forwarded direct reply to is handled correctly")
+    public void sendJMSMessageWithDirectReplyToWithForwardedId() throws JMSException, IOException {
+
+        try (RMQMessageProducer producer = new RMQMessageProducer(session, destination)) {
+            RMQMessage message = mock(RMQMessage.class);
+
+            when(message.toByteArray()).thenReturn("Test message".getBytes());
+            when(message.getJMSCorrelationID()).thenReturn("TESTID");
+            when(message.getJMSReplyTo()).thenReturn(new RMQDestination("amq.rabbitmq.reply-to", "", "amq.rabbitmq.reply-to-forwarded-id", "amq.rabbitmq.reply-to"));
+
+
+            when(session.getChannel()).thenReturn(channel);
+            when(session.delayMessage(eq(destination), any(Map.class), any(Long.class))).thenReturn("targetExch");
+
+            when(destination.isAmqp()).thenReturn(false);
+            when(destination.isAmqpWritable()).thenReturn(true);
+            when(destination.getAmqpRoutingKey()).thenReturn("key");
+
+            producer.send(message);
+
+            ArgumentCaptor<com.rabbitmq.client.AMQP.BasicProperties> propCapture = ArgumentCaptor.forClass(com.rabbitmq.client.AMQP.BasicProperties.class);
+
+            verify(channel).basicPublish(eq("targetExch"), eq("key"), propCapture.capture(), eq("Test message".getBytes()));
+
+            assertEquals("amq.rabbitmq.reply-to-forwarded-id", propCapture.getValue().getReplyTo());
+        }
+    }
+
+
+    @Test
+    @DisplayName("RMQMessageProducer::send should ensure that a JMS message with a non-direct reply to is handled correctly")
+    public void sendJMSMessageWithGenericReplyTo() throws JMSException, IOException {
+
+        try (RMQMessageProducer producer = new RMQMessageProducer(session, destination)) {
+            RMQMessage message = mock(RMQMessage.class);
+
+            when(message.toByteArray()).thenReturn("Test message".getBytes());
+            when(message.getJMSCorrelationID()).thenReturn("TESTID");
+            when(message.getJMSReplyTo()).thenReturn(new RMQDestination("other-reply-to", "", "other-reply-to", "other-reply-to"));
+
+
+            when(session.getChannel()).thenReturn(channel);
+            when(session.delayMessage(eq(destination), any(Map.class), any(Long.class))).thenReturn("targetExch");
+
+            when(destination.isAmqp()).thenReturn(false);
+            when(destination.isAmqpWritable()).thenReturn(true);
+            when(destination.getAmqpRoutingKey()).thenReturn("key");
+
+            producer.send(message);
+
+            ArgumentCaptor<com.rabbitmq.client.AMQP.BasicProperties> propCapture = ArgumentCaptor.forClass(com.rabbitmq.client.AMQP.BasicProperties.class);
+
+            verify(channel).basicPublish(eq("targetExch"), eq("key"), propCapture.capture(), eq("Test message".getBytes()));
+
+            assertEquals("other-reply-to", propCapture.getValue().getReplyTo());
+        }
+    }
+
 
     static class StubRMQMessageProducer extends RMQMessageProducer {
 
