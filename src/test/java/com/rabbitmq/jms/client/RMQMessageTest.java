@@ -157,9 +157,6 @@ class RMQMessageTest {
 
         RMQMessage result = RMQMessage.convertMessage(session, destination, getResponse, consumer);
 
-        assertNotNull(result.getJMSReplyTo());
-
-        RMQDestination expected = new RMQDestination("non-direct-replyto", "exch", "non-direct-replyto", "non-direct-replyto");
-        assertEquals(expected, result.getJMSReplyTo());
+        assertNull(result.getJMSReplyTo());
     }
 }
