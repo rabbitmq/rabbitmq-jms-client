@@ -8,7 +8,6 @@ package com.rabbitmq.jms.client;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.jms.admin.RMQDestination;
-import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.util.RMQJMSException;
 import java.util.Map;
@@ -373,6 +372,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
                 bob.contentType("application/octet-stream");
                 bob.deliveryMode(RMQMessage.rmqDeliveryMode(deliveryMode));
                 bob.priority(priority);
+                bob.correlationId(msg.getJMSCorrelationID());
                 bob.expiration(rmqExpiration(timeToLive));
                 Map<String, Object> messageHeaders = msg.toAmqpHeaders();
                 if (this.keepTextMessageType && msg instanceof RMQTextMessage) {
@@ -382,7 +382,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
                 String targetAmqpExchangeName = session.delayMessage(destination, messageHeaders, deliveryDelay);
                 bob.headers(messageHeaders);
 
-                maybeSetReplyToPropertyToDirectReplyTo(bob, msg);
+                setReplyToProperty(bob, msg);
 
                 bob = amqpPropertiesCustomiser.apply(bob, msg);
 
@@ -409,12 +409,13 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
             bob.contentType("application/octet-stream");
             bob.deliveryMode(RMQMessage.rmqDeliveryMode(deliveryMode));
             bob.priority(priority);
+            bob.correlationId(msg.getJMSCorrelationID());
             bob.expiration(rmqExpiration(timeToLive));
             Map<String, Object> headers = msg.toHeaders();
             String targetAmqpExchangeName = session.delayMessage(destination, headers, deliveryDelay);
             bob.headers(headers);
 
-            maybeSetReplyToPropertyToDirectReplyTo(bob, msg);
+            setReplyToProperty(bob, msg);
 
             byte[] data = msg.toByteArray();
 
@@ -427,11 +428,16 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
     }
 
     /**
-     * Set AMQP reply-to property to direct-reply-to if necessary.
+     * Set AMQP reply-to property to reply-to if necessary.
+     * <p>
      * <p>
      * Set the <code>reply-to</code> property to <code>amq.rabbitmq.reply-to</code>
      * if the <code>JMSReplyTo</code> header is set to a destination with that
-     * name.
+     * name and does not have a routing key (which indicates this this is a forwarded
+     * reply to destination).
+     * <p>
+     * Set the <code>reply-to</code> property to the amq routing key, if the routing key
+     * if not null.
      * <p>
      * For outbound RPC request.
      *
@@ -440,11 +446,13 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      * @throws JMSException
      * @since 1.11.0
      */
-    private static void maybeSetReplyToPropertyToDirectReplyTo(AMQP.BasicProperties.Builder builder, RMQMessage msg) throws JMSException {
+    private static void setReplyToProperty(AMQP.BasicProperties.Builder builder, RMQMessage msg) throws JMSException {
         if (msg.getJMSReplyTo() != null && msg.getJMSReplyTo() instanceof RMQDestination) {
             RMQDestination replyTo = (RMQDestination) msg.getJMSReplyTo();
-            if (DIRECT_REPLY_TO.equals(replyTo.getDestinationName())) {
+            if (DIRECT_REPLY_TO.equals(replyTo.getDestinationName()) && replyTo.getAmqpRoutingKey() == null) {
                 builder.replyTo(DIRECT_REPLY_TO);
+            } else {
+                builder.replyTo(replyTo.getAmqpRoutingKey());
             }
         }
     }

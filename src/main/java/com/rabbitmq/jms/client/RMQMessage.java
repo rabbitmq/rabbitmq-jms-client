@@ -849,7 +849,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         // JMSProperties already set
         message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
 
-        maybeSetupDirectReplyTo(message, response.getProps().getReplyTo());
+        setupJMSReplyTo(message, response.getProps().getReplyTo());
         receivingContextConsumer.accept(new ReceivingContext(message));
 
         return message;
@@ -869,7 +869,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             message.setJMSPropertiesFromAmqpProperties(props);
             message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
 
-            maybeSetupDirectReplyTo(message, response.getProps().getReplyTo());
+            setupJMSReplyTo(message, response.getProps().getReplyTo());
             receivingContextConsumer.accept(new ReceivingContext(message));
 
             return message;
@@ -899,23 +899,33 @@ public abstract class RMQMessage implements Message, Cloneable {
     }
 
     /**
-     * Properly assign JMSReplyTo header when using direct reply to.
+     * Properly assign JMSReplyTo header when using reply to.
      * <p>
      * On a received request message, the AMQP reply-to property is
      * set to a specific <code>amq.rabbitmq.reply-to.ID</code> value.
      * We must use this value for the JMS reply to destination if
      * we want to send the response back to the destination the sender
      * is waiting.
+     * <p>
+     * If we are not using a direct reply to, then assume that the
+     * reply to queue is hosted on the same exchange as the message
+     * being sent.
      *
      * @param message
      * @param replyTo
      * @throws JMSException
      * @since 1.11.0
      */
-    private static void maybeSetupDirectReplyTo(RMQMessage message, String replyTo) throws JMSException {
-        if (replyTo != null && replyTo.startsWith(DIRECT_REPLY_TO)) {
-            RMQDestination replyToDestination = new RMQDestination(DIRECT_REPLY_TO, "", replyTo, replyTo);
-            message.setJMSReplyTo(replyToDestination);
+    private static void setupJMSReplyTo(RMQMessage message, String replyTo) throws JMSException {
+        if (replyTo != null) {
+            if (replyTo.startsWith(DIRECT_REPLY_TO)) {
+                RMQDestination replyToDestination = new RMQDestination(DIRECT_REPLY_TO, "", replyTo, replyTo);
+                message.setJMSReplyTo(replyToDestination);
+            } else {
+                // If we're not a direct reply-to, assume we're replying on the same exhange as the initial request.
+                RMQDestination replyToDestination = new RMQDestination(replyTo, ((RMQDestination) message.getJMSDestination()).getAmqpExchangeName(), replyTo, replyTo);
+                message.setJMSReplyTo(replyToDestination);
+            }
         }
     }
 
@@ -1242,24 +1252,24 @@ public abstract class RMQMessage implements Message, Cloneable {
         this.rmqProperties.put(JMS_MESSAGE_ID, "ID:" + this.internalMessageID);
     }
 
-	/**
-	 * Utility method used to be able to write primitives and objects to a data
-	 * stream without keeping track of order and type.
-	 * <p>
-	 * This also allows any Object to be written.
-	 * </p>
-	 * <p>
-	 * The purpose of this method is to optimise the writing of a primitive that
-	 * is represented as an object by only writing the type and the primitive
-	 * value to the stream.
-	 * </p>
-	 *
-	 * @param s the primitive to be written
-	 * @param out the stream to write the primitive to.
-	 * @throws IOException if an I/O error occurs
+    /**
+     * Utility method used to be able to write primitives and objects to a data
+     * stream without keeping track of order and type.
+     * <p>
+     * This also allows any Object to be written.
+     * </p>
+     * <p>
+     * The purpose of this method is to optimise the writing of a primitive that
+     * is represented as an object by only writing the type and the primitive
+     * value to the stream.
+     * </p>
+     *
+     * @param s the primitive to be written
+     * @param out the stream to write the primitive to.
+     * @throws IOException if an I/O error occurs
      * @throws MessageFormatException if message cannot be parsed
      *
-	 */
+     */
     protected static void writePrimitive(Object s, ObjectOutput out) throws IOException, MessageFormatException {
         writePrimitive(s, out, false);
     }
