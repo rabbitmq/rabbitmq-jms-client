@@ -5,7 +5,17 @@
 // Copyright (c) 2014-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
+import com.rabbitmq.client.AMQP.BasicProperties;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.GetResponse;
+import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -15,8 +25,22 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class RMQMessageTest {
+
+    RMQSession session;
+    GetResponse getResponse;
+    ReceivingContextConsumer consumer;
+
+    @BeforeEach public void init() {
+        session = mock(RMQSession.class);
+        getResponse = mock(GetResponse.class);
+        consumer = mock(ReceivingContextConsumer.class);
+    }
+
 
     @Test
     @DisplayName("RMQMessage::toAmqpHeaders should convert all properties to amqp headers")
@@ -47,4 +71,92 @@ class RMQMessageTest {
         );
     }
 
+
+    @Test
+    @DisplayName("RMQMessage::convertMessage - amqp message - ensure JMS reply to is null with no replyto")
+    void convertAMQPMessageWithNoReplyTo() throws JMSException {
+
+        BasicProperties props = mock(BasicProperties.class);
+        Envelope envelope = mock(Envelope.class);
+
+        when(getResponse.getProps()).thenReturn(props);
+        when(getResponse.getEnvelope()).thenReturn(envelope);
+        when(envelope.isRedeliver()).thenReturn(false);
+
+        RMQDestination destination = new RMQDestination("dest", "exch", "key", "queue");
+        destination.setAmqp(true);
+
+        RMQMessage result = RMQMessage.convertMessage(session, destination, getResponse, consumer);
+
+        assertNull(result.getJMSReplyTo());
+    }
+
+    @Test
+    @DisplayName("RMQMessage::convertMessage - amqp message - ensure JMS reply to is set to direct reply to")
+    void convertAMQPMessageWithDirectReplyTo() throws JMSException {
+
+        BasicProperties props = mock(BasicProperties.class);
+        Envelope envelope = mock(Envelope.class);
+
+        when(getResponse.getProps()).thenReturn(props);
+        when(getResponse.getEnvelope()).thenReturn(envelope);
+        when(envelope.isRedeliver()).thenReturn(false);
+
+        when(props.getReplyTo()).thenReturn("amq.rabbitmq.reply-to");
+
+        RMQDestination destination = new RMQDestination("dest", "exch", "key", "queue");
+        destination.setAmqp(true);
+
+        RMQMessage result = RMQMessage.convertMessage(session, destination, getResponse, consumer);
+
+        assertNotNull(result.getJMSReplyTo());
+
+        RMQDestination expected = new RMQDestination("amq.rabbitmq.reply-to", "", "amq.rabbitmq.reply-to", "amq.rabbitmq.reply-to");
+        assertEquals(expected, result.getJMSReplyTo());
+    }
+
+    @Test
+    @DisplayName("RMQMessage::convertMessage - amqp message - ensure JMS reply to is set to the forwarded direct reply to")
+    void convertAMQPMessageWithForwardedDirectReplyTo() throws JMSException {
+
+        BasicProperties props = mock(BasicProperties.class);
+        Envelope envelope = mock(Envelope.class);
+
+        when(getResponse.getProps()).thenReturn(props);
+        when(getResponse.getEnvelope()).thenReturn(envelope);
+        when(envelope.isRedeliver()).thenReturn(false);
+
+        when(props.getReplyTo()).thenReturn("amq.rabbitmq.reply-to-forwarded-id");
+
+        RMQDestination destination = new RMQDestination("dest", "exch", "key", "queue");
+        destination.setAmqp(true);
+
+        RMQMessage result = RMQMessage.convertMessage(session, destination, getResponse, consumer);
+
+        assertNotNull(result.getJMSReplyTo());
+
+        RMQDestination expected = new RMQDestination("amq.rabbitmq.reply-to", "", "amq.rabbitmq.reply-to-forwarded-id", "amq.rabbitmq.reply-to-forwarded-id");
+        assertEquals(expected, result.getJMSReplyTo());
+    }
+
+    @Test
+    @DisplayName("RMQMessage::convertMessage - amqp message - ensure JMS reply to is set to the non direct reply to")
+    void convertAMQPMessageWithNonDirectReplyTo() throws JMSException {
+
+        BasicProperties props = mock(BasicProperties.class);
+        Envelope envelope = mock(Envelope.class);
+
+        when(getResponse.getProps()).thenReturn(props);
+        when(getResponse.getEnvelope()).thenReturn(envelope);
+        when(envelope.isRedeliver()).thenReturn(false);
+
+        when(props.getReplyTo()).thenReturn("non-direct-replyto");
+
+        RMQDestination destination = new RMQDestination("dest", "exch", "key", "queue");
+        destination.setAmqp(true);
+
+        RMQMessage result = RMQMessage.convertMessage(session, destination, getResponse, consumer);
+
+        assertNull(result.getJMSReplyTo());
+    }
 }
