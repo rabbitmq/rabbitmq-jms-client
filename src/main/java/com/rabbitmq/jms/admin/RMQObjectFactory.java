@@ -223,6 +223,7 @@ public class RMQObjectFactory implements ObjectFactory {
         f.setCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose(getBooleanProperty(ref, environment, "cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose",                 true, f.isCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose()                 ));
         f.setDeclareReplyToDestination(getBooleanProperty(ref, environment, "declareReplyToDestination", true, true));
         f.setKeepTextMessageType(getBooleanProperty(ref, environment, "keepTextMessageType", true, false));
+        f.setNackOnRollback(getBooleanProperty(ref, environment, "nackOnRollback", true, false));
         return f;
     }
 
