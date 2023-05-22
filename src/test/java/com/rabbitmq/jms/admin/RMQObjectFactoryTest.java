@@ -92,7 +92,7 @@ public class RMQObjectFactoryTest {
 
     @Test
     public void nackOnRollbackPropertyIsSetOnConnectionFactory() throws Exception {
-        Hashtable<?, ?> environment = new Hashtable<>() {{
+        Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
             put("className", "jakarta.jms.ConnectionFactory");
             put("nackOnRollback", "true");
         }};
