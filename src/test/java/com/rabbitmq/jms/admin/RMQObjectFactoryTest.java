@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2018-2022 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2018-2023 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.admin;
 
 import org.junit.jupiter.api.Test;
@@ -88,6 +88,21 @@ public class RMQObjectFactoryTest {
         assertEquals(RMQConnectionFactory.class, createdObject.getClass());
         RMQConnectionFactory createdConFactory = (RMQConnectionFactory) createdObject;
         assertThat(createdConFactory).hasFieldOrPropertyWithValue("keepTextMessageType", true);
+    }
+
+    @Test
+    public void nackOnRollbackPropertyIsSetOnConnectionFactory() throws Exception {
+        Hashtable<?, ?> environment = new Hashtable<>() {{
+            put("className", "jakarta.jms.ConnectionFactory");
+            put("nackOnRollback", "true");
+        }};
+
+        Object createdObject = rmqObjectFactory.getObjectInstance("anything but a javax.naming.Reference", new CompositeName("java:global/jms/TestConnectionFactory"), null, environment);
+
+        assertNotNull(createdObject);
+        assertEquals(RMQConnectionFactory.class, createdObject.getClass());
+        RMQConnectionFactory createdConFactory = (RMQConnectionFactory) createdObject;
+        assertThat(createdConFactory).hasFieldOrPropertyWithValue("nackOnRollback", true);
     }
 
     @Test
