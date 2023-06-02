@@ -89,12 +89,12 @@ public class RMQSessionTest {
     void withReplyToStrategy() throws JMSException {
 
         SessionParams params = new SessionParams();
-        params.setReplyToStrategy(ReturnToSenderExchangeReplyToStrategy.INSTANCE);
+        params.setReplyToStrategy(HandleAnyReplyToStrategy.INSTANCE);
         params.setConnection(connection);
 
         RMQSession session = new RMQSession(params);
 
-        assertSame(ReturnToSenderExchangeReplyToStrategy.INSTANCE, session.getReplyToStrategy());
+        assertSame(HandleAnyReplyToStrategy.INSTANCE, session.getReplyToStrategy());
     }
 
     @Test

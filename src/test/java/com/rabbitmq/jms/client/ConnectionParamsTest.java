@@ -30,9 +30,9 @@ public class ConnectionParamsTest {
     @Test
     void  createExplicitlySetReplyToStrategy() {
         ConnectionParams params = new ConnectionParams();
-        params.setReplyToStrategy(ReturnToSenderExchangeReplyToStrategy.INSTANCE);
+        params.setReplyToStrategy(HandleAnyReplyToStrategy.INSTANCE);
 
-        assertSame(ReturnToSenderExchangeReplyToStrategy.INSTANCE, params.getReplyToStrategy());
+        assertSame(HandleAnyReplyToStrategy.INSTANCE, params.getReplyToStrategy());
     }
 }
 

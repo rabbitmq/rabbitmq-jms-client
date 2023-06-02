@@ -18,9 +18,9 @@ import org.junit.jupiter.api.Test;
 
 import com.rabbitmq.jms.admin.RMQDestination;
 
-public class ReturnToSenderExchangeReplyToStrategyTest {
+public class HandleAnyReplyToStrategyTest {
 
-    ReturnToSenderExchangeReplyToStrategy strategy;
+    HandleAnyReplyToStrategy strategy;
 
     RMQMessage message;
 
@@ -28,7 +28,7 @@ public class ReturnToSenderExchangeReplyToStrategyTest {
 
     @BeforeEach
     void setUp() {
-        strategy = new ReturnToSenderExchangeReplyToStrategy();
+        strategy = new HandleAnyReplyToStrategy();
         message = mock(RMQMessage.class);
         destination = mock(RMQDestination.class);
     }
@@ -53,15 +53,12 @@ public class ReturnToSenderExchangeReplyToStrategyTest {
     @Test
     void nonDirctReplyTo() throws JMSException {
 
-        when(destination.getAmqpExchangeName()).thenReturn("exchange");
-
         strategy.handleReplyTo(destination, message, "non direct reply to");
 
         when(destination.getAmqpExchangeName()).thenReturn("exchange");
-        RMQDestination d = new RMQDestination("non direct reply to", "exchange", "non direct reply to", "non direct reply to");
+        RMQDestination d = new RMQDestination("non direct reply to", "", "non direct reply to", "non direct reply to");
 
         verify(message).setJMSReplyTo(d);
-        verify(destination).getAmqpExchangeName();
         verifyNoMoreInteractions(destination, message);
     }
 

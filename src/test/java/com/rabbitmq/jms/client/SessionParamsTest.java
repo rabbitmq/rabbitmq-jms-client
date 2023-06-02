@@ -30,9 +30,9 @@ public class SessionParamsTest {
     @Test
     void  createExplicitlySetReplyToStrategy() {
         SessionParams params = new SessionParams();
-        params.setReplyToStrategy(ReturnToSenderExchangeReplyToStrategy.INSTANCE);
+        params.setReplyToStrategy(HandleAnyReplyToStrategy.INSTANCE);
 
-        assertSame(ReturnToSenderExchangeReplyToStrategy.INSTANCE, params.getReplyToStrategy());
+        assertSame(HandleAnyReplyToStrategy.INSTANCE, params.getReplyToStrategy());
     }
 }
 
