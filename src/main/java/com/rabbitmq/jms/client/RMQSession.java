@@ -218,6 +218,15 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private final DelayedMessageService delayedMessageService;
 
+    /**
+     * The reply to strategy to use when dealing with received messages
+     * with a reply to specified.
+     *
+     * @since 2.9.0
+     */
+    private final ReplyToStrategy replyToStrategy;
+
+
     static boolean validateSessionMode(int sessionMode) {
        return sessionMode >= 0 && sessionMode <= CLIENT_INDIVIDUAL_ACKNOWLEDGE;
     }
@@ -262,6 +271,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             }
         };
 
+        this.replyToStrategy = sessionParams.getReplyToStrategy();
+
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;
             this.isIndividualAck = false;
@@ -299,6 +310,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             .setMode(mode)
             .setSubscriptions(subscriptions)
             .setDelayedMessageService(delayedMessageService)
+            .setReplyToStrategy(connection.getReplyToStrategy())
         );
     }
 
@@ -1457,4 +1469,17 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         void validate(String name) throws JMSException;
 
     }
+
+    /**
+     * Gets the reply to strategy that should be followed if as reply to is
+     * found on a received message.
+     *
+     * @return  The reply to strategy.
+     *
+     * @since 2.9.0
+     */
+    public ReplyToStrategy getReplyToStrategy() {
+        return replyToStrategy;
+    }
+
 }

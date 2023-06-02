@@ -10,10 +10,12 @@ import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.MetricsCollector;
 import com.rabbitmq.jms.client.ConnectionParams;
+import com.rabbitmq.jms.client.DefaultReplyToStrategy;
 import com.rabbitmq.jms.client.RMQConnection;
 import com.rabbitmq.jms.client.RMQMessage;
 import com.rabbitmq.jms.client.ReceivingContext;
 import com.rabbitmq.jms.client.ReceivingContextConsumer;
+import com.rabbitmq.jms.client.ReplyToStrategy;
 import com.rabbitmq.jms.client.RmqJmsContext;
 import com.rabbitmq.jms.client.SendingContext;
 import com.rabbitmq.jms.client.SendingContextConsumer;
@@ -240,6 +242,14 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private boolean declareReplyToDestination = true;
 
     /**
+     * The strategy to applied to reply to queue handling. Defaults to handling
+     * "amq.rabbitmq.reply-to" queues.
+     *
+     * @since 2.9.0
+     */
+    private ReplyToStrategy replyToStrategy = DefaultReplyToStrategy.INSTANCE;
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -319,6 +329,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setTrustedPackages(this.trustedPackages)
             .setRequeueOnTimeout(this.requeueOnTimeout)
             .setKeepTextMessageType(this.keepTextMessageType)
+            .setReplyToStrategy(replyToStrategy)
         );
         logger.debug("Connection {} created.", conn);
         return conn;
@@ -1033,6 +1044,25 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.declareReplyToDestination = declareReplyToDestination;
     }
 
+    /**
+     * Sets the strategy to use when receiving messages with a reply to
+     * specified.
+     *
+     * @param replyToStrategy The reply to strategy.
+     */
+    public void setReplyToStrategy(final ReplyToStrategy replyToStrategy) {
+        this.replyToStrategy = replyToStrategy;
+    }
+
+    /**
+     * Gets ths reply to strategy to use when receiving messages with a
+     * reply to specified.
+     *
+     * @return  The strategy.
+     */
+    public ReplyToStrategy getReplyToStrategy() {
+        return replyToStrategy;
+    }
 
     /**
      * Whether to requeue a message that timed out or not.

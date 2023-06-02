@@ -110,6 +110,14 @@ public class ConnectionParams {
 
     private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
 
+    /**
+     * The reply to strategy to use when dealing with received messages
+     * with a reply to specified.
+     *
+     * @since 2.9.0
+     */
+    private ReplyToStrategy replyToStrategy = DefaultReplyToStrategy.INSTANCE;
+
     public Connection getRabbitConnection() {
         return rabbitConnection;
     }
@@ -245,4 +253,12 @@ public class ConnectionParams {
         return requeueOnTimeout;
     }
 
+    public ConnectionParams setReplyToStrategy(final ReplyToStrategy replyToStrategy) {
+        this.replyToStrategy = replyToStrategy;
+        return this;
+    }
+
+    public ReplyToStrategy getReplyToStrategy() {
+        return replyToStrategy;
+    }
 }

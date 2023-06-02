@@ -22,6 +22,8 @@ import java.util.Map;
 import org.mockito.MockitoAnnotations;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -83,4 +85,39 @@ public class RMQSessionTest {
         assertTrue(headers.isEmpty());
     }
 
+    @Test
+    void withReplyToStrategy() throws JMSException {
+
+        SessionParams params = new SessionParams();
+        params.setReplyToStrategy(ReturnToSenderExchangeReplyToStrategy.INSTANCE);
+        params.setConnection(connection);
+
+        RMQSession session = new RMQSession(params);
+
+        assertSame(ReturnToSenderExchangeReplyToStrategy.INSTANCE, session.getReplyToStrategy());
+    }
+
+    @Test
+    void withNoReplyToStrategy() throws JMSException {
+
+        SessionParams params = new SessionParams();
+        params.setConnection(connection);
+
+        RMQSession session = new RMQSession(params);
+
+        assertSame(DefaultReplyToStrategy.INSTANCE, session.getReplyToStrategy());
+    }
+
+
+    @Test
+    void withNullReplyToStrategy() throws JMSException {
+
+        SessionParams params = new SessionParams();
+        params.setReplyToStrategy(null);
+        params.setConnection(connection);
+
+        RMQSession session = new RMQSession(params);
+
+        assertNull(session.getReplyToStrategy());
+    }
 }
