@@ -9,19 +9,20 @@ import com.rabbitmq.jms.admin.RMQDestination;
 import jakarta.jms.JMSException;
 
 /**
- * Default implementation of the reply to strategy.
+ * Implementation of the reply to strategy that deals with any reply
+ * to value received and will use the default, i.e. "", exchange.
  * <b>
- * This will ensure that any reply to queues using the
- * amq.rabbitmq.reply-to.<id> are correctly created.
+ * If the reply-to starts with "amq.rabbitmq.reply-to", this will
+ * correctly handle these types of temporary queues.
  *
  * @since 2.9.0
  */
-public class ReturnToSenderExchangeReplyToStrategy implements ReplyToStrategy {
+public class HandleAnyReplyToStrategy implements ReplyToStrategy {
 
     private static final long serialVersionUID = -496756742546656456L;
 
     /** An instance of the strategy to avoid having to create multiple copies of the object. */
-    public static final ReturnToSenderExchangeReplyToStrategy INSTANCE = new ReturnToSenderExchangeReplyToStrategy();
+    public static final HandleAnyReplyToStrategy INSTANCE = new HandleAnyReplyToStrategy();
 
     /**
      * Handles the reply to on a received message.
@@ -40,7 +41,7 @@ public class ReturnToSenderExchangeReplyToStrategy implements ReplyToStrategy {
             if (replyTo.startsWith(DIRECT_REPLY_TO)) {
                 message.setJMSReplyTo(new RMQDestination(DIRECT_REPLY_TO, "", replyTo, replyTo));
             } else {
-                message.setJMSReplyTo(new RMQDestination(replyTo, dest.getAmqpExchangeName(), replyTo, replyTo));
+                message.setJMSReplyTo(new RMQDestination(replyTo, "", replyTo, replyTo));
             }
         }
     }
