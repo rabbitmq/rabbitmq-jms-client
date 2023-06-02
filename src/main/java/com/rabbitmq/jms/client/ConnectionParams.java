@@ -119,6 +119,14 @@ public class ConnectionParams {
 
     private boolean validateSubscriptionNames = false;
 
+    /**
+     * The reply to strategy to use when dealing with received messages
+     * with a reply to specified.
+     *
+     * @since 2.9.0
+     */
+    private ReplyToStrategy replyToStrategy = DefaultReplyToStrategy.INSTANCE;
+
     public Connection getRabbitConnection() {
         return rabbitConnection;
     }
@@ -270,5 +278,14 @@ public class ConnectionParams {
 
     public boolean isValidateSubscriptionNames() {
         return validateSubscriptionNames;
+    }
+
+    public ConnectionParams setReplyToStrategy(final ReplyToStrategy replyToStrategy) {
+        this.replyToStrategy = replyToStrategy;
+        return this;
+    }
+
+    public ReplyToStrategy getReplyToStrategy() {
+        return replyToStrategy;
     }
 }

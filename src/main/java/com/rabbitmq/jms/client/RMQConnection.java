@@ -164,6 +164,14 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private final DelayedMessageService delayedMessageService;
 
     /**
+     * The reply to strategy to use when handling reply to properties
+     * on received messages.
+     *
+     * @Since 2.9.0
+     */
+    private final ReplyToStrategy replyToStrategy;
+
+    /**
      * Creates an RMQConnection object.
      * @param connectionParams parameters for this connection
      */
@@ -192,6 +200,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.keepTextMessageType = connectionParams.isKeepTextMessageType();
         this.validateSubscriptionNames = connectionParams.isValidateSubscriptionNames();
         this.delayedMessageService = new DelayedMessageService();
+        this.replyToStrategy = connectionParams.getReplyToStrategy();
     }
 
     /**
@@ -250,6 +259,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setKeepTextMessageType(this.keepTextMessageType)
             .setValidateSubscriptionNames(this.validateSubscriptionNames)
             .setDelayedMessageService(this.delayedMessageService)
+            .setReplyToStrategy(this.replyToStrategy)
         );
         this.sessions.add(session);
         return session;
@@ -563,5 +573,17 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         String subscriptionName, String messageSelector, ServerSessionPool sessionPool,
         int maxMessages) {
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Gets the reply to strategy that should be followed if as reply to is
+     * found on a received message.
+     *
+     * @return  The reply to strategy.
+     *
+     * @since 2.9.0
+     */
+    public ReplyToStrategy getReplyToStrategy() {
+        return replyToStrategy;
     }
 }

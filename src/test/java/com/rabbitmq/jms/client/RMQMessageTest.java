@@ -101,6 +101,31 @@ class RMQMessageTest {
         when(getResponse.getProps()).thenReturn(props);
         when(getResponse.getEnvelope()).thenReturn(envelope);
         when(envelope.isRedeliver()).thenReturn(false);
+        when(session.getReplyToStrategy()).thenReturn(DefaultReplyToStrategy.INSTANCE);
+
+        when(props.getReplyTo()).thenReturn("amq.rabbitmq.reply-to");
+
+        RMQDestination destination = new RMQDestination("dest", "exch", "key", "queue");
+        destination.setAmqp(true);
+
+        RMQMessage result = RMQMessage.convertMessage(session, destination, getResponse, consumer);
+
+        assertNotNull(result.getJMSReplyTo());
+
+        RMQDestination expected = new RMQDestination("amq.rabbitmq.reply-to", "", "amq.rabbitmq.reply-to", "amq.rabbitmq.reply-to");
+        assertEquals(expected, result.getJMSReplyTo());
+    }
+
+    @Test
+    @DisplayName("RMQMessage::convertMessage - amqp message - ensure JMS reply to is set to direct reply to")
+    void convertAMQPMessageWithDirectReplyToNoExplicityReplyToStrategy() throws JMSException {
+
+        BasicProperties props = mock(BasicProperties.class);
+        Envelope envelope = mock(Envelope.class);
+
+        when(getResponse.getProps()).thenReturn(props);
+        when(getResponse.getEnvelope()).thenReturn(envelope);
+        when(envelope.isRedeliver()).thenReturn(false);
 
         when(props.getReplyTo()).thenReturn("amq.rabbitmq.reply-to");
 
@@ -125,7 +150,7 @@ class RMQMessageTest {
         when(getResponse.getProps()).thenReturn(props);
         when(getResponse.getEnvelope()).thenReturn(envelope);
         when(envelope.isRedeliver()).thenReturn(false);
-
+        when(session.getReplyToStrategy()).thenReturn(DefaultReplyToStrategy.INSTANCE);
         when(props.getReplyTo()).thenReturn("amq.rabbitmq.reply-to-forwarded-id");
 
         RMQDestination destination = new RMQDestination("dest", "exch", "key", "queue");
