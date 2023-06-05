@@ -55,7 +55,7 @@
     <maven.jar.plugin.version>3.3.0</maven.jar.plugin.version>
     <build.helper.maven.plugin.version>3.4.0</build.helper.maven.plugin.version>
     <maven.antrun.plugin.version>1.8</maven.antrun.plugin.version>
-    <maven.release.plugin.version>3.0.0</maven.release.plugin.version>
+    <maven.release.plugin.version>3.0.1</maven.release.plugin.version>
     <maven.sources.plugin.version>3.3.0</maven.sources.plugin.version>
     <maven.javadoc.plugin.version>3.5.0</maven.javadoc.plugin.version>
     <maven.gpg.plugin.version>3.1.0</maven.gpg.plugin.version>
