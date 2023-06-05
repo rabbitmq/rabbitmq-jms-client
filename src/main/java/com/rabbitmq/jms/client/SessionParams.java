@@ -116,6 +116,14 @@ public class SessionParams {
 
     private DelayedMessageService delayedMessageService;
 
+    /**
+     * The reply to strategy to use when processing a received
+     * message with a reply to property.
+     *
+     * @Since 2.9.0
+     */
+    private ReplyToStrategy replyToStrategy = DefaultReplyToStrategy.INSTANCE;
+
     public RMQConnection getConnection() {
         return connection;
     }
@@ -276,5 +284,14 @@ public class SessionParams {
     public SessionParams setDelayedMessageService(DelayedMessageService delayedMessageService) {
         this.delayedMessageService = delayedMessageService;
         return this;
+    }
+
+    public SessionParams setReplyToStrategy(final ReplyToStrategy replyToStrategy) {
+        this.replyToStrategy = replyToStrategy;
+        return this;
+    }
+
+    public ReplyToStrategy getReplyToStrategy() {
+        return replyToStrategy;
     }
 }
