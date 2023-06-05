@@ -271,7 +271,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             }
         };
 
-        this.replyToStrategy = sessionParams.getReplyToStrategy();
+        this.replyToStrategy = sessionParams.getReplyToStrategy() == null ?
+            DefaultReplyToStrategy.INSTANCE : sessionParams.getReplyToStrategy();
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;

@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2016-2022 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2016-2023 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.AMQP;
@@ -111,8 +111,8 @@ public class ConnectionParams {
     private List<String> trustedPackages = WhiteListObjectInputStream.DEFAULT_TRUSTED_PACKAGES;
 
     /**
-     * The reply to strategy to use when dealing with received messages
-     * with a reply to specified.
+     * The reply-to strategy to use when dealing with received messages
+     * with a reply-to specified.
      *
      * @since 2.9.0
      */

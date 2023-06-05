@@ -847,7 +847,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         // JMSProperties already set
         message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
 
-        maybeSetupDirectReplyTo(session, dest, message, response.getProps().getReplyTo());
+        maybeSetupDirectReplyTo(session, message, response.getProps().getReplyTo());
         receivingContextConsumer.accept(new ReceivingContext(message));
 
         return message;
@@ -867,7 +867,7 @@ public abstract class RMQMessage implements Message, Cloneable {
             message.setJMSPropertiesFromAmqpProperties(props);
             message.setReadonly(true);                                              // Set readOnly - mandatory for received messages
 
-            maybeSetupDirectReplyTo(session, dest, message, response.getProps().getReplyTo());
+            maybeSetupDirectReplyTo(session, message, response.getProps().getReplyTo());
             receivingContextConsumer.accept(new ReceivingContext(message));
 
             return message;
@@ -910,13 +910,8 @@ public abstract class RMQMessage implements Message, Cloneable {
      * @throws JMSException
      * @since 1.11.0
      */
-    private static void maybeSetupDirectReplyTo(RMQSession session, RMQDestination dest, RMQMessage message, String replyTo) throws JMSException {
-        if (session.getReplyToStrategy() != null) {
-            session.getReplyToStrategy().handleReplyTo(dest, message, replyTo);
-        } else {
-            // Ensure that we alway apply the default strategy if one is missing:
-            DefaultReplyToStrategy.INSTANCE.handleReplyTo(dest, message, replyTo);
-        }
+    private static void maybeSetupDirectReplyTo(RMQSession session, RMQMessage message, String replyTo) throws JMSException {
+        session.getReplyToStrategy().handleReplyTo(message, replyTo);
     }
 
     /**

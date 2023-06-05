@@ -2,15 +2,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2016-2022 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2023 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.jms.admin.RMQDestination;
 import jakarta.jms.JMSException;
+import jakarta.jms.Message;
 
 /**
- * Implementation of the reply to strategy that deals with any reply
- * to value received and will use the default, i.e. "", exchange.
+ * Implementation of the reply to strategy that deals with any reply-to
+ * value received and will use the default, i.e. "", exchange.
  * <b>
  * If the reply-to starts with "amq.rabbitmq.reply-to", this will
  * correctly handle these types of temporary queues.
@@ -33,11 +34,10 @@ public class HandleAnyReplyToStrategy implements ReplyToStrategy {
      */
     @Override
     public void handleReplyTo(
-            final RMQDestination dest,
-            final RMQMessage message,
+            final Message message,
             final String replyTo) throws JMSException {
 
-        if (replyTo != null && "".equals(replyTo) == false) {
+        if (replyTo != null && !"".equals(replyTo)) {
             if (replyTo.startsWith(DIRECT_REPLY_TO)) {
                 message.setJMSReplyTo(new RMQDestination(DIRECT_REPLY_TO, "", replyTo, replyTo));
             } else {

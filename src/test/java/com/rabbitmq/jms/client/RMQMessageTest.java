@@ -2,11 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2014-2022 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2014-2023 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
-import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.jms.admin.RMQDestination;
@@ -39,6 +38,8 @@ class RMQMessageTest {
         session = mock(RMQSession.class);
         getResponse = mock(GetResponse.class);
         consumer = mock(ReceivingContextConsumer.class);
+
+        when(session.getReplyToStrategy()).thenReturn(DefaultReplyToStrategy.INSTANCE);
     }
 
 

@@ -5,30 +5,27 @@
 // Copyright (c) 2016-2022 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
 import java.io.Serializable;
 
-import com.rabbitmq.jms.admin.RMQDestination;
-import jakarta.jms.JMSException;
-
 /**
- * Interface to provide a plugable mechanism for dealing with messages
- * received with a reply to queue specified.
- * <b>
- * Implementations of this interface should update the message's JMSReplyTo
+ * Interface to provide a pluggable mechanism for dealing with messages received with a reply-to
+ * queue specified. <b> Implementations of this interface should update the message's JMSReplyTo
  * property directly.
  *
  * @since 2.9.0
  */
 public interface ReplyToStrategy extends Serializable {
 
-    public static final String DIRECT_REPLY_TO = "amq.rabbitmq.reply-to";
+  String DIRECT_REPLY_TO = "amq.rabbitmq.reply-to";
 
   /**
    * Handles the reply to on a received message.
    *
-   * @param message  The RMQMessage that has been received.
-   * @param replyTo  The reply to queue value received.
-   * @throws JMSException  if there's an issue updating the RMQMessage
+   * @param message The RMQMessage that has been received.
+   * @param replyTo The reply to queue value received.
+   * @throws JMSException if there's an issue updating the RMQMessage
    */
-  void handleReplyTo(RMQDestination dest, RMQMessage message, String replyTo) throws JMSException;
+  void handleReplyTo(Message message, String replyTo) throws JMSException;
 }

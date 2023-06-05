@@ -155,7 +155,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private final DelayedMessageService delayedMessageService;
 
     /**
-     * The reply to strategy to use when handling reply to properties
+     * The reply-to strategy to use when handling reply to properties
      * on received messages.
      *
      * @Since 2.9.0

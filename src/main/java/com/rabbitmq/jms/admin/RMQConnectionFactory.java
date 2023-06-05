@@ -242,7 +242,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private boolean declareReplyToDestination = true;
 
     /**
-     * The strategy to applied to reply to queue handling. Defaults to handling
+     * The strategy to apply to reply-to queue handling. Defaults to handling
      * "amq.rabbitmq.reply-to" queues.
      *
      * @since 2.9.0
@@ -1045,7 +1045,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     /**
-     * Sets the strategy to use when receiving messages with a reply to
+     * Sets the strategy to use when receiving messages with a reply-to
      * specified.
      *
      * @param replyToStrategy The reply to strategy.
@@ -1056,7 +1056,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     /**
      * Gets ths reply to strategy to use when receiving messages with a
-     * reply to specified.
+     * reply-to specified.
      *
      * @return  The strategy.
      */
