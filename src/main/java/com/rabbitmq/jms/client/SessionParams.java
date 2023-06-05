@@ -117,10 +117,10 @@ public class SessionParams {
     private DelayedMessageService delayedMessageService;
 
     /**
-     * The reply to strategy to use when processing a received
-     * message with a reply to property.
+     * The reply-to strategy to use when processing a received
+     * message with a reply-to property.
      *
-     * @Since 2.9.0
+     * @since 2.9.0
      */
     private ReplyToStrategy replyToStrategy = DefaultReplyToStrategy.INSTANCE;
 

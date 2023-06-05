@@ -2,14 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2014-2022 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2014-2023 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.impl.AMQImpl;
 import com.rabbitmq.jms.admin.RMQDestination;
 import javax.jms.JMSException;
-import org.junit.jupiter.api.AfterEach;
+import org.assertj.core.api.Assertions;import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.mockito.MockitoAnnotations;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -118,6 +119,6 @@ public class RMQSessionTest {
 
         RMQSession session = new RMQSession(params);
 
-        assertNull(session.getReplyToStrategy());
+        assertThat(session.getReplyToStrategy()).isEqualTo(DefaultReplyToStrategy.INSTANCE);
     }
 }

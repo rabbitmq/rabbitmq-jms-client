@@ -2,15 +2,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2016-2022 VMware, Inc. or its affiliates. All rights reserved.
+// Copyright (c) 2023 VMware, Inc. or its affiliates. All rights reserved.
 package com.rabbitmq.jms.client;
 
 import javax.jms.JMSException;
+import javax.jms.Message;
 
 import com.rabbitmq.jms.admin.RMQDestination;
 
 /**
- * Default implementation of the reply to strategy.
+ * Default implementation of the reply-to strategy.
  * <b>
  * This will ensure that any reply to queues using the
  * amq.rabbitmq.reply-to.<id> are correctly created.
@@ -33,8 +34,7 @@ public class DefaultReplyToStrategy implements ReplyToStrategy {
      */
     @Override
     public void handleReplyTo(
-            final RMQDestination dest,
-            final RMQMessage message,
+            final Message message,
             final String replyTo) throws JMSException {
 
         if (replyTo != null && replyTo.startsWith(DIRECT_REPLY_TO)) {
