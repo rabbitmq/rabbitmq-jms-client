@@ -1,11 +1,8 @@
-name: Test against RabbitMQ alphas
+name: Test against supported Java versions (2.x)
 
 on:
   schedule:
     - cron: '0 4 * * *'
-  push:
-    branches:
-      - 2.x.x-stable
   workflow_dispatch:
 
 jobs:
@@ -13,10 +10,12 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        rabbitmq-image: [ 'pivotalrabbitmq/rabbitmq:v3.12.x-otp-max-bazel', 'pivotalrabbitmq/rabbitmq:main-otp-max-bazel' ]
-    name:  Test against ${{ matrix.rabbitmq-image }}
+        java: [ '8', '11', '17', '20', '21-ea' ]
+    name:  Test against Java ${{ matrix.java }}
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: 2.x.x-stable
       - name: Checkout tls-gen
         uses: actions/checkout@v3
         with:
@@ -25,8 +24,8 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: 'zulu'
+          java-version: ${{ matrix.java }}
           cache: 'maven'
       - name: Start RabbitMQ application
         run: ci/start-broker.sh
@@ -35,6 +34,7 @@ jobs:
           ./mvnw verify -Drabbitmqctl.bin=DOCKER:rabbitmq \
             -Dtest-broker.A.nodename=rabbit@$(hostname) \
             -Dtest-tls-certs.dir=tls-gen/basic \
-            --no-transfer-progress
+            --no-transfer-progress \
+            -Dnet.bytebuddy.experimental=true
       - name: Stop broker
         run: docker stop rabbitmq && docker rm rabbitmq
