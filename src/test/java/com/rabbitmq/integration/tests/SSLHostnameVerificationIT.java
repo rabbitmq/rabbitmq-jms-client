@@ -49,7 +49,7 @@ public class SSLHostnameVerificationIT {
   }
 
   static String caCertificateFile() {
-    return System.getProperty("test-tls-certs.dir") + "/testca/cacert.pem";
+    return System.getProperty("test-tls-certs.dir", "tls-gen/basic") + "/testca/cacert.pem";
   }
 
   static X509Certificate loadCertificate(String file) throws Exception {
