@@ -16,6 +16,7 @@ make -C "${PWD}"/tls-gen/basic
 mkdir -p rabbitmq-configuration/tls
 cp -R "${PWD}"/tls-gen/basic/result/* rabbitmq-configuration/tls
 chmod o+r rabbitmq-configuration/tls/*
+chmod g+r rabbitmq-configuration/tls/*
 
 echo "[rabbitmq_jms_topic_exchange,rabbitmq_delayed_message_exchange]." > rabbitmq-configuration/enabled_plugins
 
