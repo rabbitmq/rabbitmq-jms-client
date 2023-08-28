@@ -206,7 +206,6 @@
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>${maven.failsafe.plugin.version}</version>
         <configuration>
-          <encoding>UTF-8</encoding>
           <systemPropertyVariables>
             <test-broker.A.nodename>${test-broker.A.nodename}</test-broker.A.nodename>
           </systemPropertyVariables>
