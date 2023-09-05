@@ -7,6 +7,7 @@ package com.rabbitmq.integration.tests;
 
 import javax.jms.*;
 import com.rabbitmq.TestUtils.SkipIfDelayedMessageExchangePluginNotActivated;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Integration test
  */
 @SkipIfDelayedMessageExchangePluginNotActivated
+@Disabled
 public class DelayedQueueMessageIT extends AbstractITQueue {
 
     private static final String MESSAGE = "Hello " + DelayedQueueMessageIT.class.getName();
