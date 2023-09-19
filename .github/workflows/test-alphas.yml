@@ -13,7 +13,11 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        rabbitmq-image: [ 'pivotalrabbitmq/rabbitmq:v3.12.x-otp-max-bazel', 'pivotalrabbitmq/rabbitmq:main-otp-max-bazel' ]
+        include:
+          - rabbitmq-image: "pivotalrabbitmq/rabbitmq:v3.12.x-otp-max-bazel"
+            delayed-message-exchange-plugin-version: "3.12.0"
+          - rabbitmq-image: "pivotalrabbitmq/rabbitmq:main-otp-max-bazel"
+            delayed-message-exchange-plugin-version: "3.13.0.alpha"
     name:  Test against ${{ matrix.rabbitmq-image }}
     steps:
       - uses: actions/checkout@v4
@@ -32,6 +36,7 @@ jobs:
         run: ci/start-broker.sh
         env:
           RABBITMQ_IMAGE: ${{ matrix.rabbitmq-image }}
+          DELAYED_MESSAGE_EXCHANGE_PLUGIN_VERSION: ${{ matrix.delayed-message-exchange-plugin-version }}
       - name: Test
         run: |
           ./mvnw verify -Drabbitmqctl.bin=DOCKER:rabbitmq \
