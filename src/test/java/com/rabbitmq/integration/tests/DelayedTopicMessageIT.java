@@ -7,7 +7,6 @@ package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.TestUtils.SkipIfDelayedMessageExchangePluginNotActivated;
 import jakarta.jms.*;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * Integration test
  */
 @SkipIfDelayedMessageExchangePluginNotActivated
-@Disabled
 public class DelayedTopicMessageIT extends AbstractITTopic {
 
     private static final String TOPIC_NAME = "delay.topic." + DelayedTopicMessageIT.class.getCanonicalName();
