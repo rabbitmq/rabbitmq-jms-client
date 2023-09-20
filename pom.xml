@@ -212,11 +212,11 @@
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>${maven.failsafe.plugin.version}</version>
         <configuration>
+          <argLine>${test-arguments}</argLine>
           <systemPropertyVariables>
             <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
             <test-broker.A.nodename>${test-broker.A.nodename}</test-broker.A.nodename>
           </systemPropertyVariables>
-          <argLine>${test-arguments} -Xms1024m -Xmx4096m</argLine>
         </configuration>
         <executions>
           <execution>
