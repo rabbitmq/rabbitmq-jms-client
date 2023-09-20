@@ -183,7 +183,6 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven.surefire.plugin.version}</version>
         <configuration>
-          <argLine>${test-arguments}</argLine>
           <systemPropertyVariables>
             <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
           </systemPropertyVariables>
@@ -212,7 +211,6 @@
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>${maven.failsafe.plugin.version}</version>
         <configuration>
-          <argLine>${test-arguments}</argLine>
           <systemPropertyVariables>
             <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
             <test-broker.A.nodename>${test-broker.A.nodename}</test-broker.A.nodename>
@@ -362,17 +360,6 @@
      </build>
 
    </profile>
-
-    <profile>
-      <id>jvm-test-arguments-java-21-and-more</id>
-      <activation>
-        <jdk>[21,)</jdk>
-      </activation>
-      <properties>
-        <test-arguments>-XX:+EnableDynamicAgentLoading</test-arguments>
-      </properties>
-    </profile>
-
 
     <profile>
       <id>snapshots</id>
