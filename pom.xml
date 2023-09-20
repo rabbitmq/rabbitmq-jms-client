@@ -182,6 +182,12 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven.surefire.plugin.version}</version>
+        <configuration>
+          <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+          <systemPropertyVariables>
+            <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
+          </systemPropertyVariables>
+        </configuration>
       </plugin>
 
       <plugin>
@@ -207,9 +213,10 @@
         <version>${maven.failsafe.plugin.version}</version>
         <configuration>
           <systemPropertyVariables>
+            <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
             <test-broker.A.nodename>${test-broker.A.nodename}</test-broker.A.nodename>
           </systemPropertyVariables>
-          <argLine>-Xms1024m -Xmx4096m</argLine>
+          <argLine>-XX:+EnableDynamicAgentLoading -Xms1024m -Xmx4096m</argLine>
         </configuration>
         <executions>
           <execution>
