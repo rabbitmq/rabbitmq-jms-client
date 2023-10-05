@@ -8,8 +8,10 @@ import static com.rabbitmq.jms.util.UriCodec.encUserinfo;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.DefaultSaslConfig;
 import com.rabbitmq.client.MetricsCollector;
 import com.rabbitmq.jms.client.ConfirmListener;
+import com.rabbitmq.jms.client.AuthenticationMechanism;
 import com.rabbitmq.jms.client.ConnectionParams;
 import com.rabbitmq.jms.client.DefaultReplyToStrategy;
 import com.rabbitmq.jms.client.RMQConnection;
@@ -274,6 +276,13 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private ReplyToStrategy replyToStrategy = DefaultReplyToStrategy.INSTANCE;
 
     /**
+     * The authentication mechanism to use.
+     *
+     * @since 2.9.0
+     */
+    private AuthenticationMechanism authenticationMechanism = AuthenticationMechanism.PLAIN;
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -320,6 +329,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         setRabbitUri(logger, this, cf, getUri());
         maybeEnableHostnameVerification(cf);
         cf.setMetricsCollector(this.metricsCollector);
+        setSaslConfig(cf, authenticationMechanism);
 
         if (this.amqpConnectionFactoryPostProcessor != null) {
             this.amqpConnectionFactoryPostProcessor.accept(cf);
@@ -528,6 +538,19 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         }
     }
 
+    private void setSaslConfig(com.rabbitmq.client.ConnectionFactory factory, AuthenticationMechanism authenticationMechanism) {
+        switch (authenticationMechanism) {
+            case PLAIN:
+                factory.setSaslConfig(DefaultSaslConfig.PLAIN);
+                break;
+            case EXTERNAL:
+                factory.setSaslConfig(DefaultSaslConfig.EXTERNAL);
+                break;
+            default:
+                throw new IllegalArgumentException("Unhandled AuthenticationMechanism: " + authenticationMechanism);
+        }
+    }
+
     public boolean isSsl() {
         return this.ssl;
     }
@@ -653,6 +676,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
                 this.isCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose());
         addBooleanProperty(ref, "declareReplyToDestination",
                 this.declareReplyToDestination);
+        addStringRefProperty(ref, "authenticationMechanism", this.authenticationMechanism.name());
         return ref;
     }
 
@@ -1117,6 +1141,15 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     @Deprecated
     public void setConfirmListener(ConfirmListener confirmListener) {
         this.confirmListener = confirmListener;
+    }
+
+    /**
+     * Sets the authentication mechanism to use.
+     *
+     * @param authenticationMechanism authentication mechanism
+     */
+    public void setAuthenticationMechanism(AuthenticationMechanism authenticationMechanism) {
+        this.authenticationMechanism = authenticationMechanism;
     }
 
     /**

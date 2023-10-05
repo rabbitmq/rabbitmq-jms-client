@@ -10,6 +10,9 @@ import com.rabbitmq.client.Address;
 import com.rabbitmq.client.AddressResolver;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DefaultSaslConfig;
+import com.rabbitmq.client.SaslConfig;
+import com.rabbitmq.jms.client.AuthenticationMechanism;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +29,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -51,6 +55,7 @@ public class RMQConnectionFactoryTest {
         defaultProps.setProperty("virtualHost", "/");
         defaultProps.setProperty("cleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose", "false");
         defaultProps.setProperty("declareReplyToDestination", "true");
+        defaultProps.setProperty("authenticationMechanism", AuthenticationMechanism.PLAIN.name());
     }
 
     private static Properties getProps(Reference ref) {
@@ -119,6 +124,7 @@ public class RMQConnectionFactoryTest {
         connFactory.setTerminationTimeout(1234567890123456789L);
         connFactory.setUsername("fred");
         connFactory.setVirtualHost("bill");
+        connFactory.setAuthenticationMechanism(AuthenticationMechanism.EXTERNAL);
 
         Reference ref = connFactory.getReference();
         Properties newProps = getProps(ref);
@@ -126,6 +132,7 @@ public class RMQConnectionFactoryTest {
         assertEquals("amqps://fred:my-password@sillyHost:42/bill", newProps.getProperty("uri"), "Not the correct uri");
         assertEquals("52", newProps.getProperty("queueBrowserReadMax"), "Not the correct queueBrowserReadMax");
         assertEquals("62", newProps.getProperty("onMessageTimeoutMs"), "Not the correct onMessageTimeoutMs");
+        assertEquals(AuthenticationMechanism.EXTERNAL.name(), newProps.getProperty("authenticationMechanism"), "Not the correct authenticationMechanism");
     }
 
     @Test
@@ -144,6 +151,7 @@ public class RMQConnectionFactoryTest {
         connFactory.setVirtualHost("bill");
         connFactory.setCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose(true);
         connFactory.setDeclareReplyToDestination(false);
+        connFactory.setAuthenticationMechanism(AuthenticationMechanism.EXTERNAL);
 
         Reference ref = connFactory.getReference();
 
@@ -165,9 +173,9 @@ public class RMQConnectionFactoryTest {
         assertEquals("bill", newFactory.getVirtualHost(), "Not the correct virtualHost");
         assertTrue(newFactory.isCleanUpServerNamedQueuesForNonDurableTopicsOnSessionClose());
 
-        Field declareReplyToDestinationField = RMQConnectionFactory.class.getDeclaredField("declareReplyToDestination");
-        declareReplyToDestinationField.setAccessible(true);
-        assertFalse((Boolean) declareReplyToDestinationField.get(newFactory));
+        assertFalse((Boolean) getRMQConnectionFactoryFieldValue(newFactory, "declareReplyToDestination"));
+
+        assertEquals(AuthenticationMechanism.EXTERNAL, getRMQConnectionFactoryFieldValue(newFactory, "authenticationMechanism"));
     }
 
     @Test
@@ -184,6 +192,7 @@ public class RMQConnectionFactoryTest {
         environment.put("terminationTimeout", 1234567890123456789L);
         environment.put("username", "fred");
         environment.put("virtualHost", "bill");
+        environment.put("authenticationMechanism", AuthenticationMechanism.EXTERNAL);
 
         RMQConnectionFactory newFactory = (RMQConnectionFactory) new RMQObjectFactory().createConnectionFactory(null, environment, new CompositeName("newOne"));
 
@@ -199,6 +208,8 @@ public class RMQConnectionFactoryTest {
 
         assertEquals("fred", newFactory.getUsername(), "Not the correct username");
         assertEquals("bill", newFactory.getVirtualHost(), "Not the correct virtualHost");
+
+        assertEquals(AuthenticationMechanism.EXTERNAL, getRMQConnectionFactoryFieldValue(newFactory, "authenticationMechanism"));
     }
 
     @Test
@@ -217,6 +228,7 @@ public class RMQConnectionFactoryTest {
         addStringRefProperty(ref, "terminationTimeout", "1234567890123456789");
         addStringRefProperty(ref, "username", "fred");
         addStringRefProperty(ref, "virtualHost", "bill");
+        addStringRefProperty(ref, "authenticationMechanism", AuthenticationMechanism.EXTERNAL.name());
 
         RMQConnectionFactory newFactory = (RMQConnectionFactory) new RMQObjectFactory().createConnectionFactory(ref, new Hashtable<Object, Object>(), new CompositeName("newOne"));
 
@@ -233,6 +245,15 @@ public class RMQConnectionFactoryTest {
         assertEquals("bill", newFactory.getVirtualHost(), "Not the correct virtualHost");
 
         assertEquals("amqps://fred:my-password@sillyHost:42/bill", newFactory.getUri());
+
+        assertEquals(AuthenticationMechanism.EXTERNAL, getRMQConnectionFactoryFieldValue(newFactory, "authenticationMechanism"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T getRMQConnectionFactoryFieldValue(RMQConnectionFactory factory, String fieldName) throws Exception {
+        Field field = RMQConnectionFactory.class.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        return (T) field.get(factory);
     }
 
     TestRmqConnectionFactory rmqCf;
@@ -305,6 +326,15 @@ public class RMQConnectionFactoryTest {
         assertEquals(1, callCount.get());
         rmqCf.createConnection();
         assertEquals(2, callCount.get());
+    }
+
+    @Test
+    public void saslConfigIsSet() throws Exception {
+        AtomicReference<SaslConfig> saslConfigRef = new AtomicReference<>();
+        rmqCf.setAuthenticationMechanism(AuthenticationMechanism.EXTERNAL);
+        rmqCf.setAmqpConnectionFactoryPostProcessor(cf -> saslConfigRef.set(cf.getSaslConfig()));
+        rmqCf.createConnection();
+        assertEquals(DefaultSaslConfig.EXTERNAL, saslConfigRef.get());
     }
 
     @Test
