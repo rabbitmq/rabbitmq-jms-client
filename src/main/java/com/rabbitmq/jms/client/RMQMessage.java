@@ -882,7 +882,7 @@ public abstract class RMQMessage implements Message, Cloneable {
         message.setJMSRedelivered(redelivered);
         if (redelivered) {
             Map<String, Object> headers = response.getProps().getHeaders();
-			Number deliveryCount = headers != null ? (Number) headers.get("x-delivery-count") : null;
+            Number deliveryCount = headers != null ? (Number) headers.get("x-delivery-count") : null;
             if (deliveryCount == null) {
                 message.setIntProperty(JMS_X_DELIVERY_COUNT, 2);
             } else {
