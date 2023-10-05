@@ -93,6 +93,27 @@ class RMQMessageTest {
     }
 
     @Test
+    @DisplayName("RMQMessage::convertMessage - amqp message - JMSXDeliveryCount is set to default if no header is available")
+    void convertAMQPMessageWithRedeliverFlagAndNoHeaders() throws JMSException {
+
+        BasicProperties props = mock(BasicProperties.class);
+        Envelope envelope = mock(Envelope.class);
+
+        when(getResponse.getProps()).thenReturn(props);
+        when(props.getHeaders()).thenReturn(null);
+        when(getResponse.getEnvelope()).thenReturn(envelope);
+        when(envelope.isRedeliver()).thenReturn(true);
+
+        RMQDestination destination = new RMQDestination("dest", "exch", "key", "queue");
+        destination.setAmqp(true);
+
+        RMQMessage result = RMQMessage.convertMessage(session, destination, getResponse, consumer);
+
+        // if no header information (=null) is given, fall back to default delivery count
+        assertEquals(2, result.getIntProperty("JMSXDeliveryCount"));
+    }
+    
+    @Test
     @DisplayName("RMQMessage::convertMessage - amqp message - ensure JMS reply to is set to direct reply to")
     void convertAMQPMessageWithDirectReplyTo() throws JMSException {
 
