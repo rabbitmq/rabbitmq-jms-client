@@ -11,6 +11,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import com.rabbitmq.jms.client.AuthenticationMechanism;
 import jakarta.jms.ConnectionFactory;
 import jakarta.jms.JMSException;
 import jakarta.jms.Queue;
@@ -224,6 +226,15 @@ public class RMQObjectFactory implements ObjectFactory {
         f.setDeclareReplyToDestination(getBooleanProperty(ref, environment, "declareReplyToDestination", true, true));
         f.setKeepTextMessageType(getBooleanProperty(ref, environment, "keepTextMessageType", true, false));
         f.setNackOnRollback(getBooleanProperty(ref, environment, "nackOnRollback", true, false));
+
+        String authenticationMechanismString = getStringProperty(ref, environment, "authenticationMechanism", true, null);
+        if (authenticationMechanismString != null) {
+            try {
+                f.setAuthenticationMechanism(AuthenticationMechanism.valueOf(authenticationMechanismString));
+            } catch (IllegalArgumentException e) {
+                LOGGER.warn("Failed to set AuthenticationMechanism on RMQConnectionFactory.", e);
+            }
+        }
         return f;
     }
 
