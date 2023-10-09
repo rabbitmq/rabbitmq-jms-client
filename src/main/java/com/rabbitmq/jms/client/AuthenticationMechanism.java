@@ -7,6 +7,8 @@ package com.rabbitmq.jms.client;
 
 /**
  * Authentication mechanisms that the client can use to authenticate to the server.
+ *
+ * @see com.rabbitmq.jms.admin.RMQConnectionFactory#setAuthenticationMechanism(AuthenticationMechanism)
  */
 public enum AuthenticationMechanism {
 
