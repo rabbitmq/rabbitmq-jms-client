@@ -249,6 +249,7 @@ public class RMQConnectionFactoryTest {
         assertEquals(AuthenticationMechanism.EXTERNAL, getRMQConnectionFactoryFieldValue(newFactory, "authenticationMechanism"));
     }
 
+    @SuppressWarnings("unchecked")
     private <T> T getRMQConnectionFactoryFieldValue(RMQConnectionFactory factory, String fieldName) throws Exception {
         Field field = RMQConnectionFactory.class.getDeclaredField(fieldName);
         field.setAccessible(true);
