@@ -278,7 +278,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     /**
      * The authentication mechanism to use.
      *
-     * @since 3.2.0
+     * @since 2.9.0
      */
     private AuthenticationMechanism authenticationMechanism = AuthenticationMechanism.PLAIN;
 
