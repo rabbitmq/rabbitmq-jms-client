@@ -36,7 +36,7 @@
   <scm>
     <url>https://github.com/rabbitmq/rabbitmq-jms-client</url>
     <connection>scm:git:git://github.com/rabbitmq/rabbitmq-jms-client.git</connection>
-    <developerConnection>scm:git:git@github.com:rabbitmq/rabbitmq-jms-client.git</developerConnection>
+    <developerConnection>scm:git:https://github.com/rabbitmq/rabbitmq-jms-client.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
 
