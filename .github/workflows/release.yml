@@ -22,8 +22,6 @@ jobs:
           server-password: MAVEN_PASSWORD
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
-      - name: Get dependencies
-        run: make deps
       - name: Release JMS Client (GA)
         if: ${{ env.ga_release == 'true' }}
         run:  |
