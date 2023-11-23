@@ -135,7 +135,8 @@ for the support timeline of this library.
 
 ## License and Copyright
 
-(c) 2007-2022 VMware, Inc. or its affiliates.
+(c) 2007-2023 Broadcom. All Rights Reserved.
+The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
 
 This package, the RabbitMQ JMS client library, is double-licensed
 under the Apache License version 2 ("ASL") and the Mozilla Public License

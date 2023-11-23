@@ -111,7 +111,7 @@ Mozilla Public License, V1.1 is applicable to the following component(s).
 //  The Original Code is RabbitMQ.
 //
 //  The Initial Developer of the Original Code is GoPivotal, Inc.
-//  Copyright (c) 2007-2021 VMware, Inc. or its affiliates.  All rights reserved.
+//  Copyright (c) 2007-2023 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
 
 ADDITIONAL LICENSE INFORMATION:
 
@@ -121,7 +121,8 @@ amqp-client-3.6.2-sources.jar\com\rabbitmq\tools\json\JSONWriter.java
 
 /*
    Copyright (c) 2006-2007 Frank Carver
-   Copyright (c) 2007-2021 VMware, Inc. or its affiliates. All Rights Reserved
+   Copyright (c) 2007-2022 VMware, Inc. or its affiliates. All Rights Reserved
+   Copyright (c) 2023 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -142,8 +143,8 @@ amqp-client-3.6.2-sources.jar\com\rabbitmq\tools\json\JSONWriter.java
 amqp-client-sources.jar\com\rabbitmq\client\impl\VariableLinkedBlockingQueue.java
 
 /*
- * Modifications Copyright 2015-2021 VMware, Inc. or its affiliates. and licenced as per
- * the rest of the RabbitMQ Java client.
+ * Modifications Copyright 2015-2023 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
+ * Licenced as per the rest of the RabbitMQ Java client.
  */
 * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
@@ -702,27 +703,4 @@ file, then You may include the notice in a location (such as a LICENSE
 file in a relevant directory) where a recipient would be likely to look
 for such a notice.
 
-Copyright (c) 2007-2021 VMware, Inc. or its affiliates.
-
-
-
-===========================================================================
-
-To the extent any open source components are licensed under the
-GPL and/or LGPL, or other similar licenses that require the
-source code and/or modifications to source code to be made
-available (as would be noted above), you may obtain a copy of
-the source code corresponding to the binaries for such open
-source components and modifications thereto, if any, (the
-"Source Files"), by downloading the Source Files from Pivotal's website at
-https://tanzu.vmware.com/open-source, or by sending a request,
-with your name and address to: VMware, Inc., 3401 Hillview Ave,
-Palo Alto, CA 94304, Attention: General Counsel. All such requests should
-clearly specify: OPEN SOURCE FILES REQUEST, Attention General Counsel.
-VMware shall mail a copy of the Source Files to you on a CD or equivalent physical medium.
-This offer to obtain a copy of the Source Files is valid for three
-years from the date you acquired this Software product.
-Alternatively, the Source Files may accompany the VMware product.
-
-
-[RABBITJMS146GASS110315]
+Copyright (c) 2007-2023 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
