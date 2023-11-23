@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved. */
+/* Copyright (c) 2013-2023 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries. */
 /**
  * A stream of tokens. Supports getNextToken() and putBackToken() operations as well as moreTokens().
  */

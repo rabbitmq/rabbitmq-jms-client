@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2020 VMware, Inc. or its affiliates. All rights reserved. */
+/* Copyright (c) 2013-2023 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries. */
 /**
  * Parse trees capture a structured view of a parsed token stream.
  * They encapsulate the result of a parse() operation.
