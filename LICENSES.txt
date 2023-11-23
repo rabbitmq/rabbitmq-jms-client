@@ -704,27 +704,5 @@ file, then You may include the notice in a location (such as a LICENSE
 file in a relevant directory) where a recipient would be likely to look
 for such a notice.
 
-Copyright (c) 2007-2023 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
-
-
-
-===========================================================================
-
-To the extent any open source components are licensed under the
-GPL and/or LGPL, or other similar licenses that require the
-source code and/or modifications to source code to be made
-available (as would be noted above), you may obtain a copy of
-the source code corresponding to the binaries for such open
-source components and modifications thereto, if any, (the
-"Source Files"), by downloading the Source Files from Pivotal's website at
-https://tanzu.vmware.com/open-source, or by sending a request,
-with your name and address to: VMware, Inc., 3401 Hillview Ave,
-Palo Alto, CA 94304, Attention: General Counsel. All such requests should
-clearly specify: OPEN SOURCE FILES REQUEST, Attention General Counsel.
-VMware shall mail a copy of the Source Files to you on a CD or equivalent physical medium.
-This offer to obtain a copy of the Source Files is valid for three
-years from the date you acquired this Software product.
-Alternatively, the Source Files may accompany the VMware product.
-
-
-[RABBITJMS146GASS110315]
+Copyright (c) 2007-2023 Broadcom. All Rights Reserved.
+The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
