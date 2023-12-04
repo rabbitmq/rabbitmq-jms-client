@@ -29,6 +29,8 @@ jobs:
           cache: 'maven'
       - name: Start RabbitMQ application
         run: ci/start-broker.sh
+      - name: Display Java version
+        run: ./mvnw --version
       - name: Test
         run: |
           ./mvnw verify -Drabbitmqctl.bin=DOCKER:rabbitmq \
