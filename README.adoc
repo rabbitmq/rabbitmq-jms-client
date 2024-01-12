@@ -18,6 +18,9 @@ a RabbitMQ server plugin.
 It supports JMS 2.0 as of 2.7.0 and JMS 3.0 as of 3.0.0.
 Both 2.x and 3.x branches are maintained and supported.
 
+RabbitMQ JMS Client 2.x requires Java 8 or more.
+RabbitMQ JMS Client 3.x requires Java 11 or more.
+
 == JMS 1.1 and 2.0
 
 * https://rabbitmq.github.io/rabbitmq-jms-client/2.x/stable/htmlsingle/index.html[Latest stable]
