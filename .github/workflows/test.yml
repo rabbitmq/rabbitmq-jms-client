@@ -50,7 +50,7 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
       - name: Trigger Compliance Test Suite run
         if: ${{ github.event_name != 'pull_request' }}
-        uses: peter-evans/repository-dispatch@v2
+        uses: peter-evans/repository-dispatch@v3
         with:
           event-type: new_client_snapshot
           repository: rabbitmq/rabbitmq-jms-cts
