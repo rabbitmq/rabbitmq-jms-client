@@ -63,7 +63,7 @@
     <nexus-staging-maven-plugin.version>1.6.13</nexus-staging-maven-plugin.version>
     <checksum.maven.plugin.version>1.11</checksum.maven.plugin.version>
     <build-helper-plugin.version>3.3.0</build-helper-plugin.version>
-    <asciidoctor.maven.plugin.version>2.2.5</asciidoctor.maven.plugin.version>
+    <asciidoctor.maven.plugin.version>2.2.6</asciidoctor.maven.plugin.version>
     <asciidoctorj.version>2.5.11</asciidoctorj.version>
 
     <java.compile.version>1.8</java.compile.version>
