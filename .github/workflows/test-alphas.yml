@@ -14,8 +14,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - rabbitmq-image: "pivotalrabbitmq/rabbitmq:v3.12.x-otp-max-bazel"
-            delayed-message-exchange-plugin-version: "3.12.0"
+          - rabbitmq-image: "pivotalrabbitmq/rabbitmq:v3.13.x-otp-max-bazel"
+            delayed-message-exchange-plugin-version: "3.13.0.alpha"
           - rabbitmq-image: "pivotalrabbitmq/rabbitmq:main-otp-max-bazel"
             delayed-message-exchange-plugin-version: "3.13.0.alpha"
     name:  Test against ${{ matrix.rabbitmq-image }}
