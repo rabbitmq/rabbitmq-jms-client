@@ -92,12 +92,12 @@ This library uses https://semver.org/[semantic versioning].
 
 == Support
 
-See the https://www.rabbitmq.com/java-versions.html[RabbitMQ Java libraries support page]
+See the https://www.rabbitmq.com/client-libraries/java-versions[RabbitMQ Java libraries support page]
 for the support timeline of this library.
 
 == License and Copyright
 
-(c) 2007-2023 Broadcom. All Rights Reserved.
+(c) 2007-2024 Broadcom. All Rights Reserved.
 The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
 
 This package, the RabbitMQ JMS client library, is double-licensed under the Apache License version 2 ("ASL") and the Mozilla Public License 2.0 ("MPL").
