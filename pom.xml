@@ -64,7 +64,7 @@
     <checksum.maven.plugin.version>1.11</checksum.maven.plugin.version>
     <build-helper-plugin.version>3.5.0</build-helper-plugin.version>
     <asciidoctor.maven.plugin.version>3.0.0</asciidoctor.maven.plugin.version>
-    <asciidoctorj.version>2.5.12</asciidoctorj.version>
+    <asciidoctorj.version>2.5.13</asciidoctorj.version>
 
     <java.compile.version>11</java.compile.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
