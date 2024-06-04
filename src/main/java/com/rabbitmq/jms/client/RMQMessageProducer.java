@@ -107,7 +107,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
         this.session = session;
         this.destination = destination;
         if (preferProducerMessageProperty) {
-            sendingStrategy = new PreferMessageProducerPropertySendingStategy();
+            sendingStrategy = new PreferMessageProducerPropertySendingStrategy();
         } else {
             sendingStrategy = new PreferMessagePropertySendingStrategy();
         }
@@ -566,7 +566,7 @@ public class RMQMessageProducer implements MessageProducer, QueueSender, TopicPu
      * This implementation ignores message properties (delivery mode, priority, and expiration)
      * in favor of the message producer's properties.
      */
-    private class PreferMessageProducerPropertySendingStategy implements SendingStrategy {
+    private class PreferMessageProducerPropertySendingStrategy implements SendingStrategy {
 
         @Override
         public void send(Destination destination, Message message, CompletionListener completionListener)
