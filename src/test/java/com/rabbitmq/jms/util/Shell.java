@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2014-2023 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
+// Copyright (c) 2014-2024 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
 package com.rabbitmq.jms.util;
 
 import java.io.BufferedReader;
@@ -52,6 +52,20 @@ public class Shell {
     public static void restartNode() throws IOException {
         executeCommand(rabbitmqctlCommand() + rabbitmqctlNodenameArgument() + " stop_app");
         executeCommand(rabbitmqctlCommand() + rabbitmqctlNodenameArgument() + " start_app");
+    }
+
+    public static List<Exchange> listExchanges() throws IOException {
+        List<Exchange> exchanges = new ArrayList<>();
+        ProcessState process = executeCommand(rabbitmqctlCommand() + rabbitmqctlNodenameArgument() + " list_exchanges name type --quiet");
+        String output = process.output();
+        String[] lines = output.split("\n");
+        if (lines.length > 0) {
+            for (int i = 1; i < lines.length; i++) {
+                String [] fields = lines[i].split("\t");
+                exchanges.add(new Exchange(fields[0], fields[1]));
+            }
+        }
+        return exchanges;
     }
 
     public static List<Binding> listBindings(boolean includeDefaults) throws IOException {
@@ -219,6 +233,32 @@ public class Shell {
                     ", destination='" + destination + '\'' +
                     ", routingKey='" + routingKey + '\'' +
                     '}';
+        }
+    }
+
+    public static class Exchange {
+
+        private final String name, type;
+
+      public Exchange(String name, String type) {
+        this.name = name;
+        this.type = type;
+      }
+
+      public String name() {
+          return this.name;
+      }
+
+      public String type() {
+          return this.type;
+      }
+
+        @Override
+        public String toString() {
+            return "Exchange{" +
+                "name='" + name + '\'' +
+                ", type='" + type + '\'' +
+                '}';
         }
     }
 }

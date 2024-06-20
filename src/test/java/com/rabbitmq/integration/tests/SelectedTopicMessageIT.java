@@ -2,13 +2,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2023 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
+// Copyright (c) 2013-2024 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
 package com.rabbitmq.integration.tests;
 
+import com.rabbitmq.jms.util.Shell;
 import org.junit.jupiter.api.Test;
 
 import jakarta.jms.*;
 
+import java.io.IOException;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -58,6 +63,50 @@ public class SelectedTopicMessageIT extends AbstractITTopic {
             TextMessage message = (TextMessage) configuration.subscriber.receive(1000);
             assertEquals(configuration.message, message.getText());
         }
+    }
+
+    @Test
+    public void durableTopicSubscriberWithSelectorCreatesExchangesBetweenRestarts() throws Exception {
+        String topicName = TOPIC_NAME + UUID.randomUUID().toString().substring(0, 10);
+        int exchangeInitialCount = exchangeCount();
+        String subscriberName = UUID.randomUUID().toString();
+        topicConn.start();
+        TopicSession topicSession = topicConn.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        Topic topic = topicSession.createTopic(topicName);
+        TopicSubscriber receiver = topicSession.createDurableSubscriber(
+            topic, subscriberName, "boolProp", false);
+        TopicPublisher sender = topicSession.createPublisher(topic);
+        sender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        TextMessage message = topicSession.createTextMessage("hello true");
+        message.setBooleanProperty("boolProp", true);
+        sender.send(message);
+
+        assertThat(receiver.receive(1000)).isNotNull();
+        assertThat(exchangeCount()).isEqualTo(exchangeInitialCount + 1);
+
+        sender.close();
+        receiver.close();
+
+        reconnect();
+
+        topicConn.start();
+        topicSession = topicConn.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        topic = topicSession.createTopic(topicName);
+        receiver = topicSession.createDurableSubscriber(
+            topic, subscriberName, "boolProp", false);
+        sender = topicSession.createPublisher(topic);
+        sender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        message = topicSession.createTextMessage("hello true");
+        message.setBooleanProperty("boolProp", true);
+        sender.send(message);
+
+        assertThat(receiver.receive(1000)).isNotNull();
+
+        assertThat(exchangeCount()).isEqualTo(exchangeInitialCount + 2);
+    }
+
+    private static int exchangeCount() throws IOException {
+        return Shell.listExchanges().size();
     }
 
     @FunctionalInterface
