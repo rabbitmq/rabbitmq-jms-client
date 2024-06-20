@@ -20,6 +20,7 @@ import java.util.concurrent.Callable;
 import jakarta.jms.CompletionListener;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
@@ -30,7 +31,7 @@ public class TestUtils {
 
   public static final Duration TEN_SECONDS = Duration.ofSeconds(10);
 
-  private static final long POLLING_INTERVAL = 100;
+  private static final Duration POLLING_INTERVAL = Duration.ofMillis(100);
 
   public static boolean waitUntil(ExceptionBooleanSupplier condition) {
     return waitUntil(TEN_SECONDS, condition);
@@ -49,15 +50,21 @@ public class TestUtils {
     long elapsed = 0;
     try {
       T result = operation.call();
-      while (result == null && elapsed <= duration.toMillis()) {
+      while (result == null && elapsed <= duration.toNanos()) {
+        long start = System.nanoTime();
+        System.out.println(result + " " + elapsed + " " + duration.toNanos());
         try {
-          Thread.sleep(POLLING_INTERVAL);
+          Thread.sleep(POLLING_INTERVAL.toMillis());
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
           throw new RuntimeException(e);
         }
-        elapsed += POLLING_INTERVAL;
+        elapsed += POLLING_INTERVAL.toMillis();
         result = operation.call();
+        elapsed += (System.nanoTime() - start);
+      }
+      if (result == null) {
+        Assertions.fail("Condition did not return non-null result");
       }
       return result == null ? operation.call() : result;
     } catch (RuntimeException e) {

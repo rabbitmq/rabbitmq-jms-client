@@ -68,7 +68,7 @@ public class SelectedTopicMessageIT extends AbstractITTopic {
     @Test
     public void durableTopicSubscriberWithSelectorCreatesExchangesBetweenRestarts() throws Exception {
         String topicName = TOPIC_NAME + UUID.randomUUID().toString().substring(0, 10);
-        int exchangeInitialCount = exchangeCount();
+        long exchangeInitialCount = exchangeCount();
         String subscriberName = UUID.randomUUID().toString();
         topicConn.start();
         TopicSession topicSession = topicConn.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);
@@ -103,10 +103,18 @@ public class SelectedTopicMessageIT extends AbstractITTopic {
         assertThat(receiver.receive(1000)).isNotNull();
 
         assertThat(exchangeCount()).isEqualTo(exchangeInitialCount + 2);
+
+        topicSession.unsubscribe(subscriberName);
+        assertThat(exchangeCount()).isEqualTo(exchangeInitialCount);
     }
 
-    private static int exchangeCount() throws IOException {
-        return Shell.listExchanges().size();
+    private static long exchangeCount() throws IOException {
+        return Shell.listExchanges().stream()
+            // the JMS durable topic may be created for the test,
+            // counting it makes expectation calculation more complicated,
+            // so we filter it out
+            .filter(e -> !"jms.durable.topic".equals(e.name()))
+            .count();
     }
 
     @FunctionalInterface
