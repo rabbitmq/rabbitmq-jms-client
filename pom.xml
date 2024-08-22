@@ -48,7 +48,7 @@
     <spring.version>6.1.12</spring.version>
     <logback.version>1.3.12</logback.version>
 
-    <maven.dependency.plugin.version>3.7.1</maven.dependency.plugin.version>
+    <maven.dependency.plugin.version>3.8.0</maven.dependency.plugin.version>
     <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
     <maven.surefire.plugin.version>3.4.0</maven.surefire.plugin.version>
     <maven.failsafe.plugin.version>3.4.0</maven.failsafe.plugin.version>
