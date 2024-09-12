@@ -166,6 +166,13 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private Consumer<com.rabbitmq.client.ConnectionFactory> amqpConnectionFactoryPostProcessor = new NoOpSerializableConsumer<>();
 
     /**
+     * For post-processing the created {@link com.rabbitmq.client.Connection}
+     *
+     * @since 2.10.0
+     */
+    private Consumer<com.rabbitmq.client.Connection> amqpConnectionPostProcessor = new NoOpSerializableConsumer<>();
+
+    /**
      * Callback before sending a message.
      *
      * @since 1.11.0
@@ -336,6 +343,10 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         }
 
         com.rabbitmq.client.Connection rabbitConnection = instantiateNodeConnection(cf, connectionCreator);
+
+        if (this.amqpConnectionPostProcessor != null) {
+            this.amqpConnectionPostProcessor.accept(rabbitConnection);
+        }
 
         ReceivingContextConsumer rcc;
         if (this.declareReplyToDestination) {
@@ -1033,7 +1044,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     public void setMetricsCollector(MetricsCollector metricsCollector) {
         this.metricsCollector = metricsCollector;
     }
-    
+
     public List<String> getUris() {
         return this.uris.stream().map(uri -> uri.toString()).collect(Collectors.toList());
     }
@@ -1050,6 +1061,32 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     public void setAmqpConnectionFactoryPostProcessor(Consumer<com.rabbitmq.client.ConnectionFactory> amqpConnectionFactoryPostProcessor) {
         this.amqpConnectionFactoryPostProcessor = amqpConnectionFactoryPostProcessor;
+    }
+
+
+    /**
+     * Sets a post-processor for the created {@link com.rabbitmq.client.Connection}.
+     * <p>
+     * The post-processor is called after the {@link com.rabbitmq.client.Connection} is created and established. This callback
+     * can be used to customize the {@link com.rabbitmq.client.Connection} e.g. adding a {@link com.rabbitmq.client.BlockedListener}
+     * that emits a log message when this connection gets blocked:
+     * <pre>
+     * {@code
+     * RMQConnectionFactory factory = new RMQConnectionFactory();
+     * // ...
+     * factory.setAmqpConnectionPostProcessor(connection ->
+     *                 connection.addBlockedListener(
+     *                         reason -> log.warn("Connection blocked: {}", reason),
+     *                         () -> log.info("Connection unblocked"))
+     *         );
+     * }
+     * </pre>
+     *
+     * @param amqpConnectionPostProcessor callback that processes the AMQP connections after they are established
+     * @since 2.10.0
+     */
+    public void setAmqpConnectionPostProcessor(Consumer<com.rabbitmq.client.Connection> amqpConnectionPostProcessor) {
+        this.amqpConnectionPostProcessor = amqpConnectionPostProcessor;
     }
 
     /**
