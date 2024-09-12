@@ -319,13 +319,24 @@ public class RMQConnectionFactoryTest {
         assertEquals(10000, passedInAddressResolver.getAddresses().get(1).getPort());
     }
 
-    @Test public void amqpConnectionFactoryIsCalled() throws Exception {
+    @Test
+    public void amqpConnectionFactoryIsCalled() throws Exception {
         AtomicInteger callCount = new AtomicInteger(0);
         rmqCf.setAmqpConnectionFactoryPostProcessor(cf -> callCount.incrementAndGet());
         rmqCf.createConnection();
         assertEquals(1, callCount.get());
         rmqCf.createConnection();
         assertEquals(2, callCount.get());
+    }
+
+    @Test
+    public void shouldApplyConnectionCustomizer() throws Exception {
+        AtomicInteger callCount = new AtomicInteger(0);
+        rmqCf.setAmqpConnectionPostProcessor(connection -> callCount.incrementAndGet());
+        rmqCf.createConnection();
+        assertEquals(1, callCount.get(), "Connection customizer calls");
+        rmqCf.createConnection();
+        assertEquals(2, callCount.get(), "Connection customizer calls");
     }
 
     @Test
