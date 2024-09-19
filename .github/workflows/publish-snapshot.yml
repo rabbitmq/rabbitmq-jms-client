@@ -2,11 +2,6 @@ name: Publish snapshot
 
 on: workflow_dispatch
 
-env:
-  RABBITMQ_IMAGE_TAG: 3.11
-  RABBITMQ_IMAGE: rabbitmq
-  DELAYED_MESSAGE_EXCHANGE_PLUGIN_VERSION: 3.11.1
-
 jobs:
   build:
     runs-on: ubuntu-22.04
