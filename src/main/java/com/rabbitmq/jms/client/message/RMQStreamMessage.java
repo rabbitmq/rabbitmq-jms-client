@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2023 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
+// Copyright (c) 2013-2024 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
 package com.rabbitmq.jms.client.message;
 
 import com.rabbitmq.jms.util.WhiteListObjectInputStream;
@@ -519,7 +519,7 @@ public class RMQStreamMessage extends RMQMessage implements StreamMessage {
     protected void readBody(ObjectInput inputStream, ByteArrayInputStream bin) throws IOException, ClassNotFoundException {
         int len = inputStream.readInt();
         buf = new byte[len];
-        inputStream.read(buf);
+        inputStream.readFully(buf);
         this.reading = true;
         this.bin = new ByteArrayInputStream(buf);
         this.in = new WhiteListObjectInputStream(this.bin, this.trustedPackages);

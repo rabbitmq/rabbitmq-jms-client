@@ -2,20 +2,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2013-2023 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
+// Copyright (c) 2013-2024 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
 package com.rabbitmq.jms.client.message;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.awt.*;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.LongUnaryOperator;
 
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
@@ -81,6 +81,33 @@ public class TestMessages {
         writeStreamMessage(message);
         message.reset();
         readStreamMessage(message);
+    }
+
+    @Test
+    void encodeDecodeStreamMessage() throws Exception {
+        RMQStreamMessage message = new RMQStreamMessage();
+        int elementSize = 1 + 8; // byte + long
+        int blockSize = 1024; // in ObjectOutputStream
+        int elementCount = blockSize * 2 / elementSize;
+
+        LongUnaryOperator elementFunction = e -> e + 2;
+        for (int i = 0; i < elementCount; i++) {
+            message.writeLong(elementFunction.applyAsLong(i));
+        }
+
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(512);
+        ObjectOutputStream out = new ObjectOutputStream(bout);
+        message.writeBody(out, bout);
+        out.flush();
+        byte[] bytes = bout.toByteArray();
+        message = new RMQStreamMessage();
+        ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
+        ObjectInputStream in = new ObjectInputStream(bin);
+        message.readBody(in, bin);
+
+        for (int i = 0; i < elementCount; i++) {
+            assertThat(message.readLong()).isEqualTo(elementFunction.applyAsLong(i));
+        }
     }
 
     @Test
