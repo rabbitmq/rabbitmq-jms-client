@@ -5,6 +5,7 @@
 // Copyright (c) 2013-2023 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
 package com.rabbitmq.jms.client;
 
+import com.rabbitmq.jms.admin.RMQDefaultDestinations;
 import com.rabbitmq.jms.client.Subscription.Context;
 import com.rabbitmq.jms.client.Subscription.PostAction;
 import java.io.IOException;
@@ -804,7 +805,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     private static String generateJmsConsumerQueueName() {
-       return Util.generateUUID("jms-cons-");
+       return Util.generateUUID(RMQDefaultDestinations.getInstance().getConsumerQueueNamePrefix());
     }
 
     /**
@@ -823,7 +824,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private String getDurableTopicSelectorExchange() throws IOException {
         if (this.durableTopicSelectorExchange==null) {
-            this.durableTopicSelectorExchange = Util.generateUUID("jms-dutop-slx-");
+            this.durableTopicSelectorExchange = Util.generateUUID(RMQDefaultDestinations.getInstance().getDurableTopicSelectorExchangePrefix());
         }
         this.channel.exchangeDeclare(this.durableTopicSelectorExchange, JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, true, true, RJMS_SELECTOR_EXCHANGE_ARGS);
         return this.durableTopicSelectorExchange;
@@ -831,7 +832,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private String getNonDurableTopicSelectorExchange() throws IOException {
         if (this.nonDurableTopicSelectorExchange==null) {
-            this.nonDurableTopicSelectorExchange = Util.generateUUID("jms-ndtop-slx-");
+            this.nonDurableTopicSelectorExchange = Util.generateUUID(RMQDefaultDestinations.getInstance().getNonDurableTopicSelectorExchangePrefix());
         }
         this.channel.exchangeDeclare(this.nonDurableTopicSelectorExchange, JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, RJMS_SELECTOR_EXCHANGE_ARGS);
         return this.nonDurableTopicSelectorExchange;
@@ -1124,7 +1125,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public TemporaryQueue createTemporaryQueue() throws JMSException {
         illegalStateExceptionIfClosed();
-        return new RMQDestination(Util.generateUUID("jms-temp-queue-"), true, true);
+        return new RMQDestination(Util.generateUUID(RMQDefaultDestinations.getInstance().getTempQueuePrefix()), true, true);
     }
 
     /**
@@ -1133,7 +1134,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public TemporaryTopic createTemporaryTopic() throws JMSException {
         illegalStateExceptionIfClosed();
-        return new RMQDestination(Util.generateUUID("jms-temp-topic-"), false, true);
+        return new RMQDestination(Util.generateUUID(RMQDefaultDestinations.getInstance().getTempTopicPrefix()), false, true);
     }
 
     /**

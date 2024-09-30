@@ -30,14 +30,12 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
 
     private static final String RABBITMQ_AMQ_TOPIC_EXCHANGE_NAME = "amq.topic";
     private static final String RABBITMQ_AMQ_TOPIC_EXCHANGE_TYPE = "topic";             // standard topic exchange type in RabbitMQ
-    private static final String JMS_DURABLE_TOPIC_EXCHANGE_NAME = "jms.durable.topic";  // fixed topic exchange in RabbitMQ for jms traffic
-    private static final String JMS_TEMP_TOPIC_EXCHANGE_NAME = "jms.temp.topic";        // fixed topic exchange in RabbitMQ for jms traffic
 
     private static final String RABBITMQ_UNNAMED_EXCHANGE = "";
     private static final String RABBITMQ_AMQ_DIRECT_EXCHANGE_NAME = "amq.direct";
     private static final String RABBITMQ_AMQ_DIRECT_EXCHANGE_TYPE = "direct";           // standard direct exchange type in RabbitMQ
-    private static final String JMS_DURABLE_QUEUE_EXCHANGE_NAME = "jms.durable.queues"; // fixed queue exchange in RabbitMQ for jms traffic
-    private static final String JMS_TEMP_QUEUE_EXCHANGE_NAME = "jms.temp.queues";       // fixed queue exchange in RabbitMQ for jms traffic
+
+    private static final RMQDefaultDestinations DEFAULT_DESTINATIONS = RMQDefaultDestinations.getInstance();
 
     // Would like all these to be final, but we need to allow set them
     private String destinationName;
@@ -83,10 +81,10 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     }
 
     private static String queueOrTopicExchangeName(boolean isQueue, boolean isTemporary) {
-        if (isQueue & isTemporary)              return JMS_TEMP_QUEUE_EXCHANGE_NAME;
-        else if (isQueue & !isTemporary)        return JMS_DURABLE_QUEUE_EXCHANGE_NAME;
-        else if (!isQueue & isTemporary)        return JMS_TEMP_TOPIC_EXCHANGE_NAME;
-        else /* if (!isQueue & !isTemporary) */ return JMS_DURABLE_TOPIC_EXCHANGE_NAME;
+        if (isQueue & isTemporary)              return DEFAULT_DESTINATIONS.getTempQueueExchangeName();
+        else if (isQueue & !isTemporary)        return DEFAULT_DESTINATIONS.getDurableQueueExchangeName();
+        else if (!isQueue & isTemporary)        return DEFAULT_DESTINATIONS.getTempTopicExchangeName();
+        else /* if (!isQueue & !isTemporary) */ return DEFAULT_DESTINATIONS.getDurableTopicExchangeName();
     }
 
     private static String queueOrTopicExchangeType(boolean isQueue) {
