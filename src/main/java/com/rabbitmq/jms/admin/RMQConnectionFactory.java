@@ -266,6 +266,13 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private AuthenticationMechanism authenticationMechanism = AuthenticationMechanism.PLAIN;
 
     /**
+     * The destinations name strategy to use.
+     *
+     * @since 3.4.0
+     */
+    private DestinationsStrategy destinationsStrategy = new DestinationsStrategy() {};
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -351,6 +358,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setRequeueOnTimeout(this.requeueOnTimeout)
             .setKeepTextMessageType(this.keepTextMessageType)
             .setReplyToStrategy(replyToStrategy)
+            .setDestinationsStrategy(destinationsStrategy)
         );
         logger.debug("Connection {} created.", conn);
         return conn;
@@ -1149,6 +1157,10 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     public void setKeepTextMessageType(boolean keepTextMessageType) {
         this.keepTextMessageType = keepTextMessageType;
+    }
+
+    public void setDestinationsStrategy(DestinationsStrategy destinationsStrategy) {
+        this.destinationsStrategy = destinationsStrategy;
     }
 
     @FunctionalInterface

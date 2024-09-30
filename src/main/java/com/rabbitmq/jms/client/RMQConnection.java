@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 
+import com.rabbitmq.jms.admin.DestinationsStrategy;
 import jakarta.jms.*;
 import jakarta.jms.IllegalStateException;
 
@@ -163,6 +164,13 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private final ReplyToStrategy replyToStrategy;
 
     /**
+     * The destinations name strategy to use.
+     *
+     * @since 3.4.0
+     */
+    private final DestinationsStrategy destinationsStrategy;
+
+    /**
      * Creates an RMQConnection object.
      * @param connectionParams parameters for this connection
      */
@@ -190,6 +198,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.keepTextMessageType = connectionParams.isKeepTextMessageType();
         this.delayedMessageService = new DelayedMessageService();
         this.replyToStrategy = connectionParams.getReplyToStrategy();
+        this.destinationsStrategy = connectionParams.getDestinationsStrategy();
     }
 
     /**
@@ -247,6 +256,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setKeepTextMessageType(this.keepTextMessageType)
             .setDelayedMessageService(this.delayedMessageService)
             .setReplyToStrategy(this.replyToStrategy)
+            .setDestinationsStrategy(this.destinationsStrategy)
         );
         this.sessions.add(session);
         return session;

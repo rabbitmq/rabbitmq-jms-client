@@ -9,6 +9,7 @@ import static com.rabbitmq.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.rabbitmq.TestUtils;
+import com.rabbitmq.jms.admin.DestinationsStrategy;
 import com.rabbitmq.jms.admin.RMQDestination;
 import java.util.Collections;
 import java.util.List;
@@ -63,7 +64,7 @@ public class RecoverMessagesIT extends AbstractITQueue {
         String queueName = TestUtils.queueName(info);
         Queue queue =
             new RMQDestination(
-                queueName, true, false, Collections.singletonMap("x-queue-type", "quorum"));
+                queueName, true, false, Collections.singletonMap("x-queue-type", "quorum"), new DestinationsStrategy() {});
         try {
             QueueSender queueSender = queueSession.createSender(queue);
             queueSender.setDeliveryMode(DeliveryMode.PERSISTENT);

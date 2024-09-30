@@ -7,6 +7,7 @@ package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.impl.AMQImpl;
+import com.rabbitmq.jms.admin.DestinationsStrategy;
 import com.rabbitmq.jms.admin.RMQDestination;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +37,7 @@ class DelayedMessageServiceTest {
     @Mock
     Channel channel;
     AutoCloseable mocks;
-    RMQDestination jmsQueueDestination = new RMQDestination("some-queue", true, false);
+    RMQDestination jmsQueueDestination = new RMQDestination("some-queue", true, false, new DestinationsStrategy() {});
     Map<String, Object> msgHeaders = new HashMap<>();
 
     @BeforeEach
