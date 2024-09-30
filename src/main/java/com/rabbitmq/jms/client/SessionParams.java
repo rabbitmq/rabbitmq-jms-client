@@ -6,6 +6,7 @@
 package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.jms.admin.DestinationsStrategy;
 import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 
 import jakarta.jms.Message;
@@ -114,6 +115,13 @@ public class SessionParams {
      * @since 2.9.0
      */
     private ReplyToStrategy replyToStrategy = DefaultReplyToStrategy.INSTANCE;
+
+    /**
+     * The destinations name strategy to use.
+     *
+     * @since 3.4.0
+     */
+    private DestinationsStrategy destinationsStrategy = new DestinationsStrategy() {};
 
     public RMQConnection getConnection() {
         return connection;
@@ -266,5 +274,14 @@ public class SessionParams {
 
     public ReplyToStrategy getReplyToStrategy() {
         return replyToStrategy;
+    }
+
+    public SessionParams setDestinationsStrategy(DestinationsStrategy destinationsStrategy) {
+        this.destinationsStrategy = destinationsStrategy;
+        return this;
+    }
+
+    public DestinationsStrategy getDestinationsStrategy() {
+        return destinationsStrategy;
     }
 }
