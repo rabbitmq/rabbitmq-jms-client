@@ -17,7 +17,7 @@ public class RMQDestinationTest {
 
     @Test
     void queueRegeneration() throws Exception {
-        RMQDestination queue = new RMQDestination("queue", true, false);
+        RMQDestination queue = new RMQDestination("queue", true, false, new DestinationsStrategy() {});
         Reference reference = queue.getReference();
         RMQDestination newQueue = (RMQDestination) rmqObjectFactory.getObjectInstance(reference, null, null, null);
         assertThat(newQueue.isQueue()).isTrue();
@@ -27,7 +27,7 @@ public class RMQDestinationTest {
 
     @Test
     void topicRegeneration() throws Exception {
-        RMQDestination topic = new RMQDestination("topic", false, false);
+        RMQDestination topic = new RMQDestination("topic", false, false, new DestinationsStrategy() {});
         Reference reference = topic.getReference();
         RMQDestination newTopic = (RMQDestination) rmqObjectFactory.getObjectInstance(reference, null, null, null);
         assertThat(newTopic.isQueue()).isFalse();

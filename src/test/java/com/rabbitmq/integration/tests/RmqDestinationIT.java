@@ -8,6 +8,7 @@ package com.rabbitmq.integration.tests;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.rabbitmq.jms.admin.DestinationsStrategy;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.admin.RMQDestinationTest;
 import java.util.Collections;
@@ -34,7 +35,7 @@ public class RmqDestinationIT extends AbstractITQueue {
 
     Queue queue =
         new RMQDestination(
-            QUEUE_NAME, true, false, Collections.singletonMap("x-queue-type", "quorum"));
+            QUEUE_NAME, true, false, Collections.singletonMap("x-queue-type", "quorum"), new DestinationsStrategy() {});
     QueueSender sender = session.createSender(queue);
     drainQueue(session, queue);
     String body = String.valueOf(System.currentTimeMillis());

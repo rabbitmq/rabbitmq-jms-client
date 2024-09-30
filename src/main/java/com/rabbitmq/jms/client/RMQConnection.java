@@ -16,6 +16,7 @@ import java.util.function.BiFunction;
 
 import javax.jms.*;
 import javax.jms.IllegalStateException;
+import com.rabbitmq.jms.admin.DestinationsStrategy;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.jms.util.WhiteListObjectInputStream;
@@ -172,6 +173,13 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private final ReplyToStrategy replyToStrategy;
 
     /**
+     * The destinations name strategy to use.
+     *
+     * @since 3.4.0
+     */
+    private final DestinationsStrategy destinationsStrategy;
+
+    /**
      * Creates an RMQConnection object.
      * @param connectionParams parameters for this connection
      */
@@ -201,6 +209,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.validateSubscriptionNames = connectionParams.isValidateSubscriptionNames();
         this.delayedMessageService = new DelayedMessageService();
         this.replyToStrategy = connectionParams.getReplyToStrategy();
+        this.destinationsStrategy = connectionParams.getDestinationsStrategy();
     }
 
     /**
@@ -260,6 +269,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setValidateSubscriptionNames(this.validateSubscriptionNames)
             .setDelayedMessageService(this.delayedMessageService)
             .setReplyToStrategy(this.replyToStrategy)
+            .setDestinationsStrategy(this.destinationsStrategy)
         );
         this.sessions.add(session);
         return session;

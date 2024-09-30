@@ -7,6 +7,7 @@ package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.impl.AMQImpl;
+import com.rabbitmq.jms.admin.DestinationsStrategy;
 import com.rabbitmq.jms.admin.RMQDestination;
 import javax.jms.JMSException;
 import org.assertj.core.api.Assertions;import org.junit.jupiter.api.AfterEach;
@@ -51,7 +52,7 @@ public class RMQSessionTest {
         doReturn(channel).when(connection).createRabbitChannel(false);
         session = new RMQSession(connection, false, 0, 0, new Subscriptions(), new DelayedMessageService());
 
-        destination = new RMQDestination("some-exchange", true, false);
+        destination = new RMQDestination("some-exchange", true, false, new DestinationsStrategy() {});
         headers = new HashMap<>();
     }
 

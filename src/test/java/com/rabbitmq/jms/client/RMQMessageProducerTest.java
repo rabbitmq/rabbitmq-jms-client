@@ -7,6 +7,7 @@ package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.jms.admin.DestinationsStrategy;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.RMQBytesMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
@@ -141,7 +142,7 @@ public class RMQMessageProducerTest {
 
     @Test public void sendDelayedMessageToJMSDestination() throws JMSException, IOException {
         RMQBytesMessage bytesMessage = new RMQBytesMessage();        //RMQBytesMessage || RMQTextMessage
-        RMQDestination jmsQueueDestination = new RMQDestination("some-queue", true, false);
+        RMQDestination jmsQueueDestination = new RMQDestination("some-queue", true, false, new DestinationsStrategy() {});
         assertFalse(jmsQueueDestination.isAmqp());
 
         doReturn("x").when(session).delayMessage(eq(jmsQueueDestination), anyMap(), eq(100L));

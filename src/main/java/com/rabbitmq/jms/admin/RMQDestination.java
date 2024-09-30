@@ -35,8 +35,6 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     private static final String RABBITMQ_AMQ_DIRECT_EXCHANGE_NAME = "amq.direct";
     private static final String RABBITMQ_AMQ_DIRECT_EXCHANGE_TYPE = "direct";           // standard direct exchange type in RabbitMQ
 
-    private static final RMQDefaultDestinations DEFAULT_DESTINATIONS = RMQDefaultDestinations.getInstance();
-
     // Would like all these to be final, but we need to allow set them
     private String destinationName;
     /** <code>true</code> if maps JMS destination to AMQP resource in RabbitMQ server */
@@ -65,8 +63,8 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @param isQueue true if this represent a queue
      * @param isTemporary true if this is a temporary destination
      */
-    public RMQDestination(String destName, boolean isQueue, boolean isTemporary) {
-        this(destName, isQueue, isTemporary, null);
+    public RMQDestination(String destName, boolean isQueue, boolean isTemporary, DestinationsStrategy destinationsStrategy) {
+        this(destName, isQueue, isTemporary, null, destinationsStrategy);
     }
 
     /**
@@ -76,15 +74,15 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
      * @param isTemporary true if this is a temporary destination
      * @param queueDeclareArguments arguments to use when declaring the AMQP queue
      */
-    public RMQDestination(String destName, boolean isQueue, boolean isTemporary, Map<String, Object> queueDeclareArguments) {
-        this(destName, false, queueOrTopicExchangeName(isQueue, isTemporary), destName, destName, isQueue, isTemporary, queueDeclareArguments);
+    public RMQDestination(String destName, boolean isQueue, boolean isTemporary, Map<String, Object> queueDeclareArguments, DestinationsStrategy destinationsStrategy) {
+        this(destName, false, queueOrTopicExchangeName(isQueue, isTemporary, destinationsStrategy), destName, destName, isQueue, isTemporary, queueDeclareArguments);
     }
 
-    private static String queueOrTopicExchangeName(boolean isQueue, boolean isTemporary) {
-        if (isQueue & isTemporary)              return DEFAULT_DESTINATIONS.getTempQueueExchangeName();
-        else if (isQueue & !isTemporary)        return DEFAULT_DESTINATIONS.getDurableQueueExchangeName();
-        else if (!isQueue & isTemporary)        return DEFAULT_DESTINATIONS.getTempTopicExchangeName();
-        else /* if (!isQueue & !isTemporary) */ return DEFAULT_DESTINATIONS.getDurableTopicExchangeName();
+    private static String queueOrTopicExchangeName(boolean isQueue, boolean isTemporary, DestinationsStrategy destinationsStrategy) {
+        if (isQueue & isTemporary)              return destinationsStrategy.getTempQueueExchangeName();
+        else if (isQueue & !isTemporary)        return destinationsStrategy.getDurableQueueExchangeName();
+        else if (!isQueue & isTemporary)        return destinationsStrategy.getTempTopicExchangeName();
+        else /* if (!isQueue & !isTemporary) */ return destinationsStrategy.getDurableTopicExchangeName();
     }
 
     private static String queueOrTopicExchangeType(boolean isQueue) {

@@ -6,6 +6,7 @@
 package com.rabbitmq.integration.tests;
 
 import com.rabbitmq.TestUtils.SkipIfDelayedMessageExchangePluginNotActivated;
+import com.rabbitmq.jms.admin.DestinationsStrategy;
 import com.rabbitmq.jms.admin.RMQDestination;
 import javax.jms.*;
 
@@ -27,7 +28,7 @@ public class DelayedAMQPQueueMessageIT extends AbstractAmqpITQueue {
 
     @BeforeEach
     void init() {
-        destination = new RMQDestination(queueName, true, false);
+        destination = new RMQDestination(queueName, true, false, new DestinationsStrategy() {});
     }
 
     @AfterEach
