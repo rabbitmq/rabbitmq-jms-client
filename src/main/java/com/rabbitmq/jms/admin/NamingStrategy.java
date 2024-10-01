@@ -11,7 +11,7 @@ import java.io.Serializable;
  * <p>A custom implementation can be used to customize the name of some entities (e.g. for security
  * reasons), but implementators must be prepared to API changes.
  *
- * @since 3.4.0
+ * @since 2.11.0
  * @see RMQConnectionFactory#setNamingStrategy(NamingStrategy)
  */
 public interface NamingStrategy extends Serializable {

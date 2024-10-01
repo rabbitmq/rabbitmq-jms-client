@@ -1224,22 +1224,23 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     this.validateSubscriptionNames = validateSubscriptionNames;
   }
 
-    /**
-     * Naming strategy for AMQP entities.
-     *
-     * <p>Most applications should not worry about this setting, the default is fine.
-     *
-     * <p>Note {@link NamingStrategy} is not considered a public and stable API.
-     *
-     * @param namingStrategy naming strategy
-     * @see NamingStrategy
-     */
-    public void setNamingStrategy(NamingStrategy namingStrategy) {
-      if (namingStrategy == null) {
-        throw new IllegalArgumentException("Naming strategy cannot be null");
-      }
-      this.namingStrategy = namingStrategy;
+  /**
+   * Naming strategy for AMQP entities.
+   *
+   * <p>Most applications should not worry about this setting, the default is fine.
+   *
+   * <p>Note {@link NamingStrategy} is not considered a public and stable API.
+   *
+   * @param namingStrategy naming strategy
+   * @see NamingStrategy
+   * @since 2.11.0
+   */
+  public void setNamingStrategy(NamingStrategy namingStrategy) {
+    if (namingStrategy == null) {
+      throw new IllegalArgumentException("Naming strategy cannot be null");
     }
+    this.namingStrategy = namingStrategy;
+  }
 
     @FunctionalInterface
     private interface ConnectionCreator {

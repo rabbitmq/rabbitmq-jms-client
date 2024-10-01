@@ -150,7 +150,7 @@ public class TestUtils {
 
   }
 
-  public static Connection amqpConnection(jakarta.jms.Connection connection) {
+  public static Connection amqpConnection(javax.jms.Connection connection) {
     try {
       Field connectionField = RMQConnection.class.getDeclaredField("rabbitConnection");
       connectionField.setAccessible(true);
