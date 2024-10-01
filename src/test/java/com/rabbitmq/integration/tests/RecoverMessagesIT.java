@@ -9,7 +9,6 @@ import static com.rabbitmq.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.rabbitmq.TestUtils;
-import com.rabbitmq.jms.admin.DestinationsStrategy;
 import com.rabbitmq.jms.admin.RMQDestination;
 import java.util.Collections;
 import java.util.List;
@@ -61,10 +60,10 @@ public class RecoverMessagesIT extends AbstractITQueue {
     public void testRecoverTextMessageSyncRedeliveryCountShouldBeSetWithQuorumQueue(TestInfo info) throws Exception {
         queueConn.start();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
-        String queueName = TestUtils.queueName(info);
+        String queueName = TestUtils.name(info);
         Queue queue =
             new RMQDestination(
-                queueName, true, false, Collections.singletonMap("x-queue-type", "quorum"), new DestinationsStrategy() {});
+                queueName, true, false, Collections.singletonMap("x-queue-type", "quorum"));
         try {
             QueueSender queueSender = queueSession.createSender(queue);
             queueSender.setDeliveryMode(DeliveryMode.PERSISTENT);

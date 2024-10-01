@@ -5,21 +5,12 @@
 // Copyright (c) 2013-2023 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
 package com.rabbitmq.jms.client;
 
-import com.rabbitmq.jms.admin.DestinationsStrategy;
+import com.rabbitmq.jms.admin.NamingStrategy;
 import com.rabbitmq.jms.client.Subscription.Context;
 import com.rabbitmq.jms.client.Subscription.PostAction;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
@@ -65,6 +56,9 @@ import com.rabbitmq.jms.client.message.RMQStreamMessage;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import com.rabbitmq.jms.util.RMQJMSException;
 import com.rabbitmq.jms.util.Util;
+
+import static com.rabbitmq.jms.admin.NamingStrategy.*;
+import static java.util.Optional.ofNullable;
 
 /**
  * RabbitMQ implementation of JMS {@link Session}
@@ -232,7 +226,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      *
      * @since 3.4.0
      */
-    private final DestinationsStrategy destinationsStrategy;
+    private final NamingStrategy namingStrategy;
 
     static boolean validateSessionMode(int sessionMode) {
        return sessionMode >= 0 && sessionMode <= CLIENT_INDIVIDUAL_ACKNOWLEDGE;
@@ -280,7 +274,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
         this.replyToStrategy = sessionParams.getReplyToStrategy() == null ?
             DefaultReplyToStrategy.INSTANCE : sessionParams.getReplyToStrategy();
-        this.destinationsStrategy = sessionParams.getDestinationsStrategy();
+        this.namingStrategy = ofNullable(sessionParams.getNamingStrategy()).orElse(DEFAULT);
 
         if (transacted) {
             this.acknowledgeMode = Session.SESSION_TRANSACTED;
@@ -812,7 +806,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     private String generateJmsConsumerQueueName() {
-       return Util.generateUUID(this.destinationsStrategy.getConsumerQueueNamePrefix());
+       return Util.generateUUID(this.namingStrategy.topicSubscriberQueuePrefix());
     }
 
     /**
@@ -831,7 +825,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private String getDurableTopicSelectorExchange() throws IOException {
         if (this.durableTopicSelectorExchange==null) {
-            this.durableTopicSelectorExchange = Util.generateUUID(this.destinationsStrategy.getDurableTopicSelectorExchangePrefix());
+            this.durableTopicSelectorExchange = Util.generateUUID(this.namingStrategy.durableSubscriberTopicSelectorExchangePrefix());
         }
         this.channel.exchangeDeclare(this.durableTopicSelectorExchange, JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, true, true, RJMS_SELECTOR_EXCHANGE_ARGS);
         return this.durableTopicSelectorExchange;
@@ -839,7 +833,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     private String getNonDurableTopicSelectorExchange() throws IOException {
         if (this.nonDurableTopicSelectorExchange==null) {
-            this.nonDurableTopicSelectorExchange = Util.generateUUID(this.destinationsStrategy.getNonDurableTopicSelectorExchangePrefix());
+            this.nonDurableTopicSelectorExchange = Util.generateUUID(this.namingStrategy.nonDurableSubscriberTopicSelectorExchangePrefix());
         }
         this.channel.exchangeDeclare(this.nonDurableTopicSelectorExchange, JMS_TOPIC_SELECTOR_EXCHANGE_TYPE, false, true, RJMS_SELECTOR_EXCHANGE_ARGS);
         return this.nonDurableTopicSelectorExchange;
@@ -899,7 +893,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public Queue createQueue(String queueName) throws JMSException {
         illegalStateExceptionIfClosed();
-        RMQDestination dest = new RMQDestination(queueName, true, false, this.destinationsStrategy);
+        RMQDestination dest = new RMQDestination(queueName, true, false, null, this.namingStrategy);
         declareRMQQueue(dest, null, false, true);
         return dest;
     }
@@ -1000,7 +994,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public Topic createTopic(String topicName) throws JMSException {
         illegalStateExceptionIfClosed();
-        RMQDestination dest = new RMQDestination(topicName, false, false, this.destinationsStrategy);
+        RMQDestination dest = new RMQDestination(topicName, false, false, null, this.namingStrategy);
         declareTopic(dest);
         return dest;
     }
@@ -1132,7 +1126,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public TemporaryQueue createTemporaryQueue() throws JMSException {
         illegalStateExceptionIfClosed();
-        return new RMQDestination(Util.generateUUID(this.destinationsStrategy.getTempQueuePrefix()), true, true, this.destinationsStrategy);
+        return new RMQDestination(Util.generateUUID(this.namingStrategy.temporaryQueuePrefix()), true, true, null, this.namingStrategy);
     }
 
     /**
@@ -1141,7 +1135,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     @Override
     public TemporaryTopic createTemporaryTopic() throws JMSException {
         illegalStateExceptionIfClosed();
-        return new RMQDestination(Util.generateUUID(this.destinationsStrategy.getTempTopicPrefix()), false, true, this.destinationsStrategy);
+        return new RMQDestination(Util.generateUUID(this.namingStrategy.temporaryTopicPrefix()), false, true, null, this.namingStrategy);
     }
 
     /**

@@ -7,7 +7,7 @@ package com.rabbitmq.jms.client;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Connection;
-import com.rabbitmq.jms.admin.DestinationsStrategy;
+import com.rabbitmq.jms.admin.NamingStrategy;
 import com.rabbitmq.jms.util.WhiteListObjectInputStream;
 
 import jakarta.jms.Message;
@@ -124,7 +124,7 @@ public class ConnectionParams {
      *
      * @since 3.4.0
      */
-    private DestinationsStrategy destinationsStrategy = new DestinationsStrategy() {};
+    private NamingStrategy namingStrategy = NamingStrategy.DEFAULT;
 
     public Connection getRabbitConnection() {
         return rabbitConnection;
@@ -270,12 +270,12 @@ public class ConnectionParams {
         return replyToStrategy;
     }
 
-    public ConnectionParams setDestinationsStrategy(DestinationsStrategy destinationsStrategy) {
-        this.destinationsStrategy = destinationsStrategy;
+    public ConnectionParams setNamingStrategy(NamingStrategy namingStrategy) {
+        this.namingStrategy = namingStrategy;
         return this;
     }
 
-    public DestinationsStrategy getDestinationsStrategy() {
-        return destinationsStrategy;
+    NamingStrategy getNamingStrategy() {
+        return namingStrategy;
     }
 }

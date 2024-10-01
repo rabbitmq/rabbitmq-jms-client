@@ -49,7 +49,7 @@ public class RmqJmsConsumerIT extends AbstractAmqpITQueue {
 
   @BeforeEach
   void init(TestInfo info) throws Exception {
-    queueName = TestUtils.queueName(info);
+    queueName = TestUtils.name(info);
     channel.queueDeclare(queueName,
         false, // durable
         false,  // not exclusive

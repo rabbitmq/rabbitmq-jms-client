@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 
-import com.rabbitmq.jms.admin.DestinationsStrategy;
+import com.rabbitmq.jms.admin.NamingStrategy;
 import jakarta.jms.*;
 import jakarta.jms.IllegalStateException;
 
@@ -27,6 +27,9 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ShutdownListener;
 import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.jms.util.RMQJMSException;
+
+import static com.rabbitmq.jms.admin.NamingStrategy.*;
+import static java.util.Optional.ofNullable;
 
 /**
  * Implementation of the {@link Connection}, {@link QueueConnection} and {@link TopicConnection} interfaces.
@@ -164,11 +167,11 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
     private final ReplyToStrategy replyToStrategy;
 
     /**
-     * The destinations name strategy to use.
+     * The entity naming strategy to use.
      *
      * @since 3.4.0
      */
-    private final DestinationsStrategy destinationsStrategy;
+    private final NamingStrategy namingStrategy;
 
     /**
      * Creates an RMQConnection object.
@@ -198,7 +201,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
         this.keepTextMessageType = connectionParams.isKeepTextMessageType();
         this.delayedMessageService = new DelayedMessageService();
         this.replyToStrategy = connectionParams.getReplyToStrategy();
-        this.destinationsStrategy = connectionParams.getDestinationsStrategy();
+        this.namingStrategy = ofNullable(connectionParams.getNamingStrategy()).orElse(DEFAULT);
     }
 
     /**
@@ -256,7 +259,7 @@ public class RMQConnection implements Connection, QueueConnection, TopicConnecti
             .setKeepTextMessageType(this.keepTextMessageType)
             .setDelayedMessageService(this.delayedMessageService)
             .setReplyToStrategy(this.replyToStrategy)
-            .setDestinationsStrategy(this.destinationsStrategy)
+            .setNamingStrategy(this.namingStrategy)
         );
         this.sessions.add(session);
         return session;

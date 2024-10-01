@@ -7,6 +7,7 @@ package com.rabbitmq.integration.tests;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
+import com.rabbitmq.TestUtils;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.jms.client.RMQConnection;
@@ -71,13 +72,7 @@ public abstract class AbstractITQueue {
     protected Connection amqpConnection() {
         Connection amqpConnection = null;
         if (this.queueConn != null) {
-            try {
-                Field connectionField = RMQConnection.class.getDeclaredField("rabbitConnection");
-                connectionField.setAccessible(true);
-                amqpConnection = (Connection) connectionField.get(this.queueConn);
-            } catch (NoSuchFieldException | IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
+            amqpConnection = TestUtils.amqpConnection(this.queueConn);
         }
         return amqpConnection;
     }

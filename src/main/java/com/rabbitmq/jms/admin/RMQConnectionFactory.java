@@ -266,11 +266,11 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private AuthenticationMechanism authenticationMechanism = AuthenticationMechanism.PLAIN;
 
     /**
-     * The destinations name strategy to use.
+     * The entity name strategy to use.
      *
      * @since 3.4.0
      */
-    private DestinationsStrategy destinationsStrategy = new DestinationsStrategy() {};
+    private NamingStrategy namingStrategy = NamingStrategy.DEFAULT;
 
     /**
      * {@inheritDoc}
@@ -358,7 +358,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             .setRequeueOnTimeout(this.requeueOnTimeout)
             .setKeepTextMessageType(this.keepTextMessageType)
             .setReplyToStrategy(replyToStrategy)
-            .setDestinationsStrategy(destinationsStrategy)
+            .setNamingStrategy(namingStrategy)
         );
         logger.debug("Connection {} created.", conn);
         return conn;
@@ -1159,8 +1159,21 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         this.keepTextMessageType = keepTextMessageType;
     }
 
-    public void setDestinationsStrategy(DestinationsStrategy destinationsStrategy) {
-        this.destinationsStrategy = destinationsStrategy;
+    /**
+     * Naming strategy for AMQP entities.
+     *
+     * <p>Most applications should not worry about this setting, the default is fine.
+     *
+     * <p>Note {@link NamingStrategy} is not considered a public and stable API.
+     *
+     * @param namingStrategy naming strategy
+     * @see NamingStrategy
+     */
+    public void setNamingStrategy(NamingStrategy namingStrategy) {
+      if (namingStrategy == null) {
+        throw new IllegalArgumentException("Naming strategy cannot be null");
+      }
+      this.namingStrategy = namingStrategy;
     }
 
     @FunctionalInterface

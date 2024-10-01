@@ -126,7 +126,7 @@ public class RMQObjectFactory implements ObjectFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RMQObjectFactory.class);
 
-    private final DestinationsStrategy destinationsStrategy = new DestinationsStrategy(){};
+    private final NamingStrategy namingStrategy = NamingStrategy.DEFAULT;
 
     /**
      * {@inheritDoc}
@@ -265,7 +265,7 @@ public class RMQObjectFactory implements ObjectFactory {
             String amqpQueueName = getStringProperty(ref, environment, "amqpQueueName", true, null);
             return new RMQDestination(dname, amqpExchangeName, amqpRoutingKey, amqpQueueName);
         } else {
-            return new RMQDestination(dname, !topic, false, queueDeclareArguments, destinationsStrategy);
+            return new RMQDestination(dname, !topic, false, queueDeclareArguments, namingStrategy);
         }
     }
 
