@@ -11,7 +11,6 @@ import static com.rabbitmq.TestUtils.onCompletion;
 import static java.lang.String.valueOf;
 
 import com.rabbitmq.TestUtils;
-import com.rabbitmq.jms.admin.DestinationsStrategy;
 import com.rabbitmq.jms.admin.RMQDestination;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
@@ -33,8 +32,8 @@ public class RmqJmsContextIT extends AbstractAmqpITQueue {
 
   @BeforeEach
   void init(TestInfo info) throws Exception {
-    queueName = TestUtils.queueName(info);
-    destination = new RMQDestination(queueName, true, false, new DestinationsStrategy() {});
+    queueName = TestUtils.name(info);
+    destination = new RMQDestination(queueName, true, false);
   }
 
   @AfterEach

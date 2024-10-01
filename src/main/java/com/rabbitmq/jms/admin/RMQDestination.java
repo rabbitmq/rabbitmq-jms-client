@@ -60,29 +60,41 @@ public class RMQDestination implements Queue, Topic, Destination, Referenceable,
     /**
      * Creates a destination for RJMS
      * @param destName the name of the topic or queue
-     * @param isQueue true if this represent a queue
+     * @param isQueue true if this represents a queue
      * @param isTemporary true if this is a temporary destination
      */
-    public RMQDestination(String destName, boolean isQueue, boolean isTemporary, DestinationsStrategy destinationsStrategy) {
-        this(destName, isQueue, isTemporary, null, destinationsStrategy);
+    public RMQDestination(String destName, boolean isQueue, boolean isTemporary) {
+        this(destName, isQueue, isTemporary, null, NamingStrategy.DEFAULT);
     }
 
     /**
      * Creates a destination for RJMS with arguments to declare the AMQP queue
      * @param destName the name of the topic or queue
-     * @param isQueue true if this represent a queue
+     * @param isQueue true if this represents a queue
      * @param isTemporary true if this is a temporary destination
      * @param queueDeclareArguments arguments to use when declaring the AMQP queue
      */
-    public RMQDestination(String destName, boolean isQueue, boolean isTemporary, Map<String, Object> queueDeclareArguments, DestinationsStrategy destinationsStrategy) {
-        this(destName, false, queueOrTopicExchangeName(isQueue, isTemporary, destinationsStrategy), destName, destName, isQueue, isTemporary, queueDeclareArguments);
+    public RMQDestination(String destName, boolean isQueue, boolean isTemporary, Map<String, Object> queueDeclareArguments) {
+        this(destName, isQueue, isTemporary, queueDeclareArguments, NamingStrategy.DEFAULT);
     }
 
-    private static String queueOrTopicExchangeName(boolean isQueue, boolean isTemporary, DestinationsStrategy destinationsStrategy) {
-        if (isQueue & isTemporary)              return destinationsStrategy.getTempQueueExchangeName();
-        else if (isQueue & !isTemporary)        return destinationsStrategy.getDurableQueueExchangeName();
-        else if (!isQueue & isTemporary)        return destinationsStrategy.getTempTopicExchangeName();
-        else /* if (!isQueue & !isTemporary) */ return destinationsStrategy.getDurableTopicExchangeName();
+    /**
+     * Creates a destination for RJMS with arguments to declare the AMQP queue
+     * @param destName the name of the topic or queue
+     * @param isQueue true if this represents a queue
+     * @param isTemporary true if this is a temporary destination
+     * @param queueDeclareArguments arguments to use when declaring the AMQP queue
+     * @param namingStrategy entity naming strategy
+     */
+    public RMQDestination(String destName, boolean isQueue, boolean isTemporary, Map<String, Object> queueDeclareArguments, NamingStrategy namingStrategy) {
+        this(destName, false, queueOrTopicExchangeName(isQueue, isTemporary, namingStrategy), destName, destName, isQueue, isTemporary, queueDeclareArguments);
+    }
+
+    private static String queueOrTopicExchangeName(boolean isQueue, boolean isTemporary, NamingStrategy namingStrategy) {
+        if (isQueue & isTemporary)              return namingStrategy.temporaryQueueExchangeName();
+        else if (isQueue & !isTemporary)        return namingStrategy.queueExchangeName();
+        else if (!isQueue & isTemporary)        return namingStrategy.temporaryTopicExchangeName();
+        else /* if (!isQueue & !isTemporary) */ return namingStrategy.topicExchangeName();
     }
 
     private static String queueOrTopicExchangeType(boolean isQueue) {

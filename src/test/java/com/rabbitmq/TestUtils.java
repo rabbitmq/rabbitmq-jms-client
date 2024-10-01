@@ -6,6 +6,8 @@
 
 package com.rabbitmq;
 
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.jms.client.RMQConnection;
 import com.rabbitmq.jms.util.Shell;
 import com.rabbitmq.jms.util.Shell.ProcessState;
 import java.lang.annotation.Documented;
@@ -13,6 +15,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.UUID;
@@ -122,11 +125,11 @@ public class TestUtils {
     }
   }
 
-  public static String queueName(TestInfo info) {
-    return queueName(info.getTestClass().get(), info.getTestMethod().get());
+  public static String name(TestInfo info) {
+    return name(info.getTestClass().get(), info.getTestMethod().get());
   }
 
-  private static String queueName(Class<?> testClass, Method testMethod) {
+  private static String name(Class<?> testClass, Method testMethod) {
     String uuid = UUID.randomUUID().toString();
     return String.format(
         "%s_%s%s",
@@ -145,6 +148,16 @@ public class TestUtils {
 
     boolean getAsBoolean() throws Exception;
 
+  }
+
+  public static Connection amqpConnection(jakarta.jms.Connection connection) {
+    try {
+      Field connectionField = RMQConnection.class.getDeclaredField("rabbitConnection");
+      connectionField.setAccessible(true);
+      return (Connection) connectionField.get(connection);
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @FunctionalInterface
