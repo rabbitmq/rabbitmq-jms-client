@@ -39,8 +39,7 @@ Use your favorite build management tool to add the client dependencies to your p
 </dependencies>
 ----
 
-Milestones and release candidates require to declare the <<milestone-rc-repository,appropriate repository>>.
-Snapshots require to declare their <<snapshot-repository,own repository>> as well.
+Snapshots require to declare the <<snapshot-repository,appropriate repository>>.
 
 ==== Gradle
 
@@ -52,46 +51,7 @@ dependencies {
 }
 ----
 
-Milestones and release candidates require to declare the <<milestone-rc-repository,appropriate repository>>.
-Snapshots require to declare their <<snapshot-repository,own repository>> as well.
-
-[[milestone-rc-repository]]
-==== Milestones and Release Candidates
-
-Releases are available from Maven Central, which does not require specific declaration.
-Milestones and release candidates are available from a repository that must be declared in the dependency management configuration.
-
-With Maven:
-
-.Milestone and release candidate repository declaration for Maven
-[source,xml,subs="attributes,specialcharacters"]
-----
-<repositories>
-
-  <repository>
-    <id>packagecloud-rabbitmq-maven-milestones</id>
-    <url>https://packagecloud.io/rabbitmq/maven-milestones/maven2</url>
-    <releases>
-      <enabled>true</enabled>
-    </releases>
-    <snapshots>
-      <enabled>false</enabled>
-    </snapshots>
-  </repository>
-
-</repositories>
-----
-
-With Gradle:
-
-.Milestone and release candidate repository declaration for Gradle:
-[source,groovy,subs="attributes,specialcharacters"]
-----
-repositories {
-  maven { url "https://packagecloud.io/rabbitmq/maven-milestones/maven2" }
-  mavenCentral()
-}
-----
+Snapshots require to declare the <<snapshot-repository,appropriate repository>>.
 
 [[snapshot-repository]]
 ==== Snapshots
