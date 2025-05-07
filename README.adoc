@@ -1,0 +1,99 @@
+= Java JMS Client for RabbitMQ
+
+image:https://maven-badges.herokuapp.com/maven-central/com.rabbitmq.jms/rabbitmq-jms/badge.svg["Maven Central", link="https://maven-badges.herokuapp.com/maven-central/com.rabbitmq.jms/rabbitmq-jms"]
+image:https://github.com/rabbitmq/rabbitmq-jms-client/actions/workflows/test.yml/badge.svg?branch=2.x.x-stable["Build Status", link="https://github.com/rabbitmq/rabbitmq-jms-client/actions/workflows/test.yml"] (2.x)
+image:https://github.com/rabbitmq/rabbitmq-jms-client/actions/workflows/test.yml/badge.svg["Build Status", link="https://github.com/rabbitmq/rabbitmq-jms-client/actions/workflows/test.yml"] (3.x)
+
+== Overview
+
+This is a JMS client library for RabbitMQ, working in concert with https://github.com/rabbitmq/rabbitmq-server/tree/main/deps/rabbitmq_jms_topic_exchange[rabbitmq-jms-topic-exchange],
+a RabbitMQ server plugin.
+It supports JMS 2.0 as of 2.7.0 and JMS 3.0 as of 3.0.0.
+Both 2.x and 3.x branches are maintained and supported.
+
+RabbitMQ JMS Client 2.x requires Java 8 or more.
+RabbitMQ JMS Client 3.x requires Java 11 or more.
+
+== JMS 1.1 and 2.0
+
+* https://rabbitmq.github.io/rabbitmq-jms-client/2.x/stable/htmlsingle/index.html[Latest stable]
+* https://rabbitmq.github.io/rabbitmq-jms-client/2.x/snapshot/htmlsingle/index.html[Latest snapshot]
+
+== JMS 3.0
+
+* https://rabbitmq.github.io/rabbitmq-jms-client/3.x/stable/htmlsingle/index.html[Latest stable]
+* https://rabbitmq.github.io/rabbitmq-jms-client/3.x/snapshot/htmlsingle/index.html[Latest snapshot]
+
+== Building from Source
+
+This project is managed by Maven, so use
+
+```sh
+./mvnw clean install -Dmaven.test.skip=true
+```
+
+to build it from source and install into the local repository.
+
+== Running Tests
+
+See https://github.com/rabbitmq/rabbitmq-jms-client/blob/main/CONTRIBUTING.md[CONTRIBUTING.md] for an overview of the development process.
+
+=== Unit Tests
+
+```sh
+./mvnw clean test
+```
+
+=== Integration Tests
+
+==== Running Integration Tests with Docker
+
+Launch the broker:
+
+```sh
+docker run -it --rm --name rabbitmq -p 5672:5672 rabbitmq
+```
+
+Enable the JMS Topic Exchange plugin:
+
+```sh
+docker exec rabbitmq rabbitmq-plugins enable rabbitmq_jms_topic_exchange
+```
+
+Launch the tests:
+
+```sh
+./mvnw verify -Drabbitmqctl.bin=DOCKER:rabbitmq
+```
+
+==== Running Integration Tests with a Local Broker
+
+To launch the test suite (requires a local RabbitMQ node with JMS Topic Exchange plugin enabled):
+
+```sh
+./mvnw verify -Drabbitmqctl.bin=/path/to/rabbitmqctl
+```
+
+=== JMS 1.1 Compliance Test Suite
+
+https://github.com/rabbitmq/rabbitmq-jms-cts[JMS 1.1 compliance test suite] for this client is available
+in a separate repository.
+
+== Versioning
+
+This library uses https://semver.org/[semantic versioning].
+
+== Support
+
+See the https://www.rabbitmq.com/client-libraries/java-versions[RabbitMQ Java libraries support page]
+for the support timeline of this library.
+
+== License and Copyright
+
+(c) 2007-2025 Broadcom. All Rights Reserved.
+The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
+
+This package, the RabbitMQ JMS client library, is double-licensed under the Apache License version 2 ("ASL") and the Mozilla Public License 2.0 ("MPL").
+
+See https://github.com/rabbitmq/rabbitmq-jms-client/blob/main/LICENSE[LICENSE].
+

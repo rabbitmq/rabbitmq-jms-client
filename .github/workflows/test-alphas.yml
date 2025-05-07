@@ -15,9 +15,9 @@ jobs:
       matrix:
         include:
           - rabbitmq-image: "pivotalrabbitmq/rabbitmq:v4.1.x-otp27"
-            delayed-message-exchange-plugin-version: "4.0.7"
+            delayed-message-exchange-plugin-version: "4.1.0"
           - rabbitmq-image: "pivotalrabbitmq/rabbitmq:main-otp27"
-            delayed-message-exchange-plugin-version: "4.0.7"
+            delayed-message-exchange-plugin-version: "4.1.0"
     name:  Test against ${{ matrix.rabbitmq-image }}
     steps:
       - uses: actions/checkout@v4
