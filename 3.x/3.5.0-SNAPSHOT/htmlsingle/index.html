@@ -782,8 +782,8 @@ Snapshots are available from a repository that must be declared in the dependenc
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;repositories&gt;</span>
 
   <span class="tag">&lt;repository&gt;</span>
-    <span class="tag">&lt;id&gt;</span>ossrh<span class="tag">&lt;/id&gt;</span>
-    <span class="tag">&lt;url&gt;</span>https://oss.sonatype.org/content/repositories/snapshots<span class="tag">&lt;/url&gt;</span>
+    <span class="tag">&lt;id&gt;</span>central-portal-snapshots<span class="tag">&lt;/id&gt;</span>
+    <span class="tag">&lt;url&gt;</span>https://central.sonatype.com/repository/maven-snapshots/<span class="tag">&lt;/url&gt;</span>
     <span class="tag">&lt;snapshots&gt;</span><span class="tag">&lt;enabled&gt;</span>true<span class="tag">&lt;/enabled&gt;</span><span class="tag">&lt;/snapshots&gt;</span>
     <span class="tag">&lt;releases&gt;</span><span class="tag">&lt;enabled&gt;</span>false<span class="tag">&lt;/enabled&gt;</span><span class="tag">&lt;/releases&gt;</span>
   <span class="tag">&lt;/repository&gt;</span>
@@ -798,7 +798,14 @@ Snapshots are available from a repository that must be declared in the dependenc
 <div class="title">Snapshot repository declaration for Gradle:</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="groovy">repositories {
-  maven { url <span class="string"><span class="delimiter">'</span><span class="content">https://oss.sonatype.org/content/repositories/snapshots</span><span class="delimiter">'</span></span> }
+  maven {
+    name = <span class="string"><span class="delimiter">'</span><span class="content">Central Portal Snapshots</span><span class="delimiter">'</span></span>
+    url = <span class="string"><span class="delimiter">'</span><span class="content">https://central.sonatype.com/repository/maven-snapshots/</span><span class="delimiter">'</span></span>
+    <span class="comment">// Only search this repository for the specific dependency</span>
+    content {
+      includeModule(<span class="string"><span class="delimiter">&quot;</span><span class="content">com.rabbitmq.jms</span><span class="delimiter">&quot;</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="content">rabbitmq-jms</span><span class="delimiter">&quot;</span></span>)
+    }
+  }
   mavenCentral()
 }</code></pre>
 </div>
@@ -1438,7 +1445,7 @@ on the client side.</p>
 <div class="sect2">
 <h3 id="with-spring-jms"><a class="anchor" href="#with-spring-jms"></a>With Spring JMS</h3>
 <div class="paragraph">
-<p><a href="https://docs.spring.io/spring-framework/docs/6.2.7/reference/html/integration.html#jms">Spring JMS</a>
+<p><a href="https://docs.spring.io/spring-framework/docs/6.2.8/reference/html/integration.html#jms">Spring JMS</a>
 is a popular way to work with JMS as it avoids most of JMS boilerplate.</p>
 </div>
 <div class="paragraph">
@@ -1778,7 +1785,7 @@ and browse our
 <div id="footer">
 <div id="footer-text">
 Version 3.5.0-SNAPSHOT<br>
-Last updated 2025-06-09 19:20:09 UTC
+Last updated 2025-06-13 08:03:24 UTC
 </div>
 </div>
 </body>
