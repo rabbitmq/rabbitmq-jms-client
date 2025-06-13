@@ -1,5 +1,4 @@
 ///usr/bin/env jbang "$0" "$@" ; exit $?
-//REPOS mavencentral,ossrh-staging=https://oss.sonatype.org/content/groups/staging/
 //DEPS com.rabbitmq.jms:rabbitmq-jms:${version}
 //DEPS org.slf4j:slf4j-simple:1.7.36
 

@@ -60,8 +60,7 @@
     <maven.sources.plugin.version>3.3.1</maven.sources.plugin.version>
     <maven.javadoc.plugin.version>3.11.2</maven.javadoc.plugin.version>
     <maven.gpg.plugin.version>3.2.7</maven.gpg.plugin.version>
-    <maven.packagecloud.wagon.version>0.0.6</maven.packagecloud.wagon.version>
-    <nexus-staging-maven-plugin.version>1.7.0</nexus-staging-maven-plugin.version>
+    <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
     <checksum.maven.plugin.version>1.11</checksum.maven.plugin.version>
     <build-helper-plugin.version>3.6.1</build-helper-plugin.version>
     <asciidoctor.maven.plugin.version>3.2.0</asciidoctor.maven.plugin.version>
@@ -335,14 +334,18 @@
         </configuration>
       </plugin>
 
+      <plugin>
+          <groupId>org.sonatype.central</groupId>
+          <artifactId>central-publishing-maven-plugin</artifactId>
+          <version>${central-publishing-maven-plugin.version}</version>
+          <extensions>true</extensions>
+          <configuration>
+              <publishingServerId>central</publishingServerId>
+              <autoPublish>false</autoPublish>
+          </configuration>
+      </plugin>
+
     </plugins>
-    <extensions>
-      <extension>
-        <groupId>io.packagecloud.maven.wagon</groupId>
-        <artifactId>maven-packagecloud-wagon</artifactId>
-        <version>${maven.packagecloud.wagon.version}</version>
-      </extension>
-    </extensions>
   </build>
 
   <profiles>
@@ -407,16 +410,11 @@
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <gpg.skip>false</gpg.skip>
       </properties>
-      <distributionManagement>
-        <snapshotRepository>
-          <id>ossrh</id>
-          <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-      </distributionManagement>
     </profile>
 
     <!--
-      The "release" Maven profile is used to push release artifacts to OSSRH
+      The "release" Maven profile is used to push release artifacts to
+      central portal.
     -->
     <profile>
       <id>release</id>
@@ -424,82 +422,7 @@
         <maven.javadoc.skip>false</maven.javadoc.skip>
         <gpg.skip>false</gpg.skip>
       </properties>
-      <build>
-        <plugins>
-
-          <plugin>
-            <groupId>org.sonatype.plugins</groupId>
-            <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>${nexus-staging-maven-plugin.version}</version>
-            <extensions>true</extensions>
-            <configuration>
-              <serverId>ossrh</serverId>
-              <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-              <autoReleaseAfterClose>false</autoReleaseAfterClose>
-              <stagingProgressTimeoutMinutes>20</stagingProgressTimeoutMinutes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-      <distributionManagement>
-        <repository>
-          <id>ossrh</id>
-          <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-      </distributionManagement>
     </profile>
 
-    <!--
-      The "milestone" Maven profile is used to push release artifacts to the
-      PackageCloud Milestones Maven Repository.
-    -->
-    <profile>
-      <id>milestone</id>
-      <properties>
-        <maven.javadoc.skip>false</maven.javadoc.skip>
-        <gpg.skip>false</gpg.skip>
-      </properties>
-      <build>
-        <plugins>
-
-          <plugin>
-            <groupId>net.nicoulaj.maven.plugins</groupId>
-            <artifactId>checksum-maven-plugin</artifactId>
-            <version>${checksum.maven.plugin.version}</version>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>files</goal>
-                </goals>
-                <configuration>
-                  <fileSets>
-                    <fileSet>
-                      <directory>${project.build.directory}</directory>
-                      <includes>
-                        <include>*.jar</include>
-                        <include>*.pom</include>
-                      </includes>
-                    </fileSet>
-                  </fileSets>
-                  <algorithms>
-                    <algorithm>MD5</algorithm>
-                    <algorithm>SHA-1</algorithm>
-                  </algorithms>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-
-        </plugins>
-      </build>
-      <distributionManagement>
-        <repository>
-          <id>packagecloud-rabbitmq-maven-milestones</id>
-          <url>packagecloud+https://packagecloud.io/rabbitmq/maven-milestones</url>
-        </repository>
-      </distributionManagement>
-    </profile>
   </profiles>
 </project>
