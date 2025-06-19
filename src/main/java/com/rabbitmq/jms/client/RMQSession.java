@@ -13,6 +13,8 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiFunction;
 
 import jakarta.jms.BytesMessage;
@@ -133,8 +135,10 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /** The main RabbitMQ channel we use under the hood */
     private final Channel channel;
+
     /** Set to true if close() has been called and completed */
-    private volatile boolean closed = false;
+    private final AtomicBoolean closed = new AtomicBoolean(false);
+
     /** The message listener for this session. */
     private volatile MessageListener messageListener;
     /** A list of all the producers created by this session.
@@ -146,22 +150,18 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     /** We keep an ordered set of the message tags (acknowledgement tags) for all messages received and unacknowledged.
      * Each message acknowledgement must ACK all (unacknowledged) messages received up to this point, and
      * we must never acknowledge a message more than once (nor acknowledge a message that doesn't exist). */
-    private final SortedSet<Long> unackedMessageTags = Collections.synchronizedSortedSet(
-        new TreeSet<>());
+    private final SortedSet<Long> unackedMessageTags =
+        Collections.synchronizedSortedSet(new TreeSet<>()); // GuardedBy("unackedMessageTagsLock")
+    private final Lock unackedMessageTagsLock = new ReentrantLock();
+
+    /** List of all our topic subscriptions so we can track them */
+    private final Subscriptions subscriptions; // GuardedBy("subscriptionsLock")
+    private final Lock subscriptionsLock = new ReentrantLock();
 
     /* Holds the uncommited tags to commit a nack on rollback */
     private final List<Long> uncommittedMessageTags = new ArrayList<>(); // GuardedBy("commitLock");
-
-    /** List of all our topic subscriptions so we can track them */
-    private final Subscriptions subscriptions;
-
-    /** Lock for waiting for close */
-    private final Object closeLock = new Object();
-
-    /** Lock and parms for commit and rollback blocking of other commands */
-    private final Object commitLock = new Object();
-    private static final long COMMIT_WAIT_MAX = 2000L; // 2 seconds
-    private boolean committing = false; // GuardedBy("commitLock");
+    /** Lock commit and rollback blocking of other commands */
+    private final Lock commitLock = new ReentrantLock();
 
     /** Client version obtained from compiled class. */
     private static final GenericVersion CLIENT_VERSION = new GenericVersion(RMQSession.class.getPackage().getImplementationVersion());
@@ -182,14 +182,13 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     private static final Map<String, Object> RJMS_SELECTOR_EXCHANGE_ARGS
         = Collections.singletonMap(RJMS_VERSION_ARG, RJMS_CLIENT_VERSION);
 
-
     private static final String JMS_TOPIC_SELECTOR_EXCHANGE_TYPE = "x-jms-topic";
 
     private final DeliveryExecutor deliveryExecutor;
 
     /** The channels we use for browsing queues (there may be more than one in operation at a time) */
-    private Set<Channel> browsingChannels = new HashSet<>(); // @GuardedBy(bcLock)
-    private final Object bcLock = new Object();
+    private final Set<Channel> browsingChannels = new HashSet<>(); // @GuardedBy(bcLock)
+    private final Lock bcLock = new ReentrantLock();
 
     /**
      * Classes in these packages can be transferred via ObjectMessage.
@@ -333,7 +332,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     private void illegalStateExceptionIfClosed() throws IllegalStateException {
-        if (this.closed) throw new IllegalStateException("Session is closed");
+        if (this.closed.get()) throw new IllegalStateException("Session is closed");
     }
 
     /**
@@ -459,25 +458,18 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     private boolean enterCommittingBlock() {
-        synchronized(this.commitLock){
-            try {
-                while(this.committing) {
-                    this.commitLock.wait(COMMIT_WAIT_MAX);
-                }
-                this.committing = true;
-                return true;
-            } catch(InterruptedException ie) {
-                Thread.currentThread().interrupt();
-                return false;
-            }
+        try {
+            this.commitLock.lockInterruptibly();
+            return true;
+        } catch (InterruptedException ie) {
+            this.commitLock.unlock();
+            Thread.currentThread().interrupt();
+            return false;
         }
     }
 
     private void leaveCommittingBlock() {
-        synchronized(this.commitLock){
-            this.committing = false;
-            this.commitLock.notifyAll();
-        }
+        this.commitLock.unlock();
     }
 
     /**
@@ -572,40 +564,33 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     void internalClose() throws JMSException {
-        if (this.closed) return;
-        logger.trace("close session {}", this);
+        if (this.closed.compareAndSet(false, true)) {
+            logger.trace("close session {}", this);
+            // close consumers first (to prevent requeues being consumed)
+            closeAllConsumers();
 
-        synchronized (this.closeLock) {
-            try {
-                // close consumers first (to prevent requeues being consumed)
-                closeAllConsumers();
-
-                // rollback anything not committed already
-                if (this.getTransactedNoException()) {
-                    // don't nack messages on close
-                    this.clearUncommittedTags();
-                    this.rollback();
-                }
-
-                //clear up potential executor
-                this.deliveryExecutor.close();
-
-                //close all producers created by this session
-                for (RMQMessageProducer producer : this.producers) {
-                    producer.internalClose();
-                }
-                this.producers.clear();
-
-                //now commit anything done during close
-                if (this.getTransactedNoException()) {
-                    this.commit();
-                }
-
-                this.closeRabbitChannels();
-
-            } finally {
-                this.closed = true;
+            // rollback anything not committed already
+            if (this.getTransactedNoException()) {
+                // don't nack messages on close
+                this.clearUncommittedTags();
+                this.rollback();
             }
+
+            //clear up potential executor
+            this.deliveryExecutor.close();
+
+            //close all producers created by this session
+            for (RMQMessageProducer producer : this.producers) {
+                producer.internalClose();
+            }
+            this.producers.clear();
+
+            //now commit anything done during close
+            if (this.getTransactedNoException()) {
+                this.commit();
+            }
+
+            this.closeRabbitChannels();
         }
     }
 
@@ -659,7 +644,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
         if (getTransactedNoException()) {
             throw new jakarta.jms.IllegalStateException("Session is transacted.");
         } else {
-            synchronized (this.unackedMessageTags) {
+            try {
+               this.unackedMessageTagsLock.lock();
                 /* If we have messages to recover */
                 if (!this.unackedMessageTags.isEmpty()) {
                     try {
@@ -670,6 +656,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                     }
                     this.unackedMessageTags.clear();
                 }
+            } finally {
+               this.unackedMessageTagsLock.unlock();
             }
         }
     }
@@ -1063,13 +1051,14 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     Channel getBrowsingChannel() throws JMSException {
         try {
-            synchronized (this.bcLock) {
-                Channel chan = this.getConnection().createRabbitChannel(false); // not transactional
-                this.browsingChannels.add(chan);
-                return chan;
-            }
+            this.bcLock.lock();
+            Channel chan = this.getConnection().createRabbitChannel(false); // not transactional
+            this.browsingChannels.add(chan);
+            return chan;
         } catch (Exception e) { // includes unchecked exceptions, e.g. ShutdownSignalException
             throw new RMQJMSException("Cannot create browsing channel", e);
+        } finally {
+            this.bcLock.unlock();
         }
     }
 
@@ -1090,7 +1079,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      * Silently close and discard browsing channels, if any.
      */
     private void clearBrowsingChannels() {
-        synchronized (this.bcLock) {
+        try {
+            this.bcLock.lock();
             for (Channel chan : this.browsingChannels) {
                 try {
                     if (chan.isOpen())
@@ -1100,6 +1090,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
                 }
             }
             this.browsingChannels.clear();
+        } finally {
+            this.bcLock.unlock();
         }
     }
 
@@ -1108,15 +1100,16 @@ public class RMQSession implements Session, QueueSession, TopicSession {
      */
     void closeBrowsingChannel(Channel chan) {
         try {
-            synchronized (this.bcLock) {
-                if (this.browsingChannels.remove(chan)) {
-                    if (chan.isOpen())
-                        chan.close();
+            this.bcLock.lock();
+            if (this.browsingChannels.remove(chan)) {
+                if (chan.isOpen()) {
+                    chan.close();
                 }
             }
         } catch (Exception e) {
-            // throw new RMQJMSException("Cannot close browsing channel", _);
             // ignore errors in clearing up
+        } finally {
+            this.bcLock.unlock();
         }
     }
 
@@ -1292,8 +1285,11 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     void unackedMessageReceived(long dTag) {
         if (!getTransactedNoException()) {
-            synchronized (this.unackedMessageTags) {
+            try {
+                this.unackedMessageTagsLock.lock();
                 this.unackedMessageTags.add(dTag);
+            } finally {
+                this.unackedMessageTagsLock.unlock();
             }
         }
     }
@@ -1333,32 +1329,33 @@ public class RMQSession implements Session, QueueSession, TopicSession {
              * The individualAck option is set by session mode (CLIENT_INDIVIDUAL_ACKNOWLEDGE) and overrides groupAck (default) and acknowledges at most a single message.
              * </p>
              */
-            synchronized (this.unackedMessageTags) {
-                try {
-                    if (individualAck) {
-                        if (!this.unackedMessageTags.contains(messageTag)) return; // this message already acknowledged
-                        /* ACK a single message */
-                        this.getChannel().basicAck(messageTag, false); // we ack the single message with this tag
-                        this.unackedMessageTags.remove(messageTag);
-                    } else if (groupAck) {
-                        /** The tags that precede the given one, and the given one, if unacknowledged */
-                        SortedSet<Long> previousTags = this.unackedMessageTags.headSet(messageTag+1);
-                        if (previousTags.isEmpty()) return; // no message to acknowledge
-                        /* ack multiple message up until the existing tag */
-                        this.getChannel().basicAck(previousTags.last(), // we ack the latest one (which might be this one, but might not be)
-                                              true);               // and everything prior to that
-                        // now remove all the tags <= messageTag
-                        previousTags.clear();
-                    } else {
-                        // this block is no longer possible (groupAck == true) after RJMS 1.2.0
-                        this.getChannel().basicAck(this.unackedMessageTags.last(), // we ack the highest tag
-                                              true);                          // and everything prior to that
-                        this.unackedMessageTags.clear();
-                    }
-                } catch (IOException x) {
-                    this.logger.error("RabbitMQ exception on basicAck of message {}; on session '{}'", messageTag, this, x);
-                    throw new RMQJMSException(x);
+            try {
+                this.unackedMessageTagsLock.lock();
+                if (individualAck) {
+                    if (!this.unackedMessageTags.contains(messageTag)) return; // this message already acknowledged
+                    /* ACK a single message */
+                    this.getChannel().basicAck(messageTag, false); // we ack the single message with this tag
+                    this.unackedMessageTags.remove(messageTag);
+                } else if (groupAck) {
+                    /** The tags that precede the given one, and the given one, if unacknowledged */
+                    SortedSet<Long> previousTags = this.unackedMessageTags.headSet(messageTag+1);
+                    if (previousTags.isEmpty()) return; // no message to acknowledge
+                    /* ack multiple message up until the existing tag */
+                    this.getChannel().basicAck(previousTags.last(), // we ack the latest one (which might be this one, but might not be)
+                        true);               // and everything prior to that
+                    // now remove all the tags <= messageTag
+                    previousTags.clear();
+                } else {
+                    // this block is no longer possible (groupAck == true) after RJMS 1.2.0
+                    this.getChannel().basicAck(this.unackedMessageTags.last(), // we ack the highest tag
+                        true);                          // and everything prior to that
+                    this.unackedMessageTags.clear();
                 }
+            } catch (IOException x) {
+                this.logger.error("RabbitMQ exception on basicAck of message {}; on session '{}'", messageTag, this, x);
+                throw new RMQJMSException(x);
+            } finally {
+                this.unackedMessageTagsLock.unlock();
             }
         }
     }
@@ -1433,7 +1430,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
         RMQDestination topicDest = (RMQDestination) topic;
         String queueName = durable ? name : generateJmsConsumerQueueName();
-        synchronized (this.subscriptions) {
+        try {
+            this.subscriptionsLock.lock();
             Subscription subscription = this.subscriptions.register(name, queueName, durable, shared,
                 messageSelector, noLocal);
             PostAction postAction = subscription.validateNewConsumer(topic, durable, shared,
@@ -1448,6 +1446,8 @@ public class RMQSession implements Session, QueueSession, TopicSession {
             consumer.setNoLocal(noLocal);
             subscription.add(consumer);
             return consumer;
+        } finally {
+            this.subscriptionsLock.unlock();
         }
     }
 
