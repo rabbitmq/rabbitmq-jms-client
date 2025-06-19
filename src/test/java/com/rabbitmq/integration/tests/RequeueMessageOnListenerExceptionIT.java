@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import javax.jms.*;
 import java.util.concurrent.CountDownLatch;
 
+import static com.rabbitmq.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -35,8 +36,6 @@ public class RequeueMessageOnListenerExceptionIT extends AbstractITQueue {
                 connection.close();
             }
         }
-
-
     }
 
     @Test
@@ -44,17 +43,17 @@ public class RequeueMessageOnListenerExceptionIT extends AbstractITQueue {
         sendMessage();
         QueueConnection connection = null;
         try {
-            connection = connection(RMQConnection.NO_CHANNEL_QOS);
+            connection = connection();
             QueueSession queueSession = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
             Queue queue = queueSession.createQueue(QUEUE_NAME);
             QueueReceiver queueReceiver = queueSession.createReceiver(queue);
-            final CountDownLatch latch = new CountDownLatch(1);
+            CountDownLatch latch = new CountDownLatch(1);
             queueReceiver.setMessageListener(message -> {
-                if (true) {
-                    latch.countDown();
-                    throw new RuntimeException("runtime exception in message listener");
-                }
+                latch.countDown();
+                throw new RuntimeException("runtime exception in message listener");
             });
+            assertThat(latch).completes();
+            queueSession.close();
 
             // another consumer can consume the message
             queueSession = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -74,12 +73,47 @@ public class RequeueMessageOnListenerExceptionIT extends AbstractITQueue {
         sendMessage();
         QueueConnection connection = null;
         try {
-            connection = connection(RMQConnection.NO_CHANNEL_QOS);
+            connection = connection();
             QueueSession queueSession = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
             Queue queue = queueSession.createQueue(QUEUE_NAME);
             QueueReceiver queueReceiver = queueSession.createReceiver(queue);
             final CountDownLatch latch = new CountDownLatch(1);
             queueReceiver.setMessageListener(message -> latch.countDown());
+            assertThat(latch).completes();
+            queueSession.close();
+
+            // the message has been consumed, no longer in the queue
+            queueSession = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+            queueReceiver = queueSession.createReceiver(queue);
+            Message message = queueReceiver.receive(1000L);
+            assertNull(message);
+        } finally {
+            if(connection != null) {
+                connection.close();
+            }
+        }
+    }
+
+    @Test
+    public void messageShouldBeAckedWhenRequeueOnMessageListenerExceptionIsTrue() throws Exception {
+        sendMessage();
+        QueueConnection connection = null;
+        try {
+            connection = connection();
+            QueueSession queueSession = connection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
+            Queue queue = queueSession.createQueue(QUEUE_NAME);
+            QueueReceiver queueReceiver = queueSession.createReceiver(queue);
+            final CountDownLatch latch = new CountDownLatch(1);
+            queueReceiver.setMessageListener(message -> {
+                try {
+                    message.acknowledge();
+                } catch (JMSException e) {
+                    throw new RuntimeException(e);
+                }
+                latch.countDown();
+            });
+            assertThat(latch).completes();
+            queueSession.close();
 
             // the message has been consumed, no longer in the queue
             queueSession = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -107,15 +141,13 @@ public class RequeueMessageOnListenerExceptionIT extends AbstractITQueue {
         }
     }
 
-    private QueueConnection connection(int qos) throws Exception {
+    private QueueConnection connection() throws Exception {
         RMQConnectionFactory connectionFactory = (RMQConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory().getConnectionFactory();
-        connectionFactory.setChannelsQos(qos);
+        connectionFactory.setChannelsQos(RMQConnection.NO_CHANNEL_QOS);
         connectionFactory.setRequeueOnMessageListenerException(true);
         QueueConnection queueConnection = connectionFactory.createQueueConnection();
         queueConnection.start();
         return queueConnection;
     }
-
-
 
 }
