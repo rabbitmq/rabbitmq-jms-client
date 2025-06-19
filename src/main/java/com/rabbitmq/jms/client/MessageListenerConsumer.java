@@ -44,7 +44,6 @@ class MessageListenerConsumer implements Consumer, Abortable {
     private final long terminationTimeout;
     private volatile boolean rejecting;
     private final boolean requeueOnMessageListenerException;
-    private final boolean requeueOnTimeout;
 
     /**
      * True when AMQP auto-ack is true as well. Happens
@@ -78,7 +77,6 @@ class MessageListenerConsumer implements Consumer, Abortable {
         this.requeueOnMessageListenerException = requeueOnMessageListenerException;
         this.skipAck = messageConsumer.amqpAutoAck();
         this.receivingContextConsumer = receivingContextConsumer;
-        this.requeueOnTimeout = requeueOnTimeout;
     }
 
     private String getConsTag() {
@@ -141,7 +139,7 @@ class MessageListenerConsumer implements Consumer, Abortable {
                     // see section 4.5.2 of JMS 1.1 specification
                     RMQMessage msg = RMQMessage.convertMessage(this.messageConsumer.getSession(), this.messageConsumer.getDestination(),
                         response, this.receivingContextConsumer);
-                    this.messageConsumer.getSession().addUncommittedTag(dtag);
+                    this.maybeEnqueueUnackedMessageTag(dtag);
                     boolean alreadyNacked = false;
                     try {
                         this.messageConsumer.getSession().deliverMessage(msg, this.messageListener);
@@ -187,6 +185,12 @@ class MessageListenerConsumer implements Consumer, Abortable {
     private void nack(long dtag) {
         if (!skipAck) {
             this.messageConsumer.getSession().explicitNack(dtag);
+        }
+    }
+
+    private void maybeEnqueueUnackedMessageTag(long dtag) {
+        if (!skipAck && !this.messageConsumer.getSession().isAutoAck()) {
+            this.messageConsumer.getSession().unackedMessageReceived(dtag);
         }
     }
 
