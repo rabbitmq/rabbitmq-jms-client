@@ -138,6 +138,7 @@ public class RMQSession implements Session, QueueSession, TopicSession {
 
     /** Set to true if close() has been called and completed */
     private final AtomicBoolean closed = new AtomicBoolean(false);
+    private final AtomicBoolean closing = new AtomicBoolean(false);
 
     /** The message listener for this session. */
     private volatile MessageListener messageListener;
@@ -564,33 +565,37 @@ public class RMQSession implements Session, QueueSession, TopicSession {
     }
 
     void internalClose() throws JMSException {
-        if (this.closed.compareAndSet(false, true)) {
-            logger.trace("close session {}", this);
-            // close consumers first (to prevent requeues being consumed)
-            closeAllConsumers();
+        if (this.closing.compareAndSet(false, true)) {
+            try {
+                logger.trace("close session {}", this);
+                // close consumers first (to prevent requeues being consumed)
+                closeAllConsumers();
 
-            // rollback anything not committed already
-            if (this.getTransactedNoException()) {
-                // don't nack messages on close
-                this.clearUncommittedTags();
-                this.rollback();
+                // rollback anything not committed already
+                if (this.getTransactedNoException()) {
+                    // don't nack messages on close
+                    this.clearUncommittedTags();
+                    this.rollback();
+                }
+
+                //clear up potential executor
+                this.deliveryExecutor.close();
+
+                //close all producers created by this session
+                for (RMQMessageProducer producer : this.producers) {
+                    producer.internalClose();
+                }
+                this.producers.clear();
+
+                //now commit anything done during close
+                if (this.getTransactedNoException()) {
+                    this.commit();
+                }
+
+                this.closeRabbitChannels();
+            } finally {
+                this.closed.set(true);
             }
-
-            //clear up potential executor
-            this.deliveryExecutor.close();
-
-            //close all producers created by this session
-            for (RMQMessageProducer producer : this.producers) {
-                producer.internalClose();
-            }
-            this.producers.clear();
-
-            //now commit anything done during close
-            if (this.getTransactedNoException()) {
-                this.commit();
-            }
-
-            this.closeRabbitChannels();
         }
     }
 
