@@ -59,7 +59,7 @@
     <maven.release.plugin.version>3.1.1</maven.release.plugin.version>
     <maven.sources.plugin.version>3.3.1</maven.sources.plugin.version>
     <maven.javadoc.plugin.version>3.11.2</maven.javadoc.plugin.version>
-    <maven.gpg.plugin.version>3.2.7</maven.gpg.plugin.version>
+    <maven.gpg.plugin.version>3.2.8</maven.gpg.plugin.version>
     <central-publishing-maven-plugin.version>0.8.0</central-publishing-maven-plugin.version>
     <checksum.maven.plugin.version>1.11</checksum.maven.plugin.version>
     <asciidoctor.maven.plugin.version>3.2.0</asciidoctor.maven.plugin.version>
