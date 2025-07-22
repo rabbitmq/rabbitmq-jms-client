@@ -10,12 +10,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Evaluate release information
-        run:  source ./release-versions.txt
+        run: |
+          source ./release-versions.txt
+          echo "java_version=$JAVA_VERSION" >> $GITHUB_ENV
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: ${{ env.JAVA_VERSION }}
+          java-version: ${{ env.java_version }}
           cache: 'maven'
           server-id: central
           server-username: MAVEN_USERNAME
@@ -23,7 +25,7 @@ jobs:
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
       - name: Release JMS Client
-        run:  |
+        run: |
           git config user.name "rabbitmq-ci"
           git config user.email "rabbitmq-ci@users.noreply.github.com"
           ci/release-jms-client.sh
