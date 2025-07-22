@@ -15,7 +15,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: ${{ env.java_version }}
+          java-version: ${{ env.JAVA_VERSION }}
           cache: 'maven'
           server-id: central
           server-username: MAVEN_USERNAME
