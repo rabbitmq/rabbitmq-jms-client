@@ -9,6 +9,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: Evaluate release information
+        run: |
+          source ./release-versions.txt
+          echo "java_version=$JAVA_VERSION" >> $GITHUB_ENV
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
