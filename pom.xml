@@ -42,7 +42,7 @@
 
   <properties>
     <rabbitmq.version>5.26.0</rabbitmq.version>
-    <junit.jupiter.version>5.13.4</junit.jupiter.version>
+    <junit.jupiter.version>6.0.0</junit.jupiter.version>
     <mockito-core.version>5.20.0</mockito-core.version>
     <assertj.version>3.27.6</assertj.version>
     <spring.version>6.2.11</spring.version>
