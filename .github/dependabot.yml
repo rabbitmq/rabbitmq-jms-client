@@ -13,7 +13,7 @@ updates:
         versions: [ "[1.3,)" ]
       - dependency-name: "jakarta.jms:jakarta.jms-api"
         versions: [ "[3.0.0,)" ]
-      - dependency-name: "org.junit:*"
+      - dependency-name: "org.junit.jupiter:*"
         versions: [ "[6.0,)" ]
   - package-ecosystem: "maven"
     directory: "/"
@@ -28,7 +28,7 @@ updates:
         versions: [ "[5.3,)" ]
       - dependency-name: "org.springframework:spring-context"
         versions: [ "[5.3,)" ]
-      - dependency-name: "org.junit:*"
+      - dependency-name: "org.junit.jupiter:*"
         versions: [ "[6.0,)" ]
   - package-ecosystem: "github-actions"
     directory: "/"
