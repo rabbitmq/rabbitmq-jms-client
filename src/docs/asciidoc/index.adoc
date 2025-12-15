@@ -7,11 +7,12 @@ ifndef::sourcedir[:sourcedir: ../../main/java]
 
 == Introduction
 
-RabbitMQ is not a JMS provider but includes https://github.com/rabbitmq/rabbitmq-server/tree/main/deps/rabbitmq_jms_topic_exchange[a plugin]
-needed to support the JMS Queue and Topic messaging models. JMS Client
-for RabbitMQ implements the JMS specification on top of the
+RabbitMQ server together with this RabbitMQ JMS client library provides a JMS provider implementation.
+The JMS Client for RabbitMQ implements the JMS specification on top of the
 link:https://rabbitmq.com/api-guide.html[RabbitMQ Java client], thus allowing new and
 existing JMS applications to connect to RabbitMQ.
+To support the JMS Topic messaging models, RabbitMQ includes the
+https://github.com/rabbitmq/rabbitmq-server/tree/main/deps/rabbitmq_jms_topic_exchange[RabbitMQ JMS Topic Exchange plugin].
 
 RabbitMQ JMS Client supports JMS 2.0 as of 2.7.0.
 It requires Java 8 or more.
@@ -66,18 +67,24 @@ the https://download.oracle.com/otndocs/jcp/jms-2_0_rev_a-mrel-eval-spec/index.h
 
 == Limitations
 
-Some JMS 1.1 and 2.0 features are unsupported in the RabbitMQ JMS Client:
+Some JMS features are unsupported in the RabbitMQ JMS Client:
 
-* The JMS Client does not support server sessions.
-* XA transaction support interfaces are not implemented.
-* Topic selectors are supported with the RabbitMQ JMS topic selector
- plugin. Queue selectors are not yet implemented.
-* SSL and socket options for RabbitMQ connections are supported, but
- only using the (default) SSL connection protocols that the RabbitMQ client provides.
-* The JMS `NoLocal` subscription feature, which prevents delivery of
+* Message selectors for topics are supported with the RabbitMQ JMS Topic Exchange plugin.
+  However, message selectors for queues are not supported.
+* The JMS `NoLocal` parameter, which prevents delivery of
  messages published from a subscriber's own connection, is not supported
  with RabbitMQ. You can call a method that includes the `NoLocal`
  argument, but it is ignored.
+* Client ID uniqueness is enforced only within a single JVM process.
+ Unlike traditional JMS brokers, the RabbitMQ JMS Client validates client ID uniqueness
+ only on the client side. This means duplicate client IDs are only detected if both connections originate
+ from the same JVM. Connections with the same client ID from different JVMs or
+ applications will not be detected as duplicates.
+* The JMS queue browser implementation consumes messages from the queue making them temporarily unavailable
+ to other consumers (evaluates selectors client-side, and then requeues all messages when the browser is closed).
+* XA transaction support interfaces are not implemented.
+* SSL and socket options for RabbitMQ connections are supported, but
+ only using the (default) SSL connection protocols that the RabbitMQ client provides.
 
 See link:https://github.com/rabbitmq/rabbitmq-jms-client/blob/main/jms-client-compliance.md[the JMS API compliance documentation] for a
 detailed list of supported JMS APIs.
