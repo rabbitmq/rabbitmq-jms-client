@@ -45,7 +45,7 @@
     <junit.jupiter.version>5.14.2</junit.jupiter.version>
     <mockito-core.version>5.21.0</mockito-core.version>
     <assertj.version>3.27.6</assertj.version>
-    <spring.version>7.0.2</spring.version>
+    <spring.version>7.0.3</spring.version>
     <logback.version>1.3.12</logback.version>
 
     <maven.dependency.plugin.version>3.9.0</maven.dependency.plugin.version>
