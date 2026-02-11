@@ -80,6 +80,7 @@ Some JMS features are unsupported in the RabbitMQ JMS Client:
  applications will not be detected as duplicates.
 * The JMS queue browser implementation consumes messages from the queue making them temporarily unavailable
  to other consumers (evaluates selectors client-side, and then requeues all messages when the browser is closed).
+* Local transactions do not guarantee atomicity and can result in partial completion
 * XA transaction support interfaces are not implemented.
 * SSL and socket options for RabbitMQ connections are supported, but
  only using the (default) SSL connection protocols that the RabbitMQ client provides.
