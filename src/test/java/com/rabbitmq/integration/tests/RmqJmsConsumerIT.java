@@ -51,7 +51,7 @@ public class RmqJmsConsumerIT extends AbstractAmqpITQueue {
   void init(TestInfo info) throws Exception {
     queueName = TestUtils.name(info);
     channel.queueDeclare(queueName,
-        false, // durable
+        true, // durable
         false,  // not exclusive
         true,  // autoDelete
         null   // options

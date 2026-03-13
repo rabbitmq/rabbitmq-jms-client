@@ -96,7 +96,7 @@ public class TtlIT extends AbstractITQueue {
     private Message publishAmqpConsumeJms(boolean expiration) throws Exception {
         Channel channel = connection.createChannel();
         channel.queueDeclare(AMQP_QUEUE_NAME,
-                false, // durable
+                true, // durable
                 false, // non-exclusive
                 true,  // autoDelete
                 null   // options
