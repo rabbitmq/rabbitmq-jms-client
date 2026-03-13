@@ -73,11 +73,11 @@ public class NackMessageOnRollbackIT extends AbstractITQueue {
         channel.exchangeDeclare(EXCHANGE_NAME, "direct");
         HashMap<String, Object> args = new HashMap<String, Object>();
         args.put("x-dead-letter-exchange", EXCHANGE_DLX_NAME);
-        channel.queueDeclare(QUEUE_NAME, false, false, false, args);
+        channel.queueDeclare(QUEUE_NAME, true, false, false, args);
         channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, ROUTING_KEY);
 
         channel.exchangeDeclare(EXCHANGE_DLX_NAME, "direct");
-        channel.queueDeclare(QUEUE_DLX_NAME, false, false, false, null);
+        channel.queueDeclare(QUEUE_DLX_NAME, true, false, false, null);
         channel.queueBind(QUEUE_DLX_NAME, EXCHANGE_DLX_NAME, ROUTING_KEY);
     }
 

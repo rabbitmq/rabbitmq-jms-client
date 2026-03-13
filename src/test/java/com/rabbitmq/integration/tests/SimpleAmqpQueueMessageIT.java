@@ -146,7 +146,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
     public void testSendFromAmqpAndReceiveBytesMessage() throws Exception {
 
         channel.queueDeclare(QUEUE_NAME_NON_EXCLUSIVE,
-                             false, // durable
+                             true, // durable
                              false, // non-exclusive
                              true,  // autoDelete
                              null   // options
@@ -204,7 +204,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
     public void testSendFromAmqpAndReceiveTextMessage() throws Exception {
 
         channel.queueDeclare(QUEUE_NAME_NON_EXCLUSIVE,
-                             false, // durable
+                             true, // durable
                              false, // non-exclusive
                              true,  // autoDelete
                              null   // options
@@ -257,7 +257,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
     public void testSendFromJmsAndReceiveJmsTextMessage() throws Exception {
         String queueName = UUID.randomUUID().toString();
         channel.queueDeclare(queueName,
-            false, // durable
+            true, // durable
             false, // non-exclusive
             true,  // autoDelete
             null   // options

@@ -47,7 +47,7 @@ public class JmsTypeHeaderAutomaticallySetIT {
 
     channel.queueDeclare(
         QUEUE_NAME,
-        false, // durable
+        true, // durable
         false, // exclusive
         false, // autoDelete
         null // options
