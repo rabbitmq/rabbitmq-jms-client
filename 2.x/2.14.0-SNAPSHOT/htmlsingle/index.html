@@ -669,7 +669,15 @@ the <a href="https://download.oracle.com/otndocs/jcp/jms-2_0_rev_a-mrel-eval-spe
 <ul>
 <li>
 <p>Message selectors for topics are supported with the RabbitMQ JMS Topic Exchange plugin.
-However, message selectors for queues are not supported.</p>
+Message selectors for queues are not supported by this client.
+(However, message selectors for queues are supported using the <a href="https://github.com/apache/qpid-jms">Qpid JMS client</a>
+in combination with the <a href="https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-rabbitmq-oci/4-3/tanzu-rabbitmq-oci-image/site-jms.html">JMS queue type</a>.</p>
+</li>
+<li>
+<p>The JMS queue browser implementation consumes messages from the queue making them temporarily unavailable
+to other consumers (evaluates selectors client-side, and then requeues all messages when the browser is closed).
+(However, queue browsers are implemented correctly using the <a href="https://github.com/apache/qpid-jms">Qpid JMS client</a>
+in combination with the <a href="https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-rabbitmq-oci/4-3/tanzu-rabbitmq-oci-image/site-jms.html">JMS queue type</a>.</p>
 </li>
 <li>
 <p>The JMS <code>NoLocal</code> parameter, which prevents delivery of
@@ -683,10 +691,6 @@ Unlike traditional JMS brokers, the RabbitMQ JMS Client validates client ID uniq
 only on the client side. This means duplicate client IDs are only detected if both connections originate
 from the same JVM. Connections with the same client ID from different JVMs or
 applications will not be detected as duplicates.</p>
-</li>
-<li>
-<p>The JMS queue browser implementation consumes messages from the queue making them temporarily unavailable
-to other consumers (evaluates selectors client-side, and then requeues all messages when the browser is closed).</p>
 </li>
 <li>
 <p>Local transactions do not guarantee atomicity and can result in partial completion</p>
@@ -1834,7 +1838,7 @@ and browse our
 <div id="footer">
 <div id="footer-text">
 Version 2.14.0-SNAPSHOT<br>
-Last updated 2026-04-20 09:40:37 UTC
+Last updated 2026-04-27 10:32:30 UTC
 </div>
 </div>
 </body>
