@@ -70,7 +70,13 @@ the https://download.oracle.com/otndocs/jcp/jms-2_0_rev_a-mrel-eval-spec/index.h
 Some JMS features are unsupported in the RabbitMQ JMS Client:
 
 * Message selectors for topics are supported with the RabbitMQ JMS Topic Exchange plugin.
-  However, message selectors for queues are not supported.
+  Message selectors for queues are not supported by this client.
+  (However, message selectors for queues are supported using the link:https://github.com/apache/qpid-jms[Qpid JMS client]
+  in combination with the link:https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-rabbitmq-oci/4-3/tanzu-rabbitmq-oci-image/site-jms.html[JMS queue type].
+* The JMS queue browser implementation consumes messages from the queue making them temporarily unavailable
+  to other consumers (evaluates selectors client-side, and then requeues all messages when the browser is closed).
+  (However, queue browsers are implemented correctly using the link:https://github.com/apache/qpid-jms[Qpid JMS client]
+  in combination with the link:https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-rabbitmq-oci/4-3/tanzu-rabbitmq-oci-image/site-jms.html[JMS queue type].
 * The JMS `NoLocal` parameter, which prevents delivery of
  messages published from a subscriber's own connection, is not supported
  with RabbitMQ. You can call a method that includes the `NoLocal`
@@ -80,8 +86,6 @@ Some JMS features are unsupported in the RabbitMQ JMS Client:
  only on the client side. This means duplicate client IDs are only detected if both connections originate
  from the same JVM. Connections with the same client ID from different JVMs or
  applications will not be detected as duplicates.
-* The JMS queue browser implementation consumes messages from the queue making them temporarily unavailable
- to other consumers (evaluates selectors client-side, and then requeues all messages when the browser is closed).
 * Local transactions do not guarantee atomicity and can result in partial completion
 * XA transaction support interfaces are not implemented.
 * SSL and socket options for RabbitMQ connections are supported, but
