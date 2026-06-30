@@ -341,7 +341,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         com.rabbitmq.client.ConnectionFactory cf = createConnectionFactory();
         maybeEnableTLS(cf);
         setRabbitUri(logger, this, cf, getUri());
-        maybeEnableHostnameVerification(cf);
+        maybeEnableHostnameVerification();
         cf.setMetricsCollector(this.metricsCollector);
         setSaslConfig(cf, authenticationMechanism);
 
@@ -547,13 +547,10 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             }
     }
 
-    private void maybeEnableHostnameVerification(com.rabbitmq.client.ConnectionFactory factory) {
-        if (hostnameVerification) {
-            if (this.ssl) {
-                factory.enableHostnameVerification();
-            } else {
-                logger.warn("Hostname verification enabled, but not TLS, please enable TLS too.");
-            }
+    private void maybeEnableHostnameVerification() {
+        // hostname verification is enabled automatically with SSL, no need to enable it explicitly
+        if (hostnameVerification && !this.ssl) {
+            logger.warn("Hostname verification enabled, but not TLS, please enable TLS too.");
         }
     }
 
