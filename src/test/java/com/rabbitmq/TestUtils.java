@@ -55,7 +55,6 @@ public class TestUtils {
       T result = operation.call();
       while (result == null && elapsed <= duration.toNanos()) {
         long start = System.nanoTime();
-        System.out.println(result + " " + elapsed + " " + duration.toNanos());
         try {
           Thread.sleep(POLLING_INTERVAL.toMillis());
         } catch (InterruptedException e) {
