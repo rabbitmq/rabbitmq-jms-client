@@ -317,7 +317,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         com.rabbitmq.client.ConnectionFactory cf = createConnectionFactory();
         maybeEnableTLS(cf);
         setRabbitUri(logger, this, cf, getUri());
-        maybeEnableHostnameVerification(cf);
+        maybeEnableHostnameVerification();
         cf.setMetricsCollector(this.metricsCollector);
         setSaslConfig(cf, authenticationMechanism);
 
@@ -502,32 +502,32 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     }
 
     private void maybeEnableTLS(com.rabbitmq.client.ConnectionFactory factory) {
-        if (this.ssl)
-            try {
-                if(this.useDefaultSslContext) {
-                    factory.useSslProtocol(SSLContext.getDefault());
-                } else {
-                    if (this.sslContext != null) {
-                        factory.useSslProtocol(this.sslContext);
-                    } else if (this.tlsProtocol != null) {
-                        factory.useSslProtocol(this.tlsProtocol);
-                    } else {
-                        factory.useSslProtocol();
-                    }
-                }
-            } catch (Exception e) {
-                this.logger.warn("Could not set SSL protocol on connection factory, {}. SSL set off.", this, e);
-                this.ssl = false;
+      if (this.ssl) {
+        try {
+          if (this.useDefaultSslContext) {
+            factory.useSslProtocol(SSLContext.getDefault());
+          } else {
+            if (this.sslContext != null) {
+            System.out.println("passe maybe");
+              factory.useSslProtocol(this.sslContext);
+            } else if (this.tlsProtocol != null) {
+              factory.useSslProtocol(this.tlsProtocol);
+            } else {
+              factory.useSslProtocol();
             }
+          }
+        } catch (Exception e) {
+          this.logger.warn(
+              "Could not set SSL protocol on connection factory, {}. SSL set off.", this, e);
+          this.ssl = false;
+        }
+      }
     }
 
-    private void maybeEnableHostnameVerification(com.rabbitmq.client.ConnectionFactory factory) {
-        if (hostnameVerification) {
-            if (this.ssl) {
-                factory.enableHostnameVerification();
-            } else {
-                logger.warn("Hostname verification enabled, but not TLS, please enable TLS too.");
-            }
+    private void maybeEnableHostnameVerification() {
+        // hostname verification is enabled automatically with SSL, no need to enable it explicitly
+        if (hostnameVerification && !this.ssl) {
+            logger.warn("Hostname verification enabled, but not TLS, please enable TLS too.");
         }
     }
 
