@@ -534,7 +534,6 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
             factory.useSslProtocol(SSLContext.getDefault());
           } else {
             if (this.sslContext != null) {
-            System.out.println("passe maybe");
               factory.useSslProtocol(this.sslContext);
             } else if (this.tlsProtocol != null) {
               factory.useSslProtocol(this.tlsProtocol);
