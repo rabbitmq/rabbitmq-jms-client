@@ -11,8 +11,6 @@ import jakarta.jms.JMSException;
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 
-import java.security.NoSuchAlgorithmException;
-
 /**
  * Connection factory for use in integration tests.
  */
@@ -22,8 +20,6 @@ public class RabbitAPIConnectionFactory extends AbstractTestConnectionFactory {
     private static final int RABBIT_TLS_PORT = 5671;
     private final boolean testssl;
     private int qbrMax;
-
-    public RabbitAPIConnectionFactory() { this(false); }
 
     public RabbitAPIConnectionFactory(boolean testssl) { this(testssl, 0); }
 
@@ -46,11 +42,13 @@ public class RabbitAPIConnectionFactory extends AbstractTestConnectionFactory {
             }
         };
         if (testssl) {
-            try {
-                rmqCF.useSslProtocol();
-            } catch (NoSuchAlgorithmException e) {
-                throw new RuntimeException(e);
-            }
+            rmqCF.setAmqpConnectionFactoryPostProcessor(cf -> {
+                try {
+                    cf.useTlsWithNoVerification();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
         rmqCF.setQueueBrowserReadMax(qbrMax);
         return rmqCF;
