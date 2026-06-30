@@ -11,6 +11,8 @@ import jakarta.jms.JMSException;
 
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 
+import java.util.function.Consumer;
+
 /**
  * Connection factory for use in integration tests.
  */
@@ -29,6 +31,16 @@ public class RabbitAPIConnectionFactory extends AbstractTestConnectionFactory {
 
     @Override
     public ConnectionFactory getConnectionFactory() {
+        Consumer<com.rabbitmq.client.ConnectionFactory> rmqCfConsumer =
+            testssl
+                ? cf -> {
+                try {
+                    cf.useTlsWithNoVerification();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+                : cf -> {};
         RMQConnectionFactory rmqCF = new RMQConnectionFactory() {
             private static final long serialVersionUID = 1L;
             @Override
@@ -40,16 +52,14 @@ public class RabbitAPIConnectionFactory extends AbstractTestConnectionFactory {
                 }
                 return super.createConnection(userName, password);
             }
+
+            @Override
+            protected com.rabbitmq.client.ConnectionFactory createConnectionFactory() {
+                com.rabbitmq.client.ConnectionFactory cf =  super.createConnectionFactory();
+                rmqCfConsumer.accept(cf);
+                return cf;
+            }
         };
-        if (testssl) {
-            rmqCF.setAmqpConnectionFactoryPostProcessor(cf -> {
-                try {
-                    cf.useTlsWithNoVerification();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        }
         rmqCF.setQueueBrowserReadMax(qbrMax);
         return rmqCF;
     }
