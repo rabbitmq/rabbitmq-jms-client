@@ -67,7 +67,6 @@ public class SimpleServerConnectionIT {
                     long deliveryTag = envelope.getDeliveryTag();
                     // (process the message components here
                     // ...)
-                    System.out.println("Received Message:" + new String(body));
                     channel.basicAck(deliveryTag, false);
                 }
             });
