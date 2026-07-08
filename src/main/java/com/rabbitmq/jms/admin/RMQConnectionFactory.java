@@ -296,6 +296,17 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      */
     private NamingStrategy namingStrategy = NamingStrategy.DEFAULT;
 
+    public RMQConnectionFactory() {
+    }
+
+    public RMQConnectionFactory(String uri) {
+        try {
+            setUri(uri);
+        } catch (JMSException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
