@@ -303,7 +303,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         try {
             setUri(uri);
         } catch (JMSException e) {
-            throw new RuntimeException(e);
+            throw new IllegalArgumentException(e);
         }
     }
 
