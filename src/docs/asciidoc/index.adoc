@@ -4,6 +4,7 @@
 ifndef::imagesdir[:imagesdir: images]
 ifndef::sourcedir[:sourcedir: ../../main/java]
 :source-highlighter: prettify
+:tanzu-jms-docs: https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-rabbitmq-oci/4-3/tanzu-rabbitmq-oci-image/site-jms.html
 
 == Introduction
 
@@ -65,25 +66,30 @@ You can read the https://jakarta.ee/specifications/messaging/3.0/jakarta-messagi
 
 == Limitations
 
-Some JMS features are unsupported in the RabbitMQ JMS Client:
+Some JMS features are unsupported in the RabbitMQ JMS Client.
+Where a limitation does not apply to link:{tanzu-jms-docs}[VMware Tanzu RabbitMQ], which implements JMS
+on top of AMQP 1.0 and the link:https://github.com/apache/qpid-jms[Qpid JMS client] instead of AMQP 0-9-1
+and this client, this is noted below.
 
 * Message selectors for topics are supported with the RabbitMQ JMS Topic Exchange plugin.
   Message selectors for queues are not supported by this client.
-  (However, message selectors for queues are supported using the link:https://github.com/apache/qpid-jms[Qpid JMS client]
-  in combination with the link:https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-rabbitmq-oci/4-3/tanzu-rabbitmq-oci-image/site-jms.html[JMS queue type].
+  (However, message selectors for both queues and topics are supported in Tanzu RabbitMQ,
+  where they are evaluated on the broker.)
 * The JMS queue browser implementation consumes messages from the queue making them temporarily unavailable
   to other consumers (evaluates selectors client-side, and then requeues all messages when the browser is closed).
-  (However, queue browsers are implemented correctly using the link:https://github.com/apache/qpid-jms[Qpid JMS client]
-  in combination with the link:https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-rabbitmq-oci/4-3/tanzu-rabbitmq-oci-image/site-jms.html[JMS queue type].
+  (However, queue browsers are implemented correctly in Tanzu RabbitMQ: messages are inspected on the broker
+  without being consumed.)
 * The JMS `NoLocal` parameter, which prevents delivery of
  messages published from a subscriber's own connection, is not supported
  with RabbitMQ. You can call a method that includes the `NoLocal`
  argument, but it is ignored.
+ (However, `NoLocal` is supported in Tanzu RabbitMQ 4.4 and later.)
 * Client ID uniqueness is enforced only within a single JVM process.
  Unlike traditional JMS brokers, the RabbitMQ JMS Client validates client ID uniqueness
  only on the client side. This means duplicate client IDs are only detected if both connections originate
  from the same JVM. Connections with the same client ID from different JVMs or
  applications will not be detected as duplicates.
+ (However, Tanzu RabbitMQ 4.4 and later enforces client ID uniqueness across the whole cluster.)
 * Local transactions do not guarantee atomicity and can result in partial completion
 * XA transaction support interfaces are not implemented.
 * SSL and socket options for RabbitMQ connections are supported, but
