@@ -5,6 +5,7 @@
 // Copyright (c) 2013-2023 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
 package com.rabbitmq.integration.tests;
 
+import com.rabbitmq.TestUtils;
 import jakarta.jms.QueueConnection;
 import jakarta.jms.QueueConnectionFactory;
 
@@ -15,6 +16,7 @@ import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import org.junit.jupiter.api.TestInfo;
 
 public abstract class AbstractAmqpITQueue {
     protected QueueConnectionFactory connFactory;
@@ -23,9 +25,11 @@ public abstract class AbstractAmqpITQueue {
     private ConnectionFactory rabbitConnFactory = new ConnectionFactory();
     protected Connection rabbitConn;
     protected Channel channel;
+    protected String q;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    public void setUp(TestInfo info) throws Exception {
+        this.q = TestUtils.name(info);
         this.connFactory = (QueueConnectionFactory) AbstractTestConnectionFactory.getTestConnectionFactory()
                 .getConnectionFactory();
         customise((RMQConnectionFactory) connFactory);

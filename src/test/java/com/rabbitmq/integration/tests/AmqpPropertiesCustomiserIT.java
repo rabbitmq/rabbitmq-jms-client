@@ -26,7 +26,6 @@ public class AmqpPropertiesCustomiserIT extends AbstractAmqpITQueue {
 
     public static final String MESSAGE = "hello";
     public static final String TEXT_PLAIN = "text/plain";
-    private static final String QUEUE_NAME = "test.queue." + AmqpPropertiesCustomiserIT.class.getCanonicalName();
 
     @Override
     protected void customise(RMQConnectionFactory connectionFactory) {
@@ -36,7 +35,7 @@ public class AmqpPropertiesCustomiserIT extends AbstractAmqpITQueue {
     @Test
     public void customiserIsApplied() throws Exception {
 
-        channel.queueDeclare(QUEUE_NAME,
+        channel.queueDeclare(q,
             false, // durable
             true,  // exclusive
             true,  // autoDelete
@@ -45,7 +44,7 @@ public class AmqpPropertiesCustomiserIT extends AbstractAmqpITQueue {
 
         queueConn.start();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-        Queue queue = new RMQDestination(QUEUE_NAME, "", QUEUE_NAME, null);  // write-only AMQP-mapped queue
+        Queue queue = new RMQDestination(q, "", q, null);  // write-only AMQP-mapped queue
 
         QueueSender queueSender = queueSession.createSender(queue);
 
@@ -54,7 +53,7 @@ public class AmqpPropertiesCustomiserIT extends AbstractAmqpITQueue {
         queueSender.send(message);
         queueConn.close();
 
-        GetResponse response = channel.basicGet(QUEUE_NAME, false);
+        GetResponse response = channel.basicGet(q, false);
         assertNotNull(response, "basicGet failed to retrieve a response");
 
         byte[] body = response.getBody();
