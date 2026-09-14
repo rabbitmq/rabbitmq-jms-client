@@ -5,6 +5,7 @@
 // Copyright (c) 2023 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
 package com.rabbitmq.integration.tests;
 
+import com.rabbitmq.TestUtils;
 import com.rabbitmq.TestUtils.SkipIfDelayedMessageExchangePluginNotActivated;
 import com.rabbitmq.jms.admin.RMQDestination;
 import javax.jms.*;
@@ -12,6 +13,7 @@ import javax.jms.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -22,11 +24,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @SkipIfDelayedMessageExchangePluginNotActivated
 public class DelayedAMQPQueueMessageIT extends AbstractAmqpITQueue {
 
-    String queueName = "DelayedAMQPQueueMessageIT";
+    String queueName;
     RMQDestination destination;
 
     @BeforeEach
-    void init() {
+    void init(TestInfo info) {
+        this.queueName = TestUtils.name(info);
         destination = new RMQDestination(queueName, true, false);
     }
 

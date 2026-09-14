@@ -11,7 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,7 +40,6 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
     private static final String USER_JMS_TYPE_SETTING = "this is my type";
     private static final String USER_STRING_PROPERTY_NAME = "UserHdr";
-    private static final String QUEUE_NAME = "test.queue."+SimpleAmqpQueueMessageIT.class.getCanonicalName();
     private static final String QUEUE_NAME_NON_EXCLUSIVE = "test-non-ex.queue."+SimpleAmqpQueueMessageIT.class.getCanonicalName();
     private static final String MESSAGE = "Hello " + SimpleAmqpQueueMessageIT.class.getName();
     private static final long TEST_RECEIVE_TIMEOUT = 1000; // one second
@@ -51,7 +49,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
     @Test
     public void testSendToAmqpAndReceiveTextMessage() throws Exception {
 
-        channel.queueDeclare(QUEUE_NAME,
+        channel.queueDeclare(q,
                              false, // durable
                              true,  // exclusive
                              true,  // autoDelete
@@ -60,7 +58,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
         queueConn.start();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-        Queue queue = new RMQDestination(QUEUE_NAME, "", QUEUE_NAME, null);  // write-only AMQP-mapped queue
+        Queue queue = new RMQDestination(q, "", q, null);  // write-only AMQP-mapped queue
 
         QueueSender queueSender = queueSession.createSender(queue);
         queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
@@ -72,7 +70,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
         queueSender.send(message);
         queueConn.close();
 
-        GetResponse response = channel.basicGet(QUEUE_NAME, false);
+        GetResponse response = channel.basicGet(q, false);
         assertNotNull(response, "basicGet failed to retrieve a response");
 
         byte[] body = response.getBody();
@@ -97,7 +95,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
     @Test
     public void testSendToAmqpAndReceiveBytesMessage() throws Exception {
 
-        channel.queueDeclare(QUEUE_NAME,
+        channel.queueDeclare(q,
                              false, // durable
                              true,  // exclusive
                              true,  // autoDelete
@@ -106,7 +104,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
 
         queueConn.start();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
-        Queue queue = new RMQDestination(QUEUE_NAME, "", QUEUE_NAME, null);  // write-only AMQP-mapped queue
+        Queue queue = new RMQDestination(q, "", q, null);  // write-only AMQP-mapped queue
 
         QueueSender queueSender = queueSession.createSender(queue);
         queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
@@ -120,7 +118,7 @@ public class SimpleAmqpQueueMessageIT extends AbstractAmqpITQueue {
         queueSender.send(message);
         queueConn.close();
 
-        GetResponse response = channel.basicGet(QUEUE_NAME, false);
+        GetResponse response = channel.basicGet(q, false);
         assertNotNull(response, "basicGet failed to retrieve a response");
 
         byte[] body = response.getBody();
