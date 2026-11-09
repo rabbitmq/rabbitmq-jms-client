@@ -528,7 +528,7 @@ table.CodeRay td.code{padding:0 0 0 .75em}
 <div id="header">
 <h1>RabbitMQ JMS Client</h1>
 <div class="details">
-<span id="revnumber">version 3.9.0</span>
+<span id="revnumber">version 3.9.1</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -661,34 +661,39 @@ client, it is compliant with both the JMS API and the AMQP 0-9-1 protocol.</p>
 <h2 id="limitations"><a class="anchor" href="#limitations"></a>Limitations</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Some JMS features are unsupported in the RabbitMQ JMS Client:</p>
+<p>Some JMS features are unsupported in the RabbitMQ JMS Client.
+Where a limitation does not apply to <a href="https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-rabbitmq-oci/4-3/tanzu-rabbitmq-oci-image/site-jms.html">VMware Tanzu RabbitMQ</a>, which implements JMS
+on top of AMQP 1.0 and the <a href="https://github.com/apache/qpid-jms">Qpid JMS client</a> instead of AMQP 0-9-1
+and this client, this is noted below.</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
 <p>Message selectors for topics are supported with the RabbitMQ JMS Topic Exchange plugin.
 Message selectors for queues are not supported by this client.
-(However, message selectors for queues are supported using the <a href="https://github.com/apache/qpid-jms">Qpid JMS client</a>
-in combination with the <a href="https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-rabbitmq-oci/4-3/tanzu-rabbitmq-oci-image/site-jms.html">JMS queue type</a>.</p>
+(However, message selectors for both queues and topics are supported in Tanzu RabbitMQ,
+where they are evaluated on the broker.)</p>
 </li>
 <li>
 <p>The JMS queue browser implementation consumes messages from the queue making them temporarily unavailable
 to other consumers (evaluates selectors client-side, and then requeues all messages when the browser is closed).
-(However, queue browsers are implemented correctly using the <a href="https://github.com/apache/qpid-jms">Qpid JMS client</a>
-in combination with the <a href="https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-rabbitmq-oci/4-3/tanzu-rabbitmq-oci-image/site-jms.html">JMS queue type</a>.</p>
+(However, queue browsers are implemented correctly in Tanzu RabbitMQ: messages are inspected on the broker
+without being consumed.)</p>
 </li>
 <li>
 <p>The JMS <code>NoLocal</code> parameter, which prevents delivery of
 messages published from a subscriber&#8217;s own connection, is not supported
 with RabbitMQ. You can call a method that includes the <code>NoLocal</code>
-argument, but it is ignored.</p>
+argument, but it is ignored.
+(However, <code>NoLocal</code> is supported in Tanzu RabbitMQ 4.4 and later.)</p>
 </li>
 <li>
 <p>Client ID uniqueness is enforced only within a single JVM process.
 Unlike traditional JMS brokers, the RabbitMQ JMS Client validates client ID uniqueness
 only on the client side. This means duplicate client IDs are only detected if both connections originate
 from the same JVM. Connections with the same client ID from different JVMs or
-applications will not be detected as duplicates.</p>
+applications will not be detected as duplicates.
+(However, Tanzu RabbitMQ 4.4 and later enforces client ID uniqueness across the whole cluster.)</p>
 </li>
 <li>
 <p>Local transactions do not guarantee atomicity and can result in partial completion</p>
@@ -759,7 +764,7 @@ in your JMS client applications</p>
   <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>com.rabbitmq.jms<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>rabbitmq-jms<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>3.9.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>3.9.1<span class="tag">&lt;/version&gt;</span>
   <span class="tag">&lt;/dependency&gt;</span>
 
 <span class="tag">&lt;/dependencies&gt;</span></code></pre>
@@ -775,7 +780,7 @@ in your JMS client applications</p>
 <div class="title">build.gradle</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="groovy">dependencies {
-  compile <span class="string"><span class="delimiter">&quot;</span><span class="content">com.rabbitmq.jms:rabbitmq-jms:3.9.0</span><span class="delimiter">&quot;</span></span>
+  compile <span class="string"><span class="delimiter">&quot;</span><span class="content">com.rabbitmq.jms:rabbitmq-jms:3.9.1</span><span class="delimiter">&quot;</span></span>
 }</code></pre>
 </div>
 </div>
@@ -1461,7 +1466,7 @@ on the client side.</p>
 <div class="sect2">
 <h3 id="with-spring-jms"><a class="anchor" href="#with-spring-jms"></a>With Spring JMS</h3>
 <div class="paragraph">
-<p><a href="https://docs.spring.io/spring-framework/docs/7.0.8/reference/html/integration.html#jms">Spring JMS</a>
+<p><a href="https://docs.spring.io/spring-framework/docs/7.0.10/reference/html/integration.html#jms">Spring JMS</a>
 is a popular way to work with JMS as it avoids most of JMS boilerplate.</p>
 </div>
 <div class="paragraph">
@@ -1800,8 +1805,8 @@ and browse our
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 3.9.0<br>
-Last updated 2026-08-21 09:28:45 UTC
+Version 3.9.1<br>
+Last updated 2026-11-09 10:08:44 UTC
 </div>
 </div>
 </body>
