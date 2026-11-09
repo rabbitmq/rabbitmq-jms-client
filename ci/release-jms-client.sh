@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
+set -e
 
 source ./release-versions.txt
 git checkout $RELEASE_BRANCH
 
-./mvnw release:clean release:prepare -DdryRun=true -Darguments="-DskipTests" --no-transfer-progress \
+./mvnw release:clean release:prepare -DdryRun=true -Darguments="-DskipTests -DskipITs" --no-transfer-progress \
   --batch-mode -Dtag="v$RELEASE_VERSION" \
   -DreleaseVersion=$RELEASE_VERSION \
   -DdevelopmentVersion=$DEVELOPMENT_VERSION \
 
-./mvnw release:clean release:prepare -Darguments="-DskipTests" --no-transfer-progress \
+./mvnw release:clean release:prepare -Darguments="-DskipTests -DskipITs" --no-transfer-progress \
   --batch-mode -Dtag="v$RELEASE_VERSION" \
   -DreleaseVersion=$RELEASE_VERSION \
   -DdevelopmentVersion=$DEVELOPMENT_VERSION
@@ -24,4 +25,4 @@ else
   echo "prerelease=false" >> $GITHUB_ENV
 fi
 
-./mvnw clean deploy -P $MAVEN_PROFILE -DskipTests --no-transfer-progress
+./mvnw clean deploy -P $MAVEN_PROFILE -DskipTests -DskipITs --no-transfer-progress
