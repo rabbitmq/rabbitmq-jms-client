@@ -28,6 +28,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -346,6 +347,25 @@ public class RMQConnectionFactoryTest {
         rmqCf.setAmqpConnectionFactoryPostProcessor(cf -> saslConfigRef.set(cf.getSaslConfig()));
         rmqCf.createConnection();
         assertEquals(DefaultSaslConfig.EXTERNAL, saslConfigRef.get());
+    }
+
+    @Test
+    public void automaticRecoveryIsEnabledByDefault() throws Exception {
+        AtomicBoolean recovery = new AtomicBoolean();
+        rmqCf.setAmqpConnectionFactoryPostProcessor(cf -> recovery.set(cf.isAutomaticRecoveryEnabled()));
+        rmqCf.createConnection();
+        assertTrue(recovery.get());
+        assertEquals("true", getProps(rmqCf.getReference()).getProperty("automaticRecoveryEnabled"));
+    }
+
+    @Test
+    public void automaticRecoveryCanBeDisabled() throws Exception {
+        AtomicBoolean recovery = new AtomicBoolean();
+        rmqCf.setAutomaticRecoveryEnabled(false);
+        rmqCf.setAmqpConnectionFactoryPostProcessor(cf -> recovery.set(cf.isAutomaticRecoveryEnabled()));
+        rmqCf.createConnection();
+        assertFalse(recovery.get());
+        assertEquals("false", getProps(rmqCf.getReference()).getProperty("automaticRecoveryEnabled"));
     }
 
     @Test

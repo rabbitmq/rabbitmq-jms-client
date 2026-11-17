@@ -101,6 +101,7 @@ import org.slf4j.LoggerFactory;
  * <li>port</li>
  * <li>queueBrowserReadMax</li>
  * <li>onMessageTimeoutMs</li>
+ * <li>automaticRecoveryEnabled - true/false</li>
  * <li>channelsQos</li>
  * <li>ssl</li>
  * <li>terminationTimeout</li>
@@ -227,6 +228,7 @@ public class RMQObjectFactory implements ObjectFactory {
         f.setDeclareReplyToDestination(getBooleanProperty(ref, environment, "declareReplyToDestination", true, true));
         f.setKeepTextMessageType(getBooleanProperty(ref, environment, "keepTextMessageType", true, false));
         f.setNackOnRollback(getBooleanProperty(ref, environment, "nackOnRollback", true, false));
+        f.setAutomaticRecoveryEnabled(getBooleanProperty(ref, environment, "automaticRecoveryEnabled", true, true));
 
         String authenticationMechanismString = getStringProperty(ref, environment, "authenticationMechanism", true, null);
         if (authenticationMechanismString != null) {
