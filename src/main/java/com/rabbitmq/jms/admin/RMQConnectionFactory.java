@@ -133,6 +133,14 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     private boolean nackOnRollback = false;
 
     /**
+     * Whether the underlying AMQP connection uses automatic recovery.
+     * Default is true.
+     *
+     * @since 3.9.2
+     */
+    private boolean automaticRecoveryEnabled = true;
+
+    /**
      * Whether using auto-delete for server-named queues for non-durable topics.
      * If set to true, those queues will be deleted when the session is closed.
      * If set to false, queues will be deleted when the owning connection is closed.
@@ -331,6 +339,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         maybeEnableHostnameVerification();
         cf.setMetricsCollector(this.metricsCollector);
         setSaslConfig(cf, authenticationMechanism);
+        cf.setAutomaticRecoveryEnabled(this.automaticRecoveryEnabled);
 
         if (this.amqpConnectionFactoryPostProcessor != null) {
             this.amqpConnectionFactoryPostProcessor.accept(cf);
@@ -680,6 +689,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
         addBooleanProperty(ref, "declareReplyToDestination",
                 this.declareReplyToDestination);
         addStringRefProperty(ref, "authenticationMechanism", this.authenticationMechanism.name());
+        addBooleanProperty(ref, "automaticRecoveryEnabled", this.automaticRecoveryEnabled);
         return ref;
     }
 
@@ -1039,6 +1049,33 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
 
     public List<String> getUris() {
         return this.uris.stream().map(uri -> uri.toString()).collect(Collectors.toList());
+    }
+
+    /**
+     * Enable or disable automatic recovery of the underlying AMQP connection.
+     * <p>
+     * The AMQP Java client enables automatic recovery by default. A JMS application that
+     * reconnects itself from its {@link jakarta.jms.ExceptionListener} may want to disable it:
+     * otherwise a connection the application has abandoned after a network failure is
+     * recovered by the client and stays open.
+     * <p>
+     * A {@link #setAmqpConnectionFactoryPostProcessor(Consumer) post-processor} runs after this
+     * setting and can still override it.
+     *
+     * @param automaticRecoveryEnabled true to enable, false to disable
+     * @since 3.9.2
+     */
+    public void setAutomaticRecoveryEnabled(boolean automaticRecoveryEnabled) {
+        this.automaticRecoveryEnabled = automaticRecoveryEnabled;
+    }
+
+    /**
+     * @return true if automatic recovery of the underlying AMQP connection is enabled
+     * @see #setAutomaticRecoveryEnabled(boolean)
+     * @since 3.9.2
+     */
+    public boolean isAutomaticRecoveryEnabled() {
+        return this.automaticRecoveryEnabled;
     }
 
     /**
