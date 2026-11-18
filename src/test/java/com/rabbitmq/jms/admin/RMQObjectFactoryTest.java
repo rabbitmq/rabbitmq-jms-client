@@ -108,7 +108,7 @@ public class RMQObjectFactoryTest {
     @Test
     public void automaticRecoveryEnabledPropertyIsSetOnConnectionFactory() throws Exception {
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
-            put("className", "jakarta.jms.ConnectionFactory");
+            put("className", "javax.jms.ConnectionFactory");
             put("automaticRecoveryEnabled", "false");
         }};
 
