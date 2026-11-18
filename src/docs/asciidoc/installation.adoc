@@ -274,4 +274,9 @@ The following table lists all of the attributes/properties that are available.
 | No
 | When set to `true`, the AMQP `JMSType` header will be set automatically to `"TextMessage"` for ``TextMessage``s published to AMQP-backed ``Destination``s. Default is false.
 |
+
+| `automaticRecoveryEnabled`
+| No
+| Whether the underlying AMQP connection uses https://www.rabbitmq.com/client-libraries/java-api-guide#recovery[automatic recovery]. Default is true. An application that reconnects itself from its `ExceptionListener` may want to set it to false, otherwise the abandoned connection is recovered by the AMQP client and stays open.
+|
 |===
