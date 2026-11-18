@@ -106,6 +106,35 @@ public class RMQObjectFactoryTest {
     }
 
     @Test
+    public void automaticRecoveryEnabledPropertyIsSetOnConnectionFactory() throws Exception {
+        Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
+            put("className", "javax.jms.ConnectionFactory");
+            put("automaticRecoveryEnabled", "false");
+        }};
+
+        Object createdObject = rmqObjectFactory.getObjectInstance("anything but a javax.naming.Reference", new CompositeName("java:global/jms/TestConnectionFactory"), null, environment);
+
+        assertNotNull(createdObject);
+        assertEquals(RMQConnectionFactory.class, createdObject.getClass());
+        RMQConnectionFactory createdConFactory = (RMQConnectionFactory) createdObject;
+        assertThat(createdConFactory).hasFieldOrPropertyWithValue("automaticRecoveryEnabled", false);
+    }
+
+    @Test
+    public void automaticRecoveryEnabledPropertyIsReadFromReference() throws Exception {
+        Reference emptyRef = new Reference(ConnectionFactory.class.getName());
+        RMQConnectionFactory fromEmptyRef = (RMQConnectionFactory) rmqObjectFactory.getObjectInstance(
+            emptyRef, new CompositeName("java:global/jms/TestConnectionFactory"), null, null);
+        assertTrue(fromEmptyRef.isAutomaticRecoveryEnabled());
+
+        RMQConnectionFactory original = new RMQConnectionFactory();
+        original.setAutomaticRecoveryEnabled(false);
+        RMQConnectionFactory fromRef = (RMQConnectionFactory) rmqObjectFactory.getObjectInstance(
+            original.getReference(), new CompositeName("java:global/jms/TestConnectionFactory"), null, null);
+        assertFalse(fromRef.isAutomaticRecoveryEnabled());
+    }
+
+    @Test
     public void urisOnRmqObjectFactoryShouldBeEnforced() throws Exception {
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
             put("className", "javax.jms.ConnectionFactory");
