@@ -107,6 +107,7 @@ import org.slf4j.LoggerFactory;
  * <li>terminationTimeout</li>
  * <li>username</li>
  * <li>virtualHost</li>
+ * <li>automaticRecoveryEnabled - true/false</li>
  * <li>className - only applies when properties are provided via environment HashTable</li>
  * </ul>
  * and are applied in this order, if they are present. If a property is not present, or is not set by means of the
@@ -228,6 +229,7 @@ public class RMQObjectFactory implements ObjectFactory {
         f.setDeclareReplyToDestination(getBooleanProperty(ref, environment, "declareReplyToDestination", true, true));
         f.setKeepTextMessageType(getBooleanProperty(ref, environment, "keepTextMessageType", true, false));
         f.setNackOnRollback(getBooleanProperty(ref, environment, "nackOnRollback", true, false));
+        f.setAutomaticRecoveryEnabled(getBooleanProperty(ref, environment, "automaticRecoveryEnabled", true, true));
 
         String authenticationMechanismString = getStringProperty(ref, environment, "authenticationMechanism", true, null);
         if (authenticationMechanismString != null) {
