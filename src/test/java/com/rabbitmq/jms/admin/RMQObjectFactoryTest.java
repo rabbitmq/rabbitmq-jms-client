@@ -121,6 +121,20 @@ public class RMQObjectFactoryTest {
     }
 
     @Test
+    public void automaticRecoveryEnabledPropertyIsReadFromReference() throws Exception {
+        Reference emptyRef = new Reference(ConnectionFactory.class.getName());
+        RMQConnectionFactory fromEmptyRef = (RMQConnectionFactory) rmqObjectFactory.getObjectInstance(
+            emptyRef, new CompositeName("java:global/jms/TestConnectionFactory"), null, null);
+        assertTrue(fromEmptyRef.isAutomaticRecoveryEnabled());
+
+        RMQConnectionFactory original = new RMQConnectionFactory();
+        original.setAutomaticRecoveryEnabled(false);
+        RMQConnectionFactory fromRef = (RMQConnectionFactory) rmqObjectFactory.getObjectInstance(
+            original.getReference(), new CompositeName("java:global/jms/TestConnectionFactory"), null, null);
+        assertFalse(fromRef.isAutomaticRecoveryEnabled());
+    }
+
+    @Test
     public void urisOnRmqObjectFactoryShouldBeEnforced() throws Exception {
         Hashtable<?, ?> environment = new Hashtable<Object, Object>() {{
             put("className", "javax.jms.ConnectionFactory");

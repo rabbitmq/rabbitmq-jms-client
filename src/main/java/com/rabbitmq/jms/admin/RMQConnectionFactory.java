@@ -138,7 +138,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * Whether the underlying AMQP connection uses automatic recovery.
      * Default is true.
      *
-     * @since 3.9.2
+     * @since 3.10.0
      */
     private boolean automaticRecoveryEnabled = true;
 
@@ -1089,7 +1089,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
      * setting and can still override it.
      *
      * @param automaticRecoveryEnabled true to enable, false to disable
-     * @since 3.9.2
+     * @since 3.10.0
      */
     public void setAutomaticRecoveryEnabled(boolean automaticRecoveryEnabled) {
         this.automaticRecoveryEnabled = automaticRecoveryEnabled;
@@ -1098,7 +1098,7 @@ public class RMQConnectionFactory implements ConnectionFactory, Referenceable, S
     /**
      * @return true if automatic recovery of the underlying AMQP connection is enabled
      * @see #setAutomaticRecoveryEnabled(boolean)
-     * @since 3.9.2
+     * @since 3.10.0
      */
     public boolean isAutomaticRecoveryEnabled() {
         return this.automaticRecoveryEnabled;

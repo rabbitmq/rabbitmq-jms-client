@@ -101,12 +101,12 @@ import org.slf4j.LoggerFactory;
  * <li>port</li>
  * <li>queueBrowserReadMax</li>
  * <li>onMessageTimeoutMs</li>
- * <li>automaticRecoveryEnabled - true/false</li>
  * <li>channelsQos</li>
  * <li>ssl</li>
  * <li>terminationTimeout</li>
  * <li>username</li>
  * <li>virtualHost</li>
+ * <li>automaticRecoveryEnabled - true/false</li>
  * <li>className - only applies when properties are provided via environment HashTable</li>
  * </ul>
  * and are applied in this order, if they are present. If a property is not present, or is not set by means of the
